@@ -1,6 +1,7 @@
 //! History stage: the all-modes `player_activity` corpus, from the live table
-//! (src 1) and its archive shards (src 0). Duplicates across sources (failed
-//! export deletes, re-exports) are removed in the transform step.
+//! and its archive shards. The same (membership, instance) can appear in
+//! several sources with different content (failed export deletes, re-mined
+//! history); the transform keeps the newest copy by source recency.
 
 use std::path::PathBuf;
 
@@ -30,22 +31,24 @@ pub fn load(
     staged: &StagedSources,
     progress: &Progress,
 ) -> Result<HistoryStats> {
-    let mut dbs: Vec<(PathBuf, u8)> = vec![(staged.main_db.clone(), 1)];
-    dbs.extend(
-        staged
-            .shards
-            .iter()
-            .filter(|(s, _)| s.kind == ShardKind::PlayerActivity)
-            .map(|(_, p)| (p.clone(), 0)),
-    );
+    // Ordered oldest → newest: shards by name (day, then export run id), then
+    // the live table. A row's recency is its source's position here, and the
+    // transform keeps the newest copy of each (membership, instance).
+    let mut dbs: Vec<(PathBuf, &str)> = staged
+        .shards
+        .iter()
+        .filter(|(s, _)| s.kind == ShardKind::PlayerActivity)
+        .map(|(_, p)| (p.clone(), "orig_rowid"))
+        .collect();
+    dbs.push((staged.main_db.clone(), "rowid"));
 
     let mut tasks = Vec::new();
     let mut total = 0;
-    for (db, src) in &dbs {
+    for (recency, (db, key)) in dbs.iter().enumerate() {
         let conn = sqlite::open(db)?;
         total += sqlite::count(&conn, "player_activity")?;
         for (lo, hi) in sqlite::rowid_ranges(&conn, "player_activity", CHUNK_ROWS)? {
-            tasks.push((db.clone(), *src, lo, hi));
+            tasks.push((db.clone(), recency as i32, *key, lo, hi));
         }
     }
 
@@ -54,19 +57,23 @@ pub fn load(
     let sender = sink.sender();
     let produced = tasks
         .par_iter()
-        .try_for_each(|(db, src, lo, hi)| -> Result<()> {
+        .try_for_each(|(db, recency, key, lo, hi)| -> Result<()> {
             let conn = sqlite::open(db)?;
-            let mut stmt = conn.prepare(
+            // `key` is the row's insertion rowid in the live table (shards
+            // carry it as orig_rowid), a deterministic final tie-breaker.
+            let mut stmt = conn.prepare(&format!(
                 "SELECT membership_id, character_id, instance_id, period, director_activity_hash, mode, \
-                        kills, deaths, assists, duration_seconds, completion_reason, completed, player_count \
-                 FROM player_activity WHERE rowid BETWEEN ?1 AND ?2",
-            )?;
+                        kills, deaths, assists, duration_seconds, completion_reason, completed, player_count, \
+                        {key} \
+                 FROM player_activity WHERE rowid BETWEEN ?1 AND ?2"
+            ))?;
             let mut rows = stmt.query([lo, hi])?;
             let mut out = Batcher::new(&sender, BATCH);
             let mut n = 0;
             while let Some(r) = rows.next()? {
                 out.push(StgHistory {
-                    src: *src,
+                    recency: *recency,
+                    row_key: r.get(13)?,
                     membership_id: r.get(0)?,
                     character_id: r.get(1)?,
                     instance_id: r.get(2)?,

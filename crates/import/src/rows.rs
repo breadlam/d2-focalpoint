@@ -148,7 +148,10 @@ impl AppendRow for StgWeapon {
 
 #[derive(Debug, Clone)]
 pub struct StgHistory {
-    pub src: u8,
+    /// Position of the source in oldest → newest order (live table newest).
+    pub recency: i32,
+    /// Insertion rowid in the live table: final tie-breaker within a source.
+    pub row_key: i64,
     pub membership_id: i64,
     pub character_id: Option<i64>,
     pub instance_id: i64,
@@ -167,7 +170,8 @@ pub struct StgHistory {
 impl AppendRow for StgHistory {
     fn append(&self, a: &mut Appender<'_>) -> duckdb::Result<()> {
         a.append_row(params![
-            self.src,
+            self.recency,
+            self.row_key,
             self.membership_id,
             self.character_id,
             self.instance_id,

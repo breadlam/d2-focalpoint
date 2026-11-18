@@ -225,22 +225,33 @@ fn build_backups(root: &Path) {
         fill(true),
     );
 
-    // An activity-history shard duplicating the live row plus one new row.
-    write_shard(
-        &root.join("shards/player_activity_2026-07-01_1.sqlite.gz"),
-        "CREATE TABLE player_activity (orig_rowid INT, membership_id INT, character_id INT, instance_id INT, \
-         period TEXT, director_activity_hash INT, mode INT, kills INT, deaths INT, assists INT, \
-         duration_seconds INT, completion_reason INT, completed INT, player_count INT)",
-        |c| {
-            for iid in [1, 5] {
+    // Activity-history shards: the first duplicates the live row and adds
+    // instance 5; a later export of the same day re-mined instance 5 with
+    // different content, which must win over the earlier export.
+    let pa_sql = "CREATE TABLE player_activity (orig_rowid INT, membership_id INT, character_id INT, \
+                  instance_id INT, period TEXT, director_activity_hash INT, mode INT, kills INT, deaths INT, \
+                  assists INT, duration_seconds INT, completion_reason INT, completed INT, player_count INT)";
+    let pa_fill = |rows: &'static [(i64, i64)]| {
+        move |c: &Connection| {
+            for &(iid, kills) in rows {
                 c.execute(
-                    "INSERT INTO player_activity VALUES (?1, 100, 101, ?1, '2026-07-01T12:00:00Z', 2727361621, 82, \
-                     1, 0, 0, 60, 0, 1, 1)",
-                    params![iid],
+                    "INSERT INTO player_activity VALUES (?1, 100, 101, ?1, '2026-07-01T12:00:00Z', 2727361621, \
+                     82, ?2, 0, 0, 60, 0, 1, 1)",
+                    params![iid, kills],
                 )
                 .unwrap();
             }
-        },
+        }
+    };
+    write_shard(
+        &root.join("shards/player_activity_2026-07-01_1.sqlite.gz"),
+        pa_sql,
+        pa_fill(&[(1, 1), (5, 1)]),
+    );
+    write_shard(
+        &root.join("shards/player_activity_2026-07-01_2.sqlite.gz"),
+        pa_sql,
+        pa_fill(&[(5, 7)]),
     );
 }
 
@@ -334,6 +345,23 @@ fn imports_a_synthetic_backup_tree() {
 
     // History: live row + shard duplicate + new row → 2 rows.
     assert_eq!(count(&db, "SELECT count(*) FROM activity_history"), 2);
+    // The live table is the newest source: its copy of (100, 1) wins over the
+    // shard's differing copy.
+    assert_eq!(
+        count(
+            &db,
+            "SELECT kills FROM activity_history WHERE instance_id = 1"
+        ),
+        50
+    );
+    // Between shards, the later export wins.
+    assert_eq!(
+        count(
+            &db,
+            "SELECT kills FROM activity_history WHERE instance_id = 5"
+        ),
+        7
+    );
 
     // Player identity and flags.
     let name: String = db

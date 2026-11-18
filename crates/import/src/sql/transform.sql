@@ -100,7 +100,9 @@ FROM stg.entry e
 JOIN run_choice c ON c.instance_id = e.instance_id AND c.src = e.src
 JOIN run r ON r.instance_id = e.instance_id
 LEFT JOIN timeline_key t ON t.instance_id = e.instance_id AND t.membership_id = e.membership_id
-ORDER BY e.instance_id, e.membership_id, e.character_id;
+-- Tie-breakers make the pick deterministic if a report lists a character twice.
+ORDER BY e.instance_id, e.membership_id, e.character_id,
+         e.time_played_s DESC, e.kills DESC, e.deaths, e.start_s;
 
 -- step: run_player_weapon
 INSERT INTO run_player_weapon
@@ -123,7 +125,7 @@ SELECT DISTINCT ON (membership_id, instance_id)
        mode, kills, deaths, assists, duration_s, completion_reason, completed, player_count
 FROM stg.history
 WHERE TRY_CAST(period AS TIMESTAMP) IS NOT NULL
-ORDER BY membership_id, instance_id, src DESC;
+ORDER BY membership_id, instance_id, recency DESC, row_key DESC;
 
 -- step: run_build
 INSERT INTO run_build
@@ -181,7 +183,7 @@ WITH ids AS (
            e.membership_id, e.membership_type, e.display_name, e.global_name, e.global_name_code
     FROM stg.entry e
     JOIN run r ON r.instance_id = e.instance_id
-    ORDER BY e.membership_id, r.started_at DESC, e.src
+    ORDER BY e.membership_id, r.started_at DESC, e.src, e.instance_id DESC, e.character_id DESC
 ), seen AS (
     SELECT membership_id, min(t) AS first_seen, max(t) AS last_seen
     FROM (

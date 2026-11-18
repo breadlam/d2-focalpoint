@@ -61,9 +61,12 @@ CREATE TABLE stg.weapon (
     precision_kills INTEGER
 );
 
--- Activity history rows from the live table (src 1) and archive shards (src 0).
+-- Activity history rows from the live table and archive shards. `recency`
+-- orders sources oldest → newest (the live table is newest); `row_key` is the
+-- row's insertion rowid in the live table.
 CREATE TABLE stg.history (
-    src               UTINYINT NOT NULL,
+    recency           INTEGER  NOT NULL,
+    row_key           BIGINT   NOT NULL,
     membership_id     BIGINT   NOT NULL,
     character_id      BIGINT,
     instance_id       BIGINT   NOT NULL,
