@@ -1,0 +1,19 @@
+[package]
+name = "searchlight-db"
+description = "DuckDB schema and access for the searchlight-cli analysis database"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+dirs.workspace = true
+duckdb.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true
