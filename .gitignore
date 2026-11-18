@@ -1,0 +1,18 @@
+/target/
+# Machine-local cargo settings (e.g. a target-dir on local disk).
+/.cargo/config.toml
+
+# Databases and import work areas never belong in git.
+*.duckdb
+*.duckdb.wal
+*.duckdb.partial
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+/work/
+
+# Editor / OS noise.
+.idea/
+.vscode/
+*.swp
+.DS_Store

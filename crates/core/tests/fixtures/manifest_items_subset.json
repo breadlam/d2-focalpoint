@@ -1,0 +1,2939 @@
+{
+ "1014202826": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Works best with:\nElements: [Kill] [Void] [Arc] \nWeapons: [Sword] [Sniper Rifle] [Machine Gun]",
+   "icon": "/common/destiny2_content/icons/d567549c87bb8fb18c1972027341a5f4.jpg",
+   "name": "Encrypted Data Disk"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 1506418338,
+   "stackUniqueLabel": "core.gear_systems.artifacts.reprise.season28.artifact0",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 0,
+  "itemTypeDisplayName": "Artifact"
+ },
+ "1087971716": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this shader to change the color of your gear.",
+   "icon": "/common/destiny2_content/icons/9afc83df43a5bbbebe2509454dffe35e.jpg",
+   "name": "Cruelty Song"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v820.shaders.silver.seasonal.legendary.shader2",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Shader",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
+  }
+ },
+ "11126525": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/f66a443a73883ec0c196ac7be4551cfc.png",
+   "name": "Powerful Attraction"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Class Item Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_class_item"
+  }
+ },
+ "1235188590": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "No mod currently selected.",
+   "icon": "/common/destiny2_content/icons/a36f4aeef4864444a26f7b5223cd671c.jpg",
+   "name": "Empty Artifact Mod"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "124726498": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/7a6b1d98544eb4a8512c6be0b6486456.png",
+   "name": "Facet of Purpose"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism13",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Prismatic Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.prism.fragments"
+  }
+ },
+ "1283540420": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/34621a3d8f09827b5020bb1c87fc135f.jpg",
+   "name": "Glaive Mistake"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v600.plugs.emotes.glaive_slip0",
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
+  }
+ },
+ "1283668727": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Upgrade this armor to improve its 3 lowest stats by 1, up to a maximum of 5 in each when upgraded to a Masterwork.",
+   "icon": "/common/destiny2_content/icons/171c66ca05570c05c95b262ac24d761f.jpg",
+   "name": "Upgrade Armor"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v460.plugs.armor.masterworks"
+  }
+ },
+ "1324853482": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "[Grenade]  : Throw a mass of [Void] Void energy and [Stasis] Stasis matter. On impact, deploys a miniature black hole orbited by a slowing field. After a short duration, the black hole implodes, suppressing and dealing heavy damage to all nearby targets.",
+   "icon": "/common/destiny2_content/icons/6d0151b4c04668eb6272dc58ecacc3aa.jpg",
+   "name": "Freezing Singularity"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.dummies.prism_flare",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 20,
+  "itemTypeDisplayName": "Prismatic Grenade",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.prism_grenade"
+  }
+ },
+ "1370696619": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "1388734897": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/03f0ec4cf0a678b451ebd55c2a005d06.png",
+   "name": "Kinetic Siphon"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Helmet Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_head"
+  }
+ },
+ "1392919471": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 3,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/575aa36e701cfc4fe4e62a83f423ae97.jpg",
+   "name": "Trustee"
+  },
+  "equippingBlock": {
+   "ammoType": 1
+  },
+  "inventory": {
+   "bucketTypeHash": 2465295065,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 14,
+  "itemType": 3,
+  "itemTypeDisplayName": "Scout Rifle"
+ },
+ "1444664838": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Conjure a well of power that continuously heals those inside it.",
+   "icon": "/common/destiny2_content/icons/d2b480f1161f83a84476f0e097c78096.png",
+   "name": "Healing Rift"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Class Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.class_abilities"
+  }
+ },
+ "1476923953": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Using an ability empowers the other two abilities, granting them improved energy regeneration.",
+   "icon": "/common/destiny2_content/icons/51756fc7603bd72a83d1859d8c33f0b9.png",
+   "name": "Spirit of Inmost Light"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Intrinsic",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "1476923956": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Improves melee damage when you're surrounded.",
+   "icon": "/common/destiny2_content/icons/640d76fb6ab52e290116455379194b07.png",
+   "name": "Spirit of Synthoceps"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Intrinsic",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "1479573077": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/1c1d5115bc5a75a4e72b9fdcb792ba47.jpg",
+   "name": "Fated Duel"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v820.plugs.emotes.silver.partnership.exotic.multi_emote1",
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Multiplayer Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
+  }
+ },
+ "1501421141": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Dealing damage regenerates an increased amount of ability energy.",
+   "icon": "/common/destiny2_content/icons/2d54821e93a0baaf2b2f815dff3ec7f7.png",
+   "name": "Bray Inheritance"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Origin Trait",
+  "plug": {
+   "plugCategoryIdentifier": "origins"
+  }
+ },
+ "1523545668": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/4c3c1b5313ca76fc3064fd47f1694c92.png",
+   "name": "Backup Mag"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Weapon Mod",
+  "plug": {
+   "plugCategoryIdentifier": "v400.weapon.mod_magazine"
+  }
+ },
+ "152583919": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "When triggered, a random finisher in your inventory plays.\n\nIf no finishers are in your inventory, your default class finisher plays.",
+   "icon": "/common/destiny2_content/icons/618647e637fceceda9bb5034db87a595.jpg",
+   "name": "Finishers"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 3683254069,
+   "stackUniqueLabel": "dummy.finishers.bucket.multiequip0",
+   "tierType": 1,
+   "tierTypeName": "Basic"
+  },
+  "itemSubType": 0,
+  "itemType": 29,
+  "itemTypeDisplayName": "Finisher Collection"
+ },
+ "1532397225": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Maximized stats.\n\nApplies additional stats to this weapon equal to the weapon's tier.",
+   "icon": "/common/destiny2_content/icons/66a3b548a76bbb875a332661e8b67740.jpg",
+   "name": "Masterworked: Charge Time"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.stat.charge_time"
+  }
+ },
+ "1656730803": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Gain an additional bonus engram on a Daily Focus activity in Ops.",
+   "icon": "/common/destiny2_content/icons/849e4841223f1c4e57fc122bbbf0bb6e.png",
+   "name": "Daily Ops Focus"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Clan Perk",
+  "plug": {
+   "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "1687144140": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Armor configured for Guardians that thrive in chaos.\n\nPrimary Stat: Melee\nSecondary Stat: Weapons",
+   "icon": "/common/destiny2_content/icons/7bc3bc2bccdafc19dde31f867a06ee9f.png",
+   "name": "Skirmisher"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_archetypes"
+  }
+ },
+ "1755737153": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/7b1acb2fa35c4eb1e752ba46538f0175.png",
+   "name": "Time Dilation"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Class Item Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_class_item"
+  }
+ },
+ "1763668984": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/46520f0b4fefc0270823d0b968270142.png",
+   "name": "Melee Damage Resistance"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Chest Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_chest"
+  }
+ },
+ "1773007617": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this Dark Matter Crystal to change the blade color appearance of your Praxic Blade. Once you get a crystal, it's unlocked for all characters on your account.",
+   "icon": "/common/destiny2_content/icons/70d0f7f1f67e5c345f5700d4bcdab9f8.jpg",
+   "name": "Dark Matter Crystal: Taken"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Praxic Blade Crystal",
+  "plug": {
+   "plugCategoryIdentifier": "v950.new.sword0.cosmetics"
+  }
+ },
+ "1808259051": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Reflecting shots causes you to become amplified and grants this Sword increased lunge distance for a single swing.",
+   "icon": "/common/destiny2_content/icons/8709d34751bad6a2093a397ba32dceef.jpg",
+   "name": "Hyperblade"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Trait",
+  "plug": {
+   "plugCategoryIdentifier": "v950.new.sword0.masterwork"
+  }
+ },
+ "1820053064": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/483232563d228518f96646d60a3d9883.png",
+   "name": "Blinding Light"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Experience Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_experience"
+  }
+ },
+ "1869939006": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Summon a [Stasis] Stasis staff. While your Super is active:\n\n[Super Primary]  : Cast out a barrage of [Stasis] Stasis shards that freeze targets.\n\n[Super Secondary]  : Cast out a shockwave that shatters all frozen targets.",
+   "icon": "/common/destiny2_content/icons/c9f25c8f6d5e647366ffc4f71a825961.png",
+   "name": "Winter's Wrath"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Super | Darkness Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.supers"
+  },
+  "talentGrid": {
+   "hudDamageType": 6
+  }
+ },
+ "1871180748": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Barrel optimized for distance.\n  \u2022  Greatly increases range\n  \u2022  Decreases stability\n  \u2022  Slightly decreases handling speed",
+   "icon": "/common/destiny2_content/icons/40a4bdcf0f5a4e492927f9569eaf529d.png",
+   "name": "Full Bore"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Barrel",
+  "plug": {
+   "plugCategoryIdentifier": "barrels"
+  }
+ },
+ "1892982956": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Combat Flairs provide a flourish upon defeating targets. They are available on Tier 5 weapons.\n\nThis restores your Combat Flair to its default appearance.",
+   "icon": "/common/destiny2_content/icons/6592d938ad77596715fc17c0462f4982.png",
+   "name": "Default Combat Flair"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Combat Flair",
+  "plug": {
+   "plugCategoryIdentifier": "weapon_tiering_kill_vfx"
+  }
+ },
+ "1961918267": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Deepsight can be applied to this weapon.",
+   "icon": "/common/destiny2_content/icons/b4d05ef69d0c3227a7d4f7f35bbc2848.png",
+   "name": "Empty Deepsight Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "crafting.plugs.weapons.mods.extractors"
+  }
+ },
+ "1962449707": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this ornament on any eligible Legendary armor item to change its appearance. Once you get a universal ornament, it's unlocked for all characters of the relevant class on your account.",
+   "icon": "/common/destiny2_content/icons/0acad685d11f216ef14bc7f434394b96.jpg",
+   "name": "Valkyrie's Descent Gloves"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Warlock Universal Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_arms"
+  }
+ },
+ "2024015893": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Upgrade this armor to a Masterwork, improving its 3 lowest stats by 1.",
+   "icon": "/common/destiny2_content/icons/171c66ca05570c05c95b262ac24d761f.jpg",
+   "name": "Upgrade Armor"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v460.plugs.armor.masterworks"
+  }
+ },
+ "2041822471": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "2093762600": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Your inaugural staff for Clan Banners.",
+   "icon": "/common/destiny2_content/icons/0af2b8b0aee1351d07e918767d736563.jpg",
+   "name": "Banner Staff"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Clan Staff",
+  "plug": {
+   "plugCategoryIdentifier": "social.clans.staves"
+  }
+ },
+ "2194294579": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/d436568b58806b6666fa250ec9a7b593.png",
+   "name": "Better Already"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Leg Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_legs"
+  }
+ },
+ "2240097604": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon tracks the number of enemies you defeated with it.",
+   "icon": "/common/destiny2_content/icons/2fa9b8e2b358de10643b14a058094f4b.png",
+   "name": "Kill Tracker"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.trackers"
+  }
+ },
+ "2273643087": {
+  "breakerType": 0,
+  "classType": 2,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/7b57cd041db1987c3f566b96535daf9f.jpg",
+   "name": "Solipsism"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 1585787867,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 30,
+  "itemType": 2,
+  "itemTypeDisplayName": "Warlock Bond"
+ },
+ "2294891641": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Upgrade this Ghost to increase its energy capacity by 1. Fully upgrading this Ghost to Masterwork provides an additional mod socket.",
+   "icon": "/common/destiny2_content/icons/5d829865897fc500c32401b976353434.jpg",
+   "name": "Upgrade Ghost"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 0,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "plugs.ghosts.masterworks"
+  }
+ },
+ "2302094943": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon tracks the number of enemies you defeated with it.",
+   "icon": "/common/destiny2_content/icons/2fa9b8e2b358de10643b14a058094f4b.png",
+   "name": "Kill Tracker"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.trackers"
+  }
+ },
+ "2313868561": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Increases chance of receiving Prime Engrams from Ops activities.",
+   "icon": "/common/destiny2_content/icons/849e4841223f1c4e57fc122bbbf0bb6e.png",
+   "name": "Prime Engram Boost"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Clan Perk",
+  "plug": {
+   "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "233125175": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v400.plugs.weapons.masterworks"
+  }
+ },
+ "235531041": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Activity mods provide additional currency and material rewards in various activities.",
+   "icon": "/common/destiny2_content/icons/f9bda9e5f667d092049681346a1efdde.png",
+   "name": "Activity Mod Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Activity Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_activity"
+  }
+ },
+ "2370958485": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Modifications for your ship's transmat systems, so you'll always arrive in style.",
+   "icon": "/common/destiny2_content/icons/e291934f1a4418c482636702acc03960.jpg",
+   "name": "Subjugator Entrance"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v610.plugs.ships.spawnfx.silver.seasonal.legendary.mod0",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Transmat Effect",
+  "plug": {
+   "plugCategoryIdentifier": "ship.spawnfx"
+  }
+ },
+ "2412329836": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this shader to change the color of your gear.",
+   "icon": "/common/destiny2_content/icons/b1edac58d316cd3b97054a9568113284.jpg",
+   "name": "Diametric Crush"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.shaders.activities.raid.legendary.shader0",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Shader",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
+  }
+ },
+ "2426387438": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Restores your Ghost to an empty projection.",
+   "icon": "/common/destiny2_content/icons/0aeb11bde6623050c5f3b57b672d6306.png",
+   "name": "No Projection"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Restore Defaults",
+  "plug": {
+   "plugCategoryIdentifier": "hologram"
+  }
+ },
+ "2447449706": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b4f287bb2bea2ae61431cfc3a35f6fa5.png",
+   "name": "Heavy Handed"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Arms Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_arms"
+  }
+ },
+ "2498433744": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "2515211331": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "2541757371": {
+  "breakerType": 0,
+  "classType": 2,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/e435632848cfab6c7411f7463aed910a.jpg",
+   "name": "Sage Protector Boots"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 4222859846
+  },
+  "inventory": {
+   "bucketTypeHash": 20886954,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 29,
+  "itemType": 2,
+  "itemTypeDisplayName": "Leg Armor",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_legs"
+  }
+ },
+ "2595839237": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/35e9d5635599be5c0fc306732f881459.png",
+   "name": "Special Ammo Finder"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Helmet Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_head"
+  }
+ },
+ "2622805186": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this ornament on any eligible Legendary armor item to change its appearance. Once you get a universal ornament, it's unlocked for all characters of the relevant class on your account.",
+   "icon": "/common/destiny2_content/icons/98b490860c48ed3f51161ee1c6a6b41a.jpg",
+   "name": "Valkyrie's Descent Hood"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Warlock Universal Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_head"
+  }
+ },
+ "2626922114": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/43fa2cf618e74671d0e652640c1ce4bc.png",
+   "name": "Facet of Balance"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism8",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Prismatic Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.prism.fragments"
+  }
+ },
+ "2626922120": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b6d90ee669fc1fef2e22ff95188be313.png",
+   "name": "Facet of Protection"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism2",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Prismatic Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.prism.fragments"
+  }
+ },
+ "2626922124": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/536765c9ed5e2f53268859591e8e9acf.png",
+   "name": "Facet of Courage"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism6",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Prismatic Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.prism.fragments"
+  }
+ },
+ "2626922126": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/684547ed1f97efdca37df4f1a5c5e699.png",
+   "name": "Facet of Dawn"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism4",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Prismatic Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.prism.fragments"
+  }
+ },
+ "2639422088": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/6b45221fccade87ee39f3a03efc6e9b9.png",
+   "name": "Minor Melee Mod"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_general"
+  }
+ },
+ "2680217522": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/df7f98bb75a16d9bf424700b5ce47305.jpg",
+   "name": "Dredgen's Descent"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 4274335291,
+   "stackUniqueLabel": "v950.emblems.gameplay.legendary.emblem3",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 14,
+  "itemTypeDisplayName": "Emblem"
+ },
+ "2742146816": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/daaa2ac873cf0d92f0386667b84450bd.png",
+   "name": "Sword Storm Combo"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "2742146817": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/5eacb6ab8ca7b9ed147dc842accdb41a.png",
+   "name": "Void Infestation"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "2749722041": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/d40a2344dcf28ce6db81ef67b2962339.jpg",
+   "name": "Renegade Leader"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 284967655,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 21,
+  "itemTypeDisplayName": "Ship"
+ },
+ "2800182654": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Distance optimizations.\n  \u2022  Increases range",
+   "icon": "/common/destiny2_content/icons/eaa6fcec699a88e768782068d5e509e1.png",
+   "name": "Projection Fuse"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Battery",
+  "plug": {
+   "plugCategoryIdentifier": "batteries"
+  }
+ },
+ "2903198433": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/2944f8b47be4ff1f4a0ceaa8439d0367.png",
+   "name": "Blinding Jolts"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "2903198434": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/f510c3b6aaee8ff2da5da4368bd4c63a.png",
+   "name": "Singularity Blade"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "2909846572": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "No memento currently selected.\n\nMementos provide additional vanity options to a Shaped weapon and can be obtained from sources such as Trials, Nightfalls, and Gambit.",
+   "icon": "/common/destiny2_content/icons/4d19ce623e24b54f5cff385baed7d7fd.png",
+   "name": "Empty Memento Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "crafting.recipes.empty_socket"
+  }
+ },
+ "2910697601": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "The first Vanguard Armory quest completed each week grants an Ascendant Shard.",
+   "icon": "/common/destiny2_content/icons/1db026964495f2aad3d33a345d0c8fd7.png",
+   "name": "Ascendant Supply"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Clan Perk",
+  "plug": {
+   "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "2931483505": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Restores your weapon to its default appearance.",
+   "icon": "/common/destiny2_content/icons/3bb544f2136894a13a73875639f376d5.png",
+   "name": "Default Ornament"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "exotic_all_skins"
+  },
+  "talentGrid": {
+   "hudDamageType": 2
+  }
+ },
+ "2937665788": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Armor configured for Guardians who believe effectiveness is measured by blast radius.\n\nPrimary Stat: Grenade\nSecondary Stat: Super",
+   "icon": "/common/destiny2_content/icons/cbf4f03459ab2818a3d37b7362b2aa93.png",
+   "name": "Grenadier"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_archetypes"
+  }
+ },
+ "2938480696": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Rapid precision hits temporarily increase stability and reload speed substantially.",
+   "icon": "/common/destiny2_content/icons/de22847fa94634a487758041887bcdaa.png",
+   "name": "Rapid Hit"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "3018763559": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Apply this weapon mod to add a celebratory visual effect when defeating combatants.\n\nThis mod can only be applied to tier 5 weapons.",
+   "icon": "/common/destiny2_content/icons/c6c671f8194841b01576fe7167e13ecb.png",
+   "name": "Sparks Everlasting"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Combat Flair",
+  "plug": {
+   "plugCategoryIdentifier": "weapon_tiering_kill_vfx"
+  }
+ },
+ "3040080535": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "A grenade that cures allies on impact and creates an Orb of benevolent Solar Light, granting restoration to allies when picked up.",
+   "icon": "/common/destiny2_content/icons/d7fa54aea967c101aeafcbc1163508d6.jpg",
+   "name": "Healing Grenade"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Solar Grenade | Light Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.grenades"
+  }
+ },
+ "3049715579": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 1,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/d63292c9248c5e3ae823605307140199.jpg",
+   "name": "Praxic Blade"
+  },
+  "equippingBlock": {
+   "ammoType": 2
+  },
+  "inventory": {
+   "bucketTypeHash": 1498876634,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 18,
+  "itemType": 3,
+  "itemTypeDisplayName": "Sword"
+ },
+ "3121760799": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Increases this armor's Tuned stat at the cost of a small amount of the Health stat.",
+   "icon": "/common/destiny2_content/icons/0899571e750ec89a444483bc8c0710ce.png",
+   "name": "+Weapons / -Health"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "core.gear_systems.armor_tiering.plugs.tuning.mods"
+  }
+ },
+ "3122197216": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/32759b0ce261d185ac8a06b7dc9cafb4.png",
+   "name": "Balanced Tuning"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "core.gear_systems.armor_tiering.plugs.tuning.mods"
+  }
+ },
+ "3124580742": {
+  "breakerType": 0,
+  "classType": 2,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this ornament to change the appearance of Solipsism. Once you get an ornament, it's unlocked for all characters on your account.",
+   "icon": "/common/destiny2_content/icons/9d56ec83691686350117db877856f527.jpg",
+   "name": "Curs\u00e8d Chitin"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Warlock Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_exotic_class"
+  }
+ },
+ "31662759": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b17ff3104a8cb0b13424e484d138b343.jpg",
+   "name": "Denier of Futurity"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 2025709351,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 22,
+  "itemTypeDisplayName": "Vehicle"
+ },
+ "3183180185": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Allows for the configuration of equipped emotes from your entire emote collection.",
+   "icon": "/common/destiny2_content/icons/14aa589109bbd9e95df0757b23511b73.jpg",
+   "name": "Emotes"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 1107761855,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 0,
+  "itemTypeDisplayName": "Emote Collection"
+ },
+ "3194530172": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/fe0331978affdc68f1825a8a94e444c9.png",
+   "name": "Solar Resistance"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Chest Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_chest"
+  }
+ },
+ "3220576445": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this shader to change the color of your gear.",
+   "icon": "/common/destiny2_content/icons/7b15975590f35f035c3238da5f3e33a7.jpg",
+   "name": "Mediant Flourish"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v900.shaders.activities.raid.legendary.shader0",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Shader",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
+  }
+ },
+ "3266153492": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Upgrade this armor to improve its 3 lowest stats by 1, up to a maximum of 5 in each when upgraded to a Masterwork.",
+   "icon": "/common/destiny2_content/icons/171c66ca05570c05c95b262ac24d761f.jpg",
+   "name": "Upgrade Armor"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v460.plugs.armor.masterworks"
+  }
+ },
+ "3267421167": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon can fire longer distances.\n  \u2022  Increases range",
+   "icon": "/common/destiny2_content/icons/d85024478504205359c7fb52dbc4f6b6.png",
+   "name": "Accurized Rounds"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Magazine",
+  "plug": {
+   "plugCategoryIdentifier": "magazines"
+  }
+ },
+ "3268768926": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Melee damage from this weapon applies an elemental effect that matches your equipped Super.\n\n\u2022 [Arc] Grants Bolt Charge.\n\u2022 [Solar] Scorches targets.\n\u2022 [Void] Weakens targets.\n\u2022 [Stasis] Slows targets.\n\u2022 [Strand] Severs targets.",
+   "icon": "/common/destiny2_content/icons/b620bf71907abfed007939c36f5654fd.png",
+   "name": "Impact Core"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Power Core",
+  "plug": {
+   "plugCategoryIdentifier": "v950.new.sword0.perk_upgrades"
+  }
+ },
+ "3297559996": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Take an offensive form, adjusting your tang and grip to focus on your attack.\n\n\u2022 Landing three melee or throw attacks grants ammo to this weapon.\n\u2022 Increases damage against bosses and vehicles.",
+   "icon": "/common/destiny2_content/icons/db351fc86b151713e9f2eaff80f237cb.png",
+   "name": "Offensive Form"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Praxic Blade Form",
+  "plug": {
+   "plugCategoryIdentifier": "v950.new.sword0.forms"
+  }
+ },
+ "3399528164": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Stable barrel attachment.\n  \u2022  Increases stability\n  \u2022  Moderately controls recoil\n  \u2022  Slightly decreases handling speed",
+   "icon": "/common/destiny2_content/icons/0b451cbccc7f11f6aec9c153e59474cb.png",
+   "name": "Chambered Compensator"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Barrel",
+  "plug": {
+   "plugCategoryIdentifier": "barrels"
+  }
+ },
+ "3418165135": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Increased damage against bosses, vehicles, and Guardians with their Super active. Stability is improved. Swords have improved guard resistance.",
+   "icon": "/common/destiny2_content/icons/bc5130b227ee577f2678ec2d2c97bf4a.png",
+   "name": "Vorpal Weapon"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "3437088061": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this ornament on any eligible Legendary armor item to change its appearance. Once you get a universal ornament, it's unlocked for all characters of the relevant class on your account.",
+   "icon": "/common/destiny2_content/icons/3171bae66cb955584f3919261204a628.jpg",
+   "name": "Valkyrie's Descent Boots"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Warlock Universal Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_legs"
+  }
+ },
+ "3457794063": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/bc98aeba33ecaaf152af49aee09b4e6b.png",
+   "name": "Skirmisher Armorer"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Economic Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_economic"
+  }
+ },
+ "3520307277": {
+  "breakerType": 0,
+  "classType": 2,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/97c53f7d497cbd9df50d347f90e50772.jpg",
+   "name": "Swordmaster's Cover"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 2391762223
+  },
+  "inventory": {
+   "bucketTypeHash": 3448274439,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 26,
+  "itemType": 2,
+  "itemTypeDisplayName": "Helmet",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_head"
+  }
+ },
+ "3520505385": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/be73a9d4405325fc44120e972dc3d7a5.png",
+   "name": "Wombo Detector"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Tracking Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_tracking"
+  }
+ },
+ "3530948111": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Fires a three-round burst.",
+   "icon": "/common/destiny2_content/icons/967fb4abc6ab98f74639d6c08e5f56ee.png",
+   "name": "Adaptive Burst"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Intrinsic",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "3544049564": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "The first clan bounty completed each week grants an Exotic engram.",
+   "icon": "/common/destiny2_content/icons/61e03643257b43303894e81b3011a1c5.png",
+   "name": "Bountiful Bounties"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Clan Perk",
+  "plug": {
+   "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "3545404847": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Available once the Ghost shell has been fully Masterworked.",
+   "icon": "/common/destiny2_content/icons/7dd29c9e234b4f8ab9b8f5aa399aaec4.png",
+   "name": "Activity Mod Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Activity Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_activity_fake"
+  }
+ },
+ "3581929919": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Dealing sustained damage more quickly scorches the target. Dealing damage to a scorched target inflicts scorch.",
+   "icon": "/common/destiny2_content/icons/f7a2484668486f64020a612bd3dd5ab9.png",
+   "name": "Burning Ambition"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "3644045871": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Sling a woven needle that will embed in your target, unraveling them. Activate your melee ability again to chain up to two additional attacks.",
+   "icon": "/common/destiny2_content/icons/e996524beb9d4371b1adc1212a6accdf.png",
+   "name": "Arcane Needle"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.melees.warlock.prism0",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Strand Melee | Darkness Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.melee"
+  },
+  "talentGrid": {
+   "hudDamageType": 7
+  }
+ },
+ "3696633656": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Achieve harmony by dealing damage with Light and Dark damage types in equal measure or by applying subclass buffs to your allies. Kinetic damage generates both Light and Dark energy.\n\nWhile Transcendence is active, your grenade is replaced by a unique Prismatic grenade that deals both Light and Dark damage. Dealing melee damage while transcendent greatly increases your grenade energy regeneration, and vice versa. Defeating targets while transcendent extends its duration.",
+   "icon": "/common/destiny2_content/icons/cecb681426570c4cdde540284e6407c4.jpg",
+   "name": "Transcendence"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.builds.dummies.transcendence_ability",
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 20,
+  "itemTypeDisplayName": "Utility Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.transcendence"
+  }
+ },
+ "3719981603": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/6df50890b5e91f346630ab461cd78388.png",
+   "name": "Concussive Dampener"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Chest Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_chest"
+  }
+ },
+ "3730191905": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this tier 5 weapon ornament to change the appearance of this weapon.",
+   "icon": "/common/destiny2_content/icons/575aa36e701cfc4fe4e62a83f423ae97.jpg",
+   "name": "Trustee"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v500.weapons.activities.raid.scout_rifle0_skins"
+  }
+ },
+ "3794918801": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "A tang suitable for taking the offensive stance against opponents favoring attack.",
+   "icon": "/common/destiny2_content/icons/108dc153c6639da4e15d02b68edf5754.png",
+   "name": "Fencing Tang"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Tang",
+  "plug": {
+   "plugCategoryIdentifier": "v950.new.sword0.blades"
+  }
+ },
+ "3834273538": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/379e370534eed91f6ac666196ce56d3d.png",
+   "name": "Riposte"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "3834273539": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b59af0e3a3880873b9055c3e0697b216.png",
+   "name": "Power from Pain"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "3834273540": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/cf96e4e6ccba04d4948a7bb0ca90761b.png",
+   "name": "Kinetic Synthesis"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "3846969570": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Greatly improves impact.",
+   "icon": "/common/destiny2_content/icons/f9bb7d6f66e0d5236a12165fdf815871.png",
+   "name": "Forceful Blade III"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Blade Focus",
+  "plug": {
+   "plugCategoryIdentifier": "v950.new.sword0.stat_upgrades"
+  }
+ },
+ "3893112950": {
+  "breakerType": 0,
+  "classType": 2,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/652406349e99e3db0c3198f78af4eeae.png",
+   "name": "Prismatic Warlock"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 3284755031,
+   "stackUniqueLabel": "v800.builds.prism.warlock.build0",
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 16,
+  "itemTypeDisplayName": "Warlock Subclass",
+  "talentGrid": {
+   "hudDamageType": 1
+  }
+ },
+ "3920852688": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Fires full auto with deeper ammo reserves. Faster reload when weapon is empty.",
+   "icon": "/common/destiny2_content/icons/801d62d1f9783bee81d5700c54c24fda.png",
+   "name": "Rapid-Fire Frame"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Intrinsic",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "3926153598": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 2,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/1185746c3310d4f943a81ef7892cedf1.jpg",
+   "name": "Boomslang-4fr"
+  },
+  "equippingBlock": {
+   "ammoType": 3
+  },
+  "inventory": {
+   "bucketTypeHash": 953998645,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 22,
+  "itemType": 3,
+  "itemTypeDisplayName": "Linear Fusion Rifle"
+ },
+ "3938489430": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/0abfcdf8c4c447ad5a1ec31cd1774ef5.png",
+   "name": "Hands-On"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Helmet Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_head"
+  }
+ },
+ "3948592842": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Raid Banners sold from Hawthorne cost less.",
+   "icon": "/common/destiny2_content/icons/b50715784954061004dfa16f1521d0cb.png",
+   "name": "Live Fire Sale"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Clan Perk",
+  "plug": {
+   "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "3996862463": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this shader to change the color of your gear.",
+   "icon": "/common/destiny2_content/icons/aa15737efbe2f98de70aedc078aa3cdb.jpg",
+   "name": "Ancient Defender"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v460.shaders.activities.raid.legendary.shader1",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Shader",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
+  }
+ },
+ "4026763349": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "The battle standard for your clan. As your clan levels up, this banner unlocks new clan perks each season.",
+   "icon": "/common/destiny2_content/icons/1c411cbe5e5dd9b44a45bf8873bd98a8.jpg",
+   "name": "Clan Banner"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 4292445962,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 17,
+  "itemTypeDisplayName": "Clan Banner"
+ },
+ "4030660414": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Increases this armor's Tuned stat at the cost of a small amount of the Health stat.",
+   "icon": "/common/destiny2_content/icons/da62cf43e206687a9756a41a2af68048.png",
+   "name": "+Class / -Health"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "core.gear_systems.armor_tiering.plugs.tuning.mods"
+  }
+ },
+ "4043342755": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Inserting a Weapon Level Boost into this socket will increase the weapon's level.",
+   "icon": "/common/destiny2_content/icons/756cf93b3a129ef06bbb56c02648716d.png",
+   "name": "Empty Weapon Level Boost Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "crafting.plugs.weapons.mods.transfusers.level"
+  }
+ },
+ "4046357305": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Collecting an Orb of Power causes you to gain 1 temporary Armor Charge.",
+   "icon": "/common/destiny2_content/icons/d50bb589a2497a809716093ca7ea5300.png",
+   "name": "Weapons Font"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Leg Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_legs"
+  }
+ },
+ "4160037471": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/937ab8f203bfc29918f9aa07d349cbb8.png",
+   "name": "Outreach"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Class Item Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_class_item"
+  }
+ },
+ "4164883102": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Increases this armor's Tuned stat at the cost of a small amount of the Health stat.",
+   "icon": "/common/destiny2_content/icons/a339673742be4240d00887b9bed0a19d.png",
+   "name": "+Melee / -Health"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "core.gear_systems.armor_tiering.plugs.tuning.mods"
+  }
+ },
+ "4172973116": {
+  "breakerType": 0,
+  "classType": 2,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b5b69e7a48e9aa956923bccb93247b1b.jpg",
+   "name": "Swordmaster's Gloves"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 2391762223
+  },
+  "inventory": {
+   "bucketTypeHash": 3551918588,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 27,
+  "itemType": 2,
+  "itemTypeDisplayName": "Gauntlets",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_arms"
+  }
+ },
+ "4227065942": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Armor configured for Guardians who prioritize paracausal attunement.\n\nPrimary Stat: Super\nSecondary Stat: Melee",
+   "icon": "/common/destiny2_content/icons/b5feb81f684d767d6212ca138f30b34c.png",
+   "name": "Paragon"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_archetypes"
+  }
+ },
+ "4287799666": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/66714f030b79a1517c657f1378216cca.png",
+   "name": "Melee Mod"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_general"
+  }
+ },
+ "446078514": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "458552176": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "While guarding, this Sword converts incoming projectiles into bolts that reflect to where you're aiming.",
+   "icon": "/common/destiny2_content/icons/06fb5698cab3ee5d216b103c1498610d.png",
+   "name": "Cormorant Reversal"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "461595545": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon reloads itself at an improved rate over time, up to double capacity.",
+   "icon": "/common/destiny2_content/icons/9b0c09a784bc7af2f7d038e3626832a9.png",
+   "name": "Reconstruction"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "462856101": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "465064626": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "5333292": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Jump while airborne to activate Glide and start an airborne drift with strong directional control.",
+   "icon": "/common/destiny2_content/icons/393d6a9a013b5ecef2e6c23119ae751d.png",
+   "name": "Strafe Glide"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Movement Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.movement"
+  }
+ },
+ "54024075": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Damaging a combatant with this weapon has a small chance to reload the magazine and increase movement speed while aiming down sights by an improved amount. Bows receive improved draw speed, and Swords receive improved charge rate while this perk is active.",
+   "icon": "/common/destiny2_content/icons/74c8d92641cdd221a65ccc0b0d131d45.png",
+   "name": "Veist Stinger"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Origin Trait",
+  "plug": {
+   "plugCategoryIdentifier": "origins"
+  }
+ },
+ "573576346": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/f8087518d5a534befaba19d634496170.jpg",
+   "name": "Sagira's Shell"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 4023194814,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 24,
+  "itemTypeDisplayName": "Ghost Shell"
+ },
+ "60382475": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/9ca023022b4bd50334375f3fb883191d.jpg",
+   "name": "Disciple's Judgment"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v630.plugs.emotes.rhulk_kick0",
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
+  }
+ },
+ "633101315": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Collecting an Orb of Power causes you to gain 1 temporary Armor Charge.",
+   "icon": "/common/destiny2_content/icons/fe487c4b4ad9a64f597df822d9f098b2.png",
+   "name": "Melee Font"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Arms Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_arms"
+  }
+ },
+ "640369263": {
+  "breakerType": 0,
+  "classType": 2,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/921a1c5e0de0a61d31ffe735a3633b9c.jpg",
+   "name": "Sage Protector Robes"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 4222859846
+  },
+  "inventory": {
+   "bucketTypeHash": 14239492,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 28,
+  "itemType": 2,
+  "itemTypeDisplayName": "Chest Armor",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_chest"
+  }
+ },
+ "640727985": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "After three rapid light melee attacks, quickly [Heavy Attack]  to execute a heavy melee combo.",
+   "icon": "/common/destiny2_content/icons/73125e9ded36853165b98c50f6bff64c.png",
+   "name": "Cormorant Combo"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "659359923": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon has been shaped by the Relic in the Enclave on Mars.\n\nIncrease the weapon level by equipping and using this weapon in combat and activities. Higher levels unlock more components and perks to shape or reshape a weapon.",
+   "icon": "/common/destiny2_content/icons/4cba0ecaa4eca53f6e0914bac59c9145.png",
+   "name": "Shaped Weapon"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "crafting.plugs.frame_identifiers"
+  }
+ },
+ "697983358": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Channel a paracausal grip on the hilt to bolster attack, maintaining your offensive power for longer.",
+   "icon": "/common/destiny2_content/icons/8e8a95a4590ac719eb72ca52877d7fa2.png",
+   "name": "Offensive Grip"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Grips",
+  "plug": {
+   "plugCategoryIdentifier": "v950.new.sword0.guards"
+  }
+ },
+ "715484621": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/1e48328eae62dde397c391e88b6056b3.jpg",
+   "name": "Natural 20"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v800.plugs.emotes.roll_for_weapon0",
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
+  }
+ },
+ "720825311": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Unlock the potential of this armor and enable Artifice mods, a set of stat-enhancing mods with no energy cost.",
+   "icon": "/common/destiny2_content/icons/de3e37dfd56978f1d9306fb5da7cc265.jpg",
+   "name": "Upgrade to Artifice Armor"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifice Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.artifice.exotic"
+  }
+ },
+ "747777893": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this ornament on any eligible Legendary armor item to change its appearance. Once you get a universal ornament, it's unlocked for all characters of the relevant class on your account.",
+   "icon": "/common/destiny2_content/icons/f63832941192115d14101d746db02272.jpg",
+   "name": "Valkyrie's Descent Robes"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Warlock Universal Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_warlock_chest"
+  }
+ },
+ "780815822": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon's perks can be enhanced with higher Gear Tier levels.",
+   "icon": "/common/destiny2_content/icons/71dd675f6d9177fddb6be7d0893b92a8.jpg",
+   "name": "Empty Gear Tier Upgrade"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "weapon_tiering.plugs.mods.enhancers"
+  }
+ },
+ "790664812": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/5730fd352ae02a03290387ea81d39468.jpg",
+   "name": "Lightning Surge"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Arc Aspect | Light Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.aspects"
+  }
+ },
+ "790664815": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/178bb0e78e55c5b960aa6f42660b9b66.jpg",
+   "name": "Feed the Void"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Void Aspect | Light Ability",
+  "plug": {
+   "plugCategoryIdentifier": "warlock.prism.aspects"
+  }
+ },
+ "89777927": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "[Heavy Attack]  : Throw your Praxic Blade, which will seek out multiple targets. Attacking recalls the Blade while it is in flight.\n[Heavy Attack]  : Hold to perform a more powerful throw, sending the Blade on a straight path in the direction of your aim. Releasing the button recalls the Blade.",
+   "icon": "/common/destiny2_content/icons/2d82ac01b1d4850870e1eaff9d2b13f1.png",
+   "name": "Ranged Weapon"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "905869860": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon tracks the number of enemies you defeated with it.",
+   "icon": "/common/destiny2_content/icons/2fa9b8e2b358de10643b14a058094f4b.png",
+   "name": "Kill Tracker"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.trackers"
+  }
+ },
+ "92920300": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this tier 5 weapon ornament to change the appearance of Boomslang-4fr. Once you get an ornament, it's unlocked for all characters on your account.",
+   "icon": "/common/destiny2_content/icons/71511404da16c1acbd262abca394e987.jpg",
+   "name": "Achronal Boomslang-4fr"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Weapon Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "v900_fireteam_linear_fusion_rifle0_skins"
+  }
+ }
+}

@@ -1,0 +1,80 @@
+{
+ "2391762223": {
+  "displayProperties": {
+   "description": "",
+   "name": "Swordmaster",
+   "iconHash": 0,
+   "hasIcon": false
+  },
+  "setItems": [
+   2697887125,
+   1604556427,
+   385833378,
+   1343009820,
+   445076215,
+   2347181257,
+   262826703,
+   1934339678,
+   1883377784,
+   2639123099,
+   4172973116,
+   1504698788,
+   2248528889,
+   3520307277,
+   3558781766
+  ],
+  "setPerks": [
+   {
+    "requiredSetCount": 2,
+    "sandboxPerkHash": 3916960436
+   },
+   {
+    "requiredSetCount": 4,
+    "sandboxPerkHash": 3916960437
+   }
+  ],
+  "hash": 2391762223,
+  "index": 15,
+  "redacted": false,
+  "blacklisted": false
+ },
+ "4222859846": {
+  "displayProperties": {
+   "description": "",
+   "name": "Sage Protector",
+   "iconHash": 0,
+   "hasIcon": false
+  },
+  "setItems": [
+   2354448750,
+   1867581826,
+   1091577811,
+   112779239,
+   142559592,
+   919358834,
+   279565494,
+   3945736543,
+   4118260899,
+   1320597132,
+   2249815529,
+   640369263,
+   1887527934,
+   1786011928,
+   2541757371
+  ],
+  "setPerks": [
+   {
+    "requiredSetCount": 2,
+    "sandboxPerkHash": 109046537
+   },
+   {
+    "requiredSetCount": 4,
+    "sandboxPerkHash": 109046536
+   }
+  ],
+  "hash": 4222859846,
+  "index": 14,
+  "redacted": false,
+  "blacklisted": false
+ }
+}
