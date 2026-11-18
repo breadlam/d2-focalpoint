@@ -154,19 +154,26 @@ resolve hashes in ad-hoc SQL.
 
 ## Example queries
 
+> **Item names are not unique.** Reissued or versioned items share a name
+> across several hashes (e.g. *Nothing Manacles* has more than one), so match
+> names with `IN (SELECT item_hash FROM item WHERE name = ...)`, never `=`.
+
 ```sql
 -- Builds using Nothing Manacles with a specific aspect (facet intersection).
 SELECT b.build_id, item_names(b.aspect_hashes) AS aspects, item_names(b.fragment_hashes) AS fragments
 FROM build b
-WHERE b.exotic_armor_hash = (SELECT item_hash FROM item WHERE name = 'Nothing Manacles' AND is_exotic)
-  AND list_contains(b.aspect_hashes, (SELECT item_hash FROM item WHERE name = 'Chaos Accelerant' LIMIT 1));
+WHERE b.exotic_armor_hash IN (SELECT item_hash FROM item WHERE name = 'Nothing Manacles')
+  AND list_has_any(b.aspect_hashes, (SELECT list(item_hash) FROM item WHERE name = 'Chaos Accelerant'))
+LIMIT 10;
 
--- The same filter in long form: builds containing ALL of a set of components.
-SELECT build_id
-FROM build_component
-WHERE component_hash IN (300502917, 3291545503)
-GROUP BY build_id
-HAVING count(DISTINCT component_hash) = 2;
+-- The same filter in long form: builds containing ALL of a set of components
+-- (here: any version of each named component).
+SELECT c.build_id
+FROM build_component c
+JOIN item i ON i.item_hash = c.component_hash
+WHERE i.name IN ('Nothing Manacles', 'Chaos Accelerant')
+GROUP BY c.build_id
+HAVING count(DISTINCT i.name) = 2;
 
 -- Most-used exotic armor per class among clears, weighted by time in use.
 SELECT b.class, item_name(b.exotic_armor_hash) AS exotic, round(sum(rb.duration_s) / 3600) AS hours
@@ -174,14 +181,14 @@ FROM run_build rb
 JOIN build b USING (build_id)
 JOIN run_player p USING (instance_id, membership_id)
 WHERE p.is_clear
-GROUP BY ALL
+GROUP BY 1, 2
 QUALIFY row_number() OVER (PARTITION BY b.class ORDER BY hours DESC) <= 5
 ORDER BY b.class, hours DESC;
 
 -- Weekly usage trend of a weapon across all archived raid/dungeon PGCRs.
-SELECT date_trunc('week', p.started_at) AS week, count(*) AS uses, sum(w.kills) AS kills
+SELECT date_trunc('week', p.started_at)::DATE AS week, count(*) AS uses, sum(w.kills) AS kills
 FROM run_player_weapon w
 JOIN run_player p USING (instance_id, membership_id, character_id)
-WHERE w.item_hash = (SELECT item_hash FROM item WHERE name = 'Gjallarhorn' LIMIT 1)
+WHERE w.item_hash IN (SELECT item_hash FROM item WHERE name = 'Gjallarhorn')
 GROUP BY 1 ORDER BY 1;
 ```

@@ -55,10 +55,24 @@ statistics later.
 
 ## Performance notes
 
-On the original 256-core / 1 TB machine with the work dir on tmpfs, a full
-import takes on the order of ten minutes; staging from the CIFS share is
-bandwidth-bound (~100 MB/s) the first time. On smaller machines, set
-`--memory-limit` and `--threads` and expect proportionally longer runs.
+Measured on the original 256-core / 1 TB machine with the work dir on tmpfs:
+
+| | |
+|---|---|
+| full import, sources already staged | ≈ 2.5 min (141–158 s) |
+| first run | add the time to pull ≈ 80 GB from the share |
+| published database | ≈ 11 GB |
+| peak work-dir usage | ≈ 150 GB (staged sources + staging DB + output) |
+
+Extraction is bounded by DuckDB's row-by-row appender, not by reading or
+parsing: heavy tables get one writer thread per 8 cores
+(`sink::staging_writers`). The transform step is DuckDB SQL and uses all
+cores. On smaller machines set `--memory-limit` and `--threads` and expect
+proportionally longer runs.
+
+The import is deterministic: two independent full imports of the same
+backups produce identical tables (verified by comparing an order-independent
+hash of every table).
 
 ## Re-importing after code changes
 
