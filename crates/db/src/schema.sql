@@ -5,6 +5,8 @@
 --     BIGINT; every observed value is below 2^63.
 --   * Manifest hashes are UINTEGER (they are u32 in the Bungie API).
 --   * Times are TIMESTAMP in UTC. `started_at` is the PGCR `period`.
+--   * Numeric values reported by Bungie are INTEGER even when small: real
+--     reports contain sentinel/garbage values (e.g. light_level 65535).
 --   * Enumerations are VARCHAR (DuckDB dictionary-compresses them); allowed
 --     values are documented in docs/schema.md.
 --   * Large fact tables carry no PRIMARY KEY (DuckDB's ART indexes are costly
@@ -149,19 +151,19 @@ CREATE TABLE run (
     reference_hash         UINTEGER,            -- referenceId
     mode                   INTEGER,
     modes                  INTEGER[],
-    difficulty_tier        SMALLINT,
+    difficulty_tier        INTEGER ,
     duration_s             INTEGER,
-    player_count           SMALLINT,            -- PGCR playerCount (as reported)
-    roster_size            SMALLINT,            -- entries in the report
+    player_count           INTEGER ,            -- PGCR playerCount (as reported)
+    roster_size            INTEGER ,            -- entries in the report
     is_solo                BOOLEAN,             -- roster_size = 1
     started_from_beginning BOOLEAN,
     is_private             BOOLEAN,
-    starting_phase_index   SMALLINT,
+    starting_phase_index   INTEGER ,
     skull_hashes           UINTEGER[],
     has_boon               BOOLEAN,
     equipment_locked       BOOLEAN,
-    challenge_count        SMALLINT,
-    feat_count             SMALLINT,
+    challenge_count        INTEGER ,
+    feat_count             INTEGER ,
     qualified_target       VARCHAR,   -- production target_name when the run met that target's gates
     source                 VARCHAR   NOT NULL,  -- archive | tracked (see docs/schema.md)
     is_tracked             BOOLEAN   NOT NULL   -- also present in production's run table
@@ -175,8 +177,8 @@ CREATE TABLE run_player (
     started_at        TIMESTAMP NOT NULL,  -- denormalized from run
     activity_hash     UINTEGER  NOT NULL,  -- denormalized from run
     class             VARCHAR,
-    light_level       SMALLINT,
-    character_level   SMALLINT,
+    light_level       INTEGER ,
+    character_level   INTEGER ,
     emblem_hash       UINTEGER,
     kills             INTEGER NOT NULL,
     deaths            INTEGER NOT NULL,
@@ -187,7 +189,7 @@ CREATE TABLE run_player (
     grenade_kills     INTEGER NOT NULL,
     ability_kills     INTEGER NOT NULL,
     completed         BOOLEAN NOT NULL,
-    completion_reason SMALLINT,
+    completion_reason INTEGER ,
     is_clear          BOOLEAN NOT NULL,   -- completed AND completion_reason = 0
     time_played_s     INTEGER,
     start_s           INTEGER,
@@ -281,13 +283,13 @@ CREATE TABLE segment (
     duration_s    INTEGER  NOT NULL,
     build_id      BIGINT   NOT NULL,
     loadout_id    BIGINT   NOT NULL,
-    power         SMALLINT,
-    stat_weapons  SMALLINT,
-    stat_health   SMALLINT,
-    stat_class    SMALLINT,
-    stat_grenade  SMALLINT,
-    stat_super    SMALLINT,
-    stat_melee    SMALLINT
+    power         INTEGER ,
+    stat_weapons  INTEGER ,
+    stat_health   INTEGER ,
+    stat_class    INTEGER ,
+    stat_grenade  INTEGER ,
+    stat_super    INTEGER ,
+    stat_melee    INTEGER 
 );
 
 -- Builds used per player-run, aggregated over the timeline. Natural key:
@@ -319,9 +321,9 @@ CREATE TABLE activity_history (
     deaths            INTEGER,
     assists           INTEGER,
     duration_s        INTEGER,
-    completion_reason SMALLINT,
+    completion_reason INTEGER ,
     completed         BOOLEAN,
-    player_count      SMALLINT
+    player_count      INTEGER 
 );
 
 -- ---------------------------------------------------------------------------
