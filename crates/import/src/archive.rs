@@ -2,11 +2,15 @@
 //! the live `pgcr_raw` table) → staging rows with `src = archive`.
 //!
 //! Shards overlap: whenever the nightly export's delete step failed, the same
-//! rows were exported again the next night (see docs/data-sources.md). Reports
-//! are immutable, so the first copy of each instance id wins and later copies
-//! are skipped before they are even decompressed.
+//! rows were exported again the next night, and some reports were fetched
+//! again weeks later (see docs/data-sources.md). About 10 % of duplicate copies
+//! are not byte-identical: Bungie re-renders player identity (names, emblems,
+//! light level) at fetch time, and a few rosters differ. To stay
+//! deterministic, a cheap pre-pass picks one copy per instance — the most
+//! recently fetched, ties broken by source order — and only that copy is
+//! decompressed and parsed.
 
-use std::collections::HashSet;
+use std::cmp::Reverse;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -26,7 +30,6 @@ use crate::stage::StagedSources;
 
 const CHUNK_ROWS: i64 = 20_000;
 const BATCH: usize = 8_192;
-const SHARDS: usize = 256;
 
 /// Counters from the archive stage.
 #[derive(Debug, Default, Clone)]
@@ -42,31 +45,57 @@ pub struct ArchiveStats {
     pub error_examples: Vec<(i64, String)>,
 }
 
-/// A concurrent set of instance ids, sharded to keep lock contention low.
-struct SeenSet(Vec<Mutex<HashSet<i64>>>);
+/// One stored copy of a report.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct StoredCopy {
+    instance_id: i64,
+    fetched_at: i64,
+    file: u32,
+    rowid: i64,
+}
 
-impl SeenSet {
-    fn new() -> Self {
-        Self((0..SHARDS).map(|_| Mutex::new(HashSet::new())).collect())
+/// Choose the copy of each instance to import: the most recently fetched
+/// (current player identities), ties broken by source order, then rowid.
+/// Returns, for each file, the sorted rowids of its winning copies.
+fn select_copies(mut copies: Vec<StoredCopy>, files: usize) -> Vec<Vec<i64>> {
+    copies.par_sort_unstable_by_key(|c| (c.instance_id, Reverse(c.fetched_at), c.file, c.rowid));
+    let mut winners = vec![Vec::new(); files];
+    let mut last = None;
+    for c in copies {
+        if last != Some(c.instance_id) {
+            winners[c.file as usize].push(c.rowid);
+            last = Some(c.instance_id);
+        }
     }
+    winners.par_iter_mut().for_each(|w| w.sort_unstable());
+    winners
+}
 
-    fn shard(&self, id: i64) -> &Mutex<HashSet<i64>> {
-        &self.0[(id as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15) as usize % SHARDS]
-    }
-
-    fn contains(&self, id: i64) -> bool {
-        self.shard(id).lock().expect("seen-set lock").contains(&id)
-    }
-
-    /// Claim `id`; returns true only for the first claimant.
-    fn first_sight(&self, id: i64) -> bool {
-        self.shard(id).lock().expect("seen-set lock").insert(id)
-    }
+/// Read `(rowid, instance_id, fetched_at)` of every stored copy.
+fn scan_copies(dbs: &[PathBuf]) -> Result<Vec<StoredCopy>> {
+    let per_file = dbs
+        .par_iter()
+        .enumerate()
+        .map(|(file, db)| -> Result<Vec<StoredCopy>> {
+            let conn = sqlite::open(db)?;
+            let mut stmt =
+                conn.prepare("SELECT rowid, instance_id, coalesce(fetched_at, 0) FROM pgcr_raw")?;
+            let rows = stmt.query_map([], |r| {
+                Ok(StoredCopy {
+                    rowid: r.get(0)?,
+                    instance_id: r.get(1)?,
+                    fetched_at: r.get(2)?,
+                    file: file as u32,
+                })
+            })?;
+            Ok(rows.collect::<rusqlite::Result<Vec<_>>>()?)
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(per_file.into_iter().flatten().collect())
 }
 
 struct Task {
-    db: PathBuf,
-    table: &'static str,
+    file: usize,
     lo: i64,
     hi: i64,
 }
@@ -92,18 +121,18 @@ pub fn load(
             .map(|(_, p)| p.clone()),
     );
 
+    let spinner = progress.spinner("archived PGCRs");
+    spinner.set_message("choosing one copy per report");
+    let copies = scan_copies(&dbs)?;
+    let total = copies.len() as u64;
+    let winners = select_copies(copies, dbs.len());
+    spinner.finish_and_clear();
+
     let mut tasks = Vec::new();
-    let mut total = 0;
-    for db in &dbs {
+    for (file, db) in dbs.iter().enumerate() {
         let conn = sqlite::open(db)?;
-        total += sqlite::count(&conn, "pgcr_raw")?;
         for (lo, hi) in sqlite::rowid_ranges(&conn, "pgcr_raw", CHUNK_ROWS)? {
-            tasks.push(Task {
-                db: db.clone(),
-                table: "pgcr_raw",
-                lo,
-                hi,
-            });
+            tasks.push(Task { file, lo, hi });
         }
     }
 
@@ -117,18 +146,17 @@ pub fn load(
         weapons: weapon_sink.sender(),
     };
 
-    let seen = SeenSet::new();
     let read = AtomicU64::new(0);
     let dups = AtomicU64::new(0);
     let errors = AtomicU64::new(0);
     let examples = Mutex::new(Vec::new());
 
     let produced = tasks.par_iter().try_for_each(|t| -> Result<()> {
-        let conn = sqlite::open(&t.db)?;
-        let mut stmt = conn.prepare(&format!(
-            "SELECT instance_id, raw FROM \"{}\" WHERE rowid BETWEEN ?1 AND ?2",
-            t.table
-        ))?;
+        let conn = sqlite::open(&dbs[t.file])?;
+        let mut stmt = conn.prepare(
+            "SELECT rowid, instance_id, raw FROM pgcr_raw WHERE rowid BETWEEN ?1 AND ?2",
+        )?;
+        let chosen = &winners[t.file];
         let mut rows = stmt.query([t.lo, t.hi])?;
         let mut out = (
             Batcher::new(&senders.runs, BATCH),
@@ -139,23 +167,17 @@ pub fn load(
         let mut n = 0;
         while let Some(r) = rows.next()? {
             n += 1;
-            let instance_id: i64 = r.get(0)?;
-            // Cheap early skip for copies already imported; the id is only
-            // claimed after a successful parse, so a corrupt copy never
-            // shadows a good duplicate.
-            if seen.contains(instance_id) {
+            if chosen.binary_search(&r.get::<_, i64>(0)?).is_err() {
                 dups.fetch_add(1, Ordering::Relaxed);
                 continue;
             }
-            let raw = match r.get_ref(1)? {
+            let instance_id: i64 = r.get(1)?;
+            let raw = match r.get_ref(2)? {
                 ValueRef::Blob(b) | ValueRef::Text(b) => b,
                 _ => &[][..],
             };
             match pgcr::parse_stored(raw, &mut buf) {
-                Ok(p) if seen.first_sight(p.instance_id) => emit(&p, &mut out)?,
-                Ok(_) => {
-                    dups.fetch_add(1, Ordering::Relaxed);
-                }
+                Ok(p) => emit(&p, &mut out)?,
                 Err(e) => {
                     errors.fetch_add(1, Ordering::Relaxed);
                     let mut ex = examples.lock().expect("examples lock");
@@ -259,18 +281,36 @@ fn emit(p: &Pgcr, out: &mut Outputs) -> Result<()> {
 mod tests {
     use super::*;
 
+    fn copy(instance_id: i64, fetched_at: i64, file: u32, rowid: i64) -> StoredCopy {
+        StoredCopy {
+            instance_id,
+            fetched_at,
+            file,
+            rowid,
+        }
+    }
+
     #[test]
-    fn seen_set_reports_first_sight_once() {
-        let s = SeenSet::new();
-        assert!(!s.contains(17_000_000_001));
-        assert!(s.first_sight(17_000_000_001));
-        assert!(s.contains(17_000_000_001));
-        assert!(!s.first_sight(17_000_000_001));
-        assert!(s.first_sight(-5));
-        let firsts = (0..10_000i64)
-            .into_par_iter()
-            .filter(|&i| s.first_sight(i % 1000))
-            .count();
-        assert_eq!(firsts, 1000);
+    fn latest_fetch_wins_then_source_order() {
+        let copies = vec![
+            copy(1, 100, 0, 10), // older fetch of 1
+            copy(1, 200, 2, 5),  // latest fetch of 1 -> wins
+            copy(2, 50, 1, 7),   // tie on fetched_at: file 1 beats file 2
+            copy(2, 50, 2, 3),
+            copy(3, 10, 2, 9), // unique
+        ];
+        let winners = select_copies(copies, 3);
+        assert_eq!(winners, vec![vec![], vec![7], vec![5, 9]]);
+    }
+
+    #[test]
+    fn selection_is_independent_of_input_order() {
+        let mut copies: Vec<StoredCopy> = (0..1000)
+            .map(|i| copy(i % 97, i % 5, (i % 3) as u32, i))
+            .collect();
+        let a = select_copies(copies.clone(), 3);
+        copies.reverse();
+        assert_eq!(select_copies(copies, 3), a);
+        assert_eq!(a.iter().map(Vec::len).sum::<usize>(), 97);
     }
 }

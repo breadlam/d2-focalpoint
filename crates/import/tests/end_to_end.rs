@@ -191,35 +191,38 @@ fn build_backups(root: &Path) {
     create_pgcr_table(&live, false);
     drop(live);
 
-    // A pulled shard with runs 1 and 3, and the same shard re-exported into
-    // the outbox under a different run id (the duplicate-export quirk).
+    // A pulled shard with runs 1 and 3, and the same shard exported again
+    // into the outbox (the duplicate-export quirk) — except that run 3 was
+    // re-fetched later there and its report differs. The later fetch must win.
     let shard_sql = "CREATE TABLE pgcr_raw (orig_rowid INT, instance_id INT, period TEXT, \
                      director_activity_hash INT, fetched_at INT, raw BLOB)";
-    let fill =
-        |c: &Connection| {
-            for (iid, kills) in [(1_i64, 50_u32), (3, 90)] {
+    let fill = |refetched: bool| {
+        move |c: &Connection| {
+            let run3 = if refetched { (91, 2000) } else { (90, 1000) };
+            for (iid, kills, fetched_at) in [(1_i64, 50_u32, 1000_i64), (3, run3.0, run3.1)] {
                 c.execute(
-                "INSERT INTO pgcr_raw VALUES (?1, ?1, '2026-07-01T12:00:00Z', 2727361621, 0, ?2)",
-                params![iid, gzip(pgcr_json(iid, 2_727_361_621, 100, kills).as_bytes())],
-            )
-            .unwrap();
+                    "INSERT INTO pgcr_raw VALUES (?1, ?1, '2026-07-01T12:00:00Z', 2727361621, ?2, ?3)",
+                    params![iid, fetched_at, gzip(pgcr_json(iid, 2_727_361_621, 100, kills).as_bytes())],
+                )
+                .unwrap();
             }
-            // One corrupt row must be counted, not fatal.
+            // One corrupt report must be counted, not fatal.
             c.execute(
-                "INSERT INTO pgcr_raw VALUES (4, 4, '2026-07-01T12:00:00Z', 1, 0, X'1f8b0000')",
+                "INSERT INTO pgcr_raw VALUES (4, 4, '2026-07-01T12:00:00Z', 1, 1000, X'1f8b0000')",
                 [],
             )
             .unwrap();
-        };
+        }
+    };
     write_shard(
         &root.join("shards/pgcr_raw_2026-07-01_1.sqlite.gz"),
         shard_sql,
-        fill,
+        fill(false),
     );
     write_shard(
         &data.join("archive/outbox/pgcr_raw_2026-07-01_2.sqlite.gz"),
         shard_sql,
-        fill,
+        fill(true),
     );
 
     // An activity-history shard duplicating the live row plus one new row.
@@ -263,10 +266,10 @@ fn imports_a_synthetic_backup_tree() {
     };
     let report = searchlight_import::run(&opts, &Progress::hidden()).unwrap();
 
-    // Archive: 2 shards × 3 rows; the outbox copy is all duplicates, the
-    // corrupt row fails to parse in both copies.
+    // Archive: 2 shards × 3 rows → one copy per instance is parsed; only the
+    // chosen copy of the corrupt report is attempted.
     let a = report.archive.as_ref().unwrap();
-    assert_eq!((a.rows_read, a.parse_errors), (6, 2));
+    assert_eq!((a.rows_read, a.duplicates, a.parse_errors), (6, 3, 1));
     assert_eq!(a.runs, 2);
 
     let db = Database::open_read_only(&out).unwrap();
@@ -302,6 +305,11 @@ fn imports_a_synthetic_backup_tree() {
         0
     );
     assert_eq!(count(&db, "SELECT count(*) FROM run_player_weapon"), 3);
+    // The later re-fetch of run 3 won.
+    assert_eq!(
+        count(&db, "SELECT kills FROM run_player WHERE instance_id = 3"),
+        91
+    );
 
     // Builds: two segments, two distinct builds, run 2 flagged.
     assert_eq!(count(&db, "SELECT count(*) FROM segment"), 2);

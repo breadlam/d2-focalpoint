@@ -32,7 +32,9 @@ searchlight import --backups /mnt/saspool/projects/searchlight-backups
    appender threads (one per 8 cores):
    - *manifest* → `item`, `item_set*`, `sandbox_perk`, `stat`, `activity_mode`;
    - *tracked* → production's `run` / `run_entry` / `player` / slate / skulls;
-   - *archive* → all raw PGCRs, deduplicated by instance id before parsing;
+   - *archive* → all raw PGCRs; a pre-pass reads only `(instance_id,
+     fetched_at)` and picks the latest-fetched copy of each report, so only
+     that copy is decompressed and parsed;
    - *history* → all `player_activity` rows (live + shards);
    - *builds* → each `build_segment` is parsed, projected to its build and
      fingerprinted; builds and exact loadouts are deduplicated, and a second

@@ -41,6 +41,9 @@ Key properties:
   behind, keeping memory flat. Row-by-row appending is the costliest step,
   so heavy tables get one writer per 8 cores (a CPU trace showed 256
   producers idling behind 8 writers before this was tuned).
+- **Deterministic.** Where sources disagree (re-fetched reports), a fixed
+  rule picks the winner before any parallel work, so re-imports of the same
+  backups produce the same database.
 - **Declarative merge rules.** All dedupe/precedence logic is SQL in one file,
   readable without the Rust around it.
 - **Fail loudly on invariants, record data gaps.** Validation errors abort;

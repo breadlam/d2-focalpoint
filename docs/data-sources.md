@@ -66,8 +66,14 @@ live rows (disjoint) → **17.73M distinct reports**, 2025-03-19 → 2026-09-17
 1. **Duplicated shard rows.** From late July the server disk sat at 95–100 %.
    When the export's delete step failed (`database or disk is full`,
    `database is locked`), the rows stayed live and were exported *again* the
-   next night under a new run id. ~10 % of shard rows are duplicates; the
-   importer keeps the first copy of each instance id (reports are immutable).
+   next night under a new run id; some reports were also fetched again weeks
+   later. 1.9M of 19.6M stored rows (≈10 %) are extra copies of 1.64M
+   instances. Copies are *not* always identical: in a 20k sample, 90 % were
+   byte-identical, 10 % differed only in player identity (Bungie re-renders
+   names, emblems and light level at fetch time), and 0.02 % had a different
+   roster; none differed in stats for the same roster. The importer keeps the
+   **most recently fetched** copy of each instance (ties broken by source
+   order), chosen in a pre-pass so the result is deterministic.
    Export failures were otherwise fail-safe: rows were only deleted after a
    verified shard existed, so live + shards + outbox hold every row.
 2. **Unpulled outbox.** The backup host stopped pulling after 2026-08-17; 655
