@@ -25,7 +25,11 @@ searchlight import --backups /mnt/saspool/projects/searchlight-backups
    `<work-dir>/shards`. A `.source` marker beside each copy records the
    source's size and mtime; unchanged sources are not re-staged on later
    runs, so the work dir doubles as a cache. Delete it to reclaim space.
-2. **Extract** (parallel; one DuckDB appender thread per table):
+2. **Extract** into a separate staging database
+   (`<work-dir>/staging.duckdb`, attached as `stg`) so the published file
+   never contains staging data or the free space it would leave behind.
+   Producers run on all cores; each high-volume table gets several DuckDB
+   appender threads (one per 8 cores):
    - *manifest* → `item`, `item_set*`, `sandbox_perk`, `stat`, `activity_mode`;
    - *tracked* → production's `run` / `run_entry` / `player` / slate / skulls;
    - *archive* → all raw PGCRs, deduplicated by instance id before parsing;
@@ -41,7 +45,7 @@ searchlight import --backups /mnt/saspool/projects/searchlight-backups
    (otherwise the import fails and the partial database is kept in the work
    dir for inspection). Warnings and cross-source parity counts are recorded
    in `import_stat`.
-5. **Publish.** Staging tables are dropped, metadata written, and the file is
+5. **Publish.** The staging database is detached and deleted, metadata written, and the file is
    moved into place (atomic rename, or copy + rename across filesystems).
 
 The import prints a report; `searchlight info --detailed` shows the same

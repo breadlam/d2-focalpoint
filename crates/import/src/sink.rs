@@ -111,8 +111,17 @@ pub fn staging_writers() -> usize {
 /// Rows per writer between appender flushes; bounds transaction-local memory.
 const FLUSH_EVERY: u64 = 2_000_000;
 
+/// Create an appender for `table`, which may be qualified with an attached
+/// database name (`stg.run` appends to table `run` of database `stg`).
+pub fn appender<'a>(conn: &'a Connection, table: &str) -> duckdb::Result<Appender<'a>> {
+    match table.split_once('.') {
+        Some((catalog, name)) => conn.appender_to_catalog_and_db(name, catalog, "main"),
+        None => conn.appender(table),
+    }
+}
+
 fn write_all<R: AppendRow>(conn: &Connection, table: &str, rx: &Receiver<Vec<R>>) -> Result<u64> {
-    let mut appender = conn.appender(table)?;
+    let mut appender = appender(conn, table)?;
     let (mut n, mut since_flush) = (0u64, 0u64);
     for batch in rx {
         for row in &batch {

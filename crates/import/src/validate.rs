@@ -108,7 +108,7 @@ const CHECKS: &[(&str, Severity, &str, &str)] = &[
         "unparseable_periods",
         Severity::Warning,
         "staged runs dropped for an invalid timestamp",
-        "SELECT (SELECT count(DISTINCT instance_id) FROM stg_run) - (SELECT count(*) FROM run)",
+        "SELECT (SELECT count(DISTINCT instance_id) FROM stg.run) - (SELECT count(*) FROM run)",
     ),
     (
         "unknown_weapon_hashes",
@@ -132,13 +132,13 @@ const CHECKS: &[(&str, Severity, &str, &str)] = &[
         "tracked_archive_overlap",
         Severity::Info,
         "player rows parsed from both sources",
-        "SELECT count(*) FROM stg_entry t JOIN stg_entry a ON a.src = 0 AND t.src = 1 AND a.instance_id = t.instance_id AND a.membership_id = t.membership_id AND a.character_id = t.character_id",
+        "SELECT count(*) FROM stg.entry t JOIN stg.entry a ON a.src = 0 AND t.src = 1 AND a.instance_id = t.instance_id AND a.membership_id = t.membership_id AND a.character_id = t.character_id",
     ),
     (
         "tracked_archive_mismatch",
         Severity::Info,
         "of those, rows whose stats disagree",
-        "SELECT count(*) FROM stg_entry t JOIN stg_entry a ON a.src = 0 AND t.src = 1 AND a.instance_id = t.instance_id AND a.membership_id = t.membership_id AND a.character_id = t.character_id \
+        "SELECT count(*) FROM stg.entry t JOIN stg.entry a ON a.src = 0 AND t.src = 1 AND a.instance_id = t.instance_id AND a.membership_id = t.membership_id AND a.character_id = t.character_id \
       WHERE (a.kills, a.deaths, a.assists, a.precision_kills, a.super_kills, a.melee_kills, a.grenade_kills, a.ability_kills, a.completed, a.completion_reason, a.time_played_s) \
          IS DISTINCT FROM (t.kills, t.deaths, t.assists, t.precision_kills, t.super_kills, t.melee_kills, t.grenade_kills, t.ability_kills, t.completed, t.completion_reason, t.time_played_s)",
     ),
@@ -164,13 +164,23 @@ pub fn run(conn: &Connection) -> Result<Vec<Check>> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn checks_run_against_an_empty_database() {
-        let dir = tempfile::tempdir().unwrap();
-        let db = searchlight_db::Database::create(&dir.path().join("v.duckdb")).unwrap();
+    /// A fresh database with an in-memory staging catalog, as the importer
+    /// sets it up.
+    fn staged_db(dir: &std::path::Path) -> searchlight_db::Database {
+        let db = searchlight_db::Database::create(&dir.join("v.duckdb")).unwrap();
+        db.conn()
+            .execute_batch("ATTACH ':memory:' AS stg;")
+            .unwrap();
         db.conn()
             .execute_batch(include_str!("sql/staging.sql"))
             .unwrap();
+        db
+    }
+
+    #[test]
+    fn checks_run_against_an_empty_database() {
+        let dir = tempfile::tempdir().unwrap();
+        let db = staged_db(dir.path());
         let checks = run(db.conn()).unwrap();
         assert_eq!(checks.len(), CHECKS.len());
         assert!(checks.iter().all(Check::passed), "{checks:#?}");
@@ -179,10 +189,7 @@ mod tests {
     #[test]
     fn detects_duplicates() {
         let dir = tempfile::tempdir().unwrap();
-        let db = searchlight_db::Database::create(&dir.path().join("v.duckdb")).unwrap();
-        db.conn()
-            .execute_batch(include_str!("sql/staging.sql"))
-            .unwrap();
+        let db = staged_db(dir.path());
         db.conn()
             .execute_batch(
                 "INSERT INTO run (instance_id, started_at, activity_hash, source, is_tracked)

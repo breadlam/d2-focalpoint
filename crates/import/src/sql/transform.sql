@@ -12,12 +12,12 @@ SELECT instance_id,
        min(src)                                        AS src,
        bool_or(src = 1)                                AS is_tracked,
        max(tracked_target) FILTER (WHERE src = 1)      AS tracked_target
-FROM stg_run
+FROM stg.run
 GROUP BY instance_id;
 
 CREATE TEMP TABLE roster AS
 SELECT e.instance_id, count(DISTINCT (e.membership_id, e.character_id)) AS n
-FROM stg_entry e
+FROM stg.entry e
 JOIN run_choice c ON c.instance_id = e.instance_id AND c.src = e.src
 GROUP BY e.instance_id;
 
@@ -30,7 +30,7 @@ SELECT u.instance_id,
        count(DISTINCT s.skull_hash) FILTER (WHERE s.kind = 'feat')       AS feat_count
 FROM (
     SELECT r.instance_id, unnest(r.skull_hashes) AS skull_hash
-    FROM stg_run r
+    FROM stg.run r
     JOIN run_choice c ON c.instance_id = r.instance_id AND c.src = r.src
 ) u
 LEFT JOIN skull s ON s.skull_hash = u.skull_hash
@@ -60,7 +60,7 @@ SELECT r.instance_id,
        CASE WHEN c.tracked_target <> '?' THEN c.tracked_target END AS qualified_target,
        CASE r.src WHEN 0 THEN 'archive' ELSE 'tracked' END         AS source,
        c.is_tracked
-FROM stg_run r
+FROM stg.run r
 JOIN run_choice c ON c.instance_id = r.instance_id AND c.src = r.src
 LEFT JOIN roster ro ON ro.instance_id = r.instance_id
 LEFT JOIN run_skulls sk ON sk.instance_id = r.instance_id
@@ -96,7 +96,7 @@ SELECT DISTINCT ON (e.instance_id, e.membership_id, e.character_id)
        e.time_played_s,
        e.start_s,
        t.instance_id IS NOT NULL AS has_build
-FROM stg_entry e
+FROM stg.entry e
 JOIN run_choice c ON c.instance_id = e.instance_id AND c.src = e.src
 JOIN run r ON r.instance_id = e.instance_id
 LEFT JOIN timeline_key t ON t.instance_id = e.instance_id AND t.membership_id = e.membership_id
@@ -106,7 +106,7 @@ ORDER BY e.instance_id, e.membership_id, e.character_id;
 INSERT INTO run_player_weapon
 SELECT w.instance_id, w.membership_id, w.character_id, w.item_hash,
        sum(coalesce(w.kills, 0))::INTEGER, sum(coalesce(w.precision_kills, 0))::INTEGER
-FROM stg_weapon w
+FROM stg.weapon w
 JOIN run_choice c ON c.instance_id = w.instance_id AND c.src = w.src
 WHERE EXISTS (SELECT 1 FROM run r WHERE r.instance_id = w.instance_id)
 GROUP BY ALL
@@ -121,7 +121,7 @@ SELECT DISTINCT ON (membership_id, instance_id)
        TRY_CAST(period AS TIMESTAMP),
        coalesce(activity_hash, 0),
        mode, kills, deaths, assists, duration_s, completion_reason, completed, player_count
-FROM stg_history
+FROM stg.history
 WHERE TRY_CAST(period AS TIMESTAMP) IS NOT NULL
 ORDER BY membership_id, instance_id, src DESC;
 
@@ -152,17 +152,17 @@ INSERT INTO activity
 WITH counts AS (
     SELECT activity_hash, count(*) AS run_count FROM run GROUP BY 1
 ), hashes AS (
-    SELECT activity_hash FROM stg_activity_def
+    SELECT activity_hash FROM stg.activity_def
     UNION SELECT activity_hash FROM counts
     UNION SELECT DISTINCT activity_hash FROM activity_history
-    UNION SELECT activity_hash FROM stg_target_group
+    UNION SELECT activity_hash FROM stg.target_group
 ), groups AS (
-    SELECT activity_hash, min(target_group) AS target_group FROM stg_target_group GROUP BY 1
+    SELECT activity_hash, min(target_group) AS target_group FROM stg.target_group GROUP BY 1
 )
 SELECT h.activity_hash, d.name, d.description, d.mode, d.modes, d.activity_type_hash,
        d.is_playlist, d.light_level, g.target_group, coalesce(c.run_count, 0)
 FROM hashes h
-LEFT JOIN stg_activity_def d USING (activity_hash)
+LEFT JOIN stg.activity_def d USING (activity_hash)
 LEFT JOIN groups g USING (activity_hash)
 LEFT JOIN counts c USING (activity_hash)
 ORDER BY h.activity_hash;
@@ -173,13 +173,13 @@ WITH ids AS (
     SELECT membership_id FROM run_player
     UNION SELECT membership_id FROM segment
     UNION SELECT membership_id FROM activity_history
-    UNION SELECT membership_id FROM stg_player
-    UNION SELECT membership_id FROM stg_player_flag
+    UNION SELECT membership_id FROM stg.player
+    UNION SELECT membership_id FROM stg.player_flag
 ), latest AS (
     -- Most recent identity seen in any PGCR.
     SELECT DISTINCT ON (e.membership_id)
            e.membership_id, e.membership_type, e.display_name, e.global_name, e.global_name_code
-    FROM stg_entry e
+    FROM stg.entry e
     JOIN run r ON r.instance_id = e.instance_id
     ORDER BY e.membership_id, r.started_at DESC, e.src
 ), seen AS (
@@ -197,9 +197,9 @@ WITH ids AS (
     SELECT membership_id,
            bool_or(flag = 'seeded')        AS is_seeded,
            bool_or(flag = 'random_sample') AS is_random_sample
-    FROM stg_player_flag GROUP BY 1
+    FROM stg.player_flag GROUP BY 1
 ), prod AS (
-    SELECT DISTINCT ON (membership_id) * FROM stg_player ORDER BY membership_id
+    SELECT DISTINCT ON (membership_id) * FROM stg.player ORDER BY membership_id
 )
 SELECT i.membership_id,
        coalesce(l.membership_type, p.membership_type),

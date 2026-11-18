@@ -343,13 +343,23 @@ fn imports_a_synthetic_backup_tree() {
         Some("test-manifest")
     );
 
-    // No staging tables leak into the published database.
-    assert_eq!(
-        count(
-            &db,
-            "SELECT count(*) FROM information_schema.tables WHERE table_name LIKE 'stg_%'"
-        ),
-        0
+    // The published database holds exactly the schema's tables: staging
+    // lived in a separate attached file.
+    let tables = |db: &Database| -> Vec<String> {
+        let mut stmt = db
+            .conn()
+            .prepare("SELECT table_name FROM information_schema.tables ORDER BY 1")
+            .unwrap();
+        stmt.query_map([], |r| r.get(0))
+            .unwrap()
+            .map(Result::unwrap)
+            .collect()
+    };
+    let fresh = Database::create(&dir.path().join("fresh.duckdb")).unwrap();
+    assert_eq!(tables(&db), tables(&fresh));
+    assert!(
+        !dir.path().join("work/staging.duckdb").exists(),
+        "staging file is cleaned up"
     );
 
     // Re-running without --force refuses to clobber the output.

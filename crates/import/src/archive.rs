@@ -108,9 +108,9 @@ pub fn load(
     }
 
     let bar = progress.bar("archived PGCRs", total);
-    let run_sink = Sink::<StgRun>::spawn_parallel(duck, "stg_run", staging_writers())?;
-    let entry_sink = Sink::<StgEntry>::spawn_parallel(duck, "stg_entry", staging_writers())?;
-    let weapon_sink = Sink::<StgWeapon>::spawn_parallel(duck, "stg_weapon", staging_writers())?;
+    let run_sink = Sink::<StgRun>::spawn_parallel(duck, "stg.run", staging_writers())?;
+    let entry_sink = Sink::<StgEntry>::spawn_parallel(duck, "stg.entry", staging_writers())?;
+    let weapon_sink = Sink::<StgWeapon>::spawn_parallel(duck, "stg.weapon", staging_writers())?;
     let senders = Senders {
         runs: run_sink.sender(),
         entries: entry_sink.sender(),

@@ -1,10 +1,12 @@
 -- Staging tables: raw extracts that the transform step (transform.sql) merges,
--- dedupes, and reshapes into the final schema. Dropped before the database is
--- published. `src` identifies the origin of a row:
+-- dedupes, and reshapes into the final schema. They live in a separate
+-- database file attached as `stg` (in the work dir), so the published
+-- database never contains staging data or the space it occupied. `src`
+-- identifies the origin of a row:
 --   0 = archive (raw PGCR JSON parsed by searchlight-core)
 --   1 = tracked (production's already-parsed run / run_entry tables)
 
-CREATE TABLE stg_run (
+CREATE TABLE stg.run (
     src                    UTINYINT NOT NULL,
     instance_id            BIGINT   NOT NULL,
     period                 VARCHAR,
@@ -22,7 +24,7 @@ CREATE TABLE stg_run (
     tracked_target         VARCHAR   -- production target_name (tracked only)
 );
 
-CREATE TABLE stg_entry (
+CREATE TABLE stg.entry (
     src               UTINYINT NOT NULL,
     instance_id       BIGINT   NOT NULL,
     membership_id     BIGINT   NOT NULL,
@@ -49,7 +51,7 @@ CREATE TABLE stg_entry (
     start_s           INTEGER
 );
 
-CREATE TABLE stg_weapon (
+CREATE TABLE stg.weapon (
     src             UTINYINT NOT NULL,
     instance_id     BIGINT   NOT NULL,
     membership_id   BIGINT   NOT NULL,
@@ -60,7 +62,7 @@ CREATE TABLE stg_weapon (
 );
 
 -- Activity history rows from the live table (src 1) and archive shards (src 0).
-CREATE TABLE stg_history (
+CREATE TABLE stg.history (
     src               UTINYINT NOT NULL,
     membership_id     BIGINT   NOT NULL,
     character_id      BIGINT,
@@ -78,7 +80,7 @@ CREATE TABLE stg_history (
 );
 
 -- Production's player table: identity fallback and first-seen time.
-CREATE TABLE stg_player (
+CREATE TABLE stg.player (
     membership_id    BIGINT NOT NULL,
     membership_type  INTEGER,
     display_name     VARCHAR,
@@ -87,19 +89,19 @@ CREATE TABLE stg_player (
     first_seen_unix  BIGINT
 );
 
-CREATE TABLE stg_player_flag (
+CREATE TABLE stg.player_flag (
     membership_id BIGINT  NOT NULL,
     flag          VARCHAR NOT NULL   -- seeded | random_sample
 );
 
 -- Production's curated target slate, by activity hash.
-CREATE TABLE stg_target_group (
+CREATE TABLE stg.target_group (
     activity_hash UINTEGER NOT NULL,
     target_group  VARCHAR  NOT NULL
 );
 
 -- DestinyActivityDefinition rows (named later for hashes seen in the data).
-CREATE TABLE stg_activity_def (
+CREATE TABLE stg.activity_def (
     activity_hash      UINTEGER NOT NULL,
     name               VARCHAR,
     description        VARCHAR,

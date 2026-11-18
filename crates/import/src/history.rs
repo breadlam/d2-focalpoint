@@ -50,7 +50,7 @@ pub fn load(
     }
 
     let bar = progress.bar("activity history", total);
-    let sink = Sink::<StgHistory>::spawn_parallel(duck, "stg_history", staging_writers())?;
+    let sink = Sink::<StgHistory>::spawn_parallel(duck, "stg.history", staging_writers())?;
     let sender = sink.sender();
     let produced = tasks
         .par_iter()

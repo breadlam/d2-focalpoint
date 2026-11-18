@@ -25,9 +25,9 @@ backups (CIFS, read-only)
   ▼
 work dir (local disk)
   │  rayon workers read SQLite in rowid ranges (rusqlite)
-  │  ──► bounded channels ──► one writer thread per table (DuckDB Appender)
+  │  ──► bounded channels ──► N writer threads per table (DuckDB Appender)
   ▼
-DuckDB staging tables (stg_*)            builds.rs writes final build tables directly
+staging DB (stg.*, separate file)        builds.rs writes final build tables directly
   │  transform.sql (merge, dedupe, derive, order)
   ▼
 final tables ──► validate.rs ──► drop staging ──► atomic publish
@@ -38,7 +38,9 @@ Key properties:
 - **Backups are never opened in place.** SQLite on CIFS is unsafe and opening
   a WAL database writes to it.
 - **Backpressure.** Producers block on bounded channels when writers fall
-  behind, keeping memory flat.
+  behind, keeping memory flat. Row-by-row appending is the costliest step,
+  so heavy tables get one writer per 8 cores (a CPU trace showed 256
+  producers idling behind 8 writers before this was tuned).
 - **Declarative merge rules.** All dedupe/precedence logic is SQL in one file,
   readable without the Rust around it.
 - **Fail loudly on invariants, record data gaps.** Validation errors abort;

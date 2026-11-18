@@ -43,16 +43,6 @@ pub use progress::Progress;
 use validate::{Check, Severity};
 
 const STAGING_SQL: &str = include_str!("sql/staging.sql");
-const STAGING_TABLES: &[&str] = &[
-    "stg_run",
-    "stg_entry",
-    "stg_weapon",
-    "stg_history",
-    "stg_player",
-    "stg_player_flag",
-    "stg_target_group",
-    "stg_activity_def",
-];
 
 /// Optional heavy stages that can be skipped for faster development runs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -145,9 +135,17 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
 
     let partial = opts.work_dir.join("searchlight.duckdb.partial");
     remove_db_files(&partial)?;
+    let staging = opts.work_dir.join("staging.duckdb");
+    remove_db_files(&staging)?;
     let db = Database::create(&partial)?;
     let conn = db.conn();
     configure_duckdb(conn, opts)?;
+    // Staging lives in its own file so the published database never carries
+    // staging data or the free blocks it would leave behind.
+    conn.execute_batch(&format!(
+        "ATTACH '{}' AS stg;",
+        sql_quote(&staging.display().to_string())
+    ))?;
     conn.execute_batch(STAGING_SQL)?;
 
     let t = Instant::now();
@@ -208,9 +206,8 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
         &checks,
     )?;
 
-    for t in STAGING_TABLES {
-        conn.execute_batch(&format!("DROP TABLE {t}"))?;
-    }
+    conn.execute_batch("DETACH stg")?;
+    remove_db_files(&staging)?;
     write_meta(
         &db,
         &layout,
@@ -243,13 +240,13 @@ fn configure_duckdb(conn: &duckdb::Connection, opts: &ImportOptions) -> Result<(
     fs::create_dir_all(&tmp)?;
     conn.execute_batch(&format!(
         "SET preserve_insertion_order = false; SET temp_directory = '{}';",
-        tmp.display().to_string().replace('\'', "''")
+        sql_quote(&tmp.display().to_string())
     ))?;
     if let Some(n) = opts.threads {
         conn.execute_batch(&format!("SET threads = {n};"))?;
     }
     if let Some(m) = &opts.memory_limit {
-        conn.execute_batch(&format!("SET memory_limit = '{}';", m.replace('\'', "''")))?;
+        conn.execute_batch(&format!("SET memory_limit = '{}';", sql_quote(m)))?;
     }
     Ok(())
 }
@@ -347,6 +344,11 @@ impl<'a> StatRecorder<'a> {
         }
         Ok(())
     }
+}
+
+/// Escape a value for a single-quoted SQL string literal.
+fn sql_quote(s: &str) -> String {
+    s.replace('\'', "''")
 }
 
 fn remove_db_files(path: &Path) -> Result<()> {

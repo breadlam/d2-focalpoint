@@ -154,7 +154,7 @@ fn write_modes(conn: &Connection, modes: &[ActivityModeDef]) -> Result<()> {
 }
 
 fn write_activity_defs(conn: &Connection, defs: &[ActivityDef]) -> Result<()> {
-    let mut a = conn.appender("stg_activity_def")?;
+    let mut a = crate::sink::appender(conn, "stg.activity_def")?;
     for d in defs {
         a.append_row(params![
             d.hash,

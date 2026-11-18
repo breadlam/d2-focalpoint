@@ -74,7 +74,7 @@ fn copy_target_groups(src: &rusqlite::Connection, duck: &Connection) -> Result<(
         "SELECT director_activity_hash, target_name FROM activity WHERE target_name <> '?'",
     )?;
     let mut rows = stmt.query([])?;
-    let mut a = duck.appender("stg_target_group")?;
+    let mut a = crate::sink::appender(duck, "stg.target_group")?;
     while let Some(r) = rows.next()? {
         a.append_row(params![r.get::<_, i64>(0)? as u32, r.get::<_, String>(1)?])?;
     }
@@ -89,7 +89,7 @@ fn copy_players(src: &rusqlite::Connection, duck: &Connection) -> Result<u64> {
             "SELECT membership_id, membership_type, display_name, global_name, global_name_code, first_seen FROM player",
         )?;
         let mut rows = stmt.query([])?;
-        let mut a = duck.appender("stg_player")?;
+        let mut a = crate::sink::appender(duck, "stg.player")?;
         while let Some(r) = rows.next()? {
             a.append_row(params![
                 r.get::<_, i64>(0)?,
@@ -103,7 +103,7 @@ fn copy_players(src: &rusqlite::Connection, duck: &Connection) -> Result<u64> {
         }
         a.flush()?;
     }
-    let mut a = duck.appender("stg_player_flag")?;
+    let mut a = crate::sink::appender(duck, "stg.player_flag")?;
     for (table, flag) in [
         ("seeded_player", "seeded"),
         ("random_player", "random_sample"),
@@ -137,7 +137,7 @@ fn copy_runs(main_db: &Path, duck: &Connection, progress: &Progress) -> Result<u
         )
     };
     let bar = progress.bar("tracked runs", total);
-    let sink = Sink::<StgRun>::spawn_parallel(duck, "stg_run", staging_writers())?;
+    let sink = Sink::<StgRun>::spawn_parallel(duck, "stg.run", staging_writers())?;
     let sender = sink.sender();
     let produced = ranges.par_iter().try_for_each(|&(lo, hi)| -> Result<()> {
         let src = sqlite::open(main_db)?;
@@ -191,8 +191,8 @@ fn copy_entries(main_db: &Path, duck: &Connection, progress: &Progress) -> Resul
     };
     let total = sqlite::count(&sqlite::open(main_db)?, "run_entry")?;
     let bar = progress.bar("tracked entries", total);
-    let entries = Sink::<StgEntry>::spawn_parallel(duck, "stg_entry", staging_writers())?;
-    let weapons = Sink::<StgWeapon>::spawn_parallel(duck, "stg_weapon", staging_writers())?;
+    let entries = Sink::<StgEntry>::spawn_parallel(duck, "stg.entry", staging_writers())?;
+    let weapons = Sink::<StgWeapon>::spawn_parallel(duck, "stg.weapon", staging_writers())?;
     let (es, ws) = (entries.sender(), weapons.sender());
 
     let produced = ranges
