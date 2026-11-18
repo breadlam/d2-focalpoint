@@ -198,11 +198,16 @@ pub struct Component {
     /// Multiplicity: copies of the same plug on one item (e.g. two identical
     /// armor mods), or pieces equipped for an [`ComponentKind::ArmorSet`].
     pub quantity: u16,
-    /// Socket index of the first occurrence (display order). Not identity.
+    /// Socket index of the first occurrence (display order), or
+    /// [`Component::UNSOCKETED`]. Not part of the identity.
     pub position: u16,
 }
 
 impl Component {
+    /// `position` of components that do not come from a socket (artifact
+    /// perks reported only via progressions). Fits a SQL `SMALLINT`.
+    pub const UNSOCKETED: u16 = 999;
+
     fn identity_key(&self) -> (u8, u8, u32, u32, u16) {
         (
             self.kind.code(),
@@ -418,7 +423,7 @@ pub fn extract_build(loadout: &LoadoutState, catalog: &Catalog) -> Build {
                     Some(Slot::Artifact),
                     perk,
                     artifact_item,
-                    u16::MAX,
+                    Component::UNSOCKETED,
                 );
             }
         }
@@ -734,6 +739,20 @@ mod tests {
         let mut l = loadout();
         l.items[1].plug_hashes.retain(|&p| p != 201);
         assert_ne!(extract_build(&l, &cat).id, base);
+    }
+
+    #[test]
+    fn progression_only_artifact_perks_are_unsocketed() {
+        let mut l = loadout();
+        l.artifact.as_mut().unwrap().active_perks.push(602);
+        let b = extract_build(&l, &catalog());
+        let perk = b.components.iter().find(|c| c.hash == 602).unwrap();
+        assert_eq!(perk.kind, ComponentKind::ArtifactPerk);
+        assert_eq!(perk.position, Component::UNSOCKETED);
+        assert!(
+            i16::try_from(perk.position).is_ok(),
+            "must fit SQL SMALLINT"
+        );
     }
 
     #[test]
