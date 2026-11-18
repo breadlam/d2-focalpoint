@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/core", "crates/db"]
+members = ["crates/core", "crates/db", "crates/import"]
 
 [workspace.package]
 version = "0.1.0"
@@ -48,9 +48,15 @@ cast_precision_loss = "allow"
 module_name_repetitions = "allow"
 missing_errors_doc = "allow"
 too_many_lines = "allow"
+# The only panics are lock poisoning and constant-template expects.
+missing_panics_doc = "allow"
 
 [profile.release]
 debug = "line-tables-only"
+
+# Debug info for the bundled C++ engine alone would make the binary ~1.5 GB.
+[profile.release.package.libduckdb-sys]
+debug = false
 
 # DuckDB's bundled C++ build dominates compile time; optimise dependencies even
 # in dev builds so local imports over real data are not painfully slow.

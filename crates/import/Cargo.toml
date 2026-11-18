@@ -1,0 +1,26 @@
+[package]
+name = "searchlight-import"
+description = "Builds the searchlight-cli analysis database from Searchlight backups"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+crossbeam-channel.workspace = true
+duckdb.workspace = true
+flate2.workspace = true
+indicatif.workspace = true
+rayon.workspace = true
+rusqlite.workspace = true
+searchlight-core.workspace = true
+searchlight-db.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true
