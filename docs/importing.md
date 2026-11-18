@@ -1,0 +1,62 @@
+# Importing the backups
+
+`searchlight import` rebuilds the analysis database from the Searchlight
+backups. It never modifies the backups.
+
+```sh
+searchlight import --backups /mnt/saspool/projects/searchlight-backups
+```
+
+| Option | Default | Notes |
+|---|---|---|
+| `--backups DIR` | — | root containing `builds.rodeo/` and `shards/` |
+| `--db PATH` (global) | `$SEARCHLIGHT_DB`, else `~/.local/share/searchlight/searchlight.duckdb` | output database |
+| `--work-dir DIR` | `~/.cache/searchlight/import` | **must be local disk**; needs ≈ 150 GB (staged sources ≈ 80 GB + the database under construction and DuckDB spill) |
+| `--snapshot NAME` | latest `snapshot-*` | which server snapshot to use |
+| `--force` | off | replace an existing database |
+| `--threads N` | all cores | rayon and DuckDB worker threads |
+| `--memory-limit X` | 80 % of RAM | DuckDB memory limit, e.g. `64GB`; DuckDB spills to the work dir beyond it |
+| `--skip archive,history` | none | skip the heavy stages for quick development imports |
+
+## What happens
+
+1. **Stage.** The live SQLite databases are copied *with* their `-wal` files,
+   and every shard is decompressed, into `<work-dir>/live` and
+   `<work-dir>/shards`. A `.source` marker beside each copy records the
+   source's size and mtime; unchanged sources are not re-staged on later
+   runs, so the work dir doubles as a cache. Delete it to reclaim space.
+2. **Extract** (parallel; one DuckDB appender thread per table):
+   - *manifest* → `item`, `item_set*`, `sandbox_perk`, `stat`, `activity_mode`;
+   - *tracked* → production's `run` / `run_entry` / `player` / slate / skulls;
+   - *archive* → all raw PGCRs, deduplicated by instance id before parsing;
+   - *history* → all `player_activity` rows (live + shards);
+   - *builds* → each `build_segment` is parsed, projected to its build and
+     fingerprinted; builds and exact loadouts are deduplicated, and a second
+     fingerprint guards against id collisions.
+3. **Transform.** [`transform.sql`](../crates/import/src/sql/transform.sql)
+   merges sources (a raw PGCR wins over production's parsed copy of the same
+   run), dedupes, derives difficulty gates and per-player aggregates, and
+   writes the final tables in a scan-friendly order.
+4. **Validate.** Natural-key uniqueness and referential checks must pass
+   (otherwise the import fails and the partial database is kept in the work
+   dir for inspection). Warnings and cross-source parity counts are recorded
+   in `import_stat`.
+5. **Publish.** Staging tables are dropped, metadata written, and the file is
+   moved into place (atomic rename, or copy + rename across filesystems).
+
+The import prints a report; `searchlight info --detailed` shows the same
+statistics later.
+
+## Performance notes
+
+On the original 256-core / 1 TB machine with the work dir on tmpfs, a full
+import takes on the order of ten minutes; staging from the CIFS share is
+bandwidth-bound (~100 MB/s) the first time. On smaller machines, set
+`--memory-limit` and `--threads` and expect proportionally longer runs.
+
+## Re-importing after code changes
+
+The import is deterministic for the same sources and code. Changing plug
+classification or build identity rules changes `build_id`s: bump the
+fingerprint version in `searchlight-core` (a unit test will remind you) and
+re-import with `--force`.
