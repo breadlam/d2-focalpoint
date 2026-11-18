@@ -41,7 +41,7 @@ pub fn load(duck: &Connection, main_db: &Path, progress: &Progress) -> Result<Tr
     copy_skulls(&src, duck)?;
     copy_target_groups(&src, duck)?;
     stats.players = copy_players(&src, duck)?;
-    stats.runs = copy_runs(&src, duck, progress)?;
+    stats.runs = copy_runs(main_db, duck, progress)?;
     let (entries, weapons, bad) = copy_entries(main_db, duck, progress)?;
     stats.entries = entries;
     stats.weapons = weapons;
@@ -126,17 +126,30 @@ fn parse_u32_json_array(s: Option<String>) -> Vec<u32> {
         .unwrap_or_default()
 }
 
-fn copy_runs(src: &rusqlite::Connection, duck: &Connection, progress: &Progress) -> Result<u64> {
-    let bar = progress.bar("tracked runs", sqlite::count(src, "run")?);
-    let sink = Sink::<StgRun>::spawn(duck, "stg_run")?;
-    let produced = (|| -> Result<()> {
-        let mut out = Batcher::new(&sink.sender(), BATCH);
+/// `run` (keyed by instance id, so its rowids are sparse but evenly spread)
+/// is read in parallel rowid ranges like `run_entry`.
+fn copy_runs(main_db: &Path, duck: &Connection, progress: &Progress) -> Result<u64> {
+    let (ranges, total) = {
+        let src = sqlite::open(main_db)?;
+        (
+            sqlite::rowid_ranges(&src, "run", CHUNK_ROWS)?,
+            sqlite::count(&src, "run")?,
+        )
+    };
+    let bar = progress.bar("tracked runs", total);
+    let sink = Sink::<StgRun>::spawn_parallel(duck, "stg_run", staging_writers())?;
+    let sender = sink.sender();
+    let produced = ranges.par_iter().try_for_each(|&(lo, hi)| -> Result<()> {
+        let src = sqlite::open(main_db)?;
         let mut stmt = src.prepare(
-        "SELECT instance_id, period, director_activity_hash, reference_id, mode, activity_difficulty_tier, \
-                duration_seconds, player_count, started_from_beginning, selected_skull_hashes, target_name \
-         FROM run",
-    )?;
-        let mut rows = stmt.query([])?;
+            "SELECT instance_id, period, director_activity_hash, reference_id, mode, \
+                    activity_difficulty_tier, duration_seconds, player_count, \
+                    started_from_beginning, selected_skull_hashes, target_name \
+             FROM run WHERE rowid BETWEEN ?1 AND ?2",
+        )?;
+        let mut rows = stmt.query([lo, hi])?;
+        let mut out = Batcher::new(&sender, BATCH);
+        let mut n = 0;
         while let Some(r) = rows.next()? {
             out.push(StgRun {
                 src: SRC_TRACKED,
@@ -155,10 +168,13 @@ fn copy_runs(src: &rusqlite::Connection, duck: &Connection, progress: &Progress)
                 skull_hashes: parse_u32_json_array(r.get(9)?),
                 tracked_target: r.get(10)?,
             })?;
-            bar.inc(1);
+            n += 1;
         }
-        out.flush()
-    })();
+        out.flush()?;
+        bar.inc(n);
+        Ok(())
+    });
+    drop(sender);
     // Settle writers before producers: a writer's error is the root cause of
     // a producer's "writer stopped" error.
     let n = sink.finish()?;

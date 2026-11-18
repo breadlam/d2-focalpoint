@@ -97,11 +97,15 @@ impl<R: AppendRow> Drop for Sink<R> {
     }
 }
 
-/// Writer threads for a high-volume staging table: about one per 32 worker
-/// threads, between 2 and 16 (DuckDB parallelises each append internally too).
+/// Writer threads for a high-volume table without uniqueness constraints.
+///
+/// Row-by-row appending costs more CPU than reading and parsing, so writers,
+/// not producers, are the bottleneck: with one writer per 32 threads the
+/// producers on a 256-core machine idled at ~5 % behind backpressure. One
+/// writer per 8 threads (2..=64) keeps both sides busy.
 #[must_use]
 pub fn staging_writers() -> usize {
-    (rayon::current_num_threads() / 32).clamp(2, 16)
+    (rayon::current_num_threads() / 8).clamp(2, 64)
 }
 
 /// Rows per writer between appender flushes; bounds transaction-local memory.

@@ -21,7 +21,7 @@ use searchlight_core::{Catalog, Slot};
 
 use crate::progress::Progress;
 use crate::rows::{BuildComponentRow, BuildRow, LoadoutItemRow, LoadoutRow, SegmentRow};
-use crate::sink::{Batcher, Sink};
+use crate::sink::{Batcher, Sink, staging_writers};
 use crate::sqlite;
 
 const CHUNK_ROWS: i64 = 10_000;
@@ -150,11 +150,12 @@ fn collect(
     duck: &Connection,
     rx: &crossbeam_channel::Receiver<Vec<Processed>>,
 ) -> Result<BuildStats> {
-    let segments = Sink::<SegmentRow>::spawn(duck, "segment")?;
+    let segments = Sink::<SegmentRow>::spawn_parallel(duck, "segment", staging_writers())?;
     let builds = Sink::<BuildRow>::spawn(duck, "build")?;
-    let components = Sink::<BuildComponentRow>::spawn(duck, "build_component")?;
+    let components =
+        Sink::<BuildComponentRow>::spawn_parallel(duck, "build_component", staging_writers())?;
     let loadouts = Sink::<LoadoutRow>::spawn(duck, "loadout")?;
-    let items = Sink::<LoadoutItemRow>::spawn(duck, "loadout_item")?;
+    let items = Sink::<LoadoutItemRow>::spawn_parallel(duck, "loadout_item", staging_writers())?;
     let mut seg_b = Batcher::new(&segments.sender(), BATCH);
     let mut build_b = Batcher::new(&builds.sender(), BATCH);
     let mut comp_b = Batcher::new(&components.sender(), BATCH);
