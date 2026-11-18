@@ -69,11 +69,13 @@ live rows (disjoint) → **17.73M distinct reports**, 2025-03-19 → 2026-09-17
    next night under a new run id; some reports were also fetched again weeks
    later. 1.9M of 19.6M stored rows (≈10 %) are extra copies of 1.64M
    instances. Copies are *not* always identical: in a 20k sample, 90 % were
-   byte-identical, 10 % differed only in player identity (Bungie re-renders
-   names, emblems and light level at fetch time), and 0.02 % had a different
-   roster; none differed in stats for the same roster. The importer keeps the
-   **most recently fetched** copy of each instance (ties broken by source
-   order), chosen in a pre-pass so the result is deterministic.
+   byte-identical and 10 % differed only in player identity (Bungie
+   re-renders names, emblems and light level at fetch time); none differed
+   in stats for the same roster. Across all 1.64M duplicated reports, 77 have
+   rosters of different sizes, and in every one the most recently fetched
+   copy has the largest roster. The importer therefore keeps the **most
+   recently fetched** copy of each instance (ties broken by source order),
+   chosen in a pre-pass so the result is deterministic.
    Export failures were otherwise fail-safe: rows were only deleted after a
    verified shard existed, so live + shards + outbox hold every row.
 2. **Unpulled outbox.** The backup host stopped pulling after 2026-08-17; 655
@@ -93,7 +95,11 @@ live rows (disjoint) → **17.73M distinct reports**, 2025-03-19 → 2026-09-17
 6. **Leftover temp shard.** `data/archive/tmp/` holds one shard from an
    interrupted export. Its rows were never deleted from the live table, so it
    is ignored.
-7. **Partial last days.** Runs end 2026-09-17 although the snapshot is from
+7. **Cross-source parity.** For runs present both as a raw report and in
+   production's parsed tables, ~11.9M player rows overlap and ~300 (0.003 %)
+   disagree on some stat — production recorded those rows from a different
+   fetch than the archived copy. The raw report wins.
+8. **Partial last days.** Runs end 2026-09-17 although the snapshot is from
    09-20: the gatherer stalled when the disk filled.
 
 ## Manifest
