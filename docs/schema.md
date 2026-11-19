@@ -1,4 +1,4 @@
-# Analysis database schema (version 5)
+# Analysis database schema (version 6)
 
 The database is a single DuckDB file built by `focalpoint import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
@@ -168,7 +168,8 @@ weapons or builds.
 | `item` | `item_hash` | all inventory items incl. plugs: name, type, tier, `is_exotic`, `class`, `slot`, `damage_type` (weapons), `element` (subclasses), `ammo_type`, `plug_category`, `plug_kind` (context-free; `build_component.kind` is authoritative), `item_set_hash`, `icon` |
 | `item_set`, `item_set_perk` | `set_hash` | armor sets and their 2/4-piece bonuses |
 | `sandbox_perk` | `perk_hash` | perk names/descriptions (set bonuses) |
-| `stat` | `stat_hash` | stat names |
+| `stat` | `stat_hash` | stat names and icons |
+| `damage_type` | `damage_type_hash` | element names and glyphs (`item.damage_type` holds the name) |
 | `activity` | `activity_hash` | name, mode, `target_group` (Searchlight's curated slate: "Ultimate Conquest", "Master Raid", …), `run_count` |
 | `activity_mode` | `mode` | `DestinyActivityModeType` names |
 | `skull` | `skull_hash` | modifiers with `kind` = `boon | feat | challenge | equipment_lock | other` |

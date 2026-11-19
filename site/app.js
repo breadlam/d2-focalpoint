@@ -8,7 +8,7 @@
 // facet counts, ranking, recipe differences, URL state) are exported for
 // tests/site/test.html; start() wires them to the page.
 
-export const FORMAT = 2;
+export const FORMAT = 3;
 export const STATS = ['Weapons', 'Health', 'Class', 'Grenade', 'Super', 'Melee'];
 export const ARMOR_SLOTS = ['Helmet', 'Gauntlets', 'Chest', 'Legs', 'Class item'];
 export const WEAPON_SLOTS = ['Kinetic', 'Energy', 'Power'];
@@ -50,8 +50,9 @@ export function pct(x) {
 
 /** Expand a positional recipe (see docs/site.md) into an object. */
 export function decodeRecipe(r) {
-  const [id, stats, kit, armor, weapons, sets, setBonuses, artifact] = r;
+  const [id, stats, kit, armor, weapons, sets, artifactItem, artifact] = r;
   const [subclass, sup, classAbility, movement, melee, grenade, aspects, fragments, transcendence] = kit;
+  const setEntries = sets.map(([set, pieces, bonuses]) => ({ set, pieces, bonuses }));
   return {
     id, stats,
     kit: { subclass, super: sup, classAbility, movement, melee, grenade, aspects, fragments, transcendence },
@@ -59,7 +60,7 @@ export function decodeRecipe(r) {
       ({ slot, item, exotic: exotic === 1, archetype, tuning, statMods, mods, perks })),
     weapons: weapons.map(([slot, item, exotic, frame, perks, origin, mod]) =>
       ({ slot, item, exotic: exotic === 1, frame, perks, origin, mod })),
-    sets, setBonuses, artifact,
+    sets: setEntries, setBonuses: setEntries.flatMap((e) => e.bonuses), artifactItem, artifact,
   };
 }
 
@@ -79,7 +80,7 @@ export function prepare(data) {
   return { data, types: data.types, scopes, appearances, recipe, includeCache: new Map(), rowIncludes: new WeakMap() };
 }
 
-const name = (model, i) => (i === null || i === undefined ? null : model.data.dict[i][0]);
+const name = (model, i) => (i === null || i === undefined ? null : model.data.dict[i]?.[0] ?? null);
 
 /** The searchable components of a decoded recipe: Map(name → kind). */
 export function componentsOf(model, r) {
@@ -235,6 +236,11 @@ export function recipeDiff(model, a, b) {
     }
   }
   change('Armor mods', ...listDiff(a.armor.flatMap((p) => p.mods), b.armor.flatMap((p) => p.mods)));
+  const setLabels = (r) => r.sets.filter((e) => e.pieces > 0).map((e) => `${n(e.set) ?? 'Armor set'} ×${e.pieces}`);
+  const [setsAdded, setsRemoved] = listDiff(setLabels(a), setLabels(b));
+  if (setsAdded.length || setsRemoved.length) {
+    lines.push({ label: 'Armor sets', text: [...setsAdded.map((x) => `+${x}`), ...setsRemoved.map((x) => `−${x}`)].join(', ') });
+  }
   change('Set bonuses', ...listDiff(a.setBonuses, b.setBonuses));
   change('Artifact perks', ...listDiff(a.artifact, b.artifact));
   if (a.stats && b.stats && a.stats.some((s, i) => s !== b.stats[i])) {
@@ -305,19 +311,29 @@ function typeIcon(model, nameText, cls = 'icon') {
   return img(model, nameText && model.data.icons[nameText], cls);
 }
 
-/** A dictionary entry as an icon and its name; `mark` highlights a filter match. */
-export function thing(model, i, { cls = 'thing', count = 1, mark = '' } = {}) {
-  if (i === null || i === undefined) return null;
-  const [label, icon] = model.data.dict[i];
-  return h('span', { class: `${cls}${mark && label === mark ? ' match' : ''}` },
-    img(model, icon, 'chip-icon'), h('span', {}, label), count > 1 ? h('span', { class: 'times' }, `×${count}`) : null);
+/** "Whisper of Chains · Stasis Fragment": a dictionary entry's tooltip. */
+export function tipOf(model, i) {
+  const [label, , kind] = model.data.dict[i];
+  return kind && kind !== label ? `${label} · ${kind}` : label;
 }
 
-/** Things with repeats collapsed to ×N, in first-seen order. */
-export function things(model, list, opts) {
-  const counts = new Map();
-  for (const i of list) counts.set(i, (counts.get(i) ?? 0) + 1);
-  return [...counts].map(([i, c]) => thing(model, i, { ...opts, count: c }));
+/**
+ * An icon tile with a tooltip (on hover, focus or tap) and an accessible
+ * name; a blank tile when `i` is null, so columns stay aligned.
+ */
+export function tile(model, i, { mark = '', cls = '' } = {}) {
+  if (i === null || i === undefined || !model.data.dict[i]) return h('span', { class: `tile blank ${cls}`, 'aria-hidden': 'true' });
+  const [label, icon] = model.data.dict[i];
+  const tip = tipOf(model, i);
+  return h('span', {
+    class: `tile ${cls}${mark && label === mark ? ' match' : ''}`, tabindex: '0', role: 'img', 'aria-label': tip, 'data-tip': tip,
+  }, icon ? h('img', { src: model.data.icon_base + icon, alt: '', loading: 'lazy', decoding: 'async' }) : h('span', { class: 'tile-text' }, label.slice(0, 2)));
+}
+
+/** A tile for a glyph that is not in the dictionary (an element, a stat). */
+function glyph(model, path, tip, cls = '') {
+  return h('span', { class: `tile ${cls}`, tabindex: '0', role: 'img', 'aria-label': tip, 'data-tip': tip },
+    path ? h('img', { src: model.data.icon_base + path, alt: '', loading: 'lazy', decoding: 'async' }) : h('span', { class: 'tile-text' }, tip.slice(0, 2)));
 }
 
 export function elementBadge(element) {
@@ -348,65 +364,118 @@ export function topLine(row) {
     + (builds > 1 ? ` across ${plural(builds, 'exact build')}.` : '.');
 }
 
-export function statLine(stats) {
-  if (!stats) return null;
-  return h('ul', { class: 'stat-line', 'aria-label': 'Stats' },
-    STATS.map((s, i) => h('li', {}, h('span', { class: 'stat-name' }, s), h('span', { class: 'stat-value' }, stats[i]))));
+const pad = (list, count) => Array.from({ length: count }, (_, k) => list[k] ?? null);
+const blank = () => h('span', { class: 'tile blank', 'aria-hidden': 'true' });
+
+/** One gear row: the item's icon, its name and type, then plug tiles in fixed columns. */
+function gearRow(model, item, cells, cols, mark) {
+  const [label, , kind] = model.data.dict[item] ?? ['Unknown'];
+  return h('div', { class: 'gear' },
+    tile(model, item, { mark, cls: 'item' }),
+    h('div', { class: 'gear-body' },
+      h('div', { class: 'gear-name' },
+        h('span', { class: `gear-title${mark && label === mark ? ' match' : ''}` }, label),
+        kind ? h('span', { class: 'gear-type' }, ` · ${kind}`) : null),
+      h('div', { class: 'tiles', style: `--cols:${cols}` }, cells)));
 }
 
-export function weaponRow(model, w, mark) {
-  return h('li', { class: 'weapon' },
-    h('span', { class: 'slot-label' }, WEAPON_SLOTS[w.slot]),
-    h('div', { class: 'weapon-body' },
-      thing(model, w.item, { cls: 'thing strong', mark }),
-      h('div', { class: 'perks' },
-        thing(model, w.frame, { cls: 'perk', mark }),
-        w.perks.map((p) => thing(model, p, { cls: 'perk', mark })),
-        thing(model, w.origin, { cls: 'perk', mark }),
-        thing(model, w.mod, { cls: 'perk', mark }))));
+/** Weapons: element · frame · perks · origin trait · mod, aligned across weapons. */
+function weaponsBlock(model, r, mark) {
+  if (r.weapons.length === 0) return h('p', { class: 'muted' }, 'None captured');
+  const perks = Math.max(0, ...r.weapons.map((w) => w.perks.length));
+  return r.weapons.map((w) => {
+    const damage = model.data.dict[w.item]?.[3];
+    const element = damage ? glyph(model, model.data.elements?.[damage], damage, 'element') : blank();
+    return gearRow(model, w.item, [
+      element, tile(model, w.frame, { mark }),
+      ...pad(w.perks, perks).map((x) => tile(model, x, { mark })),
+      tile(model, w.origin, { mark }), tile(model, w.mod, { mark }),
+    ], 2 + perks + 2, mark);
+  });
 }
 
-/** The always-visible part of a recipe: abilities, kit, weapons, stats. */
-export function recipeSummary(model, r, mark) {
+/** Armor: archetype · stat mod · tuning · mods · exotic perks, aligned across pieces. */
+function armorBlock(model, r, mark) {
+  if (r.armor.length === 0) return h('p', { class: 'muted' }, 'None captured');
+  const most = (f) => Math.max(0, ...r.armor.map(f));
+  const stat = most((p) => p.statMods.length);
+  const mods = most((p) => p.mods.length);
+  const perks = most((p) => p.perks.length);
+  return r.armor.map((p) => gearRow(model, p.item, [
+    tile(model, p.archetype), ...pad(p.statMods, stat).map((x) => tile(model, x)), tile(model, p.tuning),
+    ...pad(p.mods, mods).map((x) => tile(model, x, { mark })),
+    ...pad(p.perks, perks).map((x) => tile(model, x, { mark, cls: 'exotic-perk' })),
+  ], 1 + stat + 1 + mods + perks, mark));
+}
+
+function kitGroup(label, cells) {
+  return h('div', { class: 'kit-group' }, h('span', { class: 'kit-label' }, label), h('div', { class: 'kit-tiles' }, cells));
+}
+
+/** Subclass: its name; Super beside Abilities; Aspects beside Fragments; Transcendence. */
+function subclassBlock(model, r, mark) {
   const k = r.kit;
-  return h('div', { class: 'recipe-summary' },
-    h('div', { class: 'recipe-block' },
-      h('h4', {}, 'Abilities'),
-      h('div', { class: 'row-things' }, [k.super, k.classAbility, k.movement, k.melee, k.grenade].map((i) => thing(model, i, { mark })))),
-    h('div', { class: 'recipe-block' },
-      h('h4', {}, 'Aspects and fragments'),
-      h('div', { class: 'row-things' }, k.aspects.map((i) => thing(model, i, { mark })), things(model, k.fragments, { mark }))),
-    h('div', { class: 'recipe-block wide' },
-      h('h4', {}, 'Weapons'),
-      h('ul', { class: 'weapons' }, r.weapons.map((w) => weaponRow(model, w, mark)))),
-    r.stats ? h('div', { class: 'recipe-block wide' }, h('h4', {}, 'Stats'), statLine(r.stats)) : null);
+  const t = (i) => tile(model, i, { mark, cls: 'kit' });
+  const present = (list) => list.filter((x) => x !== null && x !== undefined);
+  return [
+    k.subclass !== null ? h('p', { class: 'subclass-name' }, name(model, k.subclass)) : null,
+    h('div', { class: 'kit-pair' },
+      kitGroup('Super', present([k.super]).map(t)),
+      kitGroup('Abilities', present([k.classAbility, k.movement, k.melee, k.grenade]).map(t))),
+    h('div', { class: 'kit-pair' }, kitGroup('Aspects', k.aspects.map(t)), kitGroup('Fragments', k.fragments.map(t))),
+    k.transcendence.length ? kitGroup('Transcendence', k.transcendence.map(t)) : null,
+  ];
 }
 
-/** The expandable rest of a recipe: armor, sets, artifact, transcendence. */
-export function recipeRest(model, r, mark) {
-  return h('div', { class: 'recipe-rest' },
-    h('div', { class: 'recipe-block wide' },
-      h('h4', {}, 'Armor'),
-      h('div', { class: 'table-scroll' },
-        h('table', { class: 'armor' },
-          h('thead', {}, h('tr', {}, ['Slot', 'Piece', 'Archetype', 'Tuning', 'Stat mods', 'Mods'].map((c) => h('th', { scope: 'col' }, c)))),
-          h('tbody', {}, r.armor.map((p) => h('tr', {},
-            h('td', { class: 'slot-label' }, ARMOR_SLOTS[p.slot]),
-            h('td', {}, thing(model, p.item, { cls: p.exotic ? 'thing strong' : 'thing', mark }),
-              p.perks.length ? h('div', { class: 'perks' }, p.perks.map((i) => thing(model, i, { cls: 'perk', mark }))) : null),
-            h('td', {}, thing(model, p.archetype)),
-            h('td', {}, thing(model, p.tuning)),
-            h('td', {}, things(model, p.statMods)),
-            h('td', {}, h('div', { class: 'stack' }, things(model, p.mods, { mark }))))))))),
-    r.sets.length || r.setBonuses.length ? h('div', { class: 'recipe-block' },
-      h('h4', {}, 'Armor sets'),
-      h('div', { class: 'row-things' },
-        r.sets.map(([s, pieces]) => h('span', { class: 'thing' }, `${model.data.dict[s][0]} (${plural(pieces, 'piece')})`)),
-        r.setBonuses.map((i) => thing(model, i, { mark })))) : null,
-    r.kit.transcendence.length ? h('div', { class: 'recipe-block' },
-      h('h4', {}, 'Transcendence'), h('div', { class: 'row-things' }, r.kit.transcendence.map((i) => thing(model, i)))) : null,
-    r.artifact.length ? h('div', { class: 'recipe-block wide' },
-      h('h4', {}, 'Artifact perks'), h('div', { class: 'row-things' }, r.artifact.map((i) => thing(model, i, { mark })))) : null);
+/** The in-game order of the stats (recipes store Weapons, Health, Class, Grenade, Super, Melee). */
+const GAME_ORDER = [1, 5, 3, 4, 2, 0];
+
+function statsBlock(model, r) {
+  if (!r.stats) return h('p', { class: 'muted' }, 'Not captured');
+  return h('ul', { class: 'stat-list' }, GAME_ORDER.map((i) => {
+    const [label, icon] = model.data.stats?.[i] ?? [STATS[i], null];
+    return h('li', {}, glyph(model, icon, label, 'stat-icon'),
+      h('span', { class: 'stat-value' }, r.stats[i]), h('span', { class: 'stat-name' }, label));
+  }));
+}
+
+/** Set bonuses: each set with the bonuses it activates (sets without one are left out). */
+function setsBlock(model, r, mark) {
+  const sets = r.sets.filter((e) => e.bonuses.length);
+  if (!sets.length) return null;
+  return h('section', { class: 'lo-sets' }, h('h4', {}, 'Set bonuses'),
+    sets.map((e) => h('div', { class: 'set' },
+      h('p', { class: 'set-name' }, name(model, e.set) ?? 'Armor set', h('span', { class: 'muted' }, ` · ${plural(e.pieces, 'piece')}`)),
+      e.bonuses.map((b) => h('div', { class: 'set-bonus' }, tile(model, b, { mark, cls: 'small' }),
+        h('span', { class: mark && name(model, b) === mark ? 'match' : '' }, name(model, b)))))));
+}
+
+function artifactBlock(model, r, mark) {
+  if (r.artifactItem === null && !r.artifact.length) return null;
+  return h('section', { class: 'lo-artifact' }, h('h4', {}, 'Artifact'),
+    r.artifactItem !== null ? h('div', { class: 'gear' }, tile(model, r.artifactItem, { cls: 'item' }),
+      h('div', { class: 'gear-body' },
+        h('div', { class: 'gear-name' }, h('span', { class: 'gear-title' }, name(model, r.artifactItem))),
+        h('p', { class: 'muted small' }, `Applied artifact perks (${r.artifact.length})`))) : null,
+    h('div', { class: 'kit-tiles' }, r.artifact.map((i) => tile(model, i, { mark }))));
+}
+
+/**
+ * A recipe drawn the way Searchlight drew a build, after the in-game
+ * loadout screen: weapons and subclass | stats and set bonuses | armor and
+ * artifact (stacked on narrow screens).
+ */
+export function loadoutPanel(model, r, mark = '') {
+  return h('div', { class: 'loadout' },
+    h('div', { class: 'lo-col' },
+      h('section', { class: 'lo-weapons' }, h('h4', {}, 'Weapons'), weaponsBlock(model, r, mark)),
+      h('section', { class: 'lo-subclass' }, h('h4', {}, 'Subclass'), subclassBlock(model, r, mark))),
+    h('div', { class: 'lo-col' },
+      h('section', { class: 'lo-stats' }, h('h4', {}, 'Stats'), statsBlock(model, r)),
+      setsBlock(model, r, mark)),
+    h('div', { class: 'lo-col' },
+      h('section', { class: 'lo-armor' }, h('h4', {}, 'Armor'), armorBlock(model, r, mark)),
+      artifactBlock(model, r, mark)));
 }
 
 /** A details element whose body is built on first open. */
@@ -425,7 +494,7 @@ function variantItem(model, top, v, mark) {
     diff.length
       ? h('ul', { class: 'diff' }, diff.map((d) => h('li', {}, h('span', { class: 'diff-label' }, `${d.label}: `), d.text)))
       : h('p', { class: 'muted' }, 'Same as the top recipe in every listed part.'),
-    lazyDetails('Full recipe', () => h('div', {}, recipeSummary(model, r, mark), recipeRest(model, r, mark))));
+    lazyDetails('Full recipe', () => loadoutPanel(model, r, mark)));
 }
 
 function elsewhere(model, typeId, current, go) {
@@ -469,8 +538,7 @@ function card(model, row, rank, scope, go, mark) {
       h('div', { class: 'recipe-head' },
         h('h4', { class: 'recipe-title' }, 'Top recipe'),
         h('p', { class: 'recipe-meta' }, topLine(row), topMatched ? h('span', { class: 'match-badge' }, ` includes ${mark}`) : null)),
-      recipeSummary(model, recipe, mark),
-      lazyDetails('Armor, mods and artifact', () => recipeRest(model, recipe, mark))),
+      loadoutPanel(model, recipe, mark)),
     total ? lazyDetails(
       `${total} near-identical variant${total === 1 ? '' : 's'}${more ? ` (showing the best ${variants.length})` : ''}`,
       () => h('ol', { class: 'variants' }, variants.map((v) => variantItem(model, recipe, v, mark))),

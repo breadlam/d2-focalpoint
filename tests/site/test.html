@@ -26,16 +26,16 @@
       'Outlaw', 'Adaptive Frame', 'Hands-On', 'Firepower', 'Getaway Artist', 'Elemental Siphon',
       'Iron Will', 'Iron Set', 'Grenadier', 'Synthoceps', 'Whisper of Chains'];
     const kit = [0, 1, 2, 3, 4, 5, [6, 7], [8], []];
-    // Positional recipes: [id, stats, kit, armor, weapons, sets, set bonuses, artifact].
+    // Positional recipes: [id, stats, kit, armor, weapons, [[set, pieces, [bonus]]], artifact item, artifact perks].
     const top = ['10', [30, 10, 20, 200, 100, 15], kit,
-      [[3, 15, 1, 19, null, [], [13, 13], []]], [[1, 9, 0, 12, [11], null, null]], [[18, 2]], [17], [16]];
+      [[3, 15, 1, 19, null, [], [13, 13], []]], [[1, 9, 0, 12, [11], null, null]], [[18, 2, [17]]], null, [16]];
     const variant = ['11', [30, 10, 20, 190, 100, 15], kit,
-      [[3, 15, 1, 19, null, [], [13, 14], []]], [[1, 10, 0, null, [11], null, null]], [[18, 2]], [17], [16]];
-    const titan = ['20', null, [null, null, null, null, null, null, [], [21], []], [], [], [], [], []];
+      [[3, 15, 1, 19, null, [], [13, 14], []]], [[1, 10, 0, null, [11], null, null]], [[18, 2, [17]]], null, [16]];
+    const titan = ['20', null, [null, null, null, null, null, null, [], [21], []], [], [], [], null, []];
     const data = {
-      format: 2, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
-      icon_base: 'https://www.bungie.net', icons: {},
-      dict: names.map((n) => [n, null]),
+      format: 3, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
+      icon_base: 'https://www.bungie.net', icons: {}, stats: [], elements: {},
+      dict: names.map((n) => [n, null, null, null]),
       types: [
         { class: 'Warlock', element: 'Solar', armor: 'Getaway Artist', weapon: null, super: 'Well of Radiance', aspects: ['Heat Rises', 'Icarus Dash'] },
         { class: 'Titan', element: 'Stasis', armor: 'Synthoceps', weapon: 'Ice Breaker', super: 'Glacial Quake', aspects: ['Howl of the Storm'] },
@@ -76,7 +76,7 @@
     eq([r.id, r.kit.super, r.kit.fragments, r.armor[0].slot, r.armor[0].exotic, r.armor[0].mods],
       ['10', 1, [8], 3, true, [13, 13]], 'decoded kit and armor');
     eq([r.weapons[0].slot, r.weapons[0].item, r.weapons[0].frame, r.weapons[0].perks], [1, 9, 12, [11]], 'decoded weapon');
-    eq([r.sets, r.setBonuses, r.artifact], [[[18, 2]], [17], [16]], 'decoded sets and artifact');
+    eq([r.sets, r.setBonuses, r.artifactItem, r.artifact], [[{ set: 18, pieces: 2, bonuses: [17] }], [17], null, [16]], 'decoded sets and artifact');
     eq(rowRecipes(data.scopes[0].rows[0]), [0, 1], 'a row lists its top recipe and variants');
 
     // Listings, filters and sorting.
@@ -129,29 +129,31 @@
     eq(scopeLabel({ name: 'Ultimate Conquest: Lightblade', parent: 'Ultimate Conquest' }), 'Ultimate Conquest: Lightblade', 'scope label without repetition');
 
     let threw = false;
-    try { prepare({ ...data, format: 1 }); } catch { threw = true; }
+    try { prepare({ ...data, format: 2 }); } catch { threw = true; }
     eq(threw, true, 'data of another format is rejected');
 
     // ---- Find any build: the catalog --------------------------------------
     const T = '\t';
     const indexText = [
-      'focalpoint-catalog 1', '@meta', `icon_base${T}https://www.bungie.net`,
+      'focalpoint-catalog 2', '@meta', `icon_base${T}https://www.bungie.net`,
       '@dict',
       `Ballidorse Wrathweavers${T}/b.jpg`, `Praxic Blade${T}`, `Winter's Wrath${T}`, `Frostpulse${T}`,
       `Glacial Harvest${T}`, `Repurposed Charge${T}`, `Whisper of Chains${T}`, `Shadebinder${T}`,
-      `Exodus Down${T}`, `Synthoceps${T}`,
+      `Exodus Down${T}${T}Armor set`, `Synthoceps${T}`,
+      '@stats', `Weapons${T}/w.png`, `Health${T}`, `Class${T}`, `Grenade${T}`, `Super${T}`, `Melee${T}`,
+      '@elements', `Stasis${T}/stasis.png`,
       '@activities', `Vault of Glass: Master${T}Master Raid`, `Equilibrium${T}Equilibrium`,
       '@types',
       ['Warlock', 'Stasis', '0', '1', '2', '3,4', '2', '5', '2', '0', '0,1'].join(T),
       ['Titan', 'Stasis', '9', '-', '-', '-', '1', '1', '1', '0', '1'].join(T),
     ].join('\n') + '\n';
     const shardText = [
-      'focalpoint-shard 1',
+      'focalpoint-shard 2',
       '@kits', '7 2 - - - - 3,4 6 -',
       '@weapons', '0 1 1 - - - -',
       '@armor', '1 0 1 - - - - -',
-      '@artifact', '-',
-      '@sets', '8:4 5', '- -',
+      '@artifact', '- -',
+      '@sets', '8:4:5', '-',
       '@builds',
       'aaaaaaaa 0 0 0 0 0 0 1e,a,a,1e,2s,a 3 1 2 1 fz9 2s 0',
       'bbbbbbbb 0 0 0 0 0 1 - 2 1 0 0 fz8 - 1',
@@ -177,7 +179,9 @@
     const a = builds[0];
     eq([a.recipe.kit.subclass, a.recipe.kit.fragments, a.recipe.armor[0].item, a.recipe.armor[0].exotic, a.recipe.weapons[0].item],
       [7, [6], 0, true, 1], 'decoded catalog recipe');
-    eq([a.recipe.sets, a.recipe.setBonuses, a.recipe.stats], [[[8, 4]], [5], [50, 10, 10, 50, 100, 10]], 'sets and stats');
+    eq([a.recipe.sets, a.recipe.setBonuses, a.recipe.stats], [[{ set: 8, pieces: 4, bonuses: [5] }], [5], [50, 10, 10, 50, 100, 10]], 'sets and stats');
+    eq([a.recipe.artifactItem, a.recipe.artifact], [null, []], 'artifact');
+    eq([cat.data.stats[0], cat.data.elements.Stasis, cat.dict[8][2]], [['Weapons', '/w.png'], '/stasis.png', 'Armor set'], 'catalog stats, elements and types');
     eq([a.runs, a.clears, a.qualified, a.effect, a.activities], [3, 2, 1, 0.1, [0]], 'build record');
     eq(builds[1].effect, null, 'an unranked build');
 

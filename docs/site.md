@@ -22,6 +22,12 @@ to publish:
    within 8 element changes (a perk roll, a mod, an artifact perk), each
    listed with exactly what differs and its own full recipe.
 
+Recipes are drawn the way Searchlight drew a build (after the in-game
+loadout screen): weapons and subclass, stats and set bonuses, armor and
+artifact, as icon tiles in aligned columns whose names show on hover, focus
+or tap; narrow screens stack the sections in the same reading order. The page
+uses Searchlight's dark palette.
+
 Pick "All activities", a target group (e.g. "Master Raid") or a single
 activity to get the listings ranked there, and narrow them by class,
 subclass, super, exotics, aspects or a component a listed recipe includes.
@@ -95,23 +101,25 @@ The workflow deploys `site/` whenever a push to `master` changes it. One-time
 setup in the GitHub repository: **Settings → Pages → Build and deployment →
 Source: GitHub Actions**.
 
-## Data format (`format: 2`)
+## Data format (`format: 3`)
 
 ```text
 { format, imported_at, first_run, last_run,
   icon_base,                    // "https://www.bungie.net"
-  dict:    [[name, icon path or null]],   // what recipes refer to by index
-  icons:   { name: path },                // icons for names in build types
-  types:   [{ class, element, armor, weapon, super, aspects }],
-  recipes: [recipe],                      // positional, below
-  scopes:  [{ id, name, kind: all|group|activity, parent, clears, build_runs, players,
-              rows: [[type, effect, raw, players' skill, players, runs, last used,
-                      top pick, [variant pick], variants not listed,
-                      loadout clears, loadout exact builds]] }] }
+  dict:     [[name, icon, type, damage type]],  // what recipes refer to by index
+  stats:    [[name, icon]],     // the six armor stats in recipe order
+  elements: { name: icon },     // damage-type glyphs ("Arc", "Solar", …)
+  icons:    { name: path },     // icons for names in build types
+  types:    [{ class, element, armor, weapon, super, aspects }],
+  recipes:  [recipe],           // positional, below
+  scopes:   [{ id, name, kind: all|group|activity, parent, clears, build_runs, players,
+               rows: [[type, effect, raw, players' skill, players, runs, last used,
+                       top pick, [variant pick], variants not listed,
+                       loadout clears, loadout exact builds]] }] }
 
 pick    = [recipe index, effect, runs, players, last used]
 recipe  = [build id (string), stats [6] or null, kit, [armor piece], [weapon],
-           [[set, pieces]], [set bonus], [artifact perk]]
+           [[set, pieces, [bonus]]], artifact item, [artifact perk]]
 kit     = [subclass, super, class ability, movement, melee, grenade,
            [aspect], [fragment], [transcendence]]
 armor   = [slot 0–4 (helmet … class item), item, exotic 0/1, archetype, tuning,
@@ -120,12 +128,15 @@ weapon  = [slot 0–2 (kinetic, energy, power), item, exotic 0/1, frame, [perk],
            origin trait, mod]
 ```
 
-Numbers inside recipes are indices into `dict`. Effects are on the log scale
-(`exp(x) − 1` is the percentage). Bump `SITE_FORMAT_VERSION`
-(`crates/db/src/site.rs`) and `FORMAT` (`site/app.js`) together when the
-layout changes; the page refuses data of another format.
+Numbers inside recipes are indices into `dict`; an entry's type ("Pulse
+Rifle", "Stasis Fragment") feeds the tooltips and a weapon's damage type its
+element glyph. Stats are stored Weapons, Health, Class, Grenade, Super, Melee
+and shown in the game's order. Effects are on the log scale (`exp(x) − 1` is
+the percentage). Bump `SITE_FORMAT_VERSION` (`crates/db/src/site.rs`) and
+`FORMAT` (`site/app.js`) together when the layout changes; the page refuses
+data of another format.
 
-## Catalog format (`focalpoint-catalog 1`)
+## Catalog format (`focalpoint-catalog 2`)
 
 Plain text, numbers in base 36, `-` for none, lists comma-separated.
 Players reuse a weapon roll, an armor piece or a kit across many builds, so
@@ -133,12 +144,14 @@ builds refer to **parts** stored once per shard. Build types are sorted by
 name and packed into shards of about 3,000 builds (a type larger than that
 spans several shards), and builds within a type by loadout.
 
-`index.txt` (≈ 3.3 MB, 0.7 MB compressed) — loaded when the view opens:
+`index.txt` (≈ 3.4 MB, 0.7 MB compressed) — loaded when the view opens:
 
 ```text
-focalpoint-catalog 1
+focalpoint-catalog 2
 @meta        key<TAB>value                 imported_at, first_run, last_run, icon_base, builds, shards
-@dict        name<TAB>icon path            referenced by index from types and shards
+@dict        name<TAB>icon<TAB>type<TAB>damage type   referenced by index from types and shards
+@stats       name<TAB>icon                 the six armor stats in recipe order
+@elements    name<TAB>icon                 damage-type glyphs
 @activities  name<TAB>target group
 @types       class element armor weapon super aspects builds runs players shards activities   (TAB-separated)
 ```
@@ -147,12 +160,12 @@ focalpoint-catalog 1
 Each section's lines are numbered from 0 within the shard:
 
 ```text
-focalpoint-shard 1
+focalpoint-shard 2
 @kits      subclass super class-ability movement melee grenade aspects fragments transcendence
 @weapons   slot(0 kinetic,1 energy,2 power) item exotic(0/1) frame origin mod perks
 @armor     slot(0 helmet … 4 class item) item exotic archetype tuning stat-mods mods perks
-@artifact  perks
-@sets      set:pieces,… bonuses
+@artifact  item perks
+@sets      set:pieces:bonus.bonus,…      (each set with the bonuses it activates)
 @builds    id type kit weapons armor artifact sets stats runs players clears qualified last-day effect activities
 ```
 

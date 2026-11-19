@@ -80,7 +80,17 @@ CREATE TABLE sandbox_perk (
 CREATE TABLE stat (
     stat_hash   UINTEGER PRIMARY KEY,
     name        VARCHAR NOT NULL,
-    description VARCHAR
+    description VARCHAR,
+    icon        VARCHAR             -- Bungie CDN path
+);
+
+-- Damage types (Kinetic, Arc, Solar, ...): the element glyphs; `item.damage_type`
+-- holds the name.
+CREATE TABLE damage_type (
+    damage_type_hash UINTEGER PRIMARY KEY,
+    name             VARCHAR NOT NULL,
+    description      VARCHAR,
+    icon             VARCHAR
 );
 
 CREATE TABLE activity_mode (

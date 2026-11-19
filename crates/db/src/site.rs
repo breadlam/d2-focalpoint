@@ -33,12 +33,12 @@ use focalpoint_core::vector::ElementVector;
 
 use crate::filter::RunFilter;
 use crate::rank::{BuildRank, BuildSort, RankOptions, rank_builds};
-use crate::recipe::{Dict, Recipe, recipes};
+use crate::recipe::{Dict, DictEntry, Recipe, recipes};
 use crate::search::GroupBy;
 use crate::{Database, Result, meta_key};
 
 /// Version of the JSON layout; the site checks it.
-pub const SITE_FORMAT_VERSION: u32 = 2;
+pub const SITE_FORMAT_VERSION: u32 = 3;
 
 /// Variants listed per listing (the rest are counted).
 pub const VARIANT_LIMIT: usize = 5;
@@ -82,8 +82,13 @@ pub struct SiteData {
     pub last_run: String,
     /// Prefix for icon paths.
     pub icon_base: &'static str,
-    /// Things recipes refer to by index: `[name, icon path or null]`.
-    pub dict: Vec<(String, Option<String>)>,
+    /// Things recipes refer to by index: `[name, icon, type, damage type]`.
+    pub dict: Vec<DictEntry>,
+    /// The six armor stats in recipe order (Weapons, Health, Class, Grenade,
+    /// Super, Melee): `[name, icon]`.
+    pub stats: Vec<(String, Option<String>)>,
+    /// Element glyph per damage type name ("Arc", "Solar", …).
+    pub elements: BTreeMap<String, String>,
     /// Icon path per name shown in build types (exotics, supers, aspects).
     pub icons: BTreeMap<String, String>,
     pub types: Vec<BuildType>,
@@ -348,6 +353,35 @@ fn choose<'a>(
     None
 }
 
+/// The six armor stats in recipe order, and the element glyphs.
+pub(crate) type StatIcons = Vec<(String, Option<String>)>;
+
+pub(crate) fn stat_and_element_icons(
+    db: &Database,
+) -> Result<(StatIcons, BTreeMap<String, String>)> {
+    let mut stats = Vec::new();
+    for stat in focalpoint_core::stats::ArmorStat::ALL {
+        let (name, icon): (String, Option<String>) = db
+            .conn()
+            .query_row(
+                "SELECT name, icon FROM stat WHERE stat_hash = ?",
+                [stat.hash()],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .unwrap_or_else(|_| (stat.as_str().to_string(), None));
+        stats.push((name, icon));
+    }
+    let mut elements = BTreeMap::new();
+    let mut stmt = db.conn().prepare(
+        "SELECT name, icon FROM damage_type WHERE icon IS NOT NULL ORDER BY damage_type_hash",
+    )?;
+    let mut rows = stmt.query([])?;
+    while let Some(r) = rows.next()? {
+        elements.entry(r.get(0)?).or_insert(r.get(1)?);
+    }
+    Ok((stats, elements))
+}
+
 /// Icons for the names shown in build types.
 fn type_icons(db: &Database, types: &[BuildType]) -> Result<BTreeMap<String, String>> {
     let mut wanted = BTreeSet::new();
@@ -498,6 +532,7 @@ pub fn site_data(
     let recipes = recipes(db, &recipe_ids, &mut dict)?;
     let dict = dict.resolve(db)?;
     let icons = type_icons(db, &types)?;
+    let (stats, elements) = stat_and_element_icons(db)?;
     let (first_run, last_run): (Option<String>, Option<String>) = db.conn().query_row(
         "SELECT strftime(min(started_at), '%Y-%m-%d'), strftime(max(started_at), '%Y-%m-%d') FROM run_score",
         [],
@@ -510,6 +545,8 @@ pub fn site_data(
         last_run: last_run.unwrap_or_default(),
         icon_base: "https://www.bungie.net",
         dict,
+        stats,
+        elements,
         icons,
         types,
         recipes,
@@ -700,7 +737,7 @@ pub(crate) mod tests {
     #[test]
     fn recipes_are_exact() {
         let data = export();
-        let name = |i: u32| data.dict[i as usize].0.as_str();
+        let name = |i: u32| data.dict[i as usize].name.as_str();
         let r = data.recipes.iter().find(|r| r.id == "10").unwrap();
         assert_eq!(r.stats, Some([30, 10, 20, 200, 100, 15]));
         assert_eq!(r.kit.subclass.map(name), Some("Dawnblade"));
@@ -735,16 +772,21 @@ pub(crate) mod tests {
             ["Outlaw"]
         );
 
+        let sets: Vec<(&str, u16, Vec<&str>)> = r
+            .sets
+            .iter()
+            .map(|e| {
+                (
+                    name(e.set),
+                    e.pieces,
+                    e.bonuses.iter().map(|&b| name(b)).collect(),
+                )
+            })
+            .collect();
         assert_eq!(
-            r.sets
-                .iter()
-                .map(|&(s, n)| (name(s), n))
-                .collect::<Vec<_>>(),
-            [("Iron Set", 2)]
-        );
-        assert_eq!(
-            r.set_bonuses.iter().map(|&i| name(i)).collect::<Vec<_>>(),
-            ["Iron Will"]
+            sets,
+            [("Iron Set", 2, vec!["Iron Will"])],
+            "bonuses under their set"
         );
         assert_eq!(
             r.artifact.iter().map(|&i| name(i)).collect::<Vec<_>>(),
@@ -754,9 +796,9 @@ pub(crate) mod tests {
         assert_eq!(
             data.dict
                 .iter()
-                .find(|d| d.0 == "Iron Will")
+                .find(|d| d.name == "Iron Will")
                 .unwrap()
-                .1
+                .icon
                 .as_deref(),
             Some("/p.png")
         );

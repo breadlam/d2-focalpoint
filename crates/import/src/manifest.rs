@@ -37,6 +37,11 @@ pub fn load(conn: &Connection, dir: &Path) -> Result<ManifestOutput> {
         .context("parsing DestinySandboxPerkDefinition")?;
     let stats = catalog::parse_named(&read(dir, "DestinyStatDefinition.json")?)
         .context("parsing DestinyStatDefinition")?;
+    // Older manifest caches lack damage types; they only add element glyphs.
+    let damage_types = match std::fs::read(dir.join("DestinyDamageTypeDefinition.json")) {
+        Ok(json) => catalog::parse_named(&json).context("parsing DestinyDamageTypeDefinition")?,
+        Err(_) => Vec::new(),
+    };
     let activities = catalog::parse_activities(&read(dir, "DestinyActivityDefinition.json")?)
         .context("parsing DestinyActivityDefinition")?;
     let modes = catalog::parse_activity_modes(&read(dir, "DestinyActivityModeDefinition.json")?)
@@ -49,7 +54,8 @@ pub fn load(conn: &Connection, dir: &Path) -> Result<ManifestOutput> {
     write_items(conn, &items)?;
     write_sets(conn, &sets)?;
     write_named(conn, "sandbox_perk", &perks, true)?;
-    write_named(conn, "stat", &stats, false)?;
+    write_named(conn, "stat", &stats, true)?;
+    write_named(conn, "damage_type", &damage_types, true)?;
     write_modes(conn, &modes)?;
     write_activity_defs(conn, &activities)?;
 

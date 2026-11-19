@@ -1,1034 +1,1034 @@
-focalpoint-shard 1
+focalpoint-shard 2
 @kits
-ig 7 id 19r j4 j9 4j,8 jh,1ly,jl,ji,jk -
-ig 7 id 19r j4 j9 4j,8 jh,jl,ji,jk,144 -
-ig 7 id 19r j4 j9 4j,8 ji,jk,jl,p4,1ly -
-ig 7 id 19r j4 j9 4j,8 jk,jh,ji,jl,144 -
-ig 7 id 19r j4 j9 4j,8 jk,jh,ji,jl,16h -
-ig 7 id 19r j4 j9 4j,8 jk,jh,ji,jl,1ur -
-ig 7 id 19r j4 j9 4j,8 jk,ji,jl,144,1o1 -
-ig 7 id 19r j4 j9 4j,8 jl,144,ji,110,jh -
-ig 7 id 19r j4 j9 4j,8 jl,1o1,jk,ji,p1 -
-ig 7 id 19r j4 j9 8,4j ji,jl,jh,jk,16h -
-ig 7 id 19r j4 qe 4j,8 ji,jl,jk,jh,16h -
-ig 7 id 19r j4 qe 4j,8 jk,ji,jl,144,1o1 -
-ig 7 id 19r j4 qe 4j,8 jl,jk,jh,ji,16h -
-ig 7 id 19r j4 qe 4j,8 p4,jk,jl,144,ji -
-ig 7 id 19r j4 qe 8,4j ji,jl,jh,jk,16h -
-ig 7 id 19r j4 qe 8,4j ji,jl,jk,p4,p1 -
-ig 7 id io j4 j9 4j,8 1ur,jk,ji,jl,jh -
-ig 7 id io j4 j9 4j,8 jh,ji,16h,jl,jk -
-ig 7 id io j4 j9 4j,8 jh,jl,jk,110,ji -
-ig 7 id io j4 j9 4j,8 ji,jh,jl,jk,1ur -
-ig 7 id io j4 j9 4j,8 jk,1o1,jl,jh,ji -
-ig 7 id io j4 j9 4j,8 jl,110,p4,16h,jk -
-ig 7 id io j4 j9 4j,8 jl,144,ji,110,jh -
-ig 7 id io j4 j9 8,4j 16h,jh,jk,jl,ji -
-ig 7 id io j4 j9 8,4j 16h,jl,110,jk,1ly -
-ig 7 id io j4 j9 8,4j jh,jl,p4,jk,1jd -
-ig 7 id io j4 j9 8,4j ji,jl,jh,jk,16h -
-ig 7 id io j4 j9 8,4j jk,ji,jl,144,1o1 -
-ig 7 id io j4 j9 8,4j jl,ji,p1,jk,144 -
-ig 7 id io j4 j9 8,4j p4,jh,jk,jl,ji -
-ig 7 id io j4 qe 4j,8 16h,jl,ji,jk,jh -
-ig 7 id io j4 qe 4j,8 jh,1ly,ji,jl,1o1 -
-ig 7 id io j4 qe 4j,8 jh,ji,jl,jk,16h -
-ig 7 id io j4 qe 4j,8 ji,jk,jl,p4 -
-ig 7 id io j4 qe 4j,8 ji,jl,16h,jh,jk -
-ig 7 id io j4 qe 4j,8 ji,jl,jh,jk,16h -
-ig 7 id io j4 qe 4j,8 ji,jl,jk,p4,144 -
-ig 7 id io j4 qe 4j,8 jk,144,ji,jl,p4 -
-ig 7 id io j4 qe 4j,8 jl,16h,jk,jh,ji -
-ig 7 id io j4 qe 4j,8 jl,jk,ji,p4,144 -
-ig 7 id io j4 qe 8,4j 144,jl,16h,jh,ji -
-ig 7 id io j4 qe 8,4j 16h,jh,jk,jl,ji -
-ig 7 id io j4 qe 8,4j ji,1o1,jl,16h,144 -
-ig 7 id io j4 qe 8,4j ji,jl,jh,jk,144 -
-ig 7 id io j4 qe 8,4j ji,jl,jh,jk,16h -
-ig 7 id io j4 qe 8,4j ji,jl,jk,p4 -
-ig 7 id io j4 qe 8,4j jk,jh,ji,144,jl -
-ig 7 id io j4 qe 8,4j jk,jl,ji,16h,jh -
-ig 7 id sd j4 j9 4j,8 ji,jl,jh,jk,16h -
-ig 7 id sd j4 j9 4j,8 jl,144,ji,110,jh -
-ig 7 id sd j4 j9 8,4j ji,jl,jh,jk,16h -
-ig 7 id sd j4 qe 4j,8 jh,16h,jl,ji,jk -
-ig 7 id sd j4 qe 4j,8 ji,16g,110,jl,16h -
-ig 7 id sd j4 qe 4j,8 ji,jl,jh,jk,144 -
-ig 7 id sd j4 qe 4j,8 jk,16h,jh,ji,jl -
-ig 7 id sd j4 qe 8,4j ji,jk,p4,jl,1o1 -
-ig 7 s8 19r j4 j9 4j,8 110,jk,ji,jl,16h -
-ig 7 s8 19r j4 j9 4j,8 16h,jl,jk,p4,ji -
-ig 7 s8 19r j4 j9 4j,8 ji,jl,jk,16h,144 -
-ig 7 s8 19r j4 j9 4j,8 jk,ji,jl,144,1o1 -
-ig 7 s8 19r j4 j9 4j,8 jl,jh,ji,jk,p4 -
-ig 7 s8 19r j4 j9 8,4j ji,16h,jh,1o1,jl -
-ig 7 s8 19r j4 j9 8,4j jk,p4,ji,144,jl -
-ig 7 s8 19r j4 qe 4j,8 ji,jl,jk,144,jh -
-ig 7 s8 19r j4 qe 8,4j jl,ji,144,jk,p4 -
-ig 7 s8 19r j4 qe 8,4j p4,144,jl,ji,jk -
-ig 7 s8 io j4 1jp 4j,8 16q,p4,jl -
-ig 7 s8 io j4 1lx 8,4j 16h,jl,ji,jk,jh -
-ig 7 s8 io j4 j9 4j,8 16h,p4,110,jl,16q -
-ig 7 s8 io j4 j9 4j,8 jh,144,jl,jk,ji -
-ig 7 s8 io j4 j9 4j,8 jh,1o1,jl,jk,ji -
-ig 7 s8 io j4 j9 4j,8 ji,jl,jh,jk,16h -
-ig 7 s8 io j4 j9 4j,8 ji,jl,jk,p1,p4 -
-ig 7 s8 io j4 j9 8,4j 144,16h,jl,ji,1o1 -
-ig 7 s8 io j4 j9 8,4j 1jd,jh,jk,jl,ji -
-ig 7 s8 io j4 j9 8,4j ji,jl,jh,jk,16h -
-ig 7 s8 io j4 j9 8,4j jk,ji,jl,144,jh -
-ig 7 s8 io j4 qe 4j,8 16h,jl,jk,ji,p4 -
-ig 7 s8 io j4 qe 4j,8 jh,ji,jl,144,jk -
-ig 7 s8 io j4 qe 4j,8 ji,jl,jh,16h,jk -
-ig 7 s8 io j4 qe 4j,8 ji,jl,jh,jk,144 -
-ig 7 s8 io j4 qe 4j,8 ji,jl,jh,jk,16h -
-ig 7 s8 io j4 qe 4j,8 ji,p1,jk,jl,144 -
-ig 7 s8 io j4 qe 4j,8 jk,16h,jh,ji,jl -
-ig 7 s8 io j4 qe 4j,8 jl,ji,jh,jk,1ur -
-ig 7 s8 io j4 qe 4j,8 jl,jk,ji,jh,144 -
-ig 7 s8 io j4 qe 8,4j 110,16g,1o1,p1,p4 -
-ig 7 s8 io j4 qe 8,4j 144,16h,jl,ji,jh -
-ig 7 s8 io j4 qe 8,4j jh,jl,jk,ji,16h -
-ig 7 s8 io j4 qe 8,4j ji,jl,jh,jk,16h -
-ig 7 s8 io j4 qe 8,4j jk,ji,jl,144,p4 -
-ig 7 s8 io j4 qe 8,4j jk,jl,jh,ji,p4 -
-ig 7 s8 io j4 qe 8,4j jl,jh,ji,jk,16h -
-ig 7 s8 sd j4 j9 8,4j ji,jl,jh,jk,16h -
-ig 7 s8 sd j4 j9 8,4j ji,jl,jh,jk,p4 -
-ig 7 s8 sd j4 j9 8,4j ji,jl,jk,jh,1o1 -
-ig 7 s8 sd j4 qe 4j,8 jl,110,ji,1ur,1ly -
-ig 7 s8 sd j4 qe 8,4j ji,jl,jh,jk,16h -
-ig 7 id io j4 qe 8,9z p1,144,ji,jl,jk -
-ig 7 id io j4 qe 9z,8 1ly,ji,jl,jk,jh -
-ig 7 s8 io j4 j9 8,9z ji,p4,jl,jk,16g -
-ig 7 s8 sd j4 qe 9z,8 ji,jl,jh,jk,16h -
+ii 7 if 19y j6 jb 4j,8 jj,1m5,jn,jk,jm -
+ii 7 if 19y j6 jb 4j,8 jj,jn,jk,jm,14a -
+ii 7 if 19y j6 jb 4j,8 jk,jm,jn,p9,1m5 -
+ii 7 if 19y j6 jb 4j,8 jm,jj,jk,jn,14a -
+ii 7 if 19y j6 jb 4j,8 jm,jj,jk,jn,16n -
+ii 7 if 19y j6 jb 4j,8 jm,jj,jk,jn,1uy -
+ii 7 if 19y j6 jb 4j,8 jm,jk,jn,14a,1o8 -
+ii 7 if 19y j6 jb 4j,8 jn,14a,jk,116,jj -
+ii 7 if 19y j6 jb 4j,8 jn,1o8,jm,jk,p6 -
+ii 7 if 19y j6 jb 8,4j jk,jn,jj,jm,16n -
+ii 7 if 19y j6 qj 4j,8 jk,jn,jm,jj,16n -
+ii 7 if 19y j6 qj 4j,8 jm,jk,jn,14a,1o8 -
+ii 7 if 19y j6 qj 4j,8 jn,jm,jj,jk,16n -
+ii 7 if 19y j6 qj 4j,8 p9,jm,jn,14a,jk -
+ii 7 if 19y j6 qj 8,4j jk,jn,jj,jm,16n -
+ii 7 if 19y j6 qj 8,4j jk,jn,jm,p9,p6 -
+ii 7 if iq j6 jb 4j,8 1uy,jm,jk,jn,jj -
+ii 7 if iq j6 jb 4j,8 jj,jk,16n,jn,jm -
+ii 7 if iq j6 jb 4j,8 jj,jn,jm,116,jk -
+ii 7 if iq j6 jb 4j,8 jk,jj,jn,jm,1uy -
+ii 7 if iq j6 jb 4j,8 jm,1o8,jn,jj,jk -
+ii 7 if iq j6 jb 4j,8 jn,116,p9,16n,jm -
+ii 7 if iq j6 jb 4j,8 jn,14a,jk,116,jj -
+ii 7 if iq j6 jb 8,4j 16n,jj,jm,jn,jk -
+ii 7 if iq j6 jb 8,4j 16n,jn,116,jm,1m5 -
+ii 7 if iq j6 jb 8,4j jj,jn,p9,jm,1jk -
+ii 7 if iq j6 jb 8,4j jk,jn,jj,jm,16n -
+ii 7 if iq j6 jb 8,4j jm,jk,jn,14a,1o8 -
+ii 7 if iq j6 jb 8,4j jn,jk,p6,jm,14a -
+ii 7 if iq j6 jb 8,4j p9,jj,jm,jn,jk -
+ii 7 if iq j6 qj 4j,8 16n,jn,jk,jm,jj -
+ii 7 if iq j6 qj 4j,8 jj,1m5,jk,jn,1o8 -
+ii 7 if iq j6 qj 4j,8 jj,jk,jn,jm,16n -
+ii 7 if iq j6 qj 4j,8 jk,jm,jn,p9 -
+ii 7 if iq j6 qj 4j,8 jk,jn,16n,jj,jm -
+ii 7 if iq j6 qj 4j,8 jk,jn,jj,jm,16n -
+ii 7 if iq j6 qj 4j,8 jk,jn,jm,p9,14a -
+ii 7 if iq j6 qj 4j,8 jm,14a,jk,jn,p9 -
+ii 7 if iq j6 qj 4j,8 jn,16n,jm,jj,jk -
+ii 7 if iq j6 qj 4j,8 jn,jm,jk,p9,14a -
+ii 7 if iq j6 qj 8,4j 14a,jn,16n,jj,jk -
+ii 7 if iq j6 qj 8,4j 16n,jj,jm,jn,jk -
+ii 7 if iq j6 qj 8,4j jk,1o8,jn,16n,14a -
+ii 7 if iq j6 qj 8,4j jk,jn,jj,jm,14a -
+ii 7 if iq j6 qj 8,4j jk,jn,jj,jm,16n -
+ii 7 if iq j6 qj 8,4j jk,jn,jm,p9 -
+ii 7 if iq j6 qj 8,4j jm,jj,jk,14a,jn -
+ii 7 if iq j6 qj 8,4j jm,jn,jk,16n,jj -
+ii 7 if si j6 jb 4j,8 jk,jn,jj,jm,16n -
+ii 7 if si j6 jb 4j,8 jn,14a,jk,116,jj -
+ii 7 if si j6 jb 8,4j jk,jn,jj,jm,16n -
+ii 7 if si j6 qj 4j,8 jj,16n,jn,jk,jm -
+ii 7 if si j6 qj 4j,8 jk,16m,116,jn,16n -
+ii 7 if si j6 qj 4j,8 jk,jn,jj,jm,14a -
+ii 7 if si j6 qj 4j,8 jm,16n,jj,jk,jn -
+ii 7 if si j6 qj 8,4j jk,jm,p9,jn,1o8 -
+ii 7 sd 19y j6 jb 4j,8 116,jm,jk,jn,16n -
+ii 7 sd 19y j6 jb 4j,8 16n,jn,jm,p9,jk -
+ii 7 sd 19y j6 jb 4j,8 jk,jn,jm,16n,14a -
+ii 7 sd 19y j6 jb 4j,8 jm,jk,jn,14a,1o8 -
+ii 7 sd 19y j6 jb 4j,8 jn,jj,jk,jm,p9 -
+ii 7 sd 19y j6 jb 8,4j jk,16n,jj,1o8,jn -
+ii 7 sd 19y j6 jb 8,4j jm,p9,jk,14a,jn -
+ii 7 sd 19y j6 qj 4j,8 jk,jn,jm,14a,jj -
+ii 7 sd 19y j6 qj 8,4j jn,jk,14a,jm,p9 -
+ii 7 sd 19y j6 qj 8,4j p9,14a,jn,jk,jm -
+ii 7 sd iq j6 1jw 4j,8 16w,p9,jn -
+ii 7 sd iq j6 1m4 8,4j 16n,jn,jk,jm,jj -
+ii 7 sd iq j6 jb 4j,8 16n,p9,116,jn,16w -
+ii 7 sd iq j6 jb 4j,8 jj,14a,jn,jm,jk -
+ii 7 sd iq j6 jb 4j,8 jj,1o8,jn,jm,jk -
+ii 7 sd iq j6 jb 4j,8 jk,jn,jj,jm,16n -
+ii 7 sd iq j6 jb 4j,8 jk,jn,jm,p6,p9 -
+ii 7 sd iq j6 jb 8,4j 14a,16n,jn,jk,1o8 -
+ii 7 sd iq j6 jb 8,4j 1jk,jj,jm,jn,jk -
+ii 7 sd iq j6 jb 8,4j jk,jn,jj,jm,16n -
+ii 7 sd iq j6 jb 8,4j jm,jk,jn,14a,jj -
+ii 7 sd iq j6 qj 4j,8 16n,jn,jm,jk,p9 -
+ii 7 sd iq j6 qj 4j,8 jj,jk,jn,14a,jm -
+ii 7 sd iq j6 qj 4j,8 jk,jn,jj,16n,jm -
+ii 7 sd iq j6 qj 4j,8 jk,jn,jj,jm,14a -
+ii 7 sd iq j6 qj 4j,8 jk,jn,jj,jm,16n -
+ii 7 sd iq j6 qj 4j,8 jk,p6,jm,jn,14a -
+ii 7 sd iq j6 qj 4j,8 jm,16n,jj,jk,jn -
+ii 7 sd iq j6 qj 4j,8 jn,jk,jj,jm,1uy -
+ii 7 sd iq j6 qj 4j,8 jn,jm,jk,jj,14a -
+ii 7 sd iq j6 qj 8,4j 116,16m,1o8,p6,p9 -
+ii 7 sd iq j6 qj 8,4j 14a,16n,jn,jk,jj -
+ii 7 sd iq j6 qj 8,4j jj,jn,jm,jk,16n -
+ii 7 sd iq j6 qj 8,4j jk,jn,jj,jm,16n -
+ii 7 sd iq j6 qj 8,4j jm,jk,jn,14a,p9 -
+ii 7 sd iq j6 qj 8,4j jm,jn,jj,jk,p9 -
+ii 7 sd iq j6 qj 8,4j jn,jj,jk,jm,16n -
+ii 7 sd si j6 jb 8,4j jk,jn,jj,jm,16n -
+ii 7 sd si j6 jb 8,4j jk,jn,jj,jm,p9 -
+ii 7 sd si j6 jb 8,4j jk,jn,jm,jj,1o8 -
+ii 7 sd si j6 qj 4j,8 jn,116,jk,1uy,1m5 -
+ii 7 sd si j6 qj 8,4j jk,jn,jj,jm,16n -
+ii 7 if iq j6 qj 8,9z p6,14a,jk,jn,jm -
+ii 7 if iq j6 qj 9z,8 1m5,jk,jn,jm,jj -
+ii 7 sd iq j6 jb 8,9z jk,p9,jn,jm,16m -
+ii 7 sd si j6 qj 9z,8 jk,jn,jj,jm,16n -
 @weapons
-0 1zs 0 k5 wy - pi,n3,h4,1yu
-1 6 1 ii - - ir,iw,j6,h8
-2 pr 0 q0 1t8 1tc yg,140,j5,jb
-0 i9 0 ij jj - iq,iv,j7,ja
-2 i8 0 ih hj jf 12v,sf,j5,jb
-0 273 0 vt pm - r1,r2,h9,1c4
-2 1nn 0 k5 1q5 - mz,ue,1no,wu
-0 3fs 0 39o p2 - se,iv,44v,3f0
-0 i9 0 ij 1ex jf n0,pj,j7,ja
-2 1nn 0 k5 227 jf pi,oq,12k,30y
-2 1nn 0 k5 nl jf pi,oq,12k,30y
-0 i9 0 ij 1ex nj n0,pj,j7,ja
-2 12q 0 vu yt jf 135,12x,j5,nf
-2 1nn 0 k5 227 nj ny,ud,12k,162
-2 2yk 0 3v0 202 jf v9,m0,w0,h7
-0 1nq 0 2u8 1mv oz v9,m0,h9,17q
-2 og 0 gc p3 ta r1,oq,1b4,rw
-0 1mz 0 mv hj 28j ts,gs,1ia,qf
-2 1nn 0 k5 nl jf go,kg,j7,1ib
-0 1k6 0 3vt 18c 1k8 pi,r2,si,1c4
-2 pr 0 q0 1t8 xj 20u,q9,j5,jb
-0 23t 0 mv 1ch up pi,qa,qf,1ia
-2 g1 0 gc hk l2 n0,ki,1dh,ow
-0 1lb 0 tr hj 163 nz,m0,1le,vd
-2 1h9 0 2iy 1ec nj n0,1c1,h3,vd
-2 1h9 0 2iy 1hi 2gl iq,11o,h3,1cg
-0 2jo 0 k5 y7 nj pi,155,1le,1v7
-2 1ze 0 1zf 15c nj 169,2ny,1c4,1fu
-0 19p 0 19q 19u jf ts,19t,17f,17g
-2 og 0 gc p3 ta pi,oq,ou,r8
-0 i9 0 ij 1ex jf mz,pj,j7,ja
-2 1nn 0 k5 nl jf pi,pk,j7,wu
-0 3fs 0 2ye p2 xj ro,m1,na,3wp
-2 1h9 0 10d 1hi xj mz,1he,1tq,1qd
-0 1lb 0 tr hj nj v9,m0,1le,1mb
-2 vm 0 vu w8 - ip,vy,17q,10i
-0 20w 0 2ep 1rc oz om,1w0,h9,xg
-2 vm 0 vu w8 jf ip,1d3,j5,sk
-0 ll 0 ge hj jf gm,pj,h3,10i
-2 og 0 gc p3 ta n0,ki,1dh,ow
-0 1k6 0 2ej 18c l1 n0,r2,h4,1c4
-2 1eu 0 1t1 1ew xj 18f,140,j5,24n
-0 tl 0 tr tv w4 t2,o3,na,kp
-2 og 0 gc p3 w4 pi,13l,1dh,rw
-0 i9 0 ij jj xj 10e,iv,1q3,2jd
-2 191 0 ih p3 jf 12v,1d3,j5,vd
-2 og 0 gc p3 ta pi,13l,1dh,rw
-0 1lb 0 tr hj nj nz,o3,h9,17q
-2 i8 0 ih hj jf 135,vy,j5,vd
-0 1g9 0 v7 1vu oz ro,iv,2fd,223
-2 1z1 0 k5 1ch jf lv,2ny,ot,1fu
-0 32w 0 1ll 11c p0 yf,qa,na,162
-2 1vy 0 1vz 1td 20j ir,1w0,ot,10i
-0 2cu 0 1n8 xm nj 15l,m1,24a,xg
-2 288 0 16y 177 jf r1,pk,kt,wu
-0 2lk 0 k5 2lm l1 ts,kg,1ib,1mb
-0 115 0 v7 uu jf n0,oq,kp,qf
-2 208 0 1ll tv hf yf,va,kp,wu
-0 i9 0 14c jj l1 mz,iv,j7,ja
-2 og 0 gc p3 l1 go,oq,ou,rw
-0 s7 0 sc 1ap sn r1,1ce,si,1mb
-2 g1 0 gc 1ap ta se,19h,171,wt
-0 17o 0 k5 1qs - se,gt,2bw,2zy
-2 1vd 0 1h0 1ky sm zy,vy,1f2,j5
-0 1lb 0 tr hj ta zx,m0,1le,1mb
-2 1vg 0 k5 hj - zx,1fr,r5,1gw
-0 2il 0 18v 28n 1b5 mz,m1,si,vd
-2 1ml 0 14c xm xj mz,m1,r5,wu
-2 22n 0 k5 xn jf go,va,nf,wu
-0 1lb 0 tr nl nj nz,m0,h9,vd
-2 vm 0 vu w8 sm ze,sf,j5,w3
-0 17o 0 12u 17t jf ts,n3,h3,17q
-2 31l 0 1ns xn sm zy,1d3,j5,17q
-0 1lb 0 tr hj - gm,m0,1le,1mb
-2 1eu 0 1ev 1ew - 20u,q9,j5,1cg
-0 2jr 0 2js hk hf go,1gt,130,12k
-2 og 0 gc p3 hf r1,ki,ou,ow
-0 1lb 0 tr nl 163 nz,m0,1le,h7
-2 25a 0 1iv 27o jf n0,10f,11p,o8
-0 46j 0 16y 1nx 43q ny,va,1df,1d8
-2 2ec 0 q0 qj xj yg,1y2,j5,jb
-0 g0 0 ge hj jf nz,oq,h3,ma
-0 vn 0 ge oc hg v9,qa,ot,y5
-2 i8 0 ih hj jg zy,1d3,j5,jb
-0 17o 0 k5 1qs xj 10e,1qk,2bw,1mt
-2 i8 0 ih hj jf 12v,ix,j5,jb
-0 2gi 0 1zh 2go jf ny,ki,j7,2gk
-2 1h9 0 3nd 1ec hf ub,14h,h3,2gk
-0 27w 0 k5 1ch - go,pj,130,qf
-2 vm 0 vu 186 - 12v,vy,j5,101
-0 18e 0 k4 18i qg 19s,qa,ou,ku
-2 3n1 0 1hd 1fj 330 lx,265,h3,10i
-0 224 0 k5 227 l1 pi,kg,1m6,qf
-2 g1 0 gc hk l1 r1,gs,1kd,h9
-0 1lb 0 tr hj p0 169,m0,h9,vd
-2 1rd 0 k5 1ch w4 r1,va,si,162
-0 1k6 0 2ej 18c - n0,r2,2ja,1c4
-2 1ml 0 14c 1mo 2p4 mz,m1,r5,wu
-0 1a7 0 mv oc jf n0,qa,kp,1mb
-2 191 0 ih p3 sm 135,12x,j5,jb
-0 ll 0 ge hj 1ud v9,m0,o7,ko
-0 3on 0 1hb - jf ts,ki,12k,130,10h
-2 1c8 0 1cb w8 sn ny,17e,o5,zj
-0 1wg 0 k5 l3 jf yf,ud,1bp,qf
-2 1ml 0 1zh 1mo nj pi,pk,r5,wu
-0 18t 0 18v 11s nj ts,pj,qf,vd
-2 g1 0 gc hk nj r1,ki,1dh,rw
-0 2a5 0 x6 1xt - r1,pk,2sj,sk
-2 g1 0 gc 1ap - lx,1qk,h4,h9
-0 3dv 0 19q 1z2 xj 10e,iv,1ld,2rq
-0 i9 0 k5 jj - se,ue,1q3,1wz
-0 ps 0 mv qk l2 ts,1b2,kp,qf
-0 224 0 k5 2rs ta ny,pk,h3,1dh
-2 2ec 0 q0 1t8 xj q7,q9,j5,si
-0 344 0 k5 - xj 42u,ue,2br,1t3
-0 ll 0 ge hj hg v9,qa,h3,y5
-2 1go 0 k5 l4 jf n0,pk,10z,185
-0 224 0 k5 xn - ny,kg,h3,rw
-2 i8 0 ih hj jg ze,1d3,j5,101
-0 2k2 0 k5 hj jf r1,pj,1df,10z
-2 og 0 gc p3 ta n0,ki,1dh,h9
-0 1gz 0 k5 2ty ta gn,11o,h3,1v7
-2 g1 0 gc hk ta go,13l,1yu,rw
-0 3ln 0 k5 16r ta ub,qa,1mb,3lo
-2 1ze 0 1zf 15c ta gm,1fr,kp,10i
-0 4qz 0 x6 nl rd ny,pj,si,13n
-2 i8 0 ih hj jf 12v,sf,j5,101
-0 2bm 0 1hb 1b6 jf pi,pk,1d4,1ia
-2 1s9 0 10d nl - ny,yk,1fh,o8
-0 vn 0 ge oc qg t2,pj,w0,ma
-2 vm 0 vu w8 jg 12v,sf,j5,w3
-0 nt 0 nw od hg t2,1cd,na,ma
-0 3x7 0 v7 15c up ts,kg,1le,12k
-2 207 0 10d 10j 14k n0,10f,r5,o8
-0 4qz 0 x6 nl l1 ny,pj,22u,17q
-2 i8 0 ih hj sm ze,12x,j5,jb
-0 i9 0 k5 jj - mz,iv,1wy,1wz
-2 1nn 0 k5 227 ta go,kg,1no,26i
-0 ll 0 ge hj nj t2,pj,h3,ma
-2 2ec 0 q0 1t8 xj 18f,1y2,j5,si
-0 i9 0 1zh 1ex jf pi,pj,j7,ja
-2 i8 0 ih hj jg ip,12x,j5,jb
-0 224 0 k5 227 - ub,pk,h3,1rk
-2 1x7 0 1ll 2xy w4 lx,gt,nf,162
-0 209 0 tr p3 - v9,m0,h9,1k5
-2 1ml 0 1zh xm hf ub,pk,m7,wu
-2 i8 0 ih hj jf 12v,vy,j5,vd
-0 1lb 0 tr hj - lv,m0,1le,vd
-2 i8 0 ih hj - ip,vy,j5,jb
-0 1lb 0 tr hj - lv,m0,vc,vd
-0 209 0 tr p3 nj zx,m0,yn,vd
-2 og 0 gc p3 rd go,gs,ou,rw
-0 1nq 0 2qv 1mv rd v9,o3,h9,1eb
-2 1gu 0 vu 11c jg 12v,12x,2vd,j5
-0 i9 0 ij 1ex jf pi,pj,j7,ja
-2 pr 0 q0 1t8 xj q7,1t6,j5,jb
-0 18t 0 18v 18c rd ts,pj,qf,vd
-2 g1 0 gc hk ta n0,13l,1dh,rw
-0 1mk 0 v7 177 - pi,pj,1lm,wt
-2 1tf 0 18a 1fj - gn,n5,1m6,1rk
-0 1lb 0 tr hj 1ud t2,o3,1le,h7
-2 og 0 gc p3 ta r1,13l,1b4,rw
-0 1g9 0 1gc 1vu 1rx ro,iv,kp,qf
-2 25q 0 x8 1z2 xj mz,1as,o7,1cg
-0 2jr 0 2js hk 17h ny,o1,130,1ij
-2 22n 0 k5 xn hf r1,kg,1no,185
-0 149 0 vt hj 14k yf,14h,r5,ne
-0 2jo 0 k5 y7 jf ts,yk,1le,1mb
-2 20y 0 q0 1rc xj yj,1qc,kp,j5
-0 1pv 0 1co mj xj 10e,1as,1tq,1mt
-2 1ck 0 16y qk jf 12d,pj,r5,1ib
-0 i9 0 k5 jj xj iq,gt,1q3,1wz
-0 17o 0 k5 1qs xj 15l,12w,1qp,1qq
-2 26e 0 1t1 y7 sm ip,ix,kp,j5
-0 2jo 0 k5 y7 nj 12d,10f,h3,162
-2 1go 0 k5 1ch jf yf,13l,h3,162
-0 i9 0 14c jj jf iq,iv,j7,ja
-0 209 0 tr p3 1ud nz,m0,h9,1mb
-0 vn 0 ge hj hg gm,m0,10x,h7
-2 g1 0 gc hk ta pi,gs,ou,rw
-0 1jz 0 tr tv rd v9,m0,na,kp
-2 10b 0 10d 2i0 - pi,155,ot,10i
-2 1go 0 k5 299 jf r1,pk,h3,wu
-0 i9 0 ij 1ex uq pi,pj,j7,ja
-2 vm 0 vu w8 - 12v,ix,j5,w3
-0 i9 0 k5 jj - mz,iv,j7,ja
-2 1ml 0 ij 1mo xj n0,pk,r5,2gk
-0 2is 0 k5 1ky - r1,1h1,ot,1v7
-2 1sd 0 16y hj ta ot,r8
-0 17o 0 12u 1qs - mz,iv,22u,17q
-2 12q 0 vu yt - ip,sf,j5,rw
-0 426 0 25r 1rc 1rw se,gt,1yu,xg
-0 ps 0 mv qk jf pi,pj,kp,qf
-2 1rd 0 k5 l4 jf ub,ud,10z,185
-0 1lb 0 tr hj - v9,m0,h9,vd
-2 294 0 k5 l4 1ud gm,1fr,26t,1k2
-0 ll 0 ge hj qg v9,pj,h3,y5
-2 g1 0 gc hk up ny,oq,1dh,rw
-0 1zs 0 k5 wy up pi,gs,11p,o8
-2 1go 0 k5 l4 up r1,kg,11p,26i
-0 1tt 0 k5 zm jf go,va,12k,185
-2 2yk 0 3av 202 1rw lv,m0,1le,1mb
-0 2kx 0 k5 1xt l1 n0,pj,h3,r8
-2 1lj 0 1ll tv l1 ub,ud,1lm,nf
-0 2mg 0 mv 20r hf pi,pj,kp,162
-2 29o 0 1ns 1je jf ze,12x,j5,ma
-0 19p 0 19q 19u l1 kb,19t,18g,17g
-2 i8 0 ih hj sm 135,sf,j5,1hf
-0 i9 0 14c 1ex qg pi,pj,j7,ja
-2 i8 0 ih hj jg ip,1d3,j5,jb
-0 1nq 0 2qv 1nw w4 nz,m0,h9,1k5
-2 g1 0 gc hk l1 n0,oq,1yu,h9
-0 2kx 0 k5 1xt up go,gs,10z,qf
-2 i8 0 ih hj sm zy,12x,j5,jb
-0 u0 0 k5 uu - 12d,ki,na,1ol
-2 i8 0 ih hj jf ip,12x,j5,jb
-0 1lb 0 tr hj nj t2,m0,vc,vd
-2 2ad 0 15w 1o2 - kc,o2,131,1hx
-0 i9 0 12u 1ex nj iq,pj,j7,ja
-2 pr 0 q0 qj xj q7,140,j5,jb
-0 12s 0 k5 16f 28j iq,1qk,223,1qp
-2 1vg 0 k5 hj 1ud gm,o3,r5,1fu
-0 22e 0 mv oc 28j 12d,oq,11p,qf
-2 2cr 0 k5 xn hg zx,29l,ow,10i
-0 2mg 0 mv pm jf r1,ki,si,1mb
-2 vm 0 vu w8 - ip,vy,1f2,w3
-2 1c8 0 1cb 186 - go,17e,1lw,zj
-0 1hp 0 k5 pm qg yf,yk,1le,ne
-2 g1 0 gc hk ta ts,ki,1yu,rw
-0 g0 0 ge hj jf gm,gu,h3,na
-2 2yk 0 2au 1aw xj om,kh,3pj,1mn
-0 1lb 0 tr hj ta zx,m0,h9,vd
-2 og 0 gc p3 l1 pi,oq,ou,rw
-2 og 0 gc 2hr - pi,oq,ou,rw
+0 1zz 0 k8 x4 - pn,n8,h5,1z1
+1 6 1 ik - - it,iy,j8,h9
+2 pw 0 q5 1tf 1tj ym,146,j7,jd
+0 ia 0 il jl - is,ix,j9,jc
+2 i9 0 ij hk jh 131,sk,j7,jd
+0 27a 0 vz pr - r6,r7,ha,1cb
+2 1nu 0 k8 1qc - n4,uk,1nv,x0
+0 3fz 0 39v p7 - sj,ix,452,3f7
+0 ia 0 il 1f4 jh n5,po,j9,jc
+2 1nu 0 k8 22e jh pn,ov,12q,315
+2 1nu 0 k8 nq jh pn,ov,12q,315
+0 ia 0 il 1f4 no n5,po,j9,jc
+2 12w 0 w0 yz jh 13b,133,j7,nk
+2 1nu 0 k8 22e no o3,uj,12q,168
+2 2yr 0 3v7 209 jh vf,m4,w6,h8
+0 1nx 0 2uf 1n2 p4 vf,m4,ha,17w
+2 ol 0 gd p8 tf r6,ov,1bb,s1
+0 1n6 0 n0 hk 28q tx,gt,1ih,qk
+2 1nu 0 k8 nq jh gp,kj,j9,1ii
+0 1kd 0 3w0 18i 1kf pn,r7,sn,1cb
+2 pw 0 q5 1tf xp 211,qe,j7,jd
+0 240 0 n0 1co uv pn,qf,qk,1ih
+2 g1 0 gd hl l5 n5,kl,1do,p1
+0 1li 0 tw hk 169 o4,m4,1ll,vj
+2 1hg 0 2j5 1ej no n5,1c8,h4,vj
+2 1hg 0 2j5 1hp 2gs is,11u,h4,1cn
+0 2jv 0 k8 yd no pn,15b,1ll,1ve
+2 1zl 0 1zm 15i no 16f,2o5,1cb,1g1
+0 19w 0 19x 1a1 jh tx,1a0,17l,17m
+2 ol 0 gd p8 tf pn,ov,oz,rd
+0 ia 0 il 1f4 jh n4,po,j9,jc
+2 1nu 0 k8 nq jh pn,pp,j9,x0
+0 3fz 0 2yl p7 xp rt,m5,nf,3ww
+2 1hg 0 10j 1hp xp n4,1hl,1tx,1qk
+0 1li 0 tw hk no vf,m4,1ll,1mi
+2 vs 0 w0 we - ir,w4,17w,10o
+0 213 0 2ew 1rj p4 or,1w7,ha,xm
+2 vs 0 w0 we jh ir,1da,j7,sp
+0 lo 0 gf hk jh gn,po,h4,10o
+2 ol 0 gd p8 tf n5,kl,1do,p1
+0 1kd 0 2eq 18i l4 n5,r7,h5,1cb
+2 1f1 0 1t8 1f3 xp 18l,146,j7,24u
+0 tq 0 tw u0 wa t7,o8,nf,ks
+2 ol 0 gd p8 wa pn,13r,1do,s1
+0 ia 0 il jl xp 10k,ix,1qa,2jk
+2 197 0 ij p8 jh 131,1da,j7,vj
+2 ol 0 gd p8 tf pn,13r,1do,s1
+0 1li 0 tw hk no o4,o8,ha,17w
+2 i9 0 ij hk jh 13b,w4,j7,vj
+0 1gg 0 vd 1w1 p4 rt,ix,2fk,22a
+2 1z8 0 k8 1co jh lz,2o5,oy,1g1
+0 333 0 1ls 11i p5 yl,qf,nf,168
+2 1w5 0 1w6 1tk 20q it,1w7,oy,10o
+0 2d1 0 1nf xs no 15r,m5,24h,xm
+2 28f 0 174 17d jh r6,pp,kw,x0
+0 2lr 0 k8 2lt l4 tx,kj,1ii,1mi
+0 11b 0 vd v0 jh n5,ov,ks,qk
+2 20f 0 1ls u0 hg yl,vg,ks,x0
+0 ia 0 14i jl l4 n4,ix,j9,jc
+2 ol 0 gd p8 l4 gp,ov,oz,s1
+0 sc 0 sh 1aw ss r6,1cl,sn,1mi
+2 g1 0 gd 1aw tf sj,19o,177,wz
+0 17u 0 k8 1qz - sj,gu,2c3,305
+2 1vk 0 1h7 1l5 sr 104,w4,1f9,j7
+0 1li 0 tw hk tf 103,m4,1ll,1mi
+2 1vn 0 k8 hk - 103,1fy,ra,1h3
+0 2is 0 191 28u 1bc n4,m5,sn,vj
+2 1ms 0 14i xs xp n4,m5,ra,x0
+2 22u 0 k8 xt jh gp,vg,nk,x0
+0 1li 0 tw nq no o4,m4,ha,vj
+2 vs 0 w0 we sr zk,sk,j7,w9
+0 17u 0 130 17z jh tx,n8,h4,17w
+2 31s 0 1nz xt sr 104,1da,j7,17w
+0 1li 0 tw hk - gn,m4,1ll,1mi
+2 1f1 0 1f2 1f3 - 211,qe,j7,1cn
+0 2jy 0 2jz hl hg gp,1h0,136,12q
+2 ol 0 gd p8 hg r6,kl,oz,p1
+0 1li 0 tw nq 169 o4,m4,1ll,h8
+2 25h 0 1j2 27v jh n5,10l,11v,od
+0 46q 0 174 1o4 43x o3,vg,1dm,1df
+2 2ej 0 q5 qo xp ym,1y9,j7,jd
+0 g0 0 gf hk jh o4,ov,h4,me
+0 vt 0 gf oh hh vf,qf,oy,yb
+2 i9 0 ij hk ji 104,1da,j7,jd
+0 17u 0 k8 1qz xp 10k,1qr,2c3,1n0
+2 i9 0 ij hk jh 131,iz,j7,jd
+0 2gp 0 1zo 2gv jh o3,kl,j9,2gr
+2 1hg 0 3nk 1ej hg uh,14n,h4,2gr
+0 283 0 k8 1co - gp,po,136,qk
+2 vs 0 w0 18c - 131,w4,j7,107
+0 18k 0 k7 18o ql 19z,qf,oz,kx
+2 3n8 0 1hk 1fq 337 m1,26c,h4,10o
+0 22b 0 k8 22e l4 pn,kj,1md,qk
+2 g1 0 gd hl l4 r6,gt,1kk,ha
+0 1li 0 tw hk p5 16f,m4,ha,vj
+2 1rk 0 k8 1co wa r6,vg,sn,168
+0 1kd 0 2eq 18i - n5,r7,2jh,1cb
+2 1ms 0 14i 1mv 2pb n4,m5,ra,x0
+0 1ae 0 n0 oh jh n5,qf,ks,1mi
+2 197 0 ij p8 sr 13b,133,j7,jd
+0 lo 0 gf hk 1uk vf,m4,oc,kr
+0 3ou 0 1hi - jh tx,kl,12q,136,10n
+2 1cf 0 1ci we ss o3,17k,oa,zp
+0 1wn 0 k8 l6 jh yl,uj,1bw,qk
+2 1ms 0 1zo 1mv no pn,pp,ra,x0
+0 18z 0 191 11y no tx,po,qk,vj
+2 g1 0 gd hl no r6,kl,1do,s1
+0 2ac 0 xc 1y0 - r6,pp,2sq,sp
+2 g1 0 gd 1aw - m1,1qr,h5,ha
+0 3e2 0 19x 1z9 xp 10k,ix,1lk,2rx
+0 ia 0 k8 jl - sj,uk,1qa,1x6
+0 px 0 n0 qp l5 tx,1b9,ks,qk
+0 22b 0 k8 2rz tf o3,pp,h4,1do
+2 2ej 0 q5 1tf xp qc,qe,j7,sn
+0 34b 0 k8 - xp 431,uk,2by,1ta
+0 lo 0 gf hk hh vf,qf,h4,yb
+2 1gv 0 k8 l7 jh n5,pp,115,18b
+0 22b 0 k8 xt - o3,kj,h4,s1
+2 i9 0 ij hk ji zk,1da,j7,107
+0 2k9 0 k8 hk jh r6,po,1dm,115
+2 ol 0 gd p8 tf n5,kl,1do,ha
+0 1h6 0 k8 2u5 tf go,11u,h4,1ve
+2 g1 0 gd hl tf gp,13r,1z1,s1
+0 3lu 0 k8 16x tf uh,qf,1mi,3lv
+2 1zl 0 1zm 15i tf gn,1fy,ks,10o
+0 4r6 0 xc nq ri o3,po,sn,13t
+2 i9 0 ij hk jh 131,sk,j7,107
+0 2bt 0 1hi 1bd jh pn,pp,1db,1ih
+2 1sg 0 10j nq - o3,yq,1fo,od
+0 vt 0 gf oh ql t7,po,w6,me
+2 vs 0 w0 we ji 131,sk,j7,w9
+0 ny 0 o1 oi hh t7,1ck,nf,me
+0 3xe 0 vd 15i uv tx,kj,1ll,12q
+2 20e 0 10j 10p 14q n5,10l,ra,od
+0 4r6 0 xc nq l4 o3,po,231,17w
+2 i9 0 ij hk sr zk,133,j7,jd
+0 ia 0 k8 jl - n4,ix,1x5,1x6
+2 1nu 0 k8 22e tf gp,kj,1nv,26p
+0 lo 0 gf hk no t7,po,h4,me
+2 2ej 0 q5 1tf xp 18l,1y9,j7,sn
+0 ia 0 1zo 1f4 jh pn,po,j9,jc
+2 i9 0 ij hk ji ir,133,j7,jd
+0 22b 0 k8 22e - uh,pp,h4,1rr
+2 1xe 0 1ls 2y5 wa m1,gu,nk,168
+0 20g 0 tw p8 - vf,m4,ha,1kc
+2 1ms 0 1zo xs hg uh,pp,mb,x0
+2 i9 0 ij hk jh 131,w4,j7,vj
+0 1li 0 tw hk - lz,m4,1ll,vj
+2 i9 0 ij hk - ir,w4,j7,jd
+0 1li 0 tw hk - lz,m4,vi,vj
+0 20g 0 tw p8 no 103,m4,yt,vj
+2 ol 0 gd p8 ri gp,gt,oz,s1
+0 1nx 0 2r2 1n2 ri vf,o8,ha,1ei
+2 1h1 0 w0 11i ji 131,133,2vk,j7
+0 ia 0 il 1f4 jh pn,po,j9,jc
+2 pw 0 q5 1tf xp qc,1td,j7,jd
+0 18z 0 191 18i ri tx,po,qk,vj
+2 g1 0 gd hl tf n5,13r,1do,s1
+0 1mr 0 vd 17d - pn,po,1lt,wz
+2 1tm 0 18g 1fq - go,na,1md,1rr
+0 1li 0 tw hk 1uk t7,o8,1ll,h8
+2 ol 0 gd p8 tf r6,13r,1bb,s1
+0 1gg 0 1gj 1w1 1s4 rt,ix,ks,qk
+2 25x 0 xe 1z9 xp n4,1az,oc,1cn
+0 2jy 0 2jz hl 17n o3,o6,136,1iq
+2 22u 0 k8 xt hg r6,kj,1nv,18b
+0 14f 0 vz hk 14q yl,14n,ra,nj
+0 2jv 0 k8 yd jh tx,yq,1ll,1mi
+2 215 0 q5 1rj xp yp,1qj,ks,j7
+0 1q2 0 1cv mn xp 10k,1az,1tx,1n0
+2 1cr 0 174 qp jh 12j,po,ra,1ii
+0 ia 0 k8 jl xp is,gu,1qa,1x6
+0 17u 0 k8 1qz xp 15r,132,1qw,1qx
+2 26l 0 1t8 yd sr ir,iz,ks,j7
+0 2jv 0 k8 yd no 12j,10l,h4,168
+2 1gv 0 k8 1co jh yl,13r,h4,168
+0 ia 0 14i jl jh is,ix,j9,jc
+0 20g 0 tw p8 1uk o4,m4,ha,1mi
+0 vt 0 gf hk hh gn,m4,113,h8
+2 g1 0 gd hl tf pn,gt,oz,s1
+0 1k6 0 tw u0 ri vf,m4,nf,ks
+2 10h 0 10j 2i7 - pn,15b,oy,10o
+2 1gv 0 k8 29g jh r6,pp,h4,x0
+0 ia 0 il 1f4 uw pn,po,j9,jc
+2 vs 0 w0 we - 131,iz,j7,w9
+0 ia 0 k8 jl - n4,ix,j9,jc
+2 1ms 0 il 1mv xp n5,pp,ra,2gr
+0 2iz 0 k8 1l5 - r6,1h8,oy,1ve
+2 1sk 0 174 hk tf oy,rd
+0 17u 0 130 1qz - n4,ix,231,17w
+2 12w 0 w0 yz - ir,sk,j7,s1
+0 42d 0 25y 1rj 1s3 sj,gu,1z1,xm
+0 px 0 n0 qp jh pn,po,ks,qk
+2 1rk 0 k8 l7 jh uh,uj,115,18b
+0 1li 0 tw hk - vf,m4,ha,vj
+2 29b 0 k8 l7 1uk gn,1fy,270,1k9
+0 lo 0 gf hk ql vf,po,h4,yb
+2 g1 0 gd hl uv o3,ov,1do,s1
+0 1zz 0 k8 x4 uv pn,gt,11v,od
+2 1gv 0 k8 l7 uv r6,kj,11v,26p
+0 1u0 0 k8 zs jh gp,vg,12q,18b
+2 2yr 0 3b2 209 1s3 lz,m4,1ll,1mi
+0 2l4 0 k8 1y0 l4 n5,po,h4,rd
+2 1lq 0 1ls u0 l4 uh,uj,1lt,nk
+0 2mn 0 n0 20y hg pn,po,ks,168
+2 29v 0 1nz 1jl jh zk,133,j7,me
+0 19w 0 19x 1a1 l4 ke,1a0,18m,17m
+2 i9 0 ij hk sr 13b,sk,j7,1hm
+0 ia 0 14i 1f4 ql pn,po,j9,jc
+2 i9 0 ij hk ji ir,1da,j7,jd
+0 1nx 0 2r2 1o3 wa o4,m4,ha,1kc
+2 g1 0 gd hl l4 n5,ov,1z1,ha
+0 2l4 0 k8 1y0 uv gp,gt,115,qk
+2 i9 0 ij hk sr 104,133,j7,jd
+0 u5 0 k8 v0 - 12j,kl,nf,1os
+2 i9 0 ij hk jh ir,133,j7,jd
+0 1li 0 tw hk no t7,m4,vi,vj
+2 2ak 0 162 1o9 - kf,o7,137,1i4
+0 ia 0 130 1f4 no is,po,j9,jc
+2 pw 0 q5 qo xp qc,146,j7,jd
+0 12y 0 k8 16l 28q is,1qr,22a,1qw
+2 1vn 0 k8 hk 1uk gn,o8,ra,1g1
+0 22l 0 n0 oh 28q 12j,ov,11v,qk
+2 2cy 0 k8 xt hh 103,29s,p1,10o
+0 2mn 0 n0 pr jh r6,kl,sn,1mi
+2 vs 0 w0 we - ir,w4,1f9,w9
+2 1cf 0 1ci 18c - gp,17k,1m3,zp
+0 1hw 0 k8 pr ql yl,yq,1ll,nj
+2 g1 0 gd hl tf tx,kl,1z1,s1
+0 g0 0 gf hk jh gn,gv,h4,nf
+2 2yr 0 2b1 1b3 xp or,kk,3pq,1mu
+0 1li 0 tw hk tf 103,m4,ha,vj
+2 ol 0 gd p8 l4 pn,ov,oz,s1
+2 ol 0 gd 2hy - pn,ov,oz,s1
 @armor
-0 i5 0 me hq g7 iz,iz,n1 -
-1 5 1 1av jn g7 gp,n7,n7 jm
-2 i4 0 hc 12o g6 gf,gq,pl -
-3 i6 0 sl - g7 gy,10s,nx -
-4 i7 0 sl hq g7 ke,gz,q8 -
-0 i5 0 me hr g6 il,il,ol -
-1 5 1 jd la g6 iy,is,im jm
-2 i4 0 jd - g7 j0,gq,gf -
-3 i6 0 jd 1k9 wi j1,it,ik -
-4 i7 0 jd 1z3 g6 gg,gg,j2 -
-0 i5 0 jd lb g6 rr,il,il -
-1 5 1 oy nn g7 iy,q4,1si jm
-2 i4 0 kz hq g7 gw,pl,gf -
-3 i6 0 jd hq g6 kd,xc,ik -
-4 i7 0 jd hq g7 j2,k7,k7 -
-0 i5 0 jd - g6 x9,iz,il -
-1 5 1 jd l9 oi n7,n7,n7 jm
-2 i4 0 jd - g6 gf,j0,ph -
-3 i6 0 jd - g6 ik,k9,or -
-4 i7 0 jd - g6 o0,j2,ke -
-0 i5 0 jd - g6 x9,t3,il -
-2 i4 0 jd - g6 gf,gf,j0 -
-3 i6 0 jd - g6 ik,qy,k9 -
-0 i5 0 jd - g6 x9,k8,il -
-3 i6 0 jd - g6 ik,qy,or -
-0 i5 0 sl hq g7 k8,rn,gx -
-1 5 1 sl 175 g7 n7,15x,o4 jm
-2 i4 0 sl - g6 j0,gq,gq -
-3 i6 0 hb nn g6 sh,ik,10s -
-4 i7 0 ky hq g6 j2,gz,gg -
-0 i5 0 jd so g6 rn,rn,rr -
-1 20 1 - 1hl g6 o4,o4,iy jm
-2 i4 0 jd 1hk g6 j0,m3,gq -
-3 i6 0 jd - g6 ik,sh,sh -
-4 i7 0 jd - g6 y0,k7,gg -
-0 3up 0 - - g7 il,il,x9 -
-1 5 1 jd 1fb g7 n7,n7,iy jm
-2 145 0 oy l8 g7 ph,gf,gf -
-3 1bq 0 oy - ln qy,qy,gy -
-4 147 0 oy nn g7 ke,ke,k7 -
-0 19v 0 jd hq g5 t3,il,kk -
-1 5 1 jd 12o g5 gp,gh,is jm
-2 2kf 0 jd - g5 25y,25y,pl -
-3 245 0 jd hq g5 - -
-4 1hm 0 jd hq g7 - -
-0 i5 0 jd 1sb g6 k8,il,x9 -
-1 5 1 jd 1sb g6 sg,im,iy jm
-2 i4 0 jd 1sb g6 10t,gf,gf -
-3 i6 0 me ho g7 k9,j1,m4 -
-4 i7 0 jd so g7 o0,k7,gg -
-0 i5 0 hc hq ib rn,rn,yh -
-1 5 1 hc la ib is,is,n7 jm
-2 i4 0 ky hq g6 gq,pl,j0 -
-3 i6 0 hb hq g6 k9,it,ik -
-4 i7 0 hc hq g6 gz,gg,gg -
-0 i5 0 jd l8 oi il,il,iz -
-1 5 1 jd nn g7 im,is,iy jm
-2 i4 0 me la g7 gf,gq,j0 -
-3 i6 0 hc hq pv j1,it,ik -
-4 i7 0 jd nn g7 gg,gg,j2 -
-0 i5 0 jd hq g6 gx,il,q3 -
-1 5 1 hb 12o g6 n7,is,15x jm
-2 i4 0 hc - g6 gq,gf,ph -
-3 i6 0 jd nn g6 10u,10u,10s -
-4 i7 0 jd 12o g6 gg,gg,o0 -
-0 i5 0 jd hq g6 gx,rn,q3 -
-0 1h4 0 hb hq g7 kk,gj,rn -
-1 5 1 zl l9 jz n7,o4,iy jm
-2 284 0 hb hq g7 m3,j0,gq -
-3 1y7 0 hb l8 jz qy,k9,ik -
-4 147 0 hb l8 g6 gg,j2,ke -
-0 s4 0 jd nn oi il,rn,rn -
-1 5 1 jd l8 oi sg,is,is jm
-2 s6 0 jd l8 g7 gq,gq,j0 -
-3 s3 0 jd nn g7 or,ik,j1 -
-4 s5 0 jd nn g7 j2,kj,gg -
-0 i5 0 hc l8 g7 gx,iz,rn -
-1 5 1 hc la oi is,is,n7 jm
-2 i4 0 hc l9 g7 gq,gq,gq -
-3 i6 0 jd la g7 ik,10u,gy -
-4 i7 0 zl hq g7 gz,kj,gg -
-0 i5 0 jd l8 g5 k8,k8,rr -
-1 5 1 jd l8 g5 q4,im,iy jm
-2 i4 0 jd hq g5 gw,pl,gf -
-3 i6 0 jd la g5 km,ik,xc -
-4 i7 0 jd l8 g5 j2,gg,gg -
-0 i5 0 jd la oi il,il,il -
-1 5 1 sl nn g6 n7,n7,iy jm
-2 i4 0 jd l9 g6 gf,gf,gq -
-3 i6 0 hc hq g6 gy,ik,j1 -
-4 i7 0 jd l9 g6 j2,k7,gg -
-0 i5 0 hb l8 g7 iz,k8,gx -
-1 5 1 jd nn g7 15x,is,is jm
-2 i4 0 hb l8 g7 j0,gq,gq -
-3 i6 0 jd la g7 10s,qy,qy -
-4 i7 0 hb lb g7 k7,kj,kj -
-0 i5 0 jd l8 oi il,rn,rn -
-1 5 1 me nn oi n7,n7,n7 jm
-2 i4 0 jd - g7 j0,ph,gq -
-3 i6 0 jd la oi ik,it,it -
-4 i7 0 jd nn g5 k7,k7,j2 -
-2 i4 0 jd - g7 j0,ph,gf -
-0 i5 0 jd l8 g7 il,iz,rr -
-1 5 1 me nn oi is,is,is jm
-3 i6 0 jd la g7 ik,j1,gy -
-4 i7 0 jd nn g5 gg,kj,y0 -
-0 i5 0 jd hq g6 il,q3,gx -
-1 5 1 jd nn ln im,o4,q4 jm
-2 i4 0 jd nn g6 j0,gq,pl -
-3 i6 0 jd l8 g6 13c,ik,j1 -
-4 i7 0 jd lb g6 o0,gg,j2 -
-0 i5 0 jd lb g7 ol,il,n1 -
-1 5 1 jd la g7 is,n7,gp jm
-2 i4 0 zl 1z3 g7 j0,ph,gf -
-3 i6 0 me 1z3 g7 ik,sh,qb -
-4 i7 0 jd l8 g7 j2,gg,ke -
-0 19v 0 sl l9 jz k8,rr,x9 -
-1 5 1 sl hq g5 gp,sg,15x jm
-2 1c6 0 hd hq jz gf,1ua,gw -
-3 19x 0 1av nn jz j1,gy,ik -
-4 19w 0 hd nn g5 gg,gg,gz -
-0 i5 0 jd hq g7 rn,rn,rr -
-1 5 1 jd 12o oi is,is,n7 jm
-2 i4 0 sl hq g6 j0,gf,pl -
-3 i6 0 jd 12o g7 km,km,10s -
-4 i7 0 hc hq g7 gg,ke,j2 -
-0 2d9 0 jd hq g6 il,il,gx -
-1 5 1 me hq g6 n7,n7,iy jm
-2 15p 0 jd hq g6 gq,gq,gq -
-3 18j 0 me hq g6 qy,qy,gy -
-4 1b8 0 jd hq g6 ke,ke,k7 -
-0 19v 0 me l9 ib il,il,k8 -
-1 5 1 sl nn g6 n7,im,iy jm
-2 1c6 0 jd l9 g6 gf,j0,gq -
-3 19x 0 hb - g6 km,k9,kd -
-4 19w 0 sl - g6 ke,ke,gz -
-0 i5 0 sl - g7 - -
-1 5 1 sl - g7 o4,15x,im jm
-2 i4 0 hc - g7 1ua,j0,gf -
-3 i6 0 1av - g7 10u -
-4 i7 0 hb - g7 - -
-0 zq 0 hc hq g7 n8,gx,il -
-1 5 1 hc nn g7 n7,n7 jm
-2 i4 0 hc hq g7 gf,gq,j0 -
-3 zo 0 hc hq g7 u8,km,gy -
-4 i7 0 hc hq g7 gg,ke,q8 -
-0 i5 0 hc hq g6 rn,rn,gx -
-2 i4 0 hc hq g6 gw,gw,gf -
-3 i6 0 jd hq g6 j1,gy,gy -
-4 i7 0 hc hp g6 o0,gg,gg -
-0 1h4 0 hd - jz iz,iz,kk -
-1 5 1 jd - g7 is,is jm
-2 145 0 hd - jz j0,gf,m3 -
-3 1bq 0 kz - jz gy,kd,kd -
-4 147 0 hd - jz gg,gg,k7 -
-0 i5 0 hb - g6 il,il,rr -
-2 i4 0 jd - g6 m3,gf,gq -
-3 i6 0 jd - g6 gy,km,u8 -
-4 i7 0 jd - g6 k7,gg -
-0 2e0 0 jd - g7 1nk,1nk -
-2 zp 0 hb - g7 gf,gf,j0 -
-3 24m 0 jd - g7 gy,u8,u8 -
-4 zn 0 jd - g7 gg,gg,k7 -
-0 i5 0 hb - g6 il,il -
-0 i5 0 jd nn g7 rn,rn,n1 -
-1 5 1 jd la wi gh,gh,gh jm
-2 i4 0 kz - g5 gq,gq,pl -
-3 i6 0 me lb g7 ik,13c,gi -
-4 i7 0 jd l9 g5 j2,gg,ls -
-0 i5 0 jd nn g6 gx,il,il -
-1 5 1 hc nn g6 n7,15x,iy jm
-2 i4 0 jd la g6 j0,m3,gq -
-3 i6 0 jd lb g6 gy,xc,sh -
-4 i7 0 jd nn g6 gg,k7,gz -
-0 i5 0 jd hq ib rn,iz,il -
-1 5 1 jd hq g6 n7,n7,kl jm
-2 i4 0 jd hq g5 gq,gq,gw -
-3 i6 0 jd hq g7 sh,k9,qy -
-4 i7 0 hb hq g7 gz,k7,gg -
-0 i5 0 hb jn jz gx,q3,k8 -
-1 5 1 oy hq jz r3,im,im jm
-2 i4 0 sl hq 127 gf,m3,gq -
-3 i6 0 hb hp 127 gy,u8,j1 -
-4 i7 0 sl 175 jz v8,o0,gg -
-0 i5 0 me - g5 iz,iz,gx -
-1 5 1 hc l8 wi gh,gh,15x jm
-2 i4 0 hc - g5 gq,pl,pl -
-3 i6 0 hc l8 g5 1aa,ik,gy -
-4 i7 0 hc - g5 gg,o0,q8 -
-0 i5 0 jd - ib rn,rn,rn -
-1 5 1 jd nn oi gh,gh,gh jm
-2 i4 0 hb hq g5 gq,gq,j0 -
-3 i6 0 me l8 g5 ik,ik,gy -
-4 i7 0 jd la g5 kj,k7,j2 -
-0 i5 0 me qn - il,il,il -
-1 5 1 jd nn g6 is,im,15x jm
-2 i4 0 jd hr g6 j0,gf,gf -
-3 i6 0 jd 1sb g6 ik,ik,sh -
-4 i7 0 jd ho g6 gg,gg,j2 -
-0 i5 0 jd - g7 rn,rn,gx -
-1 5 1 hc nn oi is,is,is jm
-2 i4 0 jd - g7 j0,ph -
-3 i6 0 jd l8 g7 ik,10u -
-4 i7 0 hd lb g7 j2,gg,kj -
-0 s4 0 jd l8 g6 iz,k8,n1 -
-1 5 1 jd la g6 q4,iy,im jm
-2 s6 0 jd hq g6 gf,gf,gf -
-3 s3 0 jd l8 g6 ik,km,xc -
-4 s5 0 me hq g5 gg,j2,o0 -
-0 i5 0 kz hq g7 rn,rn,gx -
-1 5 1 jd nn oi is,is,n7 jm
-2 i4 0 hc nn g7 gq,gq,gq -
-3 i6 0 hc hq g7 gi,sh,ik -
-4 i7 0 hc hq g7 gz,gg,gg -
-0 i5 0 ve hq g7 gx,rn,rn -
-1 5 1 kz hq oi n7,n7,gh jm
-2 i4 0 sl hq g7 j0,ph,pl -
-3 i6 0 sl jn g7 ik,10u -
-4 i7 0 sl - g7 kj,gg,10v -
-0 zq 0 jd hq g7 kk,rn,rn -
-1 5 1 jd nn oi is,n7,n7 jm
-2 s6 0 jd la g7 gf,gf,ph -
-3 s3 0 jd hq g7 ik,zi,gy -
-4 2fy 0 hb nn g7 j2,o0,gg -
-0 i5 0 jd l9 g7 il,il,gx -
-1 5 1 hc nn g7 n7,iy,is jm
-2 i4 0 jd lb g7 j0,m3,ly -
-3 i6 0 oy lb g7 sh,ik,gy -
-4 i7 0 hc lb g7 gg,k7,gz -
-0 i5 0 jd l8 g6 ol,rn,q3 -
-1 5 1 jd 12o g7 gh,iy,im jm
-2 i4 0 jd hq g5 gf,gf,j0 -
-3 i6 0 hc hq g7 ik,km,k9 -
-4 i7 0 jd hq g7 kj,gg,j2 -
-1 5 1 jd 12o g7 gh,gh,iy jm
-0 i5 0 jd hq g7 ol,rn,q3 -
-0 i5 0 sl jn g7 rn,rn,gx -
-1 5 1 sl hq g6 gp,is,is jm
-2 i4 0 me hq g7 gf,gw,pl -
-3 i6 0 hc hq g7 gy,ik,10u -
-4 i7 0 oy hq g7 k7,j2,gg -
-3 i6 0 hc hq g7 gy,gy,ik -
-0 i5 0 hb nn g7 gx,iz,rn -
-1 5 1 jd nn oi n7,is,is jm
-2 i4 0 jd hq g7 gq,gq,j0 -
-3 i6 0 jd hq oi gi,gi,ik -
-4 i7 0 jd hq g7 gg,k7,o0 -
-0 i5 0 hc hq g7 k8,n1,il -
-1 5 1 hc nn g6 n7,n7,iy jm
-2 i4 0 ky la g7 gw,gf,gf -
-3 i6 0 hc lb ln qy,13c,km -
-4 285 0 hb l8 g6 k7,gg,ke -
-0 i5 0 jd l8 pv rn,rn,il -
-1 5 1 jd la jz n7,n7,iy jm
-2 i4 0 jd - jz gq,pl,gf -
-3 i6 0 hb lb oi gy,k9,ik -
-4 i7 0 jd nn jz gg,o0,j2 -
-0 i5 0 sl - g7 rn,rn,gx -
-1 5 1 sl 12o oi is,is,is jm
-2 i4 0 sl - g7 j0,ph,ly -
-3 i6 0 sl - g6 sh,ik,xc -
-4 i7 0 jd - g6 kj,gg,10v -
-4 i7 0 jd - g6 kj,gg,j2 -
-0 i5 0 jd l8 g6 k8,n1,il -
-2 i4 0 kz l9 g6 gf,gf,gf -
-3 i6 0 kz nn g6 qy,ik,10s -
-4 i7 0 hb hq g6 ke,k7,kj -
-0 i5 0 jd l8 g6 il,il,rr -
-1 5 1 jd l8 g6 q4,iy jm
-2 i4 0 me la g6 j0,gq,gf -
-3 i6 0 jd - g6 ik,xc,j1 -
-4 i7 0 jd - - j2,gg,gg -
-4 i7 0 jd - ln j2,gg,gg -
-0 i5 0 jd 1hk jz gx,rn,rn -
-1 5 1 jd 12o jz n7,n7,iy jm
-2 i4 0 hb hq g6 pl,gf,j0 -
-3 i6 0 hb hp jz sh,ik,j1 -
-4 i7 0 jd hq jz k7,gg,gg -
-0 i5 0 jd nn wi il,il,rn -
-1 5 1 jd hr oi n7,n7,im jm
-2 i4 0 jd - g6 j0,gq,gf -
-3 i6 0 jd l8 g7 j1,or,ik -
-4 i7 0 jd l9 g7 j2,k7,gg -
-0 i5 0 jd nn wi il,il,kk -
-0 i5 0 hb hq oi rn,rn,rn -
-1 20 1 - - oi im,is,is jm
-2 i4 0 me - ln j0,gf,gf -
-3 i6 0 1av - g7 gy,10u,10u -
-4 i7 0 kz - g7 k7,ls,gg -
-0 i5 0 hc - g7 iz,kk,k8 -
-1 5 1 sl - g7 o4,is,n7 jm
-2 i4 0 hd - g7 j0,ph,zf -
-3 i6 0 sl - g7 sh,j1,gy -
-4 i7 0 hc - g7 k7,gz,gg -
-0 i5 0 jd hq g7 il,iz,kk -
-1 5 1 ve 1hk g7 n7,is,iy jm
-2 i4 0 zl hq g5 10t,j0,gf -
-3 i6 0 jd hq 127 qy,j1,gy -
-4 i7 0 jd hq g5 ke,ke,o0 -
-0 vj 0 sl la g7 il,rn,gx -
-1 5 1 jd hp g7 gh,n7,iy jm
-2 2g0 0 hb nn g5 m3,gf,ph -
-3 1ef 0 hb l8 g5 gy,ik,gi -
-4 1b8 0 sl hq g5 j2,gg,o0 -
-0 i5 0 jd nn g6 il,k8,ol -
-1 5 1 jd la g6 n7,n7,iy jm
-2 i4 0 jd nn g6 m3,gf,gf -
-3 i6 0 jd nn jz it,gy,ik -
-4 i7 0 hc hq g6 j2,o0,gg -
-0 i5 0 jd lb g7 il,il,gx -
-1 5 1 jd la g7 n7,n7,iy jm
-2 i4 0 jd hq g7 gq,ph,j0 -
-3 i6 0 jd hq g7 km,qy,gy -
-4 i7 0 hc nn g7 k7,ke,ke -
-0 i5 0 hc la g5 gx,rn,rn -
-1 5 1 jd l8 g5 is,is,iy jm
-2 i4 0 sl lb g5 m3,ph,gf -
-3 i6 0 sl 175 g5 gy,ik,m4 -
-4 i7 0 sl l8 g5 ls,q8,gg -
-0 i5 0 kz l8 g6 il,il,rr -
-1 5 1 jd l8 g6 q4,iy,im jm
-2 i4 0 jd hq g7 gf,gf,gf -
-3 i6 0 jd nn g6 t4,xc,ik -
-4 i7 0 jd la g6 k7,k7,j2 -
-0 333 0 sl - g7 il,il,x9 -
-1 5 1 ky hq g7 kl,1be,iy jm
-2 145 0 sl nn g7 gf,ly,j0 -
-3 2g7 0 sl - g7 sh,j1,k9 -
-4 232 0 sl - g7 j2,kj,ke -
-0 s4 0 jd nn pv il,il,rn -
-1 5 1 jd la wi sg,n7,n7 jm
-2 s6 0 jd hq jz gf,gf,j0 -
-3 s3 0 jd la g6 k9,it,ik -
-4 s5 0 me - g6 j2,o0,gg -
-0 s4 0 jd nn g6 il,il,ol -
-2 s6 0 jd hq g6 gq,gq,gw -
-3 s3 0 jd la g6 k9,j1,ik -
-0 i5 0 hb hq g6 rn,n1,k8 -
-1 5 1 jd nn g7 iy,n7,n7 jm
-2 i4 0 hb hq g7 zf,gq,gf -
-3 i6 0 hb l9 g7 xc,sh,gy -
-4 i7 0 hb hq g6 ke,q8,gz -
-0 2kw 0 jd hq g6 il,il -
-1 5 1 hb la g6 n7,is jm
-2 2vr 0 hb nn g6 pl,pl,pl -
-3 2kv 0 hb la g6 ik,km,m4 -
-4 2vq 0 hb l9 g6 j2,o0,k7 -
-3 2kv 0 hb la g6 ik,gi,m4 -
-0 i5 0 jd l9 oi rn,rn,il -
-1 5 1 jd nn oi is,is,is jm
-2 i4 0 jd la g7 10t,gf,ph -
-3 i6 0 jd l8 g7 gy,km,ik -
-4 i7 0 jd l8 g7 gg,gg,k7 -
-0 i5 0 hc hq ib rn,rn,rn -
-1 5 1 jd la g6 iy,kl,n7 jm
-2 i4 0 hc hq g6 gf,gq,pl -
-3 i6 0 hc hq g6 ik,nx,m4 -
-0 s4 0 kz hq pv q3,iz,iz -
-1 5 1 jd hp g7 iy,sg,n7 jm
-2 s6 0 kz hq jz gw,j0,gq -
-3 s3 0 oy hq jz ik,ik,213 -
-4 s5 0 jd hq jz gg,gg,q8 -
-0 s4 0 jd nn g6 il,il,kk -
-2 s6 0 jd hq g6 gf,gw,j0 -
-3 s3 0 hd hq g7 ik,j1,gy -
-4 s5 0 jd hq g6 o0,j2,gg -
-0 vj 0 jd - g6 il,il,kk -
-2 1b7 0 hc la g6 gf,gf,j0 -
-3 1b9 0 jd - g6 ik,kd,k9 -
-4 1b8 0 oy nn g6 gg,o0,j2 -
-0 i5 0 jd l8 g7 k8,kk,q3 -
-1 5 1 jd nn g7 gv,gp,1be jm
-2 i4 0 me lb g7 gq,ph,j0 -
-3 i6 0 jd la ib ik,km,j1 -
-4 i7 0 jd la g7 kj,k7,j2 -
-0 i5 0 jd l8 g6 il,rn,gx -
-1 5 1 sl hq g6 is,iy,im jm
-2 i4 0 jd hq g6 gf,gf,j0 -
-3 i6 0 hd hq g6 j1,ik,or -
-4 i7 0 jd l9 g6 gg,gg,j2 -
-2 i4 0 jd hq g6 gq,gq,j0 -
-0 10n 0 sl hq g7 rn,rn,gx -
-1 5 1 sl 12o oi gh,is,is jm
-2 23k 0 sl - g7 ph,j0,pl -
-3 1b9 0 jd hq g7 ik,10u,xc -
-4 179 0 jd nn g7 kj,10v,gg -
-0 i5 0 hc hq g7 ol,q3,q3 -
-1 20 1 - 20x jz n7,n7,gp jm
-2 i4 0 hd hq g7 pl,j0,gq -
-3 i6 0 jd nn g7 gy,vv,gi -
-4 i7 0 hc l9 ln ls,gz,gg -
-0 i5 0 jd - g7 rn,n8,gx -
-1 5 1 kz hq oi n7,im,is jm
-2 i4 0 sl la g7 gf,gf,j0 -
-3 i6 0 ky l9 g7 ik,gi,k9 -
-4 i7 0 ve - jz ke,ke,q8 -
-1 5 1 kz hq g7 n7,15x,is jm
-2 i4 0 sl la g7 pl,j0,j0 -
-0 i5 0 jd - g5 il,il -
-1 5 1 jd 1hk g5 iy,iy,is jm
-2 i4 0 me - g5 gf,gf,gf -
-3 i6 0 jd - g6 j1,xc,qy -
-4 i7 0 jd la g5 gg,ls,k7 -
-0 i5 0 jd hq jz ol,n8,k8 -
-1 5 1 sl - oi n7,n7,n7 jm
-2 i4 0 hb hq g5 gw,j0,gf -
-3 i6 0 jd hq g5 1aa,ik,13c -
-4 i7 0 hb l9 g7 j2,gg,o0 -
-0 2xm 0 jd hq g6 rn,k8,rr -
-1 5 1 jd jn ib n7,im,im jm
-2 1hz 0 me 1rh g6 gf,gf,j0 -
-3 vl 0 hb 12o g7 gy,ik,km -
-4 2oe 0 jd hq g7 o0,gg,j2 -
-0 s4 0 hb la jz iz,iz,ol -
-1 5 1 jd nn g6 n7,n7,o4 jm
-2 s6 0 jd la g6 ph,m3,gq -
-3 s3 0 jd hq g7 gy,j1,u8 -
-4 s5 0 jd la jz ls,k7,y0 -
-0 i5 0 jd l8 ib il,rn,rn -
-1 5 1 hc la g6 im,is,iy jm
-2 i4 0 jd hq g6 gq,gf,j0 -
-3 i6 0 me hq ib ik,it,j1 -
-4 i7 0 ky lb 127 gg,gg,j2 -
-0 i5 0 jd hq ln rn,il,rr -
-1 5 1 jd 138 g6 n7,n7,o4 jm
-2 i4 0 jd lb ln j0,gf,pl -
-3 i6 0 jd hq g6 k9,ik,vv -
-4 i7 0 jd lb ln gg,o0,j2 -
-0 i5 0 jd l9 ib t3,rn,rn -
-1 5 1 zl la g7 gh,im,iy jm
-2 15p 0 jd - g6 gf,pl,j0 -
-3 1on 0 jd l9 g6 t4,ik,xc -
-4 1c0 0 jd lb g6 gg,k7,k7 -
-0 i5 0 jd l9 pu rn,rn,gx -
-1 5 1 jd lb g7 n7,is,iy jm
-2 i4 0 jd la g7 gf,gq,j0 -
-3 i6 0 jd lb oi ik,kd,k9 -
-4 i7 0 jd nn g7 gg,gg,gz -
-0 i5 0 jd l9 pu rn,n1,k8 -
-0 i5 0 hc hq g6 il,iz,gx -
-1 5 1 hc hq g6 yi,n7,iy jm
-2 i4 0 hc hq g6 pl,ph,j0 -
-3 i6 0 hc hq g6 10u,gy,qy -
-4 i7 0 oy 12o g6 k7,ls,kj -
-3 i6 0 hc hq g6 - -
-0 i5 0 hc hq g7 il,gj,x9 -
-1 20 1 - - g7 is,15x,iy jm
-2 i4 0 hc nn g7 gq,pl,xy -
-3 i6 0 hd hq g7 u8,sh,qy -
-4 i7 0 oy nn g7 gg,k7,ke -
-2 i4 0 jd l9 g7 gf,gf,j0 -
-3 i6 0 jd hq g7 ik,or,sh -
-4 i7 0 jd la g5 kj,j2,o0 -
-2 i4 0 jd l9 g7 gf,j0,gq -
-0 i5 0 jd l9 g7 rn,rn,gx -
-2 i4 0 jd l9 g7 ph,j0,gf -
-3 i6 0 jd hq g7 ik,10u,sh -
-0 i5 0 hb lb oi rn,rn,q3 -
-1 5 1 jd l9 g7 o4,n7,n7 jm
-2 i4 0 hb hq g7 j0,gf,gq -
-3 i6 0 jd hq g7 ik,u8,sh -
-4 i7 0 hb la g7 k7,j2,o0 -
-0 i5 0 jd hq jz x9,k8,k8 -
-1 5 1 jd la g6 im,gh,iy jm
-2 i4 0 jd hq g6 gf,gq,pl -
-3 i6 0 jd - jz ik,qy,nx -
-4 i7 0 jd la g6 gg,gg,j2 -
-0 i5 0 hb hq g6 k8,il,x9 -
-1 5 1 jd hq g6 gv,gv,15x jm
-2 i4 0 hb hq g6 10t,ph,gf -
-3 i6 0 hb hq g6 gy,qy,qy -
-4 i7 0 jd - g7 gg,o0,kj -
-0 i5 0 jd hq g5 k8,iz,ol -
-1 5 1 jd 1hk g5 gh,q4,iy jm
-2 i4 0 jd 1hk g5 j0,ph,gf -
-3 i6 0 jd hq g5 ik,gy,xc -
-4 i7 0 jd hq g5 gg,o0,10v -
-0 i5 0 hc hq g7 gj,il,14d -
-1 20 1 - 1hl oi q4,n7,n7 jm
-2 i4 0 oy hq g7 gf,gf,gq -
-3 i6 0 ky hq oi gy,gy,10u -
-4 i7 0 hb hq g7 kj,gg,k7 -
-0 230 0 jd - g6 k8,iz,gx -
-1 5 1 jd 12o g6 is,iy,gh jm
-2 i4 0 hc hp g6 gf,gq,j0 -
-3 2fz 0 zl nn g7 ik,10u,or -
-4 i7 0 zl la g6 j2,gg,gg -
-0 i5 0 jd l8 g7 rn,rn,gx -
-2 i4 0 jd la g7 gf,j0,m3 -
-3 i6 0 jd l8 g7 ik,10u,gy -
-4 i7 0 jd lb g7 10v,kj,gg -
-0 i5 0 jd la g7 il,il -
-1 5 1 jd la g6 is,n7 jm
-2 i4 0 jd nn g6 - -
-3 i6 0 jd nn ib j1,ik -
-4 i7 0 jd la g7 j2,gg,gg -
-3 i6 0 me - g7 ik,j1 -
-0 s4 0 hb nn g7 il,rn -
-1 5 1 jd la jz q4,sg,iy jm
-2 s6 0 me hq g6 gf,gf,gw -
-3 s3 0 me la g6 ik,gi -
-4 s5 0 me l9 g6 gg,k7,j2 -
-0 i5 0 jd la jz k8,iz,gx -
-1 5 1 jd nn g7 iy,n7,15x jm
-2 i4 0 me lb jz gq,gf,j0 -
-3 i6 0 jd l9 g7 ik,vv,gy -
-4 i7 0 hc hq g5 kj,gg,q8 -
-0 i5 0 jd hq g6 il,iz,14d -
-1 5 1 sl hq g6 iy,im,n7 jm
-2 i4 0 jd hq g6 gf,gf,gf -
-3 i6 0 jd hq g6 sh,sh,zi -
-4 i7 0 jd - g6 k7,j2,kj -
-0 i5 0 hc - ib rn,rn,16b -
-1 5 1 hc la ib n7,n7,xz jm
-2 i4 0 jd 12o g6 xy,ph,j0 -
-3 i6 0 hc - g6 ik,qy,nx -
-4 i7 0 hc nn g6 gg,gg,10v -
-0 i5 0 oy l8 jz - -
-2 i4 0 hc l9 jz - -
-3 37z 0 sl l8 g7 gy,qy,u8 -
-4 i7 0 jd - - - -
-0 i5 0 jd - ib il,il,iz -
-1 5 1 jd - ib im,n7,iy jm
-2 i4 0 jd - g6 j0,gf,gq -
-3 i6 0 jd - g6 ik,it,gy -
-4 i7 0 jd - g6 gg,gg,j2 -
-0 19v 0 jd hq g7 il,il,rr -
-1 5 1 jd nn g7 15x,is,n7 jm
-2 1c6 0 jd nn jz gf,j0,m3 -
-3 19x 0 jd 12o jz gy,j1,10s -
-4 19w 0 jd hq jz ke,k7,q8 -
-0 1oo 0 jd hq 12t q3,q3,q3 -
-1 20 1 - - oi is,is,is jm
-2 1om 0 jd 1yc wi q2,gw,j0 -
-3 1on 0 ve 12o ib gy,ik,qy -
-4 1c0 0 jd 11u oi ke,gg,10v -
-0 1hn 0 jd hq g6 il,il,kk -
-1 5 1 jd nn g6 n7,is,o4 jm
-2 15p 0 hb hq g6 gw,xy,j0 -
-3 245 0 jd 12o g6 j1,it,sh -
-4 1hm 0 sl 11y g6 12e,k7,gg -
-0 i5 0 jd la g5 rn,k8,n1 -
-1 5 1 jd la g6 n7,iy,rs jm
-2 i4 0 jd nn g5 j0,gq,gf -
-3 i6 0 hb la g5 qy,10s,kd -
-4 i7 0 jd l9 g7 gg,k7,ke -
-0 i5 0 jd - ln iz,ol,n1 -
-1 5 1 jd hq g7 iy,iy,15x jm
-2 i4 0 jd - ln m3,j0,gf -
-3 i6 0 jd - ln qy,ik,10s -
-4 i7 0 jd - ln k7,gg,q8 -
-0 i5 0 jd hq g7 il,il,ol -
-1 5 1 me la g7 n7,15x,im jm
-2 i4 0 jd l8 g7 gf,gf,j0 -
-3 i6 0 jd l9 g7 k9,ik,sh -
-4 i7 0 jd lb g7 k7,gg,kj -
-0 i5 0 jd hq g7 kk,k8,il -
-2 i4 0 jd l8 g7 gf,gq,pl -
-3 i6 0 jd l9 g7 k9,ik,km -
+0 i6 0 mi hr g7 j1,j1,n6 -
+1 5 1 1b2 jp g7 gq,nc,nc jo
+2 i5 0 hd 12u g6 gg,gr,pq -
+3 i7 0 sq - g7 gz,10y,o2 -
+4 i8 0 sq hr g7 kh,h0,qd -
+0 i6 0 mi hs g6 in,in,oq -
+1 5 1 jf ld g6 j0,iu,io jo
+2 i5 0 jf - g7 j2,gr,gg -
+3 i7 0 jf 1kg wo j3,iv,im -
+4 i8 0 jf 1za g6 gh,gh,j4 -
+0 i6 0 jf le g6 rw,in,in -
+1 5 1 p3 ns g7 j0,q9,1sp jo
+2 i5 0 l2 hr g7 gx,pq,gg -
+3 i7 0 jf hr g6 kg,xi,im -
+4 i8 0 jf hr g7 j4,ka,ka -
+0 i6 0 jf - g6 xf,j1,in -
+1 5 1 jf lc on nc,nc,nc jo
+2 i5 0 jf - g6 gg,j2,pm -
+3 i7 0 jf - g6 im,kc,ow -
+4 i8 0 jf - g6 o5,j4,kh -
+0 i6 0 jf - g6 xf,t8,in -
+2 i5 0 jf - g6 gg,gg,j2 -
+3 i7 0 jf - g6 im,r3,kc -
+0 i6 0 jf - g6 xf,kb,in -
+3 i7 0 jf - g6 im,r3,ow -
+0 i6 0 sq hr g7 kb,rs,gy -
+1 5 1 sq 17b g7 nc,163,o9 jo
+2 i5 0 sq - g6 j2,gr,gr -
+3 i7 0 hc ns g6 sm,im,10y -
+4 i8 0 l1 hr g6 j4,h0,gh -
+0 i6 0 jf st g6 rs,rs,rw -
+1 20 1 - 1hs g6 o9,o9,j0 jo
+2 i5 0 jf 1hr g6 j2,m7,gr -
+3 i7 0 jf - g6 im,sm,sm -
+4 i8 0 jf - g6 y6,ka,gh -
+0 3uw 0 - - g7 in,in,xf -
+1 5 1 jf 1fi g7 nc,nc,j0 jo
+2 14b 0 p3 lb g7 pm,gg,gg -
+3 1bx 0 p3 - lq r3,r3,gz -
+4 14d 0 p3 ns g7 kh,kh,ka -
+0 1a2 0 jf hr g5 t8,in,kn -
+1 5 1 jf 12u g5 gq,gi,iu jo
+2 2km 0 jf - g5 265,265,pq -
+3 24c 0 jf hr g5 - -
+4 1ht 0 jf hr g7 - -
+0 i6 0 jf 1si g6 kb,in,xf -
+1 5 1 jf 1si g6 sl,io,j0 jo
+2 i5 0 jf 1si g6 10z,gg,gg -
+3 i7 0 mi hp g7 kc,j3,m8 -
+4 i8 0 jf st g7 o5,ka,gh -
+0 i6 0 hd hr ic rs,rs,yn -
+1 5 1 hd ld ic iu,iu,nc jo
+2 i5 0 l1 hr g6 gr,pq,j2 -
+3 i7 0 hc hr g6 kc,iv,im -
+4 i8 0 hd hr g6 h0,gh,gh -
+0 i6 0 jf lb on in,in,j1 -
+1 5 1 jf ns g7 io,iu,j0 jo
+2 i5 0 mi ld g7 gg,gr,j2 -
+3 i7 0 hd hr q0 j3,iv,im -
+4 i8 0 jf ns g7 gh,gh,j4 -
+0 i6 0 jf hr g6 gy,in,q8 -
+1 5 1 hc 12u g6 nc,iu,163 jo
+2 i5 0 hd - g6 gr,gg,pm -
+3 i7 0 jf ns g6 110,110,10y -
+4 i8 0 jf 12u g6 gh,gh,o5 -
+0 i6 0 jf hr g6 gy,rs,q8 -
+0 1hb 0 hc hr g7 kn,gk,rs -
+1 5 1 zr lc k1 nc,o9,j0 jo
+2 28b 0 hc hr g7 m7,j2,gr -
+3 1ye 0 hc lb k1 r3,kc,im -
+4 14d 0 hc lb g6 gh,j4,kh -
+0 s9 0 jf ns on in,rs,rs -
+1 5 1 jf lb on sl,iu,iu jo
+2 sb 0 jf lb g7 gr,gr,j2 -
+3 s8 0 jf ns g7 ow,im,j3 -
+4 sa 0 jf ns g7 j4,km,gh -
+0 i6 0 hd lb g7 gy,j1,rs -
+1 5 1 hd ld on iu,iu,nc jo
+2 i5 0 hd lc g7 gr,gr,gr -
+3 i7 0 jf ld g7 im,110,gz -
+4 i8 0 zr hr g7 h0,km,gh -
+0 i6 0 jf lb g5 kb,kb,rw -
+1 5 1 jf lb g5 q9,io,j0 jo
+2 i5 0 jf hr g5 gx,pq,gg -
+3 i7 0 jf ld g5 kp,im,xi -
+4 i8 0 jf lb g5 j4,gh,gh -
+0 i6 0 jf ld on in,in,in -
+1 5 1 sq ns g6 nc,nc,j0 jo
+2 i5 0 jf lc g6 gg,gg,gr -
+3 i7 0 hd hr g6 gz,im,j3 -
+4 i8 0 jf lc g6 j4,ka,gh -
+0 i6 0 hc lb g7 j1,kb,gy -
+1 5 1 jf ns g7 163,iu,iu jo
+2 i5 0 hc lb g7 j2,gr,gr -
+3 i7 0 jf ld g7 10y,r3,r3 -
+4 i8 0 hc le g7 ka,km,km -
+0 i6 0 jf lb on in,rs,rs -
+1 5 1 mi ns on nc,nc,nc jo
+2 i5 0 jf - g7 j2,pm,gr -
+3 i7 0 jf ld on im,iv,iv -
+4 i8 0 jf ns g5 ka,ka,j4 -
+2 i5 0 jf - g7 j2,pm,gg -
+0 i6 0 jf lb g7 in,j1,rw -
+1 5 1 mi ns on iu,iu,iu jo
+3 i7 0 jf ld g7 im,j3,gz -
+4 i8 0 jf ns g5 gh,km,y6 -
+0 i6 0 jf hr g6 in,q8,gy -
+1 5 1 jf ns lq io,o9,q9 jo
+2 i5 0 jf ns g6 j2,gr,pq -
+3 i7 0 jf lb g6 13i,im,j3 -
+4 i8 0 jf le g6 o5,gh,j4 -
+0 i6 0 jf le g7 oq,in,n6 -
+1 5 1 jf ld g7 iu,nc,gq jo
+2 i5 0 zr 1za g7 j2,pm,gg -
+3 i7 0 mi 1za g7 im,sm,qg -
+4 i8 0 jf lb g7 j4,gh,kh -
+0 1a2 0 sq lc k1 kb,rw,xf -
+1 5 1 sq hr g5 gq,sl,163 jo
+2 1cd 0 he hr k1 gg,1uh,gx -
+3 1a4 0 1b2 ns k1 j3,gz,im -
+4 1a3 0 he ns g5 gh,gh,h0 -
+0 i6 0 jf hr g7 rs,rs,rw -
+1 5 1 jf 12u on iu,iu,nc jo
+2 i5 0 sq hr g6 j2,gg,pq -
+3 i7 0 jf 12u g7 kp,kp,10y -
+4 i8 0 hd hr g7 gh,kh,j4 -
+0 2dg 0 jf hr g6 in,in,gy -
+1 5 1 mi hr g6 nc,nc,j0 jo
+2 15v 0 jf hr g6 gr,gr,gr -
+3 18p 0 mi hr g6 r3,r3,gz -
+4 1bf 0 jf hr g6 kh,kh,ka -
+0 1a2 0 mi lc ic in,in,kb -
+1 5 1 sq ns g6 nc,io,j0 jo
+2 1cd 0 jf lc g6 gg,j2,gr -
+3 1a4 0 hc - g6 kp,kc,kg -
+4 1a3 0 sq - g6 kh,kh,h0 -
+0 i6 0 sq - g7 - -
+1 5 1 sq - g7 o9,163,io jo
+2 i5 0 hd - g7 1uh,j2,gg -
+3 i7 0 1b2 - g7 110 -
+4 i8 0 hc - g7 - -
+0 zw 0 hd hr g7 nd,gy,in -
+1 5 1 hd ns g7 nc,nc jo
+2 i5 0 hd hr g7 gg,gr,j2 -
+3 zu 0 hd hr g7 ue,kp,gz -
+4 i8 0 hd hr g7 gh,kh,qd -
+0 i6 0 hd hr g6 rs,rs,gy -
+2 i5 0 hd hr g6 gx,gx,gg -
+3 i7 0 jf hr g6 j3,gz,gz -
+4 i8 0 hd hq g6 o5,gh,gh -
+0 1hb 0 he - k1 j1,j1,kn -
+1 5 1 jf - g7 iu,iu jo
+2 14b 0 he - k1 j2,gg,m7 -
+3 1bx 0 l2 - k1 gz,kg,kg -
+4 14d 0 he - k1 gh,gh,ka -
+0 i6 0 hc - g6 in,in,rw -
+2 i5 0 jf - g6 m7,gg,gr -
+3 i7 0 jf - g6 gz,kp,ue -
+4 i8 0 jf - g6 ka,gh -
+0 2e7 0 jf - g7 1nr,1nr -
+2 zv 0 hc - g7 gg,gg,j2 -
+3 24t 0 jf - g7 gz,ue,ue -
+4 zt 0 jf - g7 gh,gh,ka -
+0 i6 0 hc - g6 in,in -
+0 i6 0 jf ns g7 rs,rs,n6 -
+1 5 1 jf ld wo gi,gi,gi jo
+2 i5 0 l2 - g5 gr,gr,pq -
+3 i7 0 mi le g7 im,13i,gj -
+4 i8 0 jf lc g5 j4,gh,lw -
+0 i6 0 jf ns g6 gy,in,in -
+1 5 1 hd ns g6 nc,163,j0 jo
+2 i5 0 jf ld g6 j2,m7,gr -
+3 i7 0 jf le g6 gz,xi,sm -
+4 i8 0 jf ns g6 gh,ka,h0 -
+0 i6 0 jf hr ic rs,j1,in -
+1 5 1 jf hr g6 nc,nc,ko jo
+2 i5 0 jf hr g5 gr,gr,gx -
+3 i7 0 jf hr g7 sm,kc,r3 -
+4 i8 0 hc hr g7 h0,ka,gh -
+0 i6 0 hc jp k1 gy,q8,kb -
+1 5 1 p3 hr k1 r8,io,io jo
+2 i5 0 sq hr 12d gg,m7,gr -
+3 i7 0 hc hq 12d gz,ue,j3 -
+4 i8 0 sq 17b k1 ve,o5,gh -
+0 i6 0 mi - g5 j1,j1,gy -
+1 5 1 hd lb wo gi,gi,163 jo
+2 i5 0 hd - g5 gr,pq,pq -
+3 i7 0 hd lb g5 1ah,im,gz -
+4 i8 0 hd - g5 gh,o5,qd -
+0 i6 0 jf - ic rs,rs,rs -
+1 5 1 jf ns on gi,gi,gi jo
+2 i5 0 hc hr g5 gr,gr,j2 -
+3 i7 0 mi lb g5 im,im,gz -
+4 i8 0 jf ld g5 km,ka,j4 -
+0 i6 0 mi qs - in,in,in -
+1 5 1 jf ns g6 iu,io,163 jo
+2 i5 0 jf hs g6 j2,gg,gg -
+3 i7 0 jf 1si g6 im,im,sm -
+4 i8 0 jf hp g6 gh,gh,j4 -
+0 i6 0 jf - g7 rs,rs,gy -
+1 5 1 hd ns on iu,iu,iu jo
+2 i5 0 jf - g7 j2,pm -
+3 i7 0 jf lb g7 im,110 -
+4 i8 0 he le g7 j4,gh,km -
+0 s9 0 jf lb g6 j1,kb,n6 -
+1 5 1 jf ld g6 q9,j0,io jo
+2 sb 0 jf hr g6 gg,gg,gg -
+3 s8 0 jf lb g6 im,kp,xi -
+4 sa 0 mi hr g5 gh,j4,o5 -
+0 i6 0 l2 hr g7 rs,rs,gy -
+1 5 1 jf ns on iu,iu,nc jo
+2 i5 0 hd ns g7 gr,gr,gr -
+3 i7 0 hd hr g7 gj,sm,im -
+4 i8 0 hd hr g7 h0,gh,gh -
+0 i6 0 vk hr g7 gy,rs,rs -
+1 5 1 l2 hr on nc,nc,gi jo
+2 i5 0 sq hr g7 j2,pm,pq -
+3 i7 0 sq jp g7 im,110 -
+4 i8 0 sq - g7 km,gh,111 -
+0 zw 0 jf hr g7 kn,rs,rs -
+1 5 1 jf ns on iu,nc,nc jo
+2 sb 0 jf ld g7 gg,gg,pm -
+3 s8 0 jf hr g7 im,zo,gz -
+4 2g5 0 hc ns g7 j4,o5,gh -
+0 i6 0 jf lc g7 in,in,gy -
+1 5 1 hd ns g7 nc,j0,iu jo
+2 i5 0 jf le g7 j2,m7,m2 -
+3 i7 0 p3 le g7 sm,im,gz -
+4 i8 0 hd le g7 gh,ka,h0 -
+0 i6 0 jf lb g6 oq,rs,q8 -
+1 5 1 jf 12u g7 gi,j0,io jo
+2 i5 0 jf hr g5 gg,gg,j2 -
+3 i7 0 hd hr g7 im,kp,kc -
+4 i8 0 jf hr g7 km,gh,j4 -
+1 5 1 jf 12u g7 gi,gi,j0 jo
+0 i6 0 jf hr g7 oq,rs,q8 -
+0 i6 0 sq jp g7 rs,rs,gy -
+1 5 1 sq hr g6 gq,iu,iu jo
+2 i5 0 mi hr g7 gg,gx,pq -
+3 i7 0 hd hr g7 gz,im,110 -
+4 i8 0 p3 hr g7 ka,j4,gh -
+3 i7 0 hd hr g7 gz,gz,im -
+0 i6 0 hc ns g7 gy,j1,rs -
+1 5 1 jf ns on nc,iu,iu jo
+2 i5 0 jf hr g7 gr,gr,j2 -
+3 i7 0 jf hr on gj,gj,im -
+4 i8 0 jf hr g7 gh,ka,o5 -
+0 i6 0 hd hr g7 kb,n6,in -
+1 5 1 hd ns g6 nc,nc,j0 jo
+2 i5 0 l1 ld g7 gx,gg,gg -
+3 i7 0 hd le lq r3,13i,kp -
+4 28c 0 hc lb g6 ka,gh,kh -
+0 i6 0 jf lb q0 rs,rs,in -
+1 5 1 jf ld k1 nc,nc,j0 jo
+2 i5 0 jf - k1 gr,pq,gg -
+3 i7 0 hc le on gz,kc,im -
+4 i8 0 jf ns k1 gh,o5,j4 -
+0 i6 0 sq - g7 rs,rs,gy -
+1 5 1 sq 12u on iu,iu,iu jo
+2 i5 0 sq - g7 j2,pm,m2 -
+3 i7 0 sq - g6 sm,im,xi -
+4 i8 0 jf - g6 km,gh,111 -
+4 i8 0 jf - g6 km,gh,j4 -
+0 i6 0 jf lb g6 kb,n6,in -
+2 i5 0 l2 lc g6 gg,gg,gg -
+3 i7 0 l2 ns g6 r3,im,10y -
+4 i8 0 hc hr g6 kh,ka,km -
+0 i6 0 jf lb g6 in,in,rw -
+1 5 1 jf lb g6 q9,j0 jo
+2 i5 0 mi ld g6 j2,gr,gg -
+3 i7 0 jf - g6 im,xi,j3 -
+4 i8 0 jf - - j4,gh,gh -
+4 i8 0 jf - lq j4,gh,gh -
+0 i6 0 jf 1hr k1 gy,rs,rs -
+1 5 1 jf 12u k1 nc,nc,j0 jo
+2 i5 0 hc hr g6 pq,gg,j2 -
+3 i7 0 hc hq k1 sm,im,j3 -
+4 i8 0 jf hr k1 ka,gh,gh -
+0 i6 0 jf ns wo in,in,rs -
+1 5 1 jf hs on nc,nc,io jo
+2 i5 0 jf - g6 j2,gr,gg -
+3 i7 0 jf lb g7 j3,ow,im -
+4 i8 0 jf lc g7 j4,ka,gh -
+0 i6 0 jf ns wo in,in,kn -
+0 i6 0 hc hr on rs,rs,rs -
+1 20 1 - - on io,iu,iu jo
+2 i5 0 mi - lq j2,gg,gg -
+3 i7 0 1b2 - g7 gz,110,110 -
+4 i8 0 l2 - g7 ka,lw,gh -
+0 i6 0 hd - g7 j1,kn,kb -
+1 5 1 sq - g7 o9,iu,nc jo
+2 i5 0 he - g7 j2,pm,zl -
+3 i7 0 sq - g7 sm,j3,gz -
+4 i8 0 hd - g7 ka,h0,gh -
+0 i6 0 jf hr g7 in,j1,kn -
+1 5 1 vk 1hr g7 nc,iu,j0 jo
+2 i5 0 zr hr g5 10z,j2,gg -
+3 i7 0 jf hr 12d r3,j3,gz -
+4 i8 0 jf hr g5 kh,kh,o5 -
+0 vp 0 sq ld g7 in,rs,gy -
+1 5 1 jf hq g7 gi,nc,j0 jo
+2 2g7 0 hc ns g5 m7,gg,pm -
+3 1em 0 hc lb g5 gz,im,gj -
+4 1bf 0 sq hr g5 j4,gh,o5 -
+0 i6 0 jf ns g6 in,kb,oq -
+1 5 1 jf ld g6 nc,nc,j0 jo
+2 i5 0 jf ns g6 m7,gg,gg -
+3 i7 0 jf ns k1 iv,gz,im -
+4 i8 0 hd hr g6 j4,o5,gh -
+0 i6 0 jf le g7 in,in,gy -
+1 5 1 jf ld g7 nc,nc,j0 jo
+2 i5 0 jf hr g7 gr,pm,j2 -
+3 i7 0 jf hr g7 kp,r3,gz -
+4 i8 0 hd ns g7 ka,kh,kh -
+0 i6 0 hd ld g5 gy,rs,rs -
+1 5 1 jf lb g5 iu,iu,j0 jo
+2 i5 0 sq le g5 m7,pm,gg -
+3 i7 0 sq 17b g5 gz,im,m8 -
+4 i8 0 sq lb g5 lw,qd,gh -
+0 i6 0 l2 lb g6 in,in,rw -
+1 5 1 jf lb g6 q9,j0,io jo
+2 i5 0 jf hr g7 gg,gg,gg -
+3 i7 0 jf ns g6 t9,xi,im -
+4 i8 0 jf ld g6 ka,ka,j4 -
+0 33a 0 sq - g7 in,in,xf -
+1 5 1 l1 hr g7 ko,1bl,j0 jo
+2 14b 0 sq ns g7 gg,m2,j2 -
+3 2ge 0 sq - g7 sm,j3,kc -
+4 239 0 sq - g7 j4,km,kh -
+0 s9 0 jf ns q0 in,in,rs -
+1 5 1 jf ld wo sl,nc,nc jo
+2 sb 0 jf hr k1 gg,gg,j2 -
+3 s8 0 jf ld g6 kc,iv,im -
+4 sa 0 mi - g6 j4,o5,gh -
+0 s9 0 jf ns g6 in,in,oq -
+2 sb 0 jf hr g6 gr,gr,gx -
+3 s8 0 jf ld g6 kc,j3,im -
+0 i6 0 hc hr g6 rs,n6,kb -
+1 5 1 jf ns g7 j0,nc,nc jo
+2 i5 0 hc hr g7 zl,gr,gg -
+3 i7 0 hc lc g7 xi,sm,gz -
+4 i8 0 hc hr g6 kh,qd,h0 -
+0 2l3 0 jf hr g6 in,in -
+1 5 1 hc ld g6 nc,iu jo
+2 2vy 0 hc ns g6 pq,pq,pq -
+3 2l2 0 hc ld g6 im,kp,m8 -
+4 2vx 0 hc lc g6 j4,o5,ka -
+3 2l2 0 hc ld g6 im,gj,m8 -
+0 i6 0 jf lc on rs,rs,in -
+1 5 1 jf ns on iu,iu,iu jo
+2 i5 0 jf ld g7 10z,gg,pm -
+3 i7 0 jf lb g7 gz,kp,im -
+4 i8 0 jf lb g7 gh,gh,ka -
+0 i6 0 hd hr ic rs,rs,rs -
+1 5 1 jf ld g6 j0,ko,nc jo
+2 i5 0 hd hr g6 gg,gr,pq -
+3 i7 0 hd hr g6 im,o2,m8 -
+0 s9 0 l2 hr q0 q8,j1,j1 -
+1 5 1 jf hq g7 j0,sl,nc jo
+2 sb 0 l2 hr k1 gx,j2,gr -
+3 s8 0 p3 hr k1 im,im,21a -
+4 sa 0 jf hr k1 gh,gh,qd -
+0 s9 0 jf ns g6 in,in,kn -
+2 sb 0 jf hr g6 gg,gx,j2 -
+3 s8 0 he hr g7 im,j3,gz -
+4 sa 0 jf hr g6 o5,j4,gh -
+0 vp 0 jf - g6 in,in,kn -
+2 1be 0 hd ld g6 gg,gg,j2 -
+3 1bg 0 jf - g6 im,kg,kc -
+4 1bf 0 p3 ns g6 gh,o5,j4 -
+0 i6 0 jf lb g7 kb,kn,q8 -
+1 5 1 jf ns g7 gw,gq,1bl jo
+2 i5 0 mi le g7 gr,pm,j2 -
+3 i7 0 jf ld ic im,kp,j3 -
+4 i8 0 jf ld g7 km,ka,j4 -
+0 i6 0 jf lb g6 in,rs,gy -
+1 5 1 sq hr g6 iu,j0,io jo
+2 i5 0 jf hr g6 gg,gg,j2 -
+3 i7 0 he hr g6 j3,im,ow -
+4 i8 0 jf lc g6 gh,gh,j4 -
+2 i5 0 jf hr g6 gr,gr,j2 -
+0 10t 0 sq hr g7 rs,rs,gy -
+1 5 1 sq 12u on gi,iu,iu jo
+2 23r 0 sq - g7 pm,j2,pq -
+3 1bg 0 jf hr g7 im,110,xi -
+4 17f 0 jf ns g7 km,111,gh -
+0 i6 0 hd hr g7 oq,q8,q8 -
+1 20 1 - 214 k1 nc,nc,gq jo
+2 i5 0 he hr g7 pq,j2,gr -
+3 i7 0 jf ns g7 gz,w1,gj -
+4 i8 0 hd lc lq lw,h0,gh -
+0 i6 0 jf - g7 rs,nd,gy -
+1 5 1 l2 hr on nc,io,iu jo
+2 i5 0 sq ld g7 gg,gg,j2 -
+3 i7 0 l1 lc g7 im,gj,kc -
+4 i8 0 vk - k1 kh,kh,qd -
+1 5 1 l2 hr g7 nc,163,iu jo
+2 i5 0 sq ld g7 pq,j2,j2 -
+0 i6 0 jf - g5 in,in -
+1 5 1 jf 1hr g5 j0,j0,iu jo
+2 i5 0 mi - g5 gg,gg,gg -
+3 i7 0 jf - g6 j3,xi,r3 -
+4 i8 0 jf ld g5 gh,lw,ka -
+0 i6 0 jf hr k1 oq,nd,kb -
+1 5 1 sq - on nc,nc,nc jo
+2 i5 0 hc hr g5 gx,j2,gg -
+3 i7 0 jf hr g5 1ah,im,13i -
+4 i8 0 hc lc g7 j4,gh,o5 -
+0 2xt 0 jf hr g6 rs,kb,rw -
+1 5 1 jf jp ic nc,io,io jo
+2 1i6 0 mi 1ro g6 gg,gg,j2 -
+3 vr 0 hc 12u g7 gz,im,kp -
+4 2ol 0 jf hr g7 o5,gh,j4 -
+0 s9 0 hc ld k1 j1,j1,oq -
+1 5 1 jf ns g6 nc,nc,o9 jo
+2 sb 0 jf ld g6 pm,m7,gr -
+3 s8 0 jf hr g7 gz,j3,ue -
+4 sa 0 jf ld k1 lw,ka,y6 -
+0 i6 0 jf lb ic in,rs,rs -
+1 5 1 hd ld g6 io,iu,j0 jo
+2 i5 0 jf hr g6 gr,gg,j2 -
+3 i7 0 mi hr ic im,iv,j3 -
+4 i8 0 l1 le 12d gh,gh,j4 -
+0 i6 0 jf hr lq rs,in,rw -
+1 5 1 jf 13e g6 nc,nc,o9 jo
+2 i5 0 jf le lq j2,gg,pq -
+3 i7 0 jf hr g6 kc,im,w1 -
+4 i8 0 jf le lq gh,o5,j4 -
+0 i6 0 jf lc ic t8,rs,rs -
+1 5 1 zr ld g7 gi,io,j0 jo
+2 15v 0 jf - g6 gg,pq,j2 -
+3 1ou 0 jf lc g6 t9,im,xi -
+4 1c7 0 jf le g6 gh,ka,ka -
+0 i6 0 jf lc pz rs,rs,gy -
+1 5 1 jf le g7 nc,iu,j0 jo
+2 i5 0 jf ld g7 gg,gr,j2 -
+3 i7 0 jf le on im,kg,kc -
+4 i8 0 jf ns g7 gh,gh,h0 -
+0 i6 0 jf lc pz rs,n6,kb -
+0 i6 0 hd hr g6 in,j1,gy -
+1 5 1 hd hr g6 yo,nc,j0 jo
+2 i5 0 hd hr g6 pq,pm,j2 -
+3 i7 0 hd hr g6 110,gz,r3 -
+4 i8 0 p3 12u g6 ka,lw,km -
+3 i7 0 hd hr g6 - -
+0 i6 0 hd hr g7 in,gk,xf -
+1 20 1 - - g7 iu,163,j0 jo
+2 i5 0 hd ns g7 gr,pq,y4 -
+3 i7 0 he hr g7 ue,sm,r3 -
+4 i8 0 p3 ns g7 gh,ka,kh -
+2 i5 0 jf lc g7 gg,gg,j2 -
+3 i7 0 jf hr g7 im,ow,sm -
+4 i8 0 jf ld g5 km,j4,o5 -
+2 i5 0 jf lc g7 gg,j2,gr -
+0 i6 0 jf lc g7 rs,rs,gy -
+2 i5 0 jf lc g7 pm,j2,gg -
+3 i7 0 jf hr g7 im,110,sm -
+0 i6 0 hc le on rs,rs,q8 -
+1 5 1 jf lc g7 o9,nc,nc jo
+2 i5 0 hc hr g7 j2,gg,gr -
+3 i7 0 jf hr g7 im,ue,sm -
+4 i8 0 hc ld g7 ka,j4,o5 -
+0 i6 0 jf hr k1 xf,kb,kb -
+1 5 1 jf ld g6 io,gi,j0 jo
+2 i5 0 jf hr g6 gg,gr,pq -
+3 i7 0 jf - k1 im,r3,o2 -
+4 i8 0 jf ld g6 gh,gh,j4 -
+0 i6 0 hc hr g6 kb,in,xf -
+1 5 1 jf hr g6 gw,gw,163 jo
+2 i5 0 hc hr g6 10z,pm,gg -
+3 i7 0 hc hr g6 gz,r3,r3 -
+4 i8 0 jf - g7 gh,o5,km -
+0 i6 0 jf hr g5 kb,j1,oq -
+1 5 1 jf 1hr g5 gi,q9,j0 jo
+2 i5 0 jf 1hr g5 j2,pm,gg -
+3 i7 0 jf hr g5 im,gz,xi -
+4 i8 0 jf hr g5 gh,o5,111 -
+0 i6 0 hd hr g7 gk,in,14j -
+1 20 1 - 1hs on q9,nc,nc jo
+2 i5 0 p3 hr g7 gg,gg,gr -
+3 i7 0 l1 hr on gz,gz,110 -
+4 i8 0 hc hr g7 km,gh,ka -
+0 237 0 jf - g6 kb,j1,gy -
+1 5 1 jf 12u g6 iu,j0,gi jo
+2 i5 0 hd hq g6 gg,gr,j2 -
+3 2g6 0 zr ns g7 im,110,ow -
+4 i8 0 zr ld g6 j4,gh,gh -
+0 i6 0 jf lb g7 rs,rs,gy -
+2 i5 0 jf ld g7 gg,j2,m7 -
+3 i7 0 jf lb g7 im,110,gz -
+4 i8 0 jf le g7 111,km,gh -
+0 i6 0 jf ld g7 in,in -
+1 5 1 jf ld g6 iu,nc jo
+2 i5 0 jf ns g6 - -
+3 i7 0 jf ns ic j3,im -
+4 i8 0 jf ld g7 j4,gh,gh -
+3 i7 0 mi - g7 im,j3 -
+0 s9 0 hc ns g7 in,rs -
+1 5 1 jf ld k1 q9,sl,j0 jo
+2 sb 0 mi hr g6 gg,gg,gx -
+3 s8 0 mi ld g6 im,gj -
+4 sa 0 mi lc g6 gh,ka,j4 -
+0 i6 0 jf ld k1 kb,j1,gy -
+1 5 1 jf ns g7 j0,nc,163 jo
+2 i5 0 mi le k1 gr,gg,j2 -
+3 i7 0 jf lc g7 im,w1,gz -
+4 i8 0 hd hr g5 km,gh,qd -
+0 i6 0 jf hr g6 in,j1,14j -
+1 5 1 sq hr g6 j0,io,nc jo
+2 i5 0 jf hr g6 gg,gg,gg -
+3 i7 0 jf hr g6 sm,sm,zo -
+4 i8 0 jf - g6 ka,j4,km -
+0 i6 0 hd - ic rs,rs,16h -
+1 5 1 hd ld ic nc,nc,y5 jo
+2 i5 0 jf 12u g6 y4,pm,j2 -
+3 i7 0 hd - g6 im,r3,o2 -
+4 i8 0 hd ns g6 gh,gh,111 -
+0 i6 0 p3 lb k1 - -
+2 i5 0 hd lc k1 - -
+3 386 0 sq lb g7 gz,r3,ue -
+4 i8 0 jf - - - -
+0 i6 0 jf - ic in,in,j1 -
+1 5 1 jf - ic io,nc,j0 jo
+2 i5 0 jf - g6 j2,gg,gr -
+3 i7 0 jf - g6 im,iv,gz -
+4 i8 0 jf - g6 gh,gh,j4 -
+0 1a2 0 jf hr g7 in,in,rw -
+1 5 1 jf ns g7 163,iu,nc jo
+2 1cd 0 jf ns k1 gg,j2,m7 -
+3 1a4 0 jf 12u k1 gz,j3,10y -
+4 1a3 0 jf hr k1 kh,ka,qd -
+0 1ov 0 jf hr 12z q8,q8,q8 -
+1 20 1 - - on iu,iu,iu jo
+2 1ot 0 jf 1yj wo q7,gx,j2 -
+3 1ou 0 vk 12u ic gz,im,r3 -
+4 1c7 0 jf 120 on kh,gh,111 -
+0 1hu 0 jf hr g6 in,in,kn -
+1 5 1 jf ns g6 nc,iu,o9 jo
+2 15v 0 hc hr g6 gx,y4,j2 -
+3 24c 0 jf 12u g6 j3,iv,sm -
+4 1ht 0 sq 124 g6 12k,ka,gh -
+0 i6 0 jf ld g5 rs,kb,n6 -
+1 5 1 jf ld g6 nc,j0,rx jo
+2 i5 0 jf ns g5 j2,gr,gg -
+3 i7 0 hc ld g5 r3,10y,kg -
+4 i8 0 jf lc g7 gh,ka,kh -
+0 i6 0 jf - lq j1,oq,n6 -
+1 5 1 jf hr g7 j0,j0,163 jo
+2 i5 0 jf - lq m7,j2,gg -
+3 i7 0 jf - lq r3,im,10y -
+4 i8 0 jf - lq ka,gh,qd -
+0 i6 0 jf hr g7 in,in,oq -
+1 5 1 mi ld g7 nc,163,io jo
+2 i5 0 jf lb g7 gg,gg,j2 -
+3 i7 0 jf lc g7 kc,im,sm -
+4 i8 0 jf le g7 ka,gh,km -
+0 i6 0 jf hr g7 kn,kb,in -
+2 i5 0 jf lb g7 gg,gr,pq -
+3 i7 0 jf lc g7 kc,im,kp -
 @artifact
-in,ic,iu,j8,ov,jc,je,hs,jp,kw,hw,jr,hy,hz,ri,i0,nq,i1,i3
-ic,in,ov,iu,j3,jc,j8,i1
-pw,qz,iu,j8,j3,rb,in,i0,nq,i1,i2,i3
-in,ic,j3,iu,qz,j8,jc,hs,ht,hu,jo,hw,hx,p6,hy,hz,i0,nq,i2
-in,ic,j3,iu,ov,j8,jc,hs,ht,hu,jo,hw,hx,p6,hy,hz,i0,nq,i2
-in,ic,j3,iu,pw,j8,jc,hs,ht,hu,jo,hw,hx,p6,hy,hz,i0,nq,i2
-ic,q5,iu,j3,ov,jc,rb,hs,no,hu,jo,hv,lf,hx,hy,hz,nq,i1,i3
-in,ic,ov,iu,j8,jc,rb,hs,qp,jo,kw,jq,hx,jr,hz,ri,i0,i2,i3
-ic,in,j8,iu,j3,rb,jc,nq,i1,i3
-in,ic,iu,j3,ov,j8,rb,hs,jp,kw,hw,hx,hz,ri,i0,nq,i1,i3
-qz,in,j3,j8,iu,jc,ov,hs,hu,kw,hv,jq,lf,p6,jr,hz,nq,i2,i3
-in,qz,iu,j8,j3,je,rb,hs,qp,jo,kw,hv,lf,hx,jr,hz,i0,i1,i2
-ic,q5,iu,j3,ov,23x,rb,hs,hu,jo,kw,hv,hw,hx,hy,hz,nq,i1,i2
-ic,in,iu,ov,j3,j8,rb,hs,hu,jo,kw,hv,hw,hx,hy,hz,i0,nq,i1
-ic,in,j8,j3,iu,jc,je,hs,12p,kw,hv,jq,lf,hx,hy,hz,nq,i1,i3
-in,ic,iu,j3,ov,j8,rb,qp,no,hu,kw,hv,jq,hx,hz,ri,i0,nq,i1
-ic,in,ov,iu,j3,j8,rb,12p,qp,hu,kw,hv,lf,hx,jr,hz,i0,i1,i2
-pw,in,qz,iu,j8,rb,j3
-pw,in,iu,j3,j8,rb,jc,hs,hu,jo,jp,hv,lf,hx,jr,hz,nq,i2,i3
-ic,in,j3,pw,iu,jc,q5,qp,no,hv,jq,lf,p6,hz,np,ri,nq,i1,i3
-qz,in,j8,iu,j3,rb,jc,hs,12p,jo,kw,hv,hw,p6,jr,ri,i0,nq,i1
-1kc,in,1i9,ov,iu,je,jc,hs,12p,jo,kw,hv,hw,p6,jr,ri,i0,nq,i1
-in,ic,iu,j3,ov,j8,rb,hs,qp,hu,jp,hv,hw,jq,hx,hy,i0,i1,i2
-qz,in,j8,iu,j3,23x,rb,hs,12p,jo,hv,jq,hx,jr,hz,ri,i0,i1,i2
-pw,ic,in,iu,j3,23x,rb,hv,hw,jr,np,i0,nq,i1,i2,i3
-in,q5,ov,iu,j3,j8,rb
-in,ic,iu,j8,j3,jc,rb,hs,ht,hu,jo,kw,jr,hy,i0,nq,i1,i2,i3
-in,ic,iu,j8,j3,je,23x
-in,ic,iu,j3,ov,j8,rb
-ic,q5,iu,j3,ov,jc,rb,hs,no,jo,hw,hx,jr,hy,hz,i0,nq,i2,i3
-ic,in,ov,j8,iu,j3,rb,i0
-hz,jr,ri,hu,jo,hs,qp,kw,hw,hx,hy,i0,i1,i3
-ic,in,ov,j8,iu,j3,je,hs,qp,hu,jo,kw,hw,hx,hy,hz,i0,i1,i3
-ic,in,ov,j8,iu,j3,rb,hs,qp,hu,jo,kw,hw,hx,hy,hz,i0,i1,i3
-in,ic,iu,j3,ov,j8,rb,ht,12p,hu,kw,hv,lf,hx,hy,hz,nq,i1,i2
-ic,in,j3,iu,ov,j8,rb,hs,qp,hu,jo,jp,hw,hx,jr,hz,i0,i2,i3
-ic,in,j3,j8,iu,ov,rb,ht,qp,hu,jp,kw,lf,hx,hy,hz,nq,i2,i3
-pw,in,qz,iu,j8,rb,j3,hs,jo,kw,hw,lf,jr,hy,hz,ri,i0,i1,i3
-in,ic,iu,ov,j3,j8,rb
-in,ic,iu,j3,ov,jc,j8
-in,ic,iu,j3,ov,j8,rb,hs,qp,jo,jp,kw,hw,hx,jr,hz,i0,i1,i2
-pw,qz,iu,j8,j3,rb,in,hs,ht,hu,jo,jq,hx,jr,hy,hz,i0,i1,i2
-in,q5,j8,iu,ov,jc,je,hs,qp,hu,jo,kw,jq,hx,jr,hz,i0,i1,i2
-ic,in,ov,iu,j3,j8,rb
-ic,in,j3,ov,iu,rb,j8,12p,kw,hv,jq,lf,hx,p6,hz,ri,i0,i1,i3
-ic,in,iu,j3,ov,j8,je,hs,hu,jo,kw,jq,hx,jr,hz,i0,i1,i2
-in,ic,iu,j3,ov,j8,rb,hs,hu,jo,hv,hw,hx,jr,hy,hz,i0,i1,i3
-lo,19c,1j7,1r9,1su,2bz,19n,hs,ht,hu,jo,kw,hw,lf,jr,hy,i0,i2,i3
-ic,in,iu,ov,q5,j8,je,hs,ht,hu,jo,hv,hw,hx,hy,ri,nq,i2,i3
-q5,in,ov,iu,ic,23x,j8,12p,qp,kw,hv,hw,jq,hx,p6,ri,i0,i1,i2
-ic,in,iu,j3,ov,je,j8
-in,ic,iu,j3,ov,j8,rb,hs,qp,jp,kw,jq,lf,p6,jr,hz,nq,i1,i2
-in,ic,j3,j8,iu,jc,je
-pw,ic,q5,in,iu,j8,j3,hs,ht,hu,kw,lf,hx,jr,hy,hz,i0,i1,i3
-in,ic,iu,ov,j3,rb,j8,hs,qp,jo,jp,kw,hw,hx,jr,hz,i0,i1,i2
-ic,in,ov,iu,j3,j8,rb,hs,qp,hu,jo,kw,lf,hx,jr,hz,i0,i1,i3
-ic,in,ov,j8,iu,jc,j3,i0,i1
-ic,in,ov,iu,j8,je,jc
-ic,in,j3,j8,iu,ov,jc,ht,hu,jp,kw,hv,lf,hx,hy,hz,nq,i2,i3
-in,ic,iu,j3,ov,j8,rb,12p,no,jp,kw,hv,lf,p6,hz,np,i0,nq,i1
-in,ic,iu,j8,j3,jc,rb,12p,qp,hu,kw,hv,lf,hx,hz,np,nq,i1,i3
-in,ic,iu,ov,j3,rb,j8,hs,ht,hu,jo,hv,hx,hy,hz,i0,nq,i1,i2
-qz,in,ov,iu,j8,je,j3
-in,qz,ov,j3,iu,jc,je,hs,kw,hv,hw,hx,hy,hz,ri,i0,nq,i1,i2
-in,ic,iu,j3,j8,qz,rb,ht,hu,jp,kw,hw,hx,hy,hz,ri,i0,i1,i3
-ic,in,iu,j3,ov,j8,rb
-in,ic,iu,j3,j8,rb,jc
-ic,q5,j8,1cc,iu,rb,ov
-in,qz,iu,j8,j3,rb,ov,i0,i2
-in,ic,iu,j3,ov,rb,j8,hw,jq,hy,i0,i1,i2
-in,ic,ov,iu,j8,j3,jc,hs,qp,hu,jo,kw,hw,lf,jr,hz,i0,nq,i1
-in,ic,j8,iu,ov,j3,jc,hs,hu,jo,kw,lf,p6,jr,hy,hz,nq,i1,i2
-in,ic,iu,j3,j8,jc,je,hs,12p,jo,hv,lf,hx,jr,hy,hz,i0,i1,i3
-in,ic,iu,j3,ov,j8,rb,hs,qp,hu,jo,jp,lf,hx,jr,hz,i0,i1,i3
-pw,q5,1i9,j8,j3,rb,1ic,hs,qp,jo,kw,hv,lf,hx,jr,hz,i0,i1,i3
-ic,in,iu,j8,ov,j3,rb
-in,ic,ov,j3,iu,j8,rb
-ic,q5,j8,ov,iu,jc,je,no,jp,hv,hw,hx,jr,hz,ri,i0,nq,i1,i2
-qz,in,j8,iu,ov,rb,j3,ht,no,hu,kw,lf,hx,hy,hz,np,nq,i1,i2
-qz,ic,j3,iu,j8,rb,jc,hx,i0,i1,i2,i3
-in,ic,j3,pw,ov,j8,rb,hs,qp,hu,jo,lf,hx,hy,hz,np,nq,i2,i3
-in,ic,j8,iu,ov,jc,je,ht,no,hu,kw,lf,hx,hy,hz,np,nq,i1,i2
-in,qz,j3,j8,iu,jc,rb
-ic,q5,iu,j3,ov,j8,rb,hs,jo,jp,kw,lf,hx,p6,jr,hz,nq,i1,i2
-ic,in,ov,j8,iu,j3,je,hs,ht,hu,jo,kw,jq,hx,hy,hz,i0,i1,i3
-in,ic,iu,j3,ov,rb,j8,hs,qp,jo,kw,hx,p6,jr,hy,hz,nq,i1,i2
-in,ic,iu,j3,ov,j8,rb,qp,no,hu,jo,lf,hx,hy,hz,np,i0,nq,i2
-ic,qz,iu,j3,j8,je,rb,hs,ht,hu,jo,hv,lf,hx,hy,hz,nq,i1,i3
-in,ic,iu,j8,j3,jc,je
-in,pw,j8,iu,ov,jc,j3,hu,jo,kw,jq,hx,jr,hz,nq,i1,i3
-in,qz,j8,iu,ov,jc,j3,hs,ht,hu,jo,kw,hw,lf,hy,hz,i0,i1,i2
-lo,19e,1r9,19i,1su,19m,19n,12p,kw,hv,hw,lf,hx,hz,np,ri,i0,nq,i3
-in,ic,iu,j3,ov,j8,rb,hs,hu,kw,hv,lf,hx,jr,hy,hz,i0,i1,i2
-in,ic,iu,j3,ov,j8,jc
-ic,q5,j8,in,iu,jc,ov,hs,hu,kw,hw,lf,hx,jr,hy,hz,i0,i1,i3
-in,ic,j8,j3,iu,rb,jc,ri,i0,nq,i1,i2,i3
-in,ic,j8,iu,j3,jc,1ae,jq,hx,jr,ri,i0,i1,i3
-in,q5,ov,j3,iu,j8,rb
-in,ic,ov,iu,j3,jc,je
-ic,in,iu,j3,ov,j8,jc,hs,ht,hu,jo,lf,hx,jr,hy,hz,nq,i1,i3
-in,ic,j3,iu,ov,jc,23x
-in,ic,iu,j3,ov,j8,rb,ht,qp,hu,kw,hw,hx,jr,hy,hz,i0,i1,i2
-ic,in,j8,ov,iu,jc,j3,lf,hx,p6,hy,i0,i2,i3
-ic,pw,iu,j8,j3,jc,rb,hs,qp,jo,jp,hv,hw,lf,hy,hz,i0,i1,i2
-q5,ic,j3,in,iu,ov,jc,hs,ht,hu,jo,hw,hx,jr,hy,hz,i0,i1,i3
-in,qz,iu,j3,ov,j8,rb
-in,qz,iu,j3,ov,jc,rb
+id ip,ie,iw,ja,p0,je,jg,ht,jr,kz,hx,jt,hz,i0,rn,i1,nv,i2,i4
+id ie,ip,p0,iw,j5,je,ja,i2
+id q1,r4,iw,ja,j5,rg,ip,i1,nv,i2,i3,i4
+id ip,ie,j5,iw,r4,ja,je,ht,hu,hv,jq,hx,hy,pb,hz,i0,i1,nv,i3
+id ip,ie,j5,iw,p0,ja,je,ht,hu,hv,jq,hx,hy,pb,hz,i0,i1,nv,i3
+id ip,ie,j5,iw,q1,ja,je,ht,hu,hv,jq,hx,hy,pb,hz,i0,i1,nv,i3
+id ie,qa,iw,j5,p0,je,rg,ht,nt,hv,jq,hw,li,hy,hz,i0,nv,i2,i4
+id ip,ie,p0,iw,ja,je,rg,ht,qu,jq,kz,js,hy,jt,i0,rn,i1,i3,i4
+id ie,ip,ja,iw,j5,rg,je,nv,i2,i4
+id ip,ie,iw,j5,p0,ja,rg,ht,jr,kz,hx,hy,i0,rn,i1,nv,i2,i4
+id r4,ip,j5,ja,iw,je,p0,ht,hv,kz,hw,js,li,pb,jt,i0,nv,i3,i4
+id ip,r4,iw,ja,j5,jg,rg,ht,qu,jq,kz,hw,li,hy,jt,i0,i1,i2,i3
+id ie,qa,iw,j5,p0,244,rg,ht,hv,jq,kz,hw,hx,hy,hz,i0,nv,i2,i3
+id ie,ip,iw,p0,j5,ja,rg,ht,hv,jq,kz,hw,hx,hy,hz,i0,i1,nv,i2
+id ie,ip,ja,j5,iw,je,jg,ht,12v,kz,hw,js,li,hy,hz,i0,nv,i2,i4
+id ip,ie,iw,j5,p0,ja,rg,qu,nt,hv,kz,hw,js,hy,i0,rn,i1,nv,i2
+id ie,ip,p0,iw,j5,ja,rg,12v,qu,hv,kz,hw,li,hy,jt,i0,i1,i2,i3
+id q1,ip,r4,iw,ja,rg,j5
+id q1,ip,iw,j5,ja,rg,je,ht,hv,jq,jr,hw,li,hy,jt,i0,nv,i3,i4
+id ie,ip,j5,q1,iw,je,qa,qu,nt,hw,js,li,pb,i0,nu,rn,nv,i2,i4
+id r4,ip,ja,iw,j5,rg,je,ht,12v,jq,kz,hw,hx,pb,jt,rn,i1,nv,i2
+id 1kj,ip,1ig,p0,iw,jg,je,ht,12v,jq,kz,hw,hx,pb,jt,rn,i1,nv,i2
+id ip,ie,iw,j5,p0,ja,rg,ht,qu,hv,jr,hw,hx,js,hy,hz,i1,i2,i3
+id r4,ip,ja,iw,j5,244,rg,ht,12v,jq,hw,js,hy,jt,i0,rn,i1,i2,i3
+id q1,ie,ip,iw,j5,244,rg,hw,hx,jt,nu,i1,nv,i2,i3,i4
+id ip,qa,p0,iw,j5,ja,rg
+id ip,ie,iw,ja,j5,je,rg,ht,hu,hv,jq,kz,jt,hz,i1,nv,i2,i3,i4
+id ip,ie,iw,ja,j5,jg,244
+id ip,ie,iw,j5,p0,ja,rg
+id ie,qa,iw,j5,p0,je,rg,ht,nt,jq,hx,hy,jt,hz,i0,i1,nv,i3,i4
+id ie,ip,p0,ja,iw,j5,rg,i1
+k2 i0,jt,rn,hv,jq,ht,qu,kz,hx,hy,hz,i1,i2,i4
+id ie,ip,p0,ja,iw,j5,jg,ht,qu,hv,jq,kz,hx,hy,hz,i0,i1,i2,i4
+id ie,ip,p0,ja,iw,j5,rg,ht,qu,hv,jq,kz,hx,hy,hz,i0,i1,i2,i4
+id ip,ie,iw,j5,p0,ja,rg,hu,12v,hv,kz,hw,li,hy,hz,i0,nv,i2,i3
+id ie,ip,j5,iw,p0,ja,rg,ht,qu,hv,jq,jr,hx,hy,jt,i0,i1,i3,i4
+id ie,ip,j5,ja,iw,p0,rg,hu,qu,hv,jr,kz,li,hy,hz,i0,nv,i3,i4
+id q1,ip,r4,iw,ja,rg,j5,ht,jq,kz,hx,li,jt,hz,i0,rn,i1,i2,i4
+id ip,ie,iw,p0,j5,ja,rg
+id ip,ie,iw,j5,p0,je,ja
+id ip,ie,iw,j5,p0,ja,rg,ht,qu,jq,jr,kz,hx,hy,jt,i0,i1,i2,i3
+id q1,r4,iw,ja,j5,rg,ip,ht,hu,hv,jq,js,hy,jt,hz,i0,i1,i2,i3
+id ip,qa,ja,iw,p0,je,jg,ht,qu,hv,jq,kz,js,hy,jt,i0,i1,i2,i3
+id ie,ip,p0,iw,j5,ja,rg
+id ie,ip,j5,p0,iw,rg,ja,12v,kz,hw,js,li,hy,pb,i0,rn,i1,i2,i4
+id ie,ip,iw,j5,p0,ja,jg,ht,hv,jq,kz,js,hy,jt,i0,i1,i2,i3
+id ip,ie,iw,j5,p0,ja,rg,ht,hv,jq,hw,hx,hy,jt,hz,i0,i1,i2,i4
+19i ls,19j,1je,1rg,1t1,2c6,19u,ht,hu,hv,jq,kz,hx,li,jt,hz,i1,i3,i4
+id ie,ip,iw,p0,qa,ja,jg,ht,hu,hv,jq,hw,hx,hy,hz,rn,nv,i3,i4
+id qa,ip,p0,iw,ie,244,ja,12v,qu,kz,hw,hx,js,hy,pb,rn,i1,i2,i3
+id ie,ip,iw,j5,p0,jg,ja
+id ip,ie,iw,j5,p0,ja,rg,ht,qu,jr,kz,js,li,pb,jt,i0,nv,i2,i3
+id ip,ie,j5,ja,iw,je,jg
+id q1,ie,qa,ip,iw,ja,j5,ht,hu,hv,kz,li,hy,jt,hz,i0,i1,i2,i4
+id ip,ie,iw,p0,j5,rg,ja,ht,qu,jq,jr,kz,hx,hy,jt,i0,i1,i2,i3
+id ie,ip,p0,iw,j5,ja,rg,ht,qu,hv,jq,kz,li,hy,jt,i0,i1,i2,i4
+id ie,ip,p0,ja,iw,je,j5,i1,i2
+id ie,ip,p0,iw,ja,jg,je
+id ie,ip,j5,ja,iw,p0,je,hu,hv,jr,kz,hw,li,hy,hz,i0,nv,i3,i4
+id ip,ie,iw,j5,p0,ja,rg,12v,nt,jr,kz,hw,li,pb,i0,nu,i1,nv,i2
+id ip,ie,iw,ja,j5,je,rg,12v,qu,hv,kz,hw,li,hy,i0,nu,nv,i2,i4
+id ip,ie,iw,p0,j5,rg,ja,ht,hu,hv,jq,hw,hy,hz,i0,i1,nv,i2,i3
+id r4,ip,p0,iw,ja,jg,j5
+id ip,r4,p0,j5,iw,je,jg,ht,kz,hw,hx,hy,hz,i0,rn,i1,nv,i2,i3
+id ip,ie,iw,j5,ja,r4,rg,hu,hv,jr,kz,hx,hy,hz,i0,rn,i1,i2,i4
+id ie,ip,iw,j5,p0,ja,rg
+id ip,ie,iw,j5,ja,rg,je
+id ie,qa,ja,1cj,iw,rg,p0
+id ip,r4,iw,ja,j5,rg,p0,i1,i3
+id ip,ie,iw,j5,p0,rg,ja,hx,js,hz,i1,i2,i3
+id ip,ie,p0,iw,ja,j5,je,ht,qu,hv,jq,kz,hx,li,jt,i0,i1,nv,i2
+id ip,ie,ja,iw,p0,j5,je,ht,hv,jq,kz,li,pb,jt,hz,i0,nv,i2,i3
+id ip,ie,iw,j5,ja,je,jg,ht,12v,jq,hw,li,hy,jt,hz,i0,i1,i2,i4
+id ip,ie,iw,j5,p0,ja,rg,ht,qu,hv,jq,jr,li,hy,jt,i0,i1,i2,i4
+id q1,qa,1ig,ja,j5,rg,1ij,ht,qu,jq,kz,hw,li,hy,jt,i0,i1,i2,i4
+id ie,ip,iw,ja,p0,j5,rg
+id ip,ie,p0,j5,iw,ja,rg
+id ie,qa,ja,p0,iw,je,jg,nt,jr,hw,hx,hy,jt,i0,rn,i1,nv,i2,i3
+id r4,ip,ja,iw,p0,rg,j5,hu,nt,hv,kz,li,hy,hz,i0,nu,nv,i2,i3
+id r4,ie,j5,iw,ja,rg,je,hy,i1,i2,i3,i4
+id ip,ie,j5,q1,p0,ja,rg,ht,qu,hv,jq,li,hy,hz,i0,nu,nv,i3,i4
+id ip,ie,ja,iw,p0,je,jg,hu,nt,hv,kz,li,hy,hz,i0,nu,nv,i2,i3
+id ip,r4,j5,ja,iw,je,rg
+id ie,qa,iw,j5,p0,ja,rg,ht,jq,jr,kz,li,hy,pb,jt,i0,nv,i2,i3
+id ie,ip,p0,ja,iw,j5,jg,ht,hu,hv,jq,kz,js,hy,hz,i0,i1,i2,i4
+id ip,ie,iw,j5,p0,rg,ja,ht,qu,jq,kz,hy,pb,jt,hz,i0,nv,i2,i3
+id ip,ie,iw,j5,p0,ja,rg,qu,nt,hv,jq,li,hy,hz,i0,nu,i1,nv,i3
+id ie,r4,iw,j5,ja,jg,rg,ht,hu,hv,jq,hw,li,hy,hz,i0,nv,i2,i4
+id ip,ie,iw,ja,j5,je,jg
+id ip,q1,ja,iw,p0,je,j5,hv,jq,kz,js,hy,jt,i0,nv,i2,i4
+id ip,r4,ja,iw,p0,je,j5,ht,hu,hv,jq,kz,hx,li,hz,i0,i1,i2,i3
+19i ls,19l,1rg,19p,1t1,19t,19u,12v,kz,hw,hx,li,hy,i0,nu,rn,i1,nv,i4
+id ip,ie,iw,j5,p0,ja,rg,ht,hv,kz,hw,li,hy,jt,hz,i0,i1,i2,i3
+id ip,ie,iw,j5,p0,ja,je
+id ie,qa,ja,ip,iw,je,p0,ht,hv,kz,hx,li,hy,jt,hz,i0,i1,i2,i4
+id ip,ie,ja,j5,iw,rg,je,rn,i1,nv,i2,i3,i4
+id ip,ie,ja,iw,j5,je,1al,js,hy,jt,rn,i1,i2,i4
+id ip,qa,p0,j5,iw,ja,rg
+id ip,ie,p0,iw,j5,je,jg
+id ie,ip,iw,j5,p0,ja,je,ht,hu,hv,jq,li,hy,jt,hz,i0,nv,i2,i4
+id ip,ie,j5,iw,p0,je,244
+id ip,ie,iw,j5,p0,ja,rg,hu,qu,hv,kz,hx,hy,jt,hz,i0,i1,i2,i3
+id ie,ip,ja,p0,iw,je,j5,li,hy,pb,hz,i1,i3,i4
+id ie,q1,iw,ja,j5,je,rg,ht,qu,jq,jr,hw,hx,li,hz,i0,i1,i2,i3
+id qa,ie,j5,ip,iw,p0,je,ht,hu,hv,jq,hx,hy,jt,hz,i0,i1,i2,i4
+id ip,r4,iw,j5,p0,ja,rg
+id ip,r4,iw,j5,p0,je,rg
 @sets
-ia:4 ie,if
-13j:3 13k
-u2:1,g2:2,u3:1 ga
-jy:1,vq:1,13j:2 13k
-pf:4 s9,sa
-u3:4 xu,xv
-g2:1,18n:1,tn:1,g3:1 -
-ia:2,g4:2 mu,ie
-13j:4 17y,13k
-198:2,g4:2 199,mu
-u2:1,pf:2,g4:1 sa
-ia:3,jy:1 ie
-1eh:2,tn:2 1ei,tq
-13t:3,13j:1 1lt
-1wh:4 1wi,21k
-tn:4 tq,1bb
-tm:1,vq:1,tn:1,sv:1 -
-vp:2,g3:2 1zm,1vb
-ia:1,g2:1,lm:2 1or
-u2:1,ia:2,pt:1 ie
-ia:3,125:1 ie
-lm:4 1oq,1or
-g2:4 1cm,ga
+ib:4:ig.ih
+13p:3:13q
+u7:1:,g2:2:gb,u8:1:
+k0:1:,vw:1:,13p:2:13q
+pk:4:se.sf
+u8:4:y0.y1
+g2:1:,18t:1:,ts:1:,g3:1:
+ib:2:ig,g4:2:mz
+13p:4:184.13q
+19e:2:19f,g4:2:mz
+u7:1:,pk:2:sf,g4:1:
+ib:3:ig,k0:1:
+1eo:2:1ep,ts:2:tv
+13z:3:1m0,13p:1:
+1wo:4:1wp.21r
+ts:4:tv.1bi
+tr:1:,vw:1:,ts:1:,t0:1:
+vv:2:1zt,g3:2:1vi
+ib:1:,g2:1:,lp:2:1oy
+u7:1:,ib:2:ig,py:1:
+ib:3:ig,12b:1:
+lp:4:1ox.1oy
+g2:4:1ct.gb
 @builds
 snki78cc qwl 0 0,1,2 0,1,2,3,4 0 0 1b,2p,w,1z,2m,4l 2 1 0 0 fxs - n
 hzftzaxk qwl 1 3,1,4 5,6,7,8,9 1 0 a,z,14,2w,5a,36 1 1 0 0 fxh - n

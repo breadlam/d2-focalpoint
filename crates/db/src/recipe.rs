@@ -21,10 +21,43 @@ pub struct Recipe {
     pub kit: Kit,
     pub armor: Vec<ArmorPiece>,
     pub weapons: Vec<Weapon>,
-    /// Armor sets: `[set, pieces equipped]`.
-    pub sets: Vec<(u32, u16)>,
-    pub set_bonuses: Vec<u32>,
+    /// Armor sets with the bonuses active in this build.
+    pub sets: Vec<SetEntry>,
+    /// The artifact item ("Hunter's Journal") and its applied perks.
+    pub artifact_item: Option<u32>,
     pub artifact: Vec<u32>,
+}
+
+/// An armor set: how many pieces are equipped and the bonuses they activate.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SetEntry {
+    pub set: u32,
+    pub pieces: u16,
+    pub bonuses: Vec<u32>,
+}
+
+/// `[set, pieces, [bonus]]`
+impl Serialize for SetEntry {
+    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
+        (self.set, self.pieces, &self.bonuses).serialize(s)
+    }
+}
+
+/// One dictionary entry: name, icon, the item's type ("Pulse Rifle",
+/// "Stasis Fragment") and a weapon's damage type.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DictEntry {
+    pub name: String,
+    pub icon: Option<String>,
+    pub kind: Option<String>,
+    pub damage: Option<String>,
+}
+
+/// `[name, icon, type, damage type]`
+impl Serialize for DictEntry {
+    fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
+        (&self.name, &self.icon, &self.kind, &self.damage).serialize(s)
+    }
 }
 
 #[derive(Debug, Default)]
@@ -72,7 +105,7 @@ fn slot_index(slots: &[&str], slot: &str) -> usize {
     slots.iter().position(|s| *s == slot).unwrap_or(usize::MAX)
 }
 
-/// `[id, stats, kit, armor, weapons, sets, set bonuses, artifact perks]`
+/// `[id, stats, kit, armor, weapons, sets, artifact item, artifact perks]`
 impl Serialize for Recipe {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
         (
@@ -82,7 +115,7 @@ impl Serialize for Recipe {
             &self.armor,
             &self.weapons,
             &self.sets,
-            &self.set_bonuses,
+            self.artifact_item,
             &self.artifact,
         )
             .serialize(s)
@@ -163,20 +196,39 @@ impl Dict {
         })
     }
 
-    /// Resolve every entry's name and icon.
-    pub(crate) fn resolve(&self, db: &Database) -> Result<Vec<(String, Option<String>)>> {
-        let mut names: HashMap<(u8, u32), (String, Option<String>)> = HashMap::new();
+    /// Resolve every entry's name, icon, type and damage type.
+    pub(crate) fn resolve(&self, db: &Database) -> Result<Vec<DictEntry>> {
+        let mut names: HashMap<(u8, u32), DictEntry> = HashMap::new();
         for (ns, sql) in [
-            (NS_ITEM, "SELECT item_hash, name, icon FROM item"),
-            (NS_PERK, "SELECT perk_hash, name, icon FROM sandbox_perk"),
-            (NS_SET, "SELECT set_hash, name, NULL FROM item_set"),
+            (
+                NS_ITEM,
+                "SELECT item_hash, name, icon, nullif(item_type_name, ''),
+                        CASE WHEN item_type = 3 THEN damage_type END
+                 FROM item",
+            ),
+            (
+                NS_PERK,
+                "SELECT perk_hash, name, icon, 'Set bonus', NULL FROM sandbox_perk",
+            ),
+            (
+                NS_SET,
+                "SELECT set_hash, name, NULL, 'Armor set', NULL FROM item_set",
+            ),
         ] {
             let mut stmt = db.conn().prepare(sql)?;
             let mut rows = stmt.query([])?;
             while let Some(r) = rows.next()? {
                 let hash: u32 = r.get(0)?;
                 if self.index.contains_key(&(ns, hash)) {
-                    names.insert((ns, hash), (r.get(1)?, r.get(2)?));
+                    names.insert(
+                        (ns, hash),
+                        DictEntry {
+                            name: r.get(1)?,
+                            icon: r.get(2)?,
+                            kind: r.get(3)?,
+                            damage: r.get(4)?,
+                        },
+                    );
                 }
             }
         }
@@ -184,9 +236,12 @@ impl Dict {
             .keys
             .iter()
             .map(|k| {
-                names
-                    .remove(k)
-                    .unwrap_or_else(|| (format!("Unknown ({})", k.1), None))
+                names.remove(k).unwrap_or_else(|| DictEntry {
+                    name: format!("Unknown ({})", k.1),
+                    icon: None,
+                    kind: None,
+                    damage: None,
+                })
             })
             .collect())
     }
@@ -242,8 +297,9 @@ pub(crate) fn recipes(db: &Database, ids: &[i64], dict: &mut Dict) -> Result<Vec
         let hash: u32 = r.get(3)?;
         let quantity: i32 = r.get(4)?;
         let exotic: bool = r.get(5)?;
+        let parent: Option<u32> = r.get(6)?;
         if let Some(recipe) = by_id.get_mut(&id) {
-            recipe.add(dict, &kind, &slot, hash, quantity, exotic);
+            recipe.add(dict, &kind, &slot, hash, quantity, exotic, parent);
         }
     }
     Ok(ids
@@ -259,6 +315,7 @@ pub(crate) fn recipes(db: &Database, ids: &[i64], dict: &mut Dict) -> Result<Vec
 impl Recipe {
     /// Add one `build_component` row. Parents (armor pieces, weapons) must
     /// come before their mods and perks — see [`components_sql`].
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn add(
         &mut self,
         dict: &mut Dict,
@@ -267,6 +324,7 @@ impl Recipe {
         hash: u32,
         quantity: i32,
         exotic: bool,
+        parent: Option<u32>,
     ) {
         let recipe = self;
         let k = &mut recipe.kit;
@@ -286,10 +344,17 @@ impl Recipe {
                     recipe.artifact.push(d);
                 }
             }
-            "armor_set" => recipe
-                .sets
-                .push((dict.id(NS_SET, hash), u16::try_from(quantity).unwrap_or(0))),
-            "set_bonus" => recipe.set_bonuses.push(dict.id(NS_PERK, hash)),
+            "artifact" => recipe.artifact_item = Some(dict.id(NS_ITEM, hash)),
+            "armor_set" => {
+                let set = dict.id(NS_SET, hash);
+                recipe.set_entry(set).pieces = u16::try_from(quantity).unwrap_or(0);
+            }
+            "set_bonus" => {
+                // A bonus's parent is its set.
+                let bonus = dict.id(NS_PERK, hash);
+                let set = parent.map_or(u32::MAX, |p| dict.id(NS_SET, p));
+                recipe.set_entry(set).bonuses.push(bonus);
+            }
             "armor" => {
                 if let Some(slot) = slot_name(slot, &ARMOR_SLOTS) {
                     recipe.armor.push(ArmorPiece {
@@ -352,6 +417,21 @@ impl Recipe {
         }
     }
 
+    /// The entry of an armor set, created on first mention.
+    fn set_entry(&mut self, set: u32) -> &mut SetEntry {
+        let i = if let Some(i) = self.sets.iter().position(|e| e.set == set) {
+            i
+        } else {
+            self.sets.push(SetEntry {
+                set,
+                pieces: 0,
+                bonuses: Vec::new(),
+            });
+            self.sets.len() - 1
+        };
+        &mut self.sets[i]
+    }
+
     /// Put armor and weapons in slot order.
     pub(crate) fn finish(&mut self) {
         let order =
@@ -366,7 +446,7 @@ impl Recipe {
 pub(crate) fn components_sql(condition: &str) -> String {
     format!(
         "SELECT bc.build_id, bc.kind, coalesce(bc.slot, ''), bc.component_hash, bc.quantity,
-                coalesce(i.is_exotic, false)
+                coalesce(i.is_exotic, false), bc.parent_hash
          FROM build_component bc LEFT JOIN item i ON i.item_hash = bc.component_hash
          WHERE {condition}
          ORDER BY bc.build_id, bc.kind IN ('armor', 'weapon') DESC, bc.position, bc.kind, bc.component_hash"
@@ -409,7 +489,7 @@ mod tests {
         };
         assert_eq!(
             serde_json::to_string(&r).unwrap(),
-            r#"["10",null,[null,null,null,null,null,null,[],[],[]],[],[],[],[],[]]"#
+            r#"["10",null,[null,null,null,null,null,null,[],[],[]],[],[],[],null,[]]"#
         );
     }
 }

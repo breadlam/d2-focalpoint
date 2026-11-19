@@ -25,7 +25,7 @@ use crate::search::GroupBy;
 use crate::{Database, Result, meta_key};
 
 /// Version of the text layout; the site checks it.
-pub const CATALOG_FORMAT_VERSION: u32 = 1;
+pub const CATALOG_FORMAT_VERSION: u32 = 2;
 
 /// Builds per shard (a type larger than this spans several shards).
 pub const SHARD_BUILDS: usize = 3000;
@@ -290,9 +290,15 @@ fn recipes(
         let Some(&i) = pos.get(&id) else { continue };
         let kind: String = r.get(1)?;
         let slot: String = r.get(2)?;
-        builds[i]
-            .recipe
-            .add(dict, &kind, &slot, r.get(3)?, r.get(4)?, r.get(5)?);
+        builds[i].recipe.add(
+            dict,
+            &kind,
+            &slot,
+            r.get(3)?,
+            r.get(4)?,
+            r.get(5)?,
+            r.get(6)?,
+        );
     }
     for b in builds.iter_mut() {
         b.recipe.finish();
@@ -366,16 +372,22 @@ fn armor_line(a: &ArmorPiece) -> String {
     )
 }
 
+/// `set:pieces:bonus.bonus,…` — each set with the bonuses it activates.
 fn sets_line(r: &Recipe) -> String {
-    format!(
-        "{} {}",
-        list(
-            r.sets
-                .iter()
-                .map(|&(s, n)| format!("{}:{}", b36(u64::from(s)), n))
-        ),
-        ids(&r.set_bonuses)
-    )
+    list(r.sets.iter().map(|e| {
+        let bonuses: Vec<String> = e.bonuses.iter().map(|&b| b36(u64::from(b))).collect();
+        format!(
+            "{}:{}:{}",
+            b36(u64::from(e.set)),
+            e.pieces,
+            bonuses.join(".")
+        )
+    }))
+}
+
+/// `item perks` — the artifact and its applied perks.
+fn artifact_line(r: &Recipe) -> String {
+    format!("{} {}", opt(r.artifact_item), ids(&r.artifact))
 }
 
 /// The loadout of a build, for ordering similar builds together.
@@ -414,7 +426,7 @@ fn shard_text(builds: &[&BuildInfo], type_index: &HashMap<TypeKey, u32>) -> Stri
             .iter()
             .map(|x| b36(u64::from(armor.id(armor_line(x)))))
             .collect();
-        let art = artifact.id(ids(&r.artifact));
+        let art = artifact.id(artifact_line(r));
         let set = sets.id(sets_line(r));
         let stats = b.stats.map_or_else(
             || "-".to_string(),
@@ -547,8 +559,24 @@ pub fn catalog(db: &Database, mut progress: impl FnMut(&str)) -> Result<Catalog>
         let _ = writeln!(index, "{k}\t{v}");
     }
     index.push_str("@dict\n");
-    for (name, icon) in &resolved {
+    for d in &resolved {
+        let _ = writeln!(
+            index,
+            "{}\t{}\t{}\t{}",
+            d.name,
+            d.icon.as_deref().unwrap_or(""),
+            d.kind.as_deref().unwrap_or(""),
+            d.damage.as_deref().unwrap_or("")
+        );
+    }
+    let (stats, elements) = crate::site::stat_and_element_icons(db)?;
+    index.push_str("@stats\n");
+    for (name, icon) in &stats {
         let _ = writeln!(index, "{name}\t{}", icon.as_deref().unwrap_or(""));
+    }
+    index.push_str("@elements\n");
+    for (name, icon) in &elements {
+        let _ = writeln!(index, "{name}\t{icon}");
     }
     index.push_str("@activities\n");
     for (name, group) in &activity_names {
@@ -612,7 +640,10 @@ mod tests {
             .unwrap();
         let cat = catalog(&db, |_| {}).unwrap();
         assert_eq!((cat.builds, cat.types, cat.shards.len()), (6, 2, 1));
-        assert!(cat.index.starts_with("focalpoint-catalog 1\n"));
+        assert!(
+            cat.index
+                .starts_with(&format!("focalpoint-catalog {CATALOG_FORMAT_VERSION}\n"))
+        );
         let section = |text: &str, name: &str| -> Vec<String> {
             text.split(&format!("@{name}\n"))
                 .nth(1)
@@ -662,15 +693,16 @@ mod tests {
         let mods: Vec<String> = a[6].split(',').map(name).collect();
         assert_eq!(mods, ["Hands-On", "Hands-On"]);
         let sets = &section(shard, "sets")[usize::from_str_radix(f[6], 36).unwrap()];
-        let (set, bonus) = sets.split_once(' ').unwrap();
+        let parts: Vec<&str> = sets.split(':').collect();
         assert_eq!(
-            (
-                name(set.split(':').next().unwrap()).as_str(),
-                set.split(':').nth(1)
-            ),
-            ("Iron Set", Some("2"))
+            (name(parts[0]).as_str(), parts[1], name(parts[2]).as_str()),
+            ("Iron Set", "2", "Iron Will"),
+            "the set, its pieces and its bonus"
         );
-        assert_eq!(name(bonus), "Iron Will");
+        let artifact = &section(shard, "artifact")[usize::from_str_radix(f[5], 36).unwrap()];
+        let (item, perks) = artifact.split_once(' ').unwrap();
+        assert_eq!((item, name(perks).as_str()), ("-", "Elemental Siphon"));
+        assert_eq!(section(&cat.index, "stats").len(), 6, "the six armor stats");
         assert_eq!(
             (f[8], f[9], f[10], f[11]),
             ("4", "2", "4", "4"),

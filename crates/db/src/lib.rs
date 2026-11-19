@@ -19,7 +19,7 @@ pub mod similar;
 pub mod site;
 
 /// Version of [`SCHEMA_SQL`]. Bump on any incompatible schema change.
-pub const SCHEMA_VERSION: u32 = 5;
+pub const SCHEMA_VERSION: u32 = 6;
 
 /// DDL for a fresh database.
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
@@ -318,7 +318,7 @@ mod tests {
                 "INSERT INTO element_kind VALUES (1, 'exotic_armor', 1), (13, 'stat_investment', 3),
                      (14, 'set_bonus', 3), (17, 'weapon_element', 4), (19, 'weapon_perk', 4);
                  INSERT INTO item (item_hash, name, is_exotic) VALUES (7, 'Nothing Manacles', true), (8, 'Rampage', false);
-                 INSERT INTO stat VALUES (144602215, 'Super', NULL);
+                 INSERT INTO stat (stat_hash, name) VALUES (144602215, 'Super');
                  INSERT INTO sandbox_perk (perk_hash, name) VALUES (5, 'Two-Piece Bonus');",
             )
             .unwrap();

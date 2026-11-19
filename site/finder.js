@@ -7,11 +7,10 @@
 // The pure functions are exported for tests/site/test.html.
 
 import {
-  INCLUDE_KINDS, NONE, componentsOf, elementBadge, fillSelect, h, lazyDetails, n, optionList, pct,
-  plural, recipeRest, recipeSummary,
+  INCLUDE_KINDS, NONE, componentsOf, elementBadge, fillSelect, h, loadoutPanel, n, optionList, pct, plural,
 } from './app.js';
 
-export const CATALOG_FORMAT = 1;
+export const CATALOG_FORMAT = 2;
 /** The most builds the page downloads to search their recipes. */
 export const SEARCH_LIMIT = 45000;
 const PAGE = 30;
@@ -45,14 +44,16 @@ function header(text, kind) {
 /** Parse `catalog/index.txt`. */
 export function parseIndex(text) {
   header(text, 'focalpoint-catalog');
-  const meta = {}; const dict = []; const activities = []; const types = [];
+  const meta = {}; const dict = []; const activities = []; const types = []; const stats = []; const elements = {};
   let section = '';
   for (const line of text.split('\n').slice(1)) {
     if (!line) continue;
     if (line[0] === '@') { section = line.slice(1); continue; }
     const f = line.split('\t');
     if (section === 'meta') meta[f[0]] = f[1];
-    else if (section === 'dict') dict.push([f[0], f[1] || null]);
+    else if (section === 'dict') dict.push([f[0], f[1] || null, f[2] || null, f[3] || null]);
+    else if (section === 'stats') stats.push([f[0], f[1] || null]);
+    else if (section === 'elements') elements[f[0]] = f[1];
     else if (section === 'activities') activities.push({ name: f[0], group: f[1] || '' });
     else if (section === 'types') {
       types.push({
@@ -69,7 +70,7 @@ export function parseIndex(text) {
     t.superName = nameOf(t.super);
     t.aspectNames = t.aspects.map(nameOf);
   }
-  return { meta, dict, activities, types, data: { dict, icon_base: meta.icon_base } };
+  return { meta, dict, activities, types, data: { dict, stats, elements, icon_base: meta.icon_base } };
 }
 
 /** Parse one shard into builds with decoded recipes (same shape as the book's). */
@@ -100,13 +101,15 @@ export function parseShard(text) {
           statMods: nums(f[5]), mods: nums(f[6]), perks: nums(f[7]),
         });
         break;
-      case 'artifact': artifact.push(nums(f[0])); break;
-      case 'sets':
-        sets.push({
-          sets: f[0] === '-' ? [] : f[0].split(',').map((x) => { const [s, p] = x.split(':'); return [Number.parseInt(s, 36), Number(p)]; }),
-          bonuses: nums(f[1]),
+      case 'artifact': artifact.push({ item: num(f[0]), perks: nums(f[1]) }); break;
+      case 'sets': {
+        const entries = f[0] === '-' ? [] : f[0].split(',').map((x) => {
+          const [s, p, b] = x.split(':');
+          return { set: Number.parseInt(s, 36), pieces: Number(p), bonuses: b ? b.split('.').map((y) => Number.parseInt(y, 36)) : [] };
         });
+        sets.push({ entries, bonuses: entries.flatMap((e) => e.bonuses) });
         break;
+      }
       case 'builds': {
         const set = sets[num(f[6])];
         builds.push({
@@ -117,7 +120,8 @@ export function parseShard(text) {
             kit: kits[num(f[2])],
             weapons: nums(f[3]).map((i) => weapons[i]),
             armor: nums(f[4]).map((i) => armor[i]),
-            sets: set.sets, setBonuses: set.bonuses, artifact: artifact[num(f[5])],
+            sets: set.entries, setBonuses: set.bonuses,
+            artifactItem: artifact[num(f[5])].item, artifact: artifact[num(f[5])].perks,
           },
           runs: num(f[8]), players: num(f[9]), clears: num(f[10]), qualified: num(f[11]),
           lastDay: num(f[12]), effect: f[13] === '-' ? null : Number.parseInt(f[13], 36) / 1000,
@@ -305,8 +309,7 @@ function buildCard(cat, b, rank, has, book) {
         h('h4', { class: 'recipe-title' }, 'Recipe'),
         h('p', { class: 'recipe-meta' }, buildRecord(b),
           has.length ? h('span', { class: 'match-badge' }, ` · includes ${has.join(', ')}`) : null)),
-      recipeSummary(cat, r, mark),
-      lazyDetails('Armor, mods and artifact', () => recipeRest(cat, r, mark))),
+      loadoutPanel(cat, r, mark)),
     bookLink);
 }
 
