@@ -7,11 +7,14 @@ use clap::ValueEnum;
 use searchlight_db::Database;
 use searchlight_db::search::{BuildSearch, GroupBy, SortBy, search_builds};
 
+use super::filters::{FacetArgs, RunArgs};
 use crate::output::{Format, render, thousands};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum Group {
     Build,
+    /// Class, exotics, super and aspects
+    Core,
     Player,
     Class,
     Element,
@@ -32,65 +35,22 @@ pub enum Sort {
 
 #[derive(Debug, clap::Args)]
 #[command(
-    after_help = "Facets combine with AND; repeat a flag to require several (--aspect A --aspect B).\n\
-Names match case-insensitively. Run filters decide which runs are counted.\n\n\
+    after_help = "Names match case-insensitively. Run filters decide which runs are counted.\n\n\
 Examples:\n  \
 searchlight search --class Warlock --exotic-armor \"Getaway Artist\" --activity conquest\n  \
 searchlight search --class Hunter --activity \"master raid\" --clears --group-by exotic-armor"
 )]
 pub struct Args {
-    /// Titan, Hunter or Warlock
-    #[arg(long)]
-    pub class: Option<String>,
-    /// Arc, Solar, Void, Stasis, Strand or Prismatic
-    #[arg(long)]
-    pub element: Option<String>,
-    #[arg(long, value_name = "NAME")]
-    pub exotic_armor: Option<String>,
-    #[arg(long, value_name = "NAME")]
-    pub exotic_weapon: Option<String>,
-    #[arg(long = "super", value_name = "NAME")]
-    pub super_name: Option<String>,
-    #[arg(long, value_name = "NAME")]
-    pub aspect: Vec<String>,
-    #[arg(long, value_name = "NAME")]
-    pub fragment: Vec<String>,
-    /// A weapon in any slot
-    #[arg(long, value_name = "NAME")]
-    pub weapon: Vec<String>,
-    /// A weapon perk, trait, origin trait or frame
-    #[arg(long, value_name = "NAME")]
-    pub perk: Vec<String>,
-    /// An armor mod (general, stat or tuning) or weapon mod
-    #[arg(long = "mod", value_name = "NAME")]
-    pub mods: Vec<String>,
-    #[arg(long, value_name = "NAME")]
-    pub artifact_perk: Vec<String>,
-    /// An armor set with at least two pieces equipped
-    #[arg(long = "set", value_name = "NAME")]
-    pub sets: Vec<String>,
-
-    /// Only runs whose activity name or target group contains TEXT
-    #[arg(long, value_name = "TEXT")]
-    pub activity: Option<String>,
-    /// Only runs by players whose Bungie or display name contains TEXT
-    #[arg(long, value_name = "TEXT")]
-    pub player: Option<String>,
-    /// Only solo runs
-    #[arg(long)]
-    pub solo: bool,
+    #[command(flatten)]
+    pub facets: FacetArgs,
+    #[command(flatten)]
+    pub runs: RunArgs,
     /// Only runs the player cleared
     #[arg(long)]
     pub clears: bool,
     /// Count zero-kill runs too (checkpoint bots, passengers)
     #[arg(long)]
     pub include_passengers: bool,
-    /// Only runs on or after this date (YYYY-MM-DD)
-    #[arg(long, value_name = "DATE")]
-    pub since: Option<String>,
-    /// Only runs on or before this date (YYYY-MM-DD)
-    #[arg(long, value_name = "DATE")]
-    pub until: Option<String>,
 
     /// Group results (popularity reports) instead of listing builds
     #[arg(long, value_enum, default_value_t = Group::Build)]
@@ -106,27 +66,13 @@ pub struct Args {
 impl Args {
     fn to_query(&self) -> BuildSearch {
         BuildSearch {
-            class: self.class.clone(),
-            element: self.element.clone(),
-            exotic_armor: self.exotic_armor.clone(),
-            exotic_weapon: self.exotic_weapon.clone(),
-            super_name: self.super_name.clone(),
-            aspects: self.aspect.clone(),
-            fragments: self.fragment.clone(),
-            weapons: self.weapon.clone(),
-            perks: self.perk.clone(),
-            mods: self.mods.clone(),
-            artifact_perks: self.artifact_perk.clone(),
-            armor_sets: self.sets.clone(),
-            activity: self.activity.clone(),
-            player: self.player.clone(),
-            solo: self.solo,
+            facets: self.facets.to_facets(),
+            runs: self.runs.to_filter(),
             clears_only: self.clears,
             include_passengers: self.include_passengers,
-            since: self.since.clone(),
-            until: self.until.clone(),
             group_by: match self.group_by {
                 Group::Build => GroupBy::Build,
+                Group::Core => GroupBy::Core,
                 Group::Player => GroupBy::Player,
                 Group::Class => GroupBy::Class,
                 Group::Element => GroupBy::Element,
@@ -241,10 +187,10 @@ mod tests {
         ])
         .unwrap();
         let q = cli.args.to_query();
-        assert_eq!(q.class.as_deref(), Some("Warlock"));
-        assert_eq!(q.aspects.len(), 2);
-        assert_eq!(q.mods, ["Firepower"]);
-        assert_eq!(q.super_name.as_deref(), Some("Song of Flame"));
+        assert_eq!(q.facets.class.as_deref(), Some("Warlock"));
+        assert_eq!(q.facets.aspects.len(), 2);
+        assert_eq!(q.facets.mods, ["Firepower"]);
+        assert_eq!(q.facets.super_name.as_deref(), Some("Song of Flame"));
         assert!(q.clears_only);
         assert_eq!(q.group_by, GroupBy::ExoticArmor);
         assert_eq!(q.sort, SortBy::Players);

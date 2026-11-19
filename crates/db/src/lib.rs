@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use duckdb::{AccessMode, Config, Connection, OptionalExt, params};
 use thiserror::Error;
 
+pub mod filter;
 pub mod search;
 pub mod similar;
 

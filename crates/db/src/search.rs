@@ -1,23 +1,24 @@
 //! Facet search over builds, with usage aggregated over matching runs.
 //!
-//! Build facets (class, exotics, abilities, aspects, perks, mods, ...) select
-//! builds; run filters (activity, solo, clears, player, dates) select which
-//! of their runs count. Results are grouped per build, or by a chosen key for
-//! popularity reports. Names match case-insensitively against *every* item
-//! with that name, because item names are not unique.
-
-use std::fmt::Write as _;
+//! Build [`Facets`] (class, exotics, abilities, aspects, perks, mods, ...)
+//! select builds; a [`RunFilter`] (activity, solo, player, dates) plus the
+//! clears and passenger switches select which of their runs count. Results
+//! are grouped per build, or by a chosen key for popularity reports.
 
 use duckdb::params_from_iter;
 use duckdb::types::Value;
 
-use crate::{Database, DbError, Result};
+use crate::filter::{Facets, RunFilter};
+use crate::{Database, Result};
 
 /// What a search may group by.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum GroupBy {
     #[default]
     Build,
+    /// The build as players describe it: class, exotics, super and aspects
+    /// (builds differing only in fragments, mods or weapons fall together).
+    Core,
     Player,
     Class,
     Element,
@@ -28,13 +29,24 @@ pub enum GroupBy {
 }
 
 impl GroupBy {
-    /// `(column label, SQL expression)` pairs forming the group key.
-    fn key(self) -> &'static [(&'static str, &'static str)] {
+    /// `(column label, SQL expression over `b`, `rb`, `pl`)` pairs forming
+    /// the group key.
+    pub(crate) fn key(self) -> &'static [(&'static str, &'static str)] {
         match self {
             GroupBy::Build => &[
                 ("build_id", "b.build_id::VARCHAR"),
                 ("class", "b.class"),
                 ("element", "b.element"),
+                ("exotic armor", "item_name(b.exotic_armor_hash)"),
+                ("exotic weapon", "item_name(b.exotic_weapon_hash)"),
+                ("super", "item_name(b.super_hash)"),
+                (
+                    "aspects",
+                    "array_to_string(item_names(b.aspect_hashes), ', ')",
+                ),
+            ],
+            GroupBy::Core => &[
+                ("class", "b.class"),
                 ("exotic armor", "item_name(b.exotic_armor_hash)"),
                 ("exotic weapon", "item_name(b.exotic_weapon_hash)"),
                 ("super", "item_name(b.super_hash)"),
@@ -89,37 +101,14 @@ impl SortBy {
     }
 }
 
-/// Search parameters. Empty facets impose no constraint.
+/// Search parameters.
 #[derive(Debug, Clone, Default)]
 pub struct BuildSearch {
-    pub class: Option<String>,
-    pub element: Option<String>,
-    pub exotic_armor: Option<String>,
-    pub exotic_weapon: Option<String>,
-    pub super_name: Option<String>,
-    /// Every listed name must be present (AND).
-    pub aspects: Vec<String>,
-    pub fragments: Vec<String>,
-    /// Weapons in any slot.
-    pub weapons: Vec<String>,
-    /// Weapon perks, traits, origin traits and frames.
-    pub perks: Vec<String>,
-    /// Armor mods (general, stat, tuning) and weapon mods.
-    pub mods: Vec<String>,
-    pub artifact_perks: Vec<String>,
-    /// Armor sets with at least two pieces equipped.
-    pub armor_sets: Vec<String>,
-    /// Substring of an activity name or Searchlight target group.
-    pub activity: Option<String>,
-    /// Substring of a player's Bungie name or display name.
-    pub player: Option<String>,
-    pub solo: bool,
+    pub facets: Facets,
+    pub runs: RunFilter,
     pub clears_only: bool,
     /// Count runs where the player got no kills (checkpoint bots, passengers).
     pub include_passengers: bool,
-    /// Inclusive `YYYY-MM-DD` bounds on the run start date.
-    pub since: Option<String>,
-    pub until: Option<String>,
     pub group_by: GroupBy,
     pub sort: SortBy,
     pub limit: usize,
@@ -146,126 +135,16 @@ pub struct SearchResult {
     pub total_groups: i64,
 }
 
-/// Resolve a name to every hash carrying it (case-insensitive), or fail with
-/// close suggestions.
-fn resolve(db: &Database, table: &str, hash_col: &str, name: &str) -> Result<Vec<u32>> {
-    let mut stmt = db.conn().prepare(&format!(
-        "SELECT {hash_col} FROM {table} WHERE lower(name) = lower(?)"
-    ))?;
-    let hashes: Vec<u32> = stmt
-        .query_map([name], |r| r.get(0))?
-        .collect::<duckdb::Result<_>>()?;
-    if !hashes.is_empty() {
-        return Ok(hashes);
-    }
-    let mut stmt = db.conn().prepare(&format!(
-        "SELECT DISTINCT name FROM {table} WHERE name ILIKE '%' || ? || '%' ORDER BY length(name), name LIMIT 5"
-    ))?;
-    let suggestions: Vec<String> = stmt
-        .query_map([name], |r| r.get(0))?
-        .collect::<duckdb::Result<_>>()?;
-    Err(DbError::UnknownName {
-        name: name.to_string(),
-        suggestions,
-    })
-}
-
-fn hash_list(hashes: &[u32]) -> String {
-    hashes
-        .iter()
-        .map(u32::to_string)
-        .collect::<Vec<_>>()
-        .join(", ")
-}
-
 /// Run a facet search.
 pub fn search_builds(db: &Database, q: &BuildSearch) -> Result<SearchResult> {
     let mut params: Vec<Value> = Vec::new();
-    let mut build_where = String::from("TRUE");
-    if let Some(c) = &q.class {
-        build_where.push_str(" AND lower(b.class) = lower(?)");
-        params.push(Value::Text(c.clone()));
-    }
-    if let Some(e) = &q.element {
-        build_where.push_str(" AND lower(b.element) = lower(?)");
-        params.push(Value::Text(e.clone()));
-    }
-    for (name, column) in [
-        (&q.exotic_armor, "exotic_armor_hash"),
-        (&q.exotic_weapon, "exotic_weapon_hash"),
-        (&q.super_name, "super_hash"),
-    ] {
-        if let Some(n) = name {
-            let hashes = resolve(db, "item", "item_hash", n)?;
-            let _ = write!(build_where, " AND b.{column} IN ({})", hash_list(&hashes));
-        }
-    }
-    // Component facets: each listed name must be present among the kinds.
-    let component_facets: [(&Vec<String>, &str); 7] = [
-        (&q.aspects, "'aspect'"),
-        (&q.fragments, "'fragment'"),
-        (&q.weapons, "'weapon'"),
-        (
-            &q.perks,
-            "'weapon_perk', 'origin_trait', 'weapon_intrinsic'",
-        ),
-        (
-            &q.mods,
-            "'armor_mod', 'armor_stat_mod', 'armor_tuning', 'weapon_mod'",
-        ),
-        (&q.artifact_perks, "'artifact_perk'"),
-        (&q.armor_sets, "'armor_set'"),
-    ];
-    for (names, kinds) in component_facets {
-        for n in names {
-            let (hashes, extra) = if kinds == "'armor_set'" {
-                (
-                    resolve(db, "item_set", "set_hash", n)?,
-                    " AND quantity >= 2",
-                )
-            } else {
-                (resolve(db, "item", "item_hash", n)?, "")
-            };
-            let _ = write!(
-                build_where,
-                " AND b.build_id IN (SELECT build_id FROM build_component WHERE kind IN ({kinds}) \
-                 AND component_hash IN ({}){extra})",
-                hash_list(&hashes)
-            );
-        }
-    }
-
-    let mut run_where = String::from("TRUE");
+    let build_where = q.facets.sql(db, &mut params)?;
+    let mut run_where = q.runs.sql(&mut params);
     if !q.include_passengers {
         run_where.push_str(" AND p.kills > 0");
     }
     if q.clears_only {
         run_where.push_str(" AND p.is_clear");
-    }
-    if q.solo {
-        run_where.push_str(" AND r.is_solo");
-    }
-    if let Some(a) = &q.activity {
-        run_where.push_str(
-            " AND (a.name ILIKE '%' || ? || '%' OR a.target_group ILIKE '%' || ? || '%')",
-        );
-        params.push(Value::Text(a.clone()));
-        params.push(Value::Text(a.clone()));
-    }
-    if let Some(p) = &q.player {
-        run_where.push_str(
-            " AND (pl.bungie_name ILIKE '%' || ? || '%' OR pl.display_name ILIKE '%' || ? || '%')",
-        );
-        params.push(Value::Text(p.clone()));
-        params.push(Value::Text(p.clone()));
-    }
-    if let Some(d) = &q.since {
-        run_where.push_str(" AND r.started_at >= CAST(? AS DATE)");
-        params.push(Value::Text(d.clone()));
-    }
-    if let Some(d) = &q.until {
-        run_where.push_str(" AND r.started_at < CAST(? AS DATE) + INTERVAL 1 DAY");
-        params.push(Value::Text(d.clone()));
     }
 
     let key = q.group_by.key();
@@ -394,16 +273,30 @@ mod tests {
         search_builds(db, &BuildSearch { limit: 50, ..q }).unwrap()
     }
 
+    fn facets(f: Facets) -> BuildSearch {
+        BuildSearch {
+            facets: f,
+            ..Default::default()
+        }
+    }
+
+    fn runs(r: RunFilter) -> BuildSearch {
+        BuildSearch {
+            runs: r,
+            ..Default::default()
+        }
+    }
+
     #[test]
     fn names_match_every_hash_case_insensitively() {
         let (_d, db) = db();
         let r = search(
             &db,
-            BuildSearch {
+            facets(Facets {
                 class: Some("warlock".into()),
                 exotic_armor: Some("nothing manacles".into()),
                 ..Default::default()
-            },
+            }),
         );
         let mut got = ids(&r);
         got.sort();
@@ -415,10 +308,10 @@ mod tests {
         let (_d, db) = db();
         let r = search(
             &db,
-            BuildSearch {
+            facets(Facets {
                 aspects: vec!["Chaos Accelerant".into(), "Feed the Void".into()],
                 ..Default::default()
-            },
+            }),
         );
         let mut got = ids(&r);
         got.sort();
@@ -428,74 +321,71 @@ mod tests {
     #[test]
     fn run_filters_shape_the_usage() {
         let (_d, db) = db();
+        let manacles = Facets {
+            exotic_armor: Some("Nothing Manacles".into()),
+            class: Some("Warlock".into()),
+            ..Default::default()
+        };
         // Build 1: runs 10, 11 (Conquest), 12 (raid), 13 (passenger, excluded).
-        let all = search(
-            &db,
-            BuildSearch {
-                exotic_armor: Some("Nothing Manacles".into()),
-                class: Some("Warlock".into()),
-                ..Default::default()
-            },
-        );
+        let all = search(&db, facets(manacles.clone()));
         let b1 = all.rows.iter().find(|r| r.key[0] == "1").unwrap();
         assert_eq!((b1.runs, b1.players, b1.clears), (3, 2, 2));
         assert!((b1.avg_kills - 50.0).abs() < 1e-9);
         assert_eq!(b1.last_used, "2026-07-03");
 
-        let conquest = search(
+        let conquest = RunFilter {
+            activity: Some("conquest".into()),
+            ..Default::default()
+        };
+        let in_conquest = search(
             &db,
             BuildSearch {
-                activity: Some("conquest".into()),
-                exotic_armor: Some("Nothing Manacles".into()),
-                class: Some("Warlock".into()),
+                facets: manacles,
+                runs: conquest.clone(),
                 ..Default::default()
             },
         );
-        let b1 = conquest.rows.iter().find(|r| r.key[0] == "1").unwrap();
+        let b1 = in_conquest.rows.iter().find(|r| r.key[0] == "1").unwrap();
         assert_eq!(b1.runs, 2);
 
         let with_passengers = search(
             &db,
             BuildSearch {
                 include_passengers: true,
-                activity: Some("conquest".into()),
+                runs: conquest,
                 ..Default::default()
             },
         );
-        assert_eq!(
-            with_passengers
-                .rows
-                .iter()
-                .find(|r| r.key[0] == "1")
-                .unwrap()
-                .runs,
-            3
-        );
+        let b1 = with_passengers.rows.iter().find(|r| r.key[0] == "1");
+        assert_eq!(b1.unwrap().runs, 3);
 
         let solo = search(
             &db,
-            BuildSearch {
+            runs(RunFilter {
                 solo: true,
                 ..Default::default()
-            },
+            }),
         );
         assert_eq!(ids(&solo), ["1"]);
         let clears = search(
             &db,
             BuildSearch {
                 clears_only: true,
-                player: Some("bravo".into()),
+                runs: RunFilter {
+                    player: Some("bravo".into()),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
         );
         assert_eq!(ids(&clears), ["3"]);
         let dated = search(
             &db,
-            BuildSearch {
+            runs(RunFilter {
                 since: Some("2026-07-05".into()),
                 until: Some("2026-07-05".into()),
                 ..Default::default()
-            },
+            }),
         );
         assert_eq!(ids(&dated), ["2"]);
     }
@@ -506,7 +396,10 @@ mod tests {
         let r = search(
             &db,
             BuildSearch {
-                class: Some("Warlock".into()),
+                facets: Facets {
+                    class: Some("Warlock".into()),
+                    ..Default::default()
+                },
                 group_by: GroupBy::ExoticArmor,
                 ..Default::default()
             },
@@ -529,14 +422,16 @@ mod tests {
         let err = search_builds(
             &db,
             &BuildSearch {
-                exotic_armor: Some("Manacles".into()),
                 limit: 5,
-                ..Default::default()
+                ..facets(Facets {
+                    exotic_armor: Some("Manacles".into()),
+                    ..Default::default()
+                })
             },
         )
         .unwrap_err();
         match err {
-            DbError::UnknownName { name, suggestions } => {
+            crate::DbError::UnknownName { name, suggestions } => {
                 assert_eq!(name, "Manacles");
                 assert_eq!(suggestions, ["Nothing Manacles"]);
             }
