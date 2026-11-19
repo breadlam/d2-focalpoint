@@ -1,6 +1,6 @@
 # Analysis database schema (version 5)
 
-The database is a single DuckDB file built by `searchlight import`. The DDL is
+The database is a single DuckDB file built by `focalpoint import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
 explains the model and how to query it. For the source data and its quirks
 see [data-sources.md](data-sources.md).
@@ -193,13 +193,13 @@ Its building blocks work on any two multisets (lists, a value repeated once
 per copy): `jaccard_distance(a, b)` (`1 − Σmin/Σmax`), `l1_distance(a, b)`
 (added plus removed), `bag_distance(a, b)` (slots changed) and
 `multiset_common(a, b)` (`Σmin`). `element_name(key)` names an element key.
-For nearest-neighbour searches use `searchlight similar <build_id>`, which
+For nearest-neighbour searches use `focalpoint similar <build_id>`, which
 computes the same distance in Rust in parallel.
 
 ## Example queries
 
 For facet searches (class, exotics, aspects, perks, mods, activity, …) and
-popularity counts, `searchlight search` builds these queries for you; it
+popularity counts, `focalpoint search` builds these queries for you; it
 matches each name against every item carrying it.
 
 > **Item names are not unique.** Reissued or versioned items share a name
@@ -240,7 +240,7 @@ JOIN run_player p USING (instance_id, membership_id, character_id)
 WHERE w.item_hash IN (SELECT item_hash FROM item WHERE name = 'Gjallarhorn')
 GROUP BY 1 ORDER BY 1;
 
--- A build's nearest neighbours by the tiered distance (or use `searchlight similar`).
+-- A build's nearest neighbours by the tiered distance (or use `focalpoint similar`).
 WITH target AS (SELECT * FROM build WHERE build_id = 8953961516047688000)
 SELECT b.build_id, round(build_distance(target, b), 3) AS distance,
        item_name(b.exotic_armor_hash) AS exotic, b.timeline_count

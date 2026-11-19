@@ -1,10 +1,10 @@
-//! `searchlight import`
+//! `focalpoint import`
 
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use clap::ValueEnum;
-use searchlight_import::{ImportOptions, OptionalStage, Progress};
+use focalpoint_import::{ImportOptions, OptionalStage, Progress};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum Skip {
@@ -25,7 +25,7 @@ pub struct Args {
     pub snapshot: Option<String>,
 
     /// Local scratch directory for staged sources (reused between runs as a cache)
-    /// [default: <user cache dir>/searchlight/import]
+    /// [default: <user cache dir>/focalpoint/import]
     #[arg(long, value_name = "DIR")]
     pub work_dir: Option<PathBuf>,
 
@@ -50,7 +50,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
     let work_dir = args.work_dir.clone().unwrap_or_else(|| {
         dirs::cache_dir()
             .unwrap_or_else(std::env::temp_dir)
-            .join("searchlight")
+            .join("focalpoint")
             .join("import")
     });
     let opts = ImportOptions {
@@ -69,10 +69,10 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
                 Skip::History => OptionalStage::History,
             })
             .collect(),
-        investment: searchlight_core::InvestmentParams::default(),
-        scoring: searchlight_core::rank::ScoreParams::default(),
+        investment: focalpoint_core::InvestmentParams::default(),
+        scoring: focalpoint_core::rank::ScoreParams::default(),
     };
-    let report = searchlight_import::run(&opts, &Progress::stderr())?;
+    let report = focalpoint_import::run(&opts, &Progress::stderr())?;
     println!("{report}");
     Ok(())
 }

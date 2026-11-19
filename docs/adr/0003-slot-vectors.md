@@ -18,7 +18,7 @@ distance.
 
 ## Decision
 
-`searchlight_core::vector::SlotVector` projects a build onto:
+`focalpoint_core::vector::SlotVector` projects a build onto:
 
 | Single-item slots (14) | Multi-item groups (6) |
 |---|---|

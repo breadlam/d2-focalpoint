@@ -1,6 +1,6 @@
 [package]
-name = "searchlight-core"
-description = "Pure domain logic for searchlight-cli: source formats, plug classification, build identity, PGCR parsing"
+name = "focalpoint-core"
+description = "Pure domain logic for Focalpoint: source formats, plug classification, build identity, PGCR parsing"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

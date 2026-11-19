@@ -1,4 +1,4 @@
--- searchlight-cli analysis database, schema version 4.
+-- Focalpoint analysis database, schema version 4.
 --
 -- Conventions
 --   * Bungie 64-bit ids (membership, character, instance, item instance) are

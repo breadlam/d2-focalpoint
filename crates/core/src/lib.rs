@@ -1,4 +1,4 @@
-//! Pure domain logic for `searchlight-cli`.
+//! Pure domain logic for Focalpoint.
 //!
 //! This crate has no I/O. It knows how to:
 //!
@@ -10,8 +10,8 @@
 //!   build as a sparse element count [`vector`] with a tiered distance;
 //! * score runs and separate a build's value from its player's ([`rank`]).
 //!
-//! Everything that touches files or databases lives in `searchlight-import`
-//! and `searchlight-db`.
+//! Everything that touches files or databases lives in `focalpoint-import`
+//! and `focalpoint-db`.
 
 pub mod build;
 pub mod catalog;

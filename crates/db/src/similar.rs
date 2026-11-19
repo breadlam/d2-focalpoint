@@ -4,8 +4,8 @@ use std::fmt::Write as _;
 
 use duckdb::types::Value;
 use duckdb::{OptionalExt, params};
+use focalpoint_core::vector::{ElementVector, TierWeights, TieredDistance};
 use rayon::prelude::*;
-use searchlight_core::vector::{ElementVector, TierWeights, TieredDistance};
 
 use crate::{Database, DbError, Result};
 

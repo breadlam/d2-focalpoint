@@ -5,11 +5,11 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use duckdb::{Connection, params};
-use searchlight_core::Catalog;
-use searchlight_core::catalog::{
+use focalpoint_core::Catalog;
+use focalpoint_core::catalog::{
     self, ActivityDef, ActivityModeDef, ItemDef, ItemSetDef, NamedDef, damage_type_name,
 };
-use searchlight_core::slot::SlotGroup;
+use focalpoint_core::slot::SlotGroup;
 
 use crate::rows::i32_list;
 
@@ -89,7 +89,7 @@ fn write_items(conn: &Connection, items: &[ItemDef]) -> Result<()> {
                 .then(|| damage_type_name(i.default_damage_type))
                 .flatten(),
             is_subclass
-                .then(|| i.subclass_element().map(searchlight_core::Element::as_str))
+                .then(|| i.subclass_element().map(focalpoint_core::Element::as_str))
                 .flatten(),
             i.ammo_type,
             i.breaker_type,

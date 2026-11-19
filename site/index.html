@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Searchlight Build Rankings</title>
+  <title>Focalpoint Build Rankings</title>
   <meta name="description" content="Destiny 2 endgame builds ranked by how much they help the players who use them, from Searchlight's captured clears.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
@@ -11,11 +11,11 @@
 <body>
   <main id="app" class="loading">
     <header class="masthead">
-      <h1>Searchlight build rankings</h1>
+      <h1>Focalpoint</h1>
       <p class="lede">
         Destiny 2 endgame builds ranked by how much they help the players who use them,
         not by how good those players already are. From <span id="total-clears">…</span>
-        qualified clears, <span id="data-range">…</span>.
+        qualified clears captured by Searchlight, <span id="data-range">…</span>.
       </p>
     </header>
 
@@ -141,8 +141,8 @@
 
     const root = document.getElementById('app');
     try {
-      const response = await fetch('data/searchlight.json');
-      if (!response.ok) throw new Error(`data/searchlight.json: HTTP ${response.status}`);
+      const response = await fetch('data/focalpoint.json');
+      if (!response.ok) throw new Error(`data/focalpoint.json: HTTP ${response.status}`);
       start(root, await response.json());
     } catch (error) {
       root.classList.remove('loading');

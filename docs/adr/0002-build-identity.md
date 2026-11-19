@@ -18,7 +18,7 @@ identity that ignores everything that does not change how a character plays.
 ## Decision
 
 A **build** is the set of gameplay-relevant components extracted from a
-loadout (`searchlight_core::build::extract_build`):
+loadout (`focalpoint_core::build::extract_build`):
 
 | Included | Excluded |
 |---|---|

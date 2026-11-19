@@ -673,6 +673,67 @@ dependencies = [
 ]
 
 [[package]]
+name = "focalpoint-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "comfy-table",
+ "dirs",
+ "duckdb",
+ "focalpoint-core",
+ "focalpoint-db",
+ "focalpoint-import",
+ "serde_json",
+ "tempfile",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "focalpoint-core"
+version = "0.1.0"
+dependencies = [
+ "flate2",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "focalpoint-db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "duckdb",
+ "focalpoint-core",
+ "rayon",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
+name = "focalpoint-import"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "crossbeam-channel",
+ "duckdb",
+ "flate2",
+ "focalpoint-core",
+ "focalpoint-db",
+ "indicatif",
+ "rayon",
+ "rusqlite",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "foldhash"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1368,67 +1429,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "searchlight-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "comfy-table",
- "dirs",
- "duckdb",
- "searchlight-core",
- "searchlight-db",
- "searchlight-import",
- "serde_json",
- "tempfile",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
-name = "searchlight-core"
-version = "0.1.0"
-dependencies = [
- "flate2",
- "serde",
- "serde_json",
- "thiserror",
- "xxhash-rust",
-]
-
-[[package]]
-name = "searchlight-db"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dirs",
- "duckdb",
- "rayon",
- "searchlight-core",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
-]
-
-[[package]]
-name = "searchlight-import"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "crossbeam-channel",
- "duckdb",
- "flate2",
- "indicatif",
- "rayon",
- "rusqlite",
- "searchlight-core",
- "searchlight-db",
- "serde_json",
- "tempfile",
-]
 
 [[package]]
 name = "serde"

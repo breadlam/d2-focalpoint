@@ -1,15 +1,15 @@
 [package]
-name = "searchlight-cli"
+name = "focalpoint-cli"
 description = "Query and analyse Destiny 2 builds collected by Searchlight"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-default-run = "searchlight"
+default-run = "focalpoint"
 
 [[bin]]
-name = "searchlight"
+name = "focalpoint"
 path = "src/main.rs"
 
 [dependencies]
@@ -18,9 +18,9 @@ clap.workspace = true
 comfy-table.workspace = true
 dirs.workspace = true
 duckdb.workspace = true
-searchlight-core.workspace = true
-searchlight-db.workspace = true
-searchlight-import.workspace = true
+focalpoint-core.workspace = true
+focalpoint-db.workspace = true
+focalpoint-import.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

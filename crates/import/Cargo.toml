@@ -1,6 +1,6 @@
 [package]
-name = "searchlight-import"
-description = "Builds the searchlight-cli analysis database from Searchlight backups"
+name = "focalpoint-import"
+description = "Builds the Focalpoint analysis database from Searchlight backups"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -15,8 +15,8 @@ flate2.workspace = true
 indicatif.workspace = true
 rayon.workspace = true
 rusqlite.workspace = true
-searchlight-core.workspace = true
-searchlight-db.workspace = true
+focalpoint-core.workspace = true
+focalpoint-db.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]

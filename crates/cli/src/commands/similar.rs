@@ -1,10 +1,10 @@
-//! `searchlight similar` — a build's nearest neighbours by tiered distance.
+//! `focalpoint similar` — a build's nearest neighbours by tiered distance.
 
 use std::path::Path;
 
 use anyhow::Result;
-use searchlight_db::Database;
-use searchlight_db::similar::{BuildSummary, SimilarOptions, nearest_builds};
+use focalpoint_db::Database;
+use focalpoint_db::similar::{BuildSummary, SimilarOptions, nearest_builds};
 
 use crate::output::{Format, render, thousands};
 

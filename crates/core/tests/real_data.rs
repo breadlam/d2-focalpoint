@@ -1,11 +1,11 @@
 //! Tests against real captured data (see `tests/fixtures/README.md`).
 
-use searchlight_core::build::{ComponentKind, extract_build};
-use searchlight_core::catalog::{Catalog, parse_item_sets, parse_items};
-use searchlight_core::pgcr::{parse_slice, parse_stored};
-use searchlight_core::stats::{ArmorStat, InvestmentParams, fragment_stats};
-use searchlight_core::vector::{ElementKind, ElementVector, Tier, TierWeights};
-use searchlight_core::{Element, GuardianClass, LoadoutState, Slot};
+use focalpoint_core::build::{ComponentKind, extract_build};
+use focalpoint_core::catalog::{Catalog, parse_item_sets, parse_items};
+use focalpoint_core::pgcr::{parse_slice, parse_stored};
+use focalpoint_core::stats::{ArmorStat, InvestmentParams, fragment_stats};
+use focalpoint_core::vector::{ElementKind, ElementVector, Tier, TierWeights};
+use focalpoint_core::{Element, GuardianClass, LoadoutState, Slot};
 
 fn fixture(name: &str) -> Vec<u8> {
     let path = format!("{}/tests/fixtures/{name}", env!("CARGO_MANIFEST_DIR"));

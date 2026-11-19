@@ -1,4 +1,4 @@
-//! Builds the searchlight-cli analysis database from Searchlight backups.
+//! Builds the Focalpoint analysis database from Searchlight backups.
 //!
 //! The import is a from-scratch rebuild (the sources are static backups):
 //!
@@ -37,9 +37,9 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, bail};
-use searchlight_core::build::{BUILD_FINGERPRINT_VERSION, LOADOUT_FINGERPRINT_VERSION};
-use searchlight_core::vector::ELEMENT_VECTOR_VERSION;
-use searchlight_db::{Database, meta_key};
+use focalpoint_core::build::{BUILD_FINGERPRINT_VERSION, LOADOUT_FINGERPRINT_VERSION};
+use focalpoint_core::vector::ELEMENT_VECTOR_VERSION;
+use focalpoint_db::{Database, meta_key};
 
 pub use layout::SourceLayout;
 pub use progress::Progress;
@@ -85,9 +85,9 @@ pub struct ImportOptions {
     pub memory_limit: Option<String>,
     pub skip: Vec<OptionalStage>,
     /// Parameters of the budget-aware stat investment model.
-    pub investment: searchlight_core::InvestmentParams,
+    pub investment: focalpoint_core::InvestmentParams,
     /// Parameters of run performance (ranking).
-    pub scoring: searchlight_core::rank::ScoreParams,
+    pub scoring: focalpoint_core::rank::ScoreParams,
 }
 
 /// What an import did.
@@ -142,7 +142,7 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
     let staged = stage::stage_sources(&layout, &opts.work_dir, progress)?;
     timed("stage sources", t);
 
-    let partial = opts.work_dir.join("searchlight.duckdb.partial");
+    let partial = opts.work_dir.join("focalpoint.duckdb.partial");
     remove_db_files(&partial)?;
     let staging = opts.work_dir.join("staging.duckdb");
     remove_db_files(&staging)?;

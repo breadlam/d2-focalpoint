@@ -1,5 +1,5 @@
-// Searchlight build rankings: a static client for data/searchlight.json,
-// which `searchlight site` exports (see docs/site.md).
+// Focalpoint build rankings: a static client for data/focalpoint.json,
+// which `focalpoint site` exports (see docs/site.md).
 //
 // The pure functions (filtering, facet counts, ranking, URL state) are
 // exported for tests/site/test.html; start() wires them to the page.
@@ -45,7 +45,7 @@ export function pct(x) {
 /** Index the exported data for filtering. */
 export function prepare(data) {
   if (data.format !== FORMAT) {
-    throw new Error(`data format ${data.format}, expected ${FORMAT}: re-export with this version of searchlight`);
+    throw new Error(`data format ${data.format}, expected ${FORMAT}: re-export with this version of focalpoint`);
   }
   const groups = data.groups.map((g, id) => ({ ...g, id }));
   const scopes = new Map(data.scopes.map((s) => [s.id, s]));

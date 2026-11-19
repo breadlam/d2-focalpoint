@@ -1,11 +1,11 @@
-//! `searchlight search` — facet search over builds and popularity reports.
+//! `focalpoint search` — facet search over builds and popularity reports.
 
 use std::path::Path;
 
 use anyhow::Result;
 use clap::ValueEnum;
-use searchlight_db::Database;
-use searchlight_db::search::{BuildSearch, GroupBy, SortBy, search_builds};
+use focalpoint_db::Database;
+use focalpoint_db::search::{BuildSearch, GroupBy, SortBy, search_builds};
 
 use super::filters::{FacetArgs, RunArgs};
 use crate::output::{Format, render, thousands};
@@ -37,8 +37,8 @@ pub enum Sort {
 #[command(
     after_help = "Names match case-insensitively. Run filters decide which runs are counted.\n\n\
 Examples:\n  \
-searchlight search --class Warlock --exotic-armor \"Getaway Artist\" --activity conquest\n  \
-searchlight search --class Hunter --activity \"master raid\" --clears --group-by exotic-armor"
+focalpoint search --class Warlock --exotic-armor \"Getaway Artist\" --activity conquest\n  \
+focalpoint search --class Hunter --activity \"master raid\" --clears --group-by exotic-armor"
 )]
 pub struct Args {
     #[command(flatten)]

@@ -13,8 +13,8 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use duckdb::{Connection, params};
+use focalpoint_core::pgcr::WeaponKills;
 use rayon::prelude::*;
-use searchlight_core::pgcr::WeaponKills;
 
 use crate::progress::Progress;
 use crate::rows::{SRC_TRACKED, StgEntry, StgRun, StgWeapon};

@@ -1,7 +1,7 @@
 //! Rankings of builds and players that separate the build from the player.
 //!
 //! Every query fits `perf = skill(player) + effect(build group)` with
-//! [`searchlight_core::rank::fit_effects`] over the scored runs (`run_score`)
+//! [`focalpoint_core::rank::fit_effects`] over the scored runs (`run_score`)
 //! that the [`RunFilter`] selects:
 //!
 //! * runs without a captured build inform only their player's skill;
@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 
 use duckdb::params_from_iter;
 use duckdb::types::Value;
-use searchlight_core::rank::{Baseline, FitParams, Observation, fit_effects};
+use focalpoint_core::rank::{Baseline, FitParams, Observation, fit_effects};
 
 use crate::filter::{Facets, RunFilter};
 use crate::search::GroupBy;

@@ -1,4 +1,4 @@
-//! `searchlight` — query and analyse Destiny 2 builds collected by Searchlight.
+//! `focalpoint` — query and analyse Destiny 2 builds collected by Searchlight.
 
 mod commands;
 mod output;
@@ -9,10 +9,10 @@ use std::process::ExitCode;
 use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
-#[command(name = "searchlight", version, about, long_about = None)]
+#[command(name = "focalpoint", version, about, long_about = None)]
 struct Cli {
-    /// Analysis database to use [default: searchlight/searchlight.duckdb in the user data dir]
-    #[arg(long, global = true, env = searchlight_db::DB_ENV_VAR)]
+    /// Analysis database to use [default: focalpoint/focalpoint.duckdb in the user data dir]
+    #[arg(long, global = true, env = focalpoint_db::DB_ENV_VAR)]
     db: Option<PathBuf>,
 
     /// Increase log verbosity (-v, -vv)
@@ -39,7 +39,7 @@ enum Command {
     Site(commands::site::Args),
     /// Run an ad-hoc SQL query against the database
     #[command(
-        after_help = "Example:\n  searchlight sql \"SELECT item_name(exotic_armor_hash) AS exotic, count(*) AS builds\n                   FROM build GROUP BY 1 ORDER BY 2 DESC LIMIT 10\""
+        after_help = "Example:\n  focalpoint sql \"SELECT item_name(exotic_armor_hash) AS exotic, count(*) AS builds\n                   FROM build GROUP BY 1 ORDER BY 2 DESC LIMIT 10\""
     )]
     Sql(commands::sql::Args),
 }
@@ -47,7 +47,7 @@ enum Command {
 fn main() -> ExitCode {
     let cli = Cli::parse();
     init_logging(cli.verbose);
-    let db = cli.db.unwrap_or_else(searchlight_db::default_path);
+    let db = cli.db.unwrap_or_else(focalpoint_db::default_path);
     let result = match cli.command {
         Command::Import(args) => commands::import::run(&args, &db),
         Command::Info(args) => commands::info::run(&args, &db),
@@ -94,7 +94,7 @@ mod tests {
     #[test]
     fn parses_import_skip_list() {
         let cli = Cli::try_parse_from([
-            "searchlight",
+            "focalpoint",
             "import",
             "--backups",
             "/b",

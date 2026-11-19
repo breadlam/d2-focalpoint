@@ -9,16 +9,16 @@
 //! adds.
 //!
 //! ```text
-//! cargo run --release -p searchlight-db --example rank_tuning [DB]
+//! cargo run --release -p focalpoint-db --example rank_tuning [DB]
 //! ```
 
 use std::path::PathBuf;
 
+use focalpoint_core::rank::{FitParams, Observation, fit_effects};
+use focalpoint_db::Database;
+use focalpoint_db::rank::{ModelData, RankOptions, load_model};
+use focalpoint_db::search::GroupBy;
 use rayon::prelude::*;
-use searchlight_core::rank::{FitParams, Observation, fit_effects};
-use searchlight_db::Database;
-use searchlight_db::rank::{ModelData, RankOptions, load_model};
-use searchlight_db::search::GroupBy;
 
 const FOLDS: u64 = 5;
 
@@ -60,7 +60,7 @@ fn main() -> anyhow::Result<()> {
     let path = std::env::args().nth(1).map_or_else(
         || {
             let home = std::env::var("HOME").unwrap_or_default();
-            PathBuf::from(home).join(".local/share/searchlight/searchlight.duckdb")
+            PathBuf::from(home).join(".local/share/focalpoint/focalpoint.duckdb")
         },
         PathBuf::from,
     );

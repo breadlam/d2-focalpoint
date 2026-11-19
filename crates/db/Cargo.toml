@@ -1,6 +1,6 @@
 [package]
-name = "searchlight-db"
-description = "DuckDB schema and access for the searchlight-cli analysis database"
+name = "focalpoint-db"
+description = "DuckDB schema and access for the Focalpoint analysis database"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,7 +11,7 @@ repository.workspace = true
 dirs.workspace = true
 duckdb.workspace = true
 rayon.workspace = true
-searchlight-core.workspace = true
+focalpoint-core.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 

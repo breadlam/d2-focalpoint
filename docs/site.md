@@ -22,7 +22,7 @@ kept in the URL, so a view can be shared as a link.
 |---|---|
 | `site/index.html`, `site/style.css`, `site/favicon.svg` | the page; no build step, no dependencies |
 | `site/app.js` | an ES module: pure functions (filtering, facet counts, ranking, URL state) plus the DOM layer |
-| `site/data/searchlight.json` | the data, exported by `searchlight site` and committed |
+| `site/data/focalpoint.json` | the data, exported by `focalpoint site` and committed |
 | `site/.nojekyll` | serve files as they are |
 | `tests/site/test.html` | browser tests for `app.js` |
 | `tests/site/details.html` | a screenshot harness that opens the first build's details |
@@ -31,14 +31,14 @@ kept in the URL, so a view can be shared as a link.
 ## Updating the data
 
 The ranking model needs every player's runs, so it cannot run in a browser.
-`searchlight site` precomputes the rankings for every **scope** (all
+`focalpoint site` precomputes the rankings for every **scope** (all
 activities, each Searchlight target group, and each activity of a group with
 more than one), then describes each build group from its captured runs:
 
 ```sh
-searchlight import --backups ../searchlight-backups   # if the database changed
-searchlight site                                      # writes site/data/searchlight.json
-git add site/data/searchlight.json
+focalpoint import --backups ../searchlight-backups   # if the database changed
+focalpoint site                                      # writes site/data/focalpoint.json
+git add site/data/focalpoint.json
 ```
 
 It takes about 15 s and writes about 3.5 MB (0.9 MB compressed, which is how

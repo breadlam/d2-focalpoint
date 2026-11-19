@@ -6,9 +6,9 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use focalpoint_db::Database;
+use focalpoint_import::{ImportOptions, Progress};
 use rusqlite::{Connection, params};
-use searchlight_db::Database;
-use searchlight_import::{ImportOptions, Progress};
 
 const DATA: &str = "builds.rodeo/snapshot-2026-09-20/opt/searchlight/searchlight/data";
 
@@ -318,7 +318,7 @@ fn imports_a_synthetic_backup_tree() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path().join("backups");
     build_backups(&root);
-    let out: PathBuf = dir.path().join("out/searchlight.duckdb");
+    let out: PathBuf = dir.path().join("out/focalpoint.duckdb");
     let opts = ImportOptions {
         backups_root: root,
         snapshot: None,
@@ -328,10 +328,10 @@ fn imports_a_synthetic_backup_tree() {
         threads: Some(4),
         memory_limit: Some("1GB".into()),
         skip: vec![],
-        investment: searchlight_core::InvestmentParams::default(),
-        scoring: searchlight_core::rank::ScoreParams::default(),
+        investment: focalpoint_core::InvestmentParams::default(),
+        scoring: focalpoint_core::rank::ScoreParams::default(),
     };
-    let report = searchlight_import::run(&opts, &Progress::hidden()).unwrap();
+    let report = focalpoint_import::run(&opts, &Progress::hidden()).unwrap();
 
     // Archive: 2 shards × 4 rows → one copy per instance is parsed; only the
     // chosen copy of the corrupt report is attempted.
@@ -542,5 +542,5 @@ fn imports_a_synthetic_backup_tree() {
     );
 
     // Re-running without --force refuses to clobber the output.
-    assert!(searchlight_import::run(&opts, &Progress::hidden()).is_err());
+    assert!(focalpoint_import::run(&opts, &Progress::hidden()).is_err());
 }

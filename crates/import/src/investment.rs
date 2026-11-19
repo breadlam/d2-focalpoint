@@ -1,15 +1,15 @@
 //! Investment stage (after transform): read each staged build's modal stats
 //! and fragment share, apply the budget-aware investment model
-//! ([`searchlight_core::stats`]), and stage the levels and the tier-3
+//! ([`focalpoint_core::stats`]), and stage the levels and the tier-3
 //! elements with stat investment for `finalize.sql`. Also writes the
 //! `element_kind` dimension.
 
 use anyhow::Result;
 use duckdb::types::Value;
 use duckdb::{Connection, params};
+use focalpoint_core::stats::{ArmorStat, InvestmentParams, StatLine};
+use focalpoint_core::vector::{ElementKind, ElementVector, Tier};
 use rayon::prelude::*;
-use searchlight_core::stats::{ArmorStat, InvestmentParams, StatLine};
-use searchlight_core::vector::{ElementKind, ElementVector, Tier};
 
 use crate::progress::Progress;
 use crate::rows::{i64_list, u32_list};

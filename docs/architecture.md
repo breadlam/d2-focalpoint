@@ -1,6 +1,6 @@
 # Architecture
 
-`searchlight-cli` turns the frozen Searchlight backups into a DuckDB
+Focalpoint turns the frozen Searchlight backups into a DuckDB
 analysis database and (going forward) answers questions about builds,
 players and trends from it.
 
@@ -8,12 +8,12 @@ players and trends from it.
 
 | Crate | Kind | Responsibility |
 |---|---|---|
-| [`searchlight-core`](../crates/core) | library, no I/O | Source formats (`LoadoutState`, PGCR JSON), manifest model (`Catalog`), plug classification, build extraction and fingerprints, stat investment (`stats`), element vectors and distances (`vector`), run scoring and the player/build model (`rank`). Everything here is deterministic and unit-tested, including against real captured fixtures. |
-| [`searchlight-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`, and the site export (`site`). |
-| [`searchlight-import`](../crates/import) | library | The ETL: source discovery, local staging, parallel extract into staging tables, SQL transform, stat investment, scoring, validation, publish. |
-| [`searchlight-cli`](../crates/cli) | binary `searchlight` | Command-line interface: `import`, `info`, `search`, `similar`, `rank`, `site`, `sql`. |
+| [`focalpoint-core`](../crates/core) | library, no I/O | Source formats (`LoadoutState`, PGCR JSON), manifest model (`Catalog`), plug classification, build extraction and fingerprints, stat investment (`stats`), element vectors and distances (`vector`), run scoring and the player/build model (`rank`). Everything here is deterministic and unit-tested, including against real captured fixtures. |
+| [`focalpoint-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`, and the site export (`site`). |
+| [`focalpoint-import`](../crates/import) | library | The ETL: source discovery, local staging, parallel extract into staging tables, SQL transform, stat investment, scoring, validation, publish. |
+| [`focalpoint-cli`](../crates/cli) | binary `focalpoint` | Command-line interface: `import`, `info`, `search`, `similar`, `rank`, `site`, `sql`. |
 
-The static site in [`site/`](../site) reads only the JSON that `searchlight site` exports ([site.md](site.md)).
+The static site in [`site/`](../site) reads only the JSON that `focalpoint site` exports ([site.md](site.md)).
 
 Dependency direction: `cli → import → (db, core)`, `cli → db`. `core` depends
 on nothing project-internal, so it can be reused (e.g. by a future web UI or
@@ -53,9 +53,9 @@ Key properties:
 
 ## Adding a CLI feature
 
-1. Put pure logic (scoring, similarity, feature vectors) in `searchlight-core`
+1. Put pure logic (scoring, similarity, feature vectors) in `focalpoint-core`
    with unit tests.
-2. Put SQL-facing query functions in `searchlight-db` (they take a
+2. Put SQL-facing query functions in `focalpoint-db` (they take a
    `&Database` and return typed rows), tested against a small in-memory
    database.
 3. Add a subcommand module under `crates/cli/src/commands/` that parses
@@ -67,5 +67,5 @@ Key properties:
   tests, DuckDB schema/macro tests, ETL component tests).
 - `cargo clippy --workspace --all-targets` must be clean (pedantic lints are
   enabled workspace-wide; deliberate exceptions are listed in `Cargo.toml`).
-- End-to-end: `searchlight import` on the real backups, then
-  `searchlight info --detailed`; validation results are part of the report.
+- End-to-end: `focalpoint import` on the real backups, then
+  `focalpoint info --detailed`; validation results are part of the report.

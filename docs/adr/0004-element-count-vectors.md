@@ -24,7 +24,7 @@ awkward when the game adds items.
 
 ## Decision
 
-A build is a **sparse element count vector** (`searchlight_core::vector::
+A build is a **sparse element count vector** (`focalpoint_core::vector::
 ElementVector`): only non-zero coordinates are stored, as sorted
 `(kind, item hash, count)` entries. A missing hash means a count of zero.
 

@@ -1,4 +1,4 @@
-//! `searchlight site` — export the data behind the static build-ranking
+//! `focalpoint site` — export the data behind the static build-ranking
 //! site in `site/` (see `docs/site.md`).
 
 use std::fs;
@@ -6,14 +6,14 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use anyhow::{Context, Result};
-use searchlight_db::Database;
-use searchlight_db::site::{SiteOptions, site_data};
+use focalpoint_db::Database;
+use focalpoint_db::site::{SiteOptions, site_data};
 
 use crate::output::thousands;
 
 #[derive(Debug, clap::Args)]
 pub struct Args {
-    /// Directory to write `searchlight.json` into
+    /// Directory to write `focalpoint.json` into
     #[arg(long, default_value = "site/data")]
     pub out: PathBuf,
 
@@ -32,8 +32,8 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
     let data = site_data(&db, &opts, |scope| eprintln!("  {scope}"))?;
 
     fs::create_dir_all(&args.out).with_context(|| format!("creating {}", args.out.display()))?;
-    let path = args.out.join("searchlight.json");
-    let tmp = args.out.join(".searchlight.json.tmp");
+    let path = args.out.join("focalpoint.json");
+    let tmp = args.out.join(".focalpoint.json.tmp");
     let json = serde_json::to_vec(&data)?;
     fs::write(&tmp, &json).with_context(|| format!("writing {}", tmp.display()))?;
     fs::rename(&tmp, &path).with_context(|| format!("replacing {}", path.display()))?;

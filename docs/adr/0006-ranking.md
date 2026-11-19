@@ -67,7 +67,7 @@ perf = skill(player) + effect(build group) + noise
 ```
 
 and fit by ridge-regularised alternating least squares — the "baseline
-predictor" of collaborative filtering (`searchlight_core::rank::fit_effects`).
+predictor" of collaborative filtering (`focalpoint_core::rank::fit_effects`).
 The ridge priors add pseudo-runs at zero, so players and builds with little
 evidence are shrunk toward average.
 

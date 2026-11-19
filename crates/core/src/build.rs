@@ -460,6 +460,8 @@ pub fn extract_build(loadout: &LoadoutState, catalog: &Catalog) -> Build {
 /// Fingerprint canonically ordered components.
 #[must_use]
 pub fn build_fingerprint(components: &[Component]) -> i64 {
+    // The domain tags predate the Focalpoint name; they are part of every id,
+    // so they stay unless the fingerprint version is bumped.
     let mut fp = Fingerprinter::new(b"searchlight.build", BUILD_FINGERPRINT_VERSION);
     for c in components {
         let (kind, slot, hash, parent, qty) = c.identity_key();

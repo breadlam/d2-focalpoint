@@ -1,12 +1,20 @@
-# searchlight-cli
+# Focalpoint
 
-Query and analyse the Destiny 2 builds collected by **Searchlight**
-(formerly builds.rodeo), a service that discovered top-tier players in
-high-difficulty content and recorded what they had equipped, second by
-second, while they played.
+Find the Destiny 2 builds that make players better. Focalpoint analyses the
+builds collected by **Searchlight** (formerly builds.rodeo), a service that
+discovered top-tier players in high-difficulty content and recorded what they
+had equipped, second by second, while they played.
 
-The service is offline; its backups remain. This tool rebuilds them into a
-single, analysis-ready [DuckDB](https://duckdb.org) database and queries it.
+The service is offline; its backups remain. Focalpoint rebuilds them into a
+single, analysis-ready [DuckDB](https://duckdb.org) database, then:
+
+- searches builds by any combination of facets and reports their popularity;
+- ranks builds and players, separating the value of a build from the skill
+  of the players who use it;
+- finds similar builds by a tiered build distance;
+- publishes a static [build-ranking site](docs/site.md) for GitHub Pages.
+
+The command-line tool is `focalpoint`.
 
 ## Quick start
 
@@ -15,30 +23,30 @@ single, analysis-ready [DuckDB](https://duckdb.org) database and queries it.
 cargo build --release
 
 # Build the analysis database from the backups (local scratch space required)
-./target/release/searchlight import --backups /mnt/saspool/projects/searchlight-backups
+./target/release/focalpoint import --backups ../searchlight-backups
 
 # What is in it?
-./target/release/searchlight info
+./target/release/focalpoint info
 
 # Which builds make their players better in Ultimate Conquest? Who is best?
-./target/release/searchlight rank builds --activity "ultimate conquest" --min-players 10
-./target/release/searchlight rank players --activity "ultimate conquest"
+./target/release/focalpoint rank builds --activity "ultimate conquest" --min-players 10
+./target/release/focalpoint rank players --activity "ultimate conquest"
 
 # Which exotics do Hunters wear in Master raid clears?
-./target/release/searchlight search --class Hunter --activity "master raid" --clears --group-by exotic-armor
+./target/release/focalpoint search --class Hunter --activity "master raid" --clears --group-by exotic-armor
 
 # Prismatic Warlock builds with two given aspects, then builds like one of them
-./target/release/searchlight search --class Warlock --aspect "Feed the Void" --aspect "Hellion"
-./target/release/searchlight similar <BUILD_ID> --other-players
+./target/release/focalpoint search --class Warlock --aspect "Feed the Void" --aspect "Hellion"
+./target/release/focalpoint similar <BUILD_ID> --other-players
 
 # Ask anything in SQL
-./target/release/searchlight sql "
+./target/release/focalpoint sql "
   SELECT class, item_name(exotic_armor_hash) AS exotic, count(*) AS builds
   FROM build GROUP BY ALL ORDER BY builds DESC LIMIT 10"
 ```
 
-The database lives at `$SEARCHLIGHT_DB`, else
-`~/.local/share/searchlight/searchlight.duckdb`; override per command with
+The database lives at `$FOCALPOINT_DB`, else
+`~/.local/share/focalpoint/focalpoint.duckdb`; override per command with
 `--db PATH`.
 
 ## What the database holds
@@ -66,20 +74,20 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 | Command | Purpose |
 |---|---|
-| `searchlight import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
-| `searchlight info [--detailed]` | provenance, headline counts, coverage, import statistics |
-| `searchlight rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
-| `searchlight rank players [FACETS] [RUN FILTERS]` | players ranked by skill net of the builds they used (`--min-runs N`, `--sort skill\|runs\|best`); facets list players who used matching builds |
-| `searchlight site [--out site/data]` | export the rankings for the static site ([docs/site.md](docs/site.md)) |
-| `searchlight search [FACETS] [RUN FILTERS]` | builds matching any combination of class, element, exotic armor/weapon, super, aspects, fragments, weapons, perks, mods, artifact perks, armor sets; run filters `--activity`, `--player`, `--solo`, `--clears`, `--since/--until`; `--group-by exotic-armor` (etc.) for popularity reports |
-| `searchlight similar BUILD_ID` | a build's nearest neighbours by tiered distance, with per-tier breakdown (`--other-players`, `--any-class`, `--include-passengers`, `--limit N`) |
-| `searchlight sql "QUERY"` | ad-hoc read-only SQL (`--format tsv`, `--max-rows N`) |
+| `focalpoint import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
+| `focalpoint info [--detailed]` | provenance, headline counts, coverage, import statistics |
+| `focalpoint rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
+| `focalpoint rank players [FACETS] [RUN FILTERS]` | players ranked by skill net of the builds they used (`--min-runs N`, `--sort skill\|runs\|best`); facets list players who used matching builds |
+| `focalpoint site [--out site/data]` | export the rankings for the static site ([docs/site.md](docs/site.md)) |
+| `focalpoint search [FACETS] [RUN FILTERS]` | builds matching any combination of class, element, exotic armor/weapon, super, aspects, fragments, weapons, perks, mods, artifact perks, armor sets; run filters `--activity`, `--player`, `--solo`, `--clears`, `--since/--until`; `--group-by exotic-armor` (etc.) for popularity reports |
+| `focalpoint similar BUILD_ID` | a build's nearest neighbours by tiered distance, with per-tier breakdown (`--other-players`, `--any-class`, `--include-passengers`, `--limit N`) |
+| `focalpoint sql "QUERY"` | ad-hoc read-only SQL (`--format tsv`, `--max-rows N`) |
 
 ## Build-ranking site
 
 [`site/`](site) is a static page for GitHub Pages: search builds by class,
 subclass, super, exotics and aspects, or pick an activity for recommended
-builds, all ranked by build effect. Refresh its data with `searchlight site`;
+builds, all ranked by build effect. Refresh its data with `focalpoint site`;
 see [docs/site.md](docs/site.md) for previewing, tests and publishing.
 
 Trend reports, clustering and charts are the next milestones; see [docs/architecture.md](docs/architecture.md#adding-a-cli-feature)
@@ -109,7 +117,7 @@ git-ignored `.cargo/config.toml`:
 
 ```toml
 [build]
-target-dir = "/home/<you>/.cache/searchlight-cli/target"
+target-dir = "/home/<you>/.cache/Focalpoint/target"
 ```
 
 ## License

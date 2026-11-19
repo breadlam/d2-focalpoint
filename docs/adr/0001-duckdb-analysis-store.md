@@ -11,7 +11,7 @@ web API. The service is gone; what remains is a static set of backups (a
 34 GB SQLite snapshot, ~2,300 gzipped day-shards of raw reports, and older
 dumps).
 
-`searchlight-cli` has a different workload. It is read-only and analytical:
+Focalpoint has a different workload. It is read-only and analytical:
 filtering builds by arbitrary combinations of facets, aggregating usage and
 performance over time, ranking players, computing similarity between builds,
 and feeding charts. Typical queries scan or aggregate millions of rows

@@ -1,15 +1,15 @@
-//! `searchlight rank` — builds and players, with the build separated from
+//! `focalpoint rank` — builds and players, with the build separated from
 //! the player.
 
 use std::path::Path;
 
 use anyhow::Result;
 use clap::ValueEnum;
-use searchlight_db::Database;
-use searchlight_db::rank::{
+use focalpoint_db::Database;
+use focalpoint_db::rank::{
     BuildSort, Model, PlayerSort, RankOptions, name_players, rank_builds, rank_players,
 };
-use searchlight_db::search::GroupBy;
+use focalpoint_db::search::GroupBy;
 
 use super::filters::{FacetArgs, RunArgs};
 use crate::output::{Format, render, thousands};
@@ -28,8 +28,8 @@ pub enum What {
         after_help = "Effects are relative to the average captured build. 'raw' is how \
 the build's runs went without separating the player; 'players' is how good its players are.\n\n\
 Examples:\n  \
-searchlight rank builds --class Warlock --activity conquest\n  \
-searchlight rank builds --group-by exotic-armor --class Hunter --min-players 10"
+focalpoint rank builds --class Warlock --activity conquest\n  \
+focalpoint rank builds --group-by exotic-armor --class Hunter --min-players 10"
     )]
     Builds(BuildArgs),
     /// Players ranked by skill, net of the builds they used
@@ -37,8 +37,8 @@ searchlight rank builds --group-by exotic-armor --class Hunter --min-players 10"
         after_help = "Skill is performance relative to a typical clear of the same \
 activity and solo status, shrunk toward average when a player has few runs.\n\n\
 Examples:\n  \
-searchlight rank players --activity \"ultimate conquest\"\n  \
-searchlight rank players --exotic-armor \"Getaway Artist\" --min-runs 20"
+focalpoint rank players --activity \"ultimate conquest\"\n  \
+focalpoint rank players --exotic-armor \"Getaway Artist\" --min-runs 20"
     )]
     Players(PlayerArgs),
 }

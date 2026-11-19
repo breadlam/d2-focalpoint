@@ -1,6 +1,6 @@
 //! Scoring stage (after finalize): measure every qualified clear against a
 //! typical clear of its activity and solo status
-//! ([`searchlight_core::rank`]), producing `activity_reference` and
+//! ([`focalpoint_core::rank`]), producing `activity_reference` and
 //! `run_score` for the ranking queries.
 //!
 //! The population is production's own definition of difficult content: runs
@@ -11,8 +11,8 @@
 
 use anyhow::Result;
 use duckdb::{Connection, params};
+use focalpoint_core::rank::{Reference, ScoreParams};
 use rayon::prelude::*;
-use searchlight_core::rank::{Reference, ScoreParams};
 
 use crate::progress::Progress;
 use crate::sink::appender;

@@ -1,17 +1,17 @@
 # Importing the backups
 
-`searchlight import` rebuilds the analysis database from the Searchlight
+`focalpoint import` rebuilds the analysis database from the Searchlight
 backups. It never modifies the backups.
 
 ```sh
-searchlight import --backups /mnt/saspool/projects/searchlight-backups
+focalpoint import --backups ../searchlight-backups
 ```
 
 | Option | Default | Notes |
 |---|---|---|
 | `--backups DIR` | — | root containing `builds.rodeo/` and `shards/` |
-| `--db PATH` (global) | `$SEARCHLIGHT_DB`, else `~/.local/share/searchlight/searchlight.duckdb` | output database |
-| `--work-dir DIR` | `~/.cache/searchlight/import` | **must be local disk**; needs ≈ 150 GB (staged sources ≈ 80 GB + the database under construction and DuckDB spill) |
+| `--db PATH` (global) | `$FOCALPOINT_DB`, else `~/.local/share/focalpoint/focalpoint.duckdb` | output database |
+| `--work-dir DIR` | `~/.cache/focalpoint/import` | **must be local disk**; needs ≈ 150 GB (staged sources ≈ 80 GB + the database under construction and DuckDB spill) |
 | `--snapshot NAME` | latest `snapshot-*` | which server snapshot to use |
 | `--force` | off | replace an existing database |
 | `--threads N` | all cores | rayon and DuckDB worker threads |
@@ -58,7 +58,7 @@ searchlight import --backups /mnt/saspool/projects/searchlight-backups
 7. **Publish.** The staging database is detached and deleted, metadata written, and the file is
    moved into place (atomic rename, or copy + rename across filesystems).
 
-The import prints a report; `searchlight info --detailed` shows the same
+The import prints a report; `focalpoint info --detailed` shows the same
 statistics later.
 
 ## Performance notes
@@ -86,5 +86,5 @@ hash of every table).
 
 The import is deterministic for the same sources and code. Changing plug
 classification or build identity rules changes `build_id`s: bump the
-fingerprint version in `searchlight-core` (a unit test will remind you) and
+fingerprint version in `focalpoint-core` (a unit test will remind you) and
 re-import with `--force`.

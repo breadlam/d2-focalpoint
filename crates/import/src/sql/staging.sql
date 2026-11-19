@@ -3,7 +3,7 @@
 -- database file attached as `stg` (in the work dir), so the published
 -- database never contains staging data or the space it occupied. `src`
 -- identifies the origin of a row:
---   0 = archive (raw PGCR JSON parsed by searchlight-core)
+--   0 = archive (raw PGCR JSON parsed by focalpoint-core)
 --   1 = tracked (production's already-parsed run / run_entry tables)
 
 CREATE TABLE stg.run (

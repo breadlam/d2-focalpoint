@@ -1,6 +1,6 @@
 //! Flags shared by `search` and `rank`: build facets and run filters.
 
-use searchlight_db::filter::{Facets, RunFilter};
+use focalpoint_db::filter::{Facets, RunFilter};
 
 #[derive(Debug, Clone, clap::Args)]
 #[command(next_help_heading = "Build facets (combine with AND; repeat a flag to require several)")]

@@ -8,7 +8,7 @@ timelines*. The service ran from 2026-06-09 until its disk filled around
 
 This document records what the backups contain, how they were produced, and
 the quirks the importer has to handle. Paths are relative to the backups root
-(`/mnt/saspool/projects/searchlight-backups` on the original machine).
+(the directory passed to `focalpoint import --backups`).
 
 ## Layout
 

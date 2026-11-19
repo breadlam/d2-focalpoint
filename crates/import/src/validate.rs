@@ -194,8 +194,8 @@ mod tests {
 
     /// A fresh database with an in-memory staging catalog, as the importer
     /// sets it up.
-    fn staged_db(dir: &std::path::Path) -> searchlight_db::Database {
-        let db = searchlight_db::Database::create(&dir.join("v.duckdb")).unwrap();
+    fn staged_db(dir: &std::path::Path) -> focalpoint_db::Database {
+        let db = focalpoint_db::Database::create(&dir.join("v.duckdb")).unwrap();
         db.conn()
             .execute_batch("ATTACH ':memory:' AS stg;")
             .unwrap();

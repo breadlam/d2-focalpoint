@@ -17,9 +17,9 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use anyhow::{Context, Result};
 use duckdb::Connection;
+use focalpoint_core::pgcr::{self, Pgcr};
 use rayon::prelude::*;
 use rusqlite::types::ValueRef;
-use searchlight_core::pgcr::{self, Pgcr};
 
 use crate::layout::ShardKind;
 use crate::progress::Progress;

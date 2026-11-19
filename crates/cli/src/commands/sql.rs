@@ -1,10 +1,10 @@
-//! `searchlight sql` — ad-hoc SQL against the (read-only) database.
+//! `focalpoint sql` — ad-hoc SQL against the (read-only) database.
 
 use std::path::Path;
 
 use anyhow::{Context, Result};
 use duckdb::Connection;
-use searchlight_db::Database;
+use focalpoint_db::Database;
 
 use crate::output::{Format, render};
 

@@ -1,10 +1,10 @@
-//! `searchlight info` — what is in the database.
+//! `focalpoint info` — what is in the database.
 
 use std::path::Path;
 
 use anyhow::Result;
 use duckdb::Connection;
-use searchlight_db::Database;
+use focalpoint_db::Database;
 
 use crate::commands::sql::query_strings;
 use crate::output::{Format, render, thousands};

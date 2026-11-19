@@ -1,4 +1,4 @@
-//! The searchlight-cli analysis database (DuckDB).
+//! The Focalpoint analysis database (DuckDB).
 //!
 //! The schema lives in [`SCHEMA_SQL`] and is documented in `docs/schema.md`.
 //! Databases are created once by the importer and opened read-only by the
@@ -23,7 +23,7 @@ pub const SCHEMA_VERSION: u32 = 5;
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
 
 /// Environment variable that overrides the default database location.
-pub const DB_ENV_VAR: &str = "SEARCHLIGHT_DB";
+pub const DB_ENV_VAR: &str = "FOCALPOINT_DB";
 
 /// Well-known `meta` keys.
 pub mod meta_key {
@@ -45,18 +45,18 @@ pub mod meta_key {
 pub enum DbError {
     #[error("database error: {0}")]
     DuckDb(#[from] duckdb::Error),
-    #[error("database not found at {0} (run `searchlight import` first, or pass --db)")]
+    #[error("database not found at {0} (run `focalpoint import` first, or pass --db)")]
     NotFound(PathBuf),
     #[error(
-        "{path} has schema version {found}, this build of searchlight expects {expected}; re-run `searchlight import`"
+        "{path} has schema version {found}, this build of focalpoint expects {expected}; re-run `focalpoint import`"
     )]
     SchemaMismatch {
         path: PathBuf,
         found: String,
         expected: u32,
     },
-    #[error("{0} is not a searchlight database (no schema_version)")]
-    NotSearchlight(PathBuf),
+    #[error("{0} is not a focalpoint database (no schema_version)")]
+    NotFocalpoint(PathBuf),
     #[error("no build with id {0}")]
     BuildNotFound(i64),
     #[error("no item named {name:?}{}", suggest(suggestions))]
@@ -76,8 +76,8 @@ fn suggest(suggestions: &[String]) -> String {
     }
 }
 
-/// The default database path: `$SEARCHLIGHT_DB`, else
-/// `<data dir>/searchlight/searchlight.duckdb` (e.g. `~/.local/share/...`).
+/// The default database path: `$FOCALPOINT_DB`, else
+/// `<data dir>/focalpoint/focalpoint.duckdb` (e.g. `~/.local/share/...`).
 #[must_use]
 pub fn default_path() -> PathBuf {
     if let Some(p) = std::env::var_os(DB_ENV_VAR) {
@@ -85,8 +85,8 @@ pub fn default_path() -> PathBuf {
     }
     dirs::data_dir()
         .unwrap_or_else(|| PathBuf::from("."))
-        .join("searchlight")
-        .join("searchlight.duckdb")
+        .join("focalpoint")
+        .join("focalpoint.duckdb")
 }
 
 /// An open analysis database.
@@ -132,10 +132,10 @@ impl Database {
             |r| r.get(0),
         )?;
         if !has_meta {
-            return Err(DbError::NotSearchlight(self.path.clone()));
+            return Err(DbError::NotFocalpoint(self.path.clone()));
         }
         match self.meta(meta_key::SCHEMA_VERSION)? {
-            None => Err(DbError::NotSearchlight(self.path.clone())),
+            None => Err(DbError::NotFocalpoint(self.path.clone())),
             Some(v) if v == SCHEMA_VERSION.to_string() => Ok(()),
             Some(found) => Err(DbError::SchemaMismatch {
                 path: self.path.clone(),
@@ -250,7 +250,7 @@ mod tests {
             .unwrap();
         assert!(matches!(
             Database::open_read_only(&foreign),
-            Err(DbError::NotSearchlight(_))
+            Err(DbError::NotFocalpoint(_))
         ));
 
         let old = dir.path().join("old.duckdb");
@@ -353,7 +353,7 @@ mod tests {
         // Only assert the fallback shape; mutating the process environment in
         // tests is unsafe under the 2024 edition and racy across threads.
         if std::env::var_os(DB_ENV_VAR).is_none() {
-            assert!(default_path().ends_with("searchlight/searchlight.duckdb"));
+            assert!(default_path().ends_with("focalpoint/focalpoint.duckdb"));
         }
     }
 }

@@ -13,12 +13,12 @@ use std::path::Path;
 use anyhow::{Context, Result, bail};
 use crossbeam_channel::bounded;
 use duckdb::Connection;
+use focalpoint_core::build::{Build, ComponentKind, extract_build, loadout_id};
+use focalpoint_core::fingerprint::Fingerprinter;
+use focalpoint_core::loadout::{LoadoutState, stat_hash};
+use focalpoint_core::stats::fragment_stats;
+use focalpoint_core::{Catalog, ElementVector, Slot, Tier};
 use rayon::prelude::*;
-use searchlight_core::build::{Build, ComponentKind, extract_build, loadout_id};
-use searchlight_core::fingerprint::Fingerprinter;
-use searchlight_core::loadout::{LoadoutState, stat_hash};
-use searchlight_core::stats::fragment_stats;
-use searchlight_core::{Catalog, ElementVector, Slot, Tier};
 
 use crate::progress::Progress;
 use crate::rows::{BuildComponentRow, BuildRow, LoadoutItemRow, LoadoutRow, SegmentRow};
@@ -272,7 +272,7 @@ fn build_row(b: &Build, catalog: &Catalog) -> BuildRow {
     BuildRow {
         build_id: b.id,
         class: b.class.as_str().to_string(),
-        element: b.element.map(searchlight_core::Element::as_str),
+        element: b.element.map(focalpoint_core::Element::as_str),
         subclass_hash: b.item_in(Slot::Subclass),
         super_hash: b.first(ComponentKind::Super),
         class_ability_hash: b.first(ComponentKind::ClassAbility),
