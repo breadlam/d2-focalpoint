@@ -87,6 +87,12 @@ const CHECKS: &[(&str, Severity, &str, &str)] = &[
         "SELECT count(*) FROM segment s WHERE NOT EXISTS (SELECT 1 FROM build b WHERE b.build_id = s.build_id)",
     ),
     (
+        "builds_without_investment",
+        Severity::Error,
+        "builds with stats but no investment levels",
+        "SELECT count(*) FROM build WHERE stat_weapons IS NOT NULL AND stat_levels IS NULL",
+    ),
+    (
         "timeline_without_run",
         Severity::Warning,
         "build timelines whose run is unknown",

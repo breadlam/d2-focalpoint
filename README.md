@@ -37,9 +37,10 @@ The database lives at `$SEARCHLIGHT_DB`, else
   fragments, abilities, weapons with perks, armor with mods and set bonuses,
   artifact perks) with a stable `build_id`, plus the exact lossless loadout.
 - **Element count vectors** — each build as a sparse vector of element
-  counts (abilities, aspects, fragments, weapons and perks, armor and mods,
-  artifact perks), with exact weighted-Jaccard, L1 and slot-edit distances
-  for similarity, popularity and clustering ([ADR 0004](docs/adr/0004-element-count-vectors.md)).
+  counts with a tiered distance (exotics › kit › armor effects › weapons) and
+  budget-aware armor stat investment, for similarity, popularity and
+  clustering ([ADR 0004](docs/adr/0004-element-count-vectors.md),
+  [ADR 0005](docs/adr/0005-tiered-distance-and-stat-investment.md)).
 - **Runs** — ~17.7M raw post-game carnage reports (target activities and all
   raids/dungeons) merged with production's parsed runs: per-character kills,
   deaths, kill sources, clears, and per-weapon kills.
@@ -69,7 +70,7 @@ for where new features go.
 - [docs/schema.md](docs/schema.md) — tables, columns, keys, example queries
 - [docs/importing.md](docs/importing.md) — running and tuning the import
 - [docs/architecture.md](docs/architecture.md) — crates, data flow, testing
-- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors)
+- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment)
 
 ## Development
 

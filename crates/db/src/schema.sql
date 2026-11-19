@@ -1,4 +1,4 @@
--- searchlight-cli analysis database, schema version 3.
+-- searchlight-cli analysis database, schema version 4.
 --
 -- Conventions
 --   * Bungie 64-bit ids (membership, character, instance, item instance) are
@@ -238,16 +238,36 @@ CREATE TABLE build (
     artifact_perk_hashes UINTEGER[],
     armor_mod_hashes     UINTEGER[],   -- general armor mods, with repeats
     item_hashes          UINTEGER[],   -- every inventory-item hash in the build (facet filters)
-    -- The build's sparse element count vector (docs/adr/0004): every player
-    -- choice as a sorted multiset of item hashes, a hash repeated once per
-    -- copy. Compare builds with jaccard_distance / l1_distance (see macros).
-    element_hashes       UINTEGER[] NOT NULL,
-    element_count        SMALLINT NOT NULL,   -- len(element_hashes)
+    -- Armor stats (modal across the build's segments; Armor 3.0 order
+    -- Weapons, Health, Class, Grenade, Super, Melee in the list columns).
+    stat_weapons         INTEGER,
+    stat_health          INTEGER,
+    stat_class           INTEGER,
+    stat_grenade         INTEGER,
+    stat_super           INTEGER,
+    stat_melee           INTEGER,
+    fragment_stats       INTEGER[],     -- the fragments' fixed share of each stat
+    stat_levels          UTINYINT[],    -- budget-aware investment level 0-4 per stat (ADR 0005)
+    stats_promoted       VARCHAR[],     -- stats read as held back by budget
+    -- The build's sparse element count vector (ADR 0004/0005), split by tier:
+    -- element keys ((kind code << 32) | hash, see element_kind), a key
+    -- repeated once per copy. Compare builds with build_distance(a, b).
+    tier1_elements       BIGINT[] NOT NULL,   -- exotics
+    tier2_elements       BIGINT[] NOT NULL,   -- subclass kit, artifact perks
+    tier3_elements       BIGINT[] NOT NULL,   -- stat investment, set bonuses, armor mods
+    tier4_elements       BIGINT[] NOT NULL,   -- weapons, elements, frames, perks, weapon mods
     component_count      SMALLINT NOT NULL,
     unresolved_count     SMALLINT NOT NULL,   -- plug hashes missing from the manifest
     timeline_count       INTEGER  NOT NULL DEFAULT 0,   -- player-runs that used the build
     player_count         INTEGER  NOT NULL DEFAULT 0,
     seconds_used         BIGINT   NOT NULL DEFAULT 0    -- total time equipped across runs
+);
+
+-- Element kinds of the build vectors: key = (code << 32) | hash.
+CREATE TABLE element_kind (
+    code UTINYINT PRIMARY KEY,
+    name VARCHAR  NOT NULL,
+    tier UTINYINT            -- 1-4; NULL = kept in vectors but unweighted
 );
 
 -- Long form of a build, one row per component. Natural key:
@@ -351,9 +371,8 @@ CREATE MACRO item_names(hs) AS (
 -- activity_name(2727361621) -> 'Equilibrium: Standard'
 CREATE MACRO activity_name(h) AS (SELECT name FROM activity WHERE activity_hash = h);
 
--- Distances between element count vectors stored as sorted multisets
--- (build.element_hashes). They equal the corresponding distances on the dense
--- "one coordinate per possible element" count vector (docs/adr/0004).
+-- Distances between element multisets (sorted lists, a value repeated once
+-- per copy). They equal the same distances on the dense count vector.
 
 -- Σ min(a_i, b_i): the size of the multiset intersection.
 CREATE MACRO multiset_common(a, b) AS (
@@ -362,8 +381,7 @@ CREATE MACRO multiset_common(a, b) AS (
                         len(list_filter(coalesce(b, []), lambda y: y = x))))), 0)
 );
 
--- Weighted-Jaccard (Ruzicka) distance with unit weights:
--- 1 - Σ min / Σ max, in [0, 1]. The default for comparing builds.
+-- Jaccard (Ruzicka) distance 1 - Σmin/Σmax, in [0, 1].
 CREATE MACRO jaccard_distance(a, b) AS (
     CASE WHEN len(coalesce(a, [])) + len(coalesce(b, [])) = 0 THEN 0.0
          ELSE 1.0 - multiset_common(a, b)
@@ -376,8 +394,27 @@ CREATE MACRO l1_distance(a, b) AS (
     len(coalesce(a, [])) + len(coalesce(b, [])) - 2 * multiset_common(a, b)
 );
 
--- Bag distance max(|A\B|, |B\A|): slots changed within one group of
--- interchangeable slots, e.g. bag_distance(x.aspect_hashes, y.aspect_hashes).
+-- Bag distance max(|A\B|, |B\A|): slots changed among interchangeable slots.
 CREATE MACRO bag_distance(a, b) AS (
     greatest(len(coalesce(a, [])), len(coalesce(b, []))) - multiset_common(a, b)
+);
+
+-- The default build distance (ADR 0005): each tier's Jaccard distance
+-- weighted by its share (0.4 / 0.3 / 0.2 / 0.1). Pass two build rows:
+-- SELECT build_distance(a, b) FROM build a, build b WHERE ...
+CREATE MACRO build_distance(a, b) AS (
+    0.4 * jaccard_distance(a.tier1_elements, b.tier1_elements)
+    + 0.3 * jaccard_distance(a.tier2_elements, b.tier2_elements)
+    + 0.2 * jaccard_distance(a.tier3_elements, b.tier3_elements)
+    + 0.1 * jaccard_distance(a.tier4_elements, b.tier4_elements)
+);
+
+-- Human-readable name of an element key.
+CREATE MACRO element_name(key) AS (
+    CASE (SELECT name FROM element_kind WHERE code = key >> 32)
+        WHEN 'stat_investment' THEN (SELECT name FROM stat WHERE stat_hash = (key & 4294967295)::UINTEGER)
+        WHEN 'set_bonus' THEN (SELECT name FROM sandbox_perk WHERE perk_hash = (key & 4294967295)::UINTEGER)
+        WHEN 'weapon_element' THEN ['Kinetic', 'Arc', 'Solar', 'Void', 'Raid', 'Stasis', 'Strand'][(key & 4294967295)::INTEGER]
+        ELSE (SELECT name FROM item WHERE item_hash = (key & 4294967295)::UINTEGER)
+    END
 );

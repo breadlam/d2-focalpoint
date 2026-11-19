@@ -69,6 +69,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
                 Skip::History => OptionalStage::History,
             })
             .collect(),
+        investment: searchlight_core::InvestmentParams::default(),
     };
     let report = searchlight_import::run(&opts, &Progress::stderr())?;
     println!("{report}");

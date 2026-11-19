@@ -8,6 +8,7 @@ use duckdb::Connection;
 use crate::progress::Progress;
 
 const TRANSFORM_SQL: &str = include_str!("sql/transform.sql");
+const FINALIZE_SQL: &str = include_str!("sql/finalize.sql");
 const STEP_MARKER: &str = "-- step: ";
 
 /// Split a script into `(step name, sql)` pairs on lines starting with
@@ -32,8 +33,21 @@ fn steps(script: &str) -> Vec<(&str, String)> {
 
 /// Execute every transform step, returning per-step timings.
 pub fn run(conn: &Connection, progress: &Progress) -> Result<Vec<(String, Duration)>> {
+    run_script(conn, TRANSFORM_SQL, progress)
+}
+
+/// Execute the finalize steps (after the investment stage).
+pub fn finalize(conn: &Connection, progress: &Progress) -> Result<Vec<(String, Duration)>> {
+    run_script(conn, FINALIZE_SQL, progress)
+}
+
+fn run_script(
+    conn: &Connection,
+    script: &str,
+    progress: &Progress,
+) -> Result<Vec<(String, Duration)>> {
     let mut timings = Vec::new();
-    for (name, sql) in steps(TRANSFORM_SQL) {
+    for (name, sql) in steps(script) {
         let spinner = progress.spinner("transform");
         spinner.set_message(name.to_string());
         let t = Instant::now();

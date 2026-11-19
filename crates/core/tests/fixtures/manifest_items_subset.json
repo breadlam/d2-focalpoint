@@ -17,6 +17,13 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3289069874,
+    "value": 0
+   }
+  ],
   "itemSubType": 0,
   "itemType": 0,
   "itemTypeDisplayName": "Artifact"
@@ -36,6 +43,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 20,
   "itemType": 19,
   "itemTypeDisplayName": "Shader",
@@ -57,11 +65,68 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 2
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Class Item Armor Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.v2_class_item"
+  }
+ },
+ "1133590731": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/9dda4b4c36d637e806773bf9d124e37d.png",
+   "name": "Enhanced Athletics"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 1
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Leg Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_legs"
+  }
+ },
+ "1135494563": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Final blows with this weapon grant your projectiles tracking and increase reload speed for an improved duration. Dealing further damage extends the duration.",
+   "icon": "/common/destiny2_content/icons/53b269a1760611b75170abde8ff1032c.png",
+   "name": "Beacon Rounds"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
   }
  },
  "1235188590": {
@@ -78,6 +143,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -99,6 +165,18 @@
    "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism13",
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1943323491,
+    "value": -10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Prismatic Fragment",
@@ -121,11 +199,70 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Emote",
   "plug": {
    "plugCategoryIdentifier": "emote"
+  }
+ },
+ "1283668722": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Upgrade this armor to a Masterwork, improving its 3 lowest stats by 1.",
+   "icon": "/common/destiny2_content/icons/171c66ca05570c05c95b262ac24d761f.jpg",
+   "name": "Upgrade Armor"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 16120457,
+    "value": 11
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2996146975,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 392767087,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1735777505,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 144602215,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1943323491,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4244567218,
+    "value": 5
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v460.plugs.armor.masterworks"
   }
  },
  "1283668727": {
@@ -142,6 +279,13 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 16120457,
+    "value": 11
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -163,11 +307,58 @@
    "stackUniqueLabel": "v800.plugs.builds.dummies.prism_flare",
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 20,
   "itemTypeDisplayName": "Prismatic Grenade",
   "plug": {
    "plugCategoryIdentifier": "warlock.prism.prism_grenade"
+  }
+ },
+ "1341767667": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Toss a [Stasis] Stasis Shuriken at targets to damage and slow them.  \n\nProvides multiple charges.",
+   "icon": "/common/destiny2_content/icons/d4dbdba1bbc4f102f865b14dc2ec186f.png",
+   "name": "Withering Blade"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Melee",
+  "plug": {
+   "plugCategoryIdentifier": "hunter.stasis.melee"
+  },
+  "talentGrid": {
+   "hudDamageType": 6
+  }
+ },
+ "1350878542": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This vehicle has a shorter cooldown between summonings.",
+   "icon": "/common/destiny2_content/icons/c5a1216fa95ac4ab890c5a74d68ef970.png",
+   "name": "Improved Assembler"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 4,
+   "tierTypeName": "Rare"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Sparrow Mod",
+  "plug": {
+   "plugCategoryIdentifier": "v300.vehicles.mod.function"
   }
  },
  "1370696619": {
@@ -182,6 +373,65 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 144602215,
+    "value": 25
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "1370696622": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 144602215,
+    "value": 20
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "1387474177": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 144602215,
+    "value": 30
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -203,11 +453,41 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 2
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Helmet Armor Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.v2_head"
+  }
+ },
+ "1390587439": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Use default transmat effects when arriving in a location or reviving.",
+   "icon": "/common/destiny2_content/icons/33a96d4cde13a70911de1bb6a03301ac.png",
+   "name": "Default Effect"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "stackUniqueLabel": "v300.mods.ships.spawnfx.defaults.mod0",
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "ship.spawnfx"
   }
  },
  "1392919471": {
@@ -227,9 +507,151 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1480404414,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3555269338,
+    "value": 19
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4284893193,
+    "value": 100
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4043523819,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1240592695,
+    "value": 35
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 43
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 71
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 31
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 56
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": 30
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1345609583,
+    "value": 67
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2715839340,
+    "value": 59
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2714457168,
+    "value": 22
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3209419233,
+    "value": 0
+   }
+  ],
   "itemSubType": 14,
   "itemType": 3,
   "itemTypeDisplayName": "Scout Rifle"
+ },
+ "1399216": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "A grenade that shatters on impact, leaving behind a field that slows targets and freezes those who do not leave the volume.",
+   "icon": "/common/destiny2_content/icons/5ed90305d6131582eb76abd99c487826.png",
+   "name": "Duskfield Grenade"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v500.plugs.builds.grenades.shared.stasis1",
+   "tierType": 0
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Grenade",
+  "plug": {
+   "plugCategoryIdentifier": "shared.stasis.grenades"
+  }
+ },
+ "1441682018": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon's launch barrel is well-balanced.\n  \u2022  Slightly increases projectile speed\n  \u2022  Slightly increases blast radius\n  \u2022  Slightly increases stability",
+   "icon": "/common/destiny2_content/icons/5059f4059a4c59d0003f8fedf8987b78.png",
+   "name": "Linear Compensator"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2523465841,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3614673599,
+    "value": 5
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Launcher Barrel",
+  "plug": {
+   "plugCategoryIdentifier": "tubes"
+  }
  },
  "1444664838": {
   "breakerType": 0,
@@ -245,11 +667,34 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Class Ability",
   "plug": {
    "plugCategoryIdentifier": "warlock.prism.class_abilities"
+  }
+ },
+ "1446726707": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this ornament on any eligible Legendary armor item to change its appearance. Once you get a universal ornament, it's unlocked for all characters of the relevant class on your account.",
+   "icon": "/common/destiny2_content/icons/d57073e46146c5d9e1a5e0881c0954c4.jpg",
+   "name": "Couturier Jacket"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Hunter Universal Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_chest"
   }
  },
  "1476923953": {
@@ -266,6 +711,18 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 144602215,
+    "value": 30
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 25
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Intrinsic",
@@ -287,6 +744,7 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Intrinsic",
@@ -309,6 +767,7 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Multiplayer Emote",
@@ -330,11 +789,64 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Origin Trait",
   "plug": {
    "plugCategoryIdentifier": "origins"
+  }
+ },
+ "1504442987": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Works best with:\nElements: [Arc] [Void] [Strand]\nWeapons: [Glaive] [Auto Rifle]",
+   "icon": "/common/destiny2_content/icons/d710c0340c78b1eecd6821bd5dd104ce.jpg",
+   "name": "NPA Repulsion Regulator"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 1506418338,
+   "stackUniqueLabel": "core.gear_systems.artifacts.reprise.season21.artifact0",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3289069874,
+    "value": 0
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 0,
+  "itemTypeDisplayName": "Artifact"
+ },
+ "1521453111": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/3be92a7bdbac47dc80ac1bddfb7d4500.jpg",
+   "name": "Throne of Atheon"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v520.plugs.emotes.vault_of_glass0",
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
   }
  },
  "1523545668": {
@@ -351,6 +863,18 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 40
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 925767036,
+    "value": 40
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Weapon Mod",
@@ -376,6 +900,7 @@
    "tierType": 1,
    "tierTypeName": "Basic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 29,
   "itemTypeDisplayName": "Finisher Collection"
@@ -394,11 +919,160 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2961396640,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 155624089,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1240592695,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 943549884,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4188031367,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3614673599,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2523465841,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1591432999,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1842278586,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3085395333,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 447667954,
+    "value": 0
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.stat.charge_time"
+  }
+ },
+ "155603519": {
+  "breakerType": 0,
+  "classType": 1,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/595e87931bbc6cd8fb02182bb0f21136.jpg",
+   "name": "Vest of Trepidation"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 2586994783
+  },
+  "inventory": {
+   "bucketTypeHash": 14239492,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
+  "itemSubType": 28,
+  "itemType": 2,
+  "itemTypeDisplayName": "Chest Armor",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_chest"
+  }
+ },
+ "1621842933": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "After using your class ability, final blows with this weapon grant you bonus damage resistance for a longer duration.",
+   "icon": "/common/destiny2_content/icons/0eac4566f9f8eb2179d2734e886f958e.png",
+   "name": "Vanguard Determination"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Origin Trait",
+  "plug": {
+   "plugCategoryIdentifier": "origins"
+  }
+ },
+ "16277432": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Apply this shader to change the color of your gear.",
+   "icon": "/common/destiny2_content/icons/769d7538f6477ee936854ab3b4934ad7.jpg",
+   "name": "Honors of the Nine"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v300.shaders.activities.trials.shader1",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Shader",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
   }
  },
  "1656730803": {
@@ -415,11 +1089,34 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Clan Perk",
   "plug": {
    "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "165824714": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Apply this weapon mod to add a celebratory visual effect when defeating combatants.\n\nThis mod can only be applied to Tier 5 weapons.",
+   "icon": "/common/destiny2_content/icons/1f455d55b85156ae92c1219252fea12a.png",
+   "name": "Roguish Bolts"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Combat Flair",
+  "plug": {
+   "plugCategoryIdentifier": "weapon_tiering_kill_vfx"
   }
  },
  "1687144140": {
@@ -435,11 +1132,73 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "armor_archetypes"
+  }
+ },
+ "1687452232": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Slower-building charge for higher damage.\n  \u2022  Increases impact damage\n  \u2022  Slower charge time",
+   "icon": "/common/destiny2_content/icons/01e813d983526b009b4e1c700a1d0081.png",
+   "name": "Liquid Coils"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4043523819,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4006394725,
+    "value": -1
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Battery",
+  "plug": {
+   "plugCategoryIdentifier": "batteries"
+  }
+ },
+ "1750845415": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/57db346edee222d0866ed0fe14aadde6.png",
+   "name": "Innervation"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 1
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Leg Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_legs"
   }
  },
  "1755737153": {
@@ -456,6 +1215,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Class Item Armor Mod",
@@ -477,11 +1243,65 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Chest Armor Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.v2_chest"
+  }
+ },
+ "1768035391": {
+  "breakerType": 0,
+  "classType": 1,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/88b92cd5dd13134e087007c6382c7fa7.jpg",
+   "name": "Techeun's Regalia Cloak"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 1339137760
+  },
+  "inventory": {
+   "bucketTypeHash": 1585787867,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
+  "itemSubType": 30,
+  "itemType": 2,
+  "itemTypeDisplayName": "Hunter Cloak",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_class"
   }
  },
  "1773007617": {
@@ -498,11 +1318,50 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Praxic Blade Crystal",
   "plug": {
    "plugCategoryIdentifier": "v950.new.sword0.cosmetics"
+  }
+ },
+ "1783397184": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon has multiple tactical improvements.\n  \u2022  Slightly increases stability\n  \u2022  Increases reload speed\n  \u2022  Slightly increases magazine size",
+   "icon": "/common/destiny2_content/icons/f0e309a267b25279a871d182f8910bcc.png",
+   "name": "Tactical Mag"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 11
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 6
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Magazine",
+  "plug": {
+   "plugCategoryIdentifier": "magazines"
   }
  },
  "1808259051": {
@@ -519,6 +1378,7 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Trait",
@@ -540,6 +1400,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 514071887,
+    "value": 6
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Experience Ghost Mod",
@@ -560,6 +1427,7 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Stasis Super | Darkness Ability",
@@ -584,6 +1452,23 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": -9
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1240592695,
+    "value": 15
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": -4
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Barrel",
@@ -605,6 +1490,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Combat Flair",
@@ -626,6 +1512,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -647,11 +1534,59 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "Warlock Universal Ornament",
   "plug": {
    "plugCategoryIdentifier": "armor_skins_warlock_arms"
+  }
+ },
+ "1965763230": {
+  "breakerType": 0,
+  "classType": 1,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b74049aa88629eb1f03a761ec9b96849.jpg",
+   "name": "Darkhollow Grasps"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 305091568
+  },
+  "inventory": {
+   "bucketTypeHash": 3551918588,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
+  "itemSubType": 27,
+  "itemType": 2,
+  "itemTypeDisplayName": "Gauntlets",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_arms"
   }
  },
  "2024015893": {
@@ -668,11 +1603,74 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 16120457,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2996146975,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 392767087,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1735777505,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 144602215,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1943323491,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4244567218,
+    "value": 5
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "v460.plugs.armor.masterworks"
+  }
+ },
+ "2025044905": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2996146975,
+    "value": 16
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
   }
  },
  "2041822471": {
@@ -687,12 +1685,144 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2996146975,
+    "value": 25
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "armor_stats"
   }
+ },
+ "2057203855": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Fires a long-range precision energy bolt. This weapon's recoil pattern is more predictably vertical.",
+   "icon": "/common/destiny2_content/icons/e9dd736124e8ef94048901a279a5bb18.png",
+   "name": "Precision Frame"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Intrinsic",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "2059741649": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 6,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/6811038e603cb67b8b4ff7716aa280c5.jpg",
+   "name": "New Pacific Epitaph"
+  },
+  "equippingBlock": {
+   "ammoType": 2
+  },
+  "inventory": {
+   "bucketTypeHash": 1498876634,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1480404414,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3555269338,
+    "value": 13
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4284893193,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3614673599,
+    "value": 50
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2523465841,
+    "value": 73
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 26
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 71
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 70
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": 71
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1345609583,
+    "value": 76
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2715839340,
+    "value": 70
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2714457168,
+    "value": 4
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3209419233,
+    "value": 0
+   }
+  ],
+  "itemSubType": 23,
+  "itemType": 3,
+  "itemTypeDisplayName": "Grenade Launcher"
  },
  "2093762600": {
   "breakerType": 0,
@@ -708,11 +1838,62 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Clan Staff",
   "plug": {
    "plugCategoryIdentifier": "social.clans.staves"
+  }
+ },
+ "2094823172": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/c40222a4030330d3d179c7ff4e5a1550.png",
+   "name": "Bulwark Armorer"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 514071887,
+    "value": 2
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Economic Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_economic"
+  }
+ },
+ "2121121504": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "No Tuning mod selected.\n\nAvailable mods will be aligned with this armor's Tuned stat, which is randomly selected.",
+   "icon": "/common/destiny2_content/icons/984ccced9bbf0bc881e1f4025632c664.png",
+   "name": "Empty Tuning Mod Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "core.gear_systems.armor_tiering.plugs.tuning.mods"
   }
  },
  "2194294579": {
@@ -729,11 +1910,39 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 1
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Leg Armor Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.v2_legs"
+  }
+ },
+ "2222960133": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Armor configured for Guardians that believe all good plans should include a well-placed explosive.\n\nPrimary Stat: Grenade\nSecondary Stat: Class",
+   "icon": "/common/destiny2_content/icons/cbf4f03459ab2818a3d37b7362b2aa93.png",
+   "name": "Demolitionist"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_archetypes"
   }
  },
  "2240097604": {
@@ -750,11 +1959,40 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.trackers"
+  }
+ },
+ "2257238439": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/1f83eec51bd4be101cc8ff07bbf6deb4.png",
+   "name": "Strand Scavenger"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Leg Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_legs"
   }
  },
  "2273643087": {
@@ -774,6 +2012,28 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
   "itemSubType": 30,
   "itemType": 2,
   "itemTypeDisplayName": "Warlock Bond"
@@ -792,6 +2052,13 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 237763788,
+    "value": 10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 0,
   "itemTypeDisplayName": "",
@@ -813,11 +2080,56 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.trackers"
+  }
+ },
+ "2311625536": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/815e319a7dd9b8675619aa2f515f03b8.png",
+   "name": "Supernova"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "2311625540": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/22ca2ec59b144ae96610b2b6f25e8190.png",
+   "name": "Void Weapon Channeling"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
   }
  },
  "2313868561": {
@@ -834,11 +2146,56 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Clan Perk",
   "plug": {
    "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "2323170449": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "[Brake]  : Use while airborne to release roll stabilizers, and move [Movement] to roll.",
+   "icon": "/common/destiny2_content/icons/233f748b6fa07f081ed94f4bafb92175.png",
+   "name": "Destabilizers"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 4,
+   "tierTypeName": "Rare"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Sparrow Mod",
+  "plug": {
+   "plugCategoryIdentifier": "v300.vehicles.mod.function"
+  }
+ },
+ "2323986101": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "No mod currently selected.",
+   "icon": "/common/destiny2_content/icons/431cc8304da4f5eb44c5c10a5c1866ce.jpg",
+   "name": "Empty Mod Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Weapon Mod",
+  "plug": {
+   "plugCategoryIdentifier": "v400.weapon.mod_empty"
   }
  },
  "233125175": {
@@ -854,6 +2211,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -875,6 +2233,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Activity Ghost Mod",
@@ -897,11 +2256,92 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Transmat Effect",
   "plug": {
    "plugCategoryIdentifier": "ship.spawnfx"
+  }
+ },
+ "2385145720": {
+  "breakerType": 0,
+  "classType": 1,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/614589979057cca209a09bbc5a01c339.jpg",
+   "name": "Darkhollow Treads"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 305091568
+  },
+  "inventory": {
+   "bucketTypeHash": 20886954,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
+  "itemSubType": 29,
+  "itemType": 2,
+  "itemTypeDisplayName": "Leg Armor",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_legs"
+  }
+ },
+ "2400144052": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/faa8e06f2943031a948f0bb55971ce6d.png",
+   "name": "Tactical"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 6
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": 6
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Weapon Mod",
+  "plug": {
+   "plugCategoryIdentifier": "v400.weapon.mod_guns"
   }
  },
  "2412329836": {
@@ -919,6 +2359,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 20,
   "itemType": 19,
   "itemTypeDisplayName": "Shader",
@@ -940,6 +2381,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 20,
   "itemType": 19,
   "itemTypeDisplayName": "Restore Defaults",
@@ -961,11 +2403,82 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Arms Armor Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.v2_arms"
+  }
+ },
+ "2483898429": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/2d84a595d269762c434718e34d2e7d78.png",
+   "name": "Whisper of Conduction"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 144602215,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.stasis.trinkets"
+  }
+ },
+ "2483898430": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/0ec49820a6de05851c099cf7fb5d7554.png",
+   "name": "Whisper of Rime"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.stasis.trinkets"
   }
  },
  "2498433744": {
@@ -980,11 +2493,87 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1735777505,
+    "value": 20
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "2498433747": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1735777505,
+    "value": 23
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "2503134034": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/9e96b83cb854c1fd2a417c02eff02049.jpg",
+   "name": "Echo Zero"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 284967655,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 21,
+  "itemTypeDisplayName": "Ship"
+ },
+ "2503381935": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Armor configured for Guardians that prefer to play the role of battering ram.\n\nPrimary Stat: Health\nSecondary Stat: Grenade",
+   "icon": "/common/destiny2_content/icons/d1ff2914d445faeddc4b1d009649b106.png",
+   "name": "Siegebreaker"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_archetypes"
   }
  },
  "2515211331": {
@@ -999,11 +2588,73 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1735777505,
+    "value": 30
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "2527938402": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/f315bf201b832c06032392ba742a0f54.png",
+   "name": "Riven's Curse"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.rivens_curse"
+  }
+ },
+ "2532323436": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/85f956602980f8fd2480a9908029256c.png",
+   "name": "Minor Health Mod"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": 5
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_general"
   }
  },
  "2541757371": {
@@ -1024,11 +2675,99 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
   "itemSubType": 29,
   "itemType": 2,
   "itemTypeDisplayName": "Leg Armor",
   "plug": {
    "plugCategoryIdentifier": "armor_skins_warlock_legs"
+  }
+ },
+ "255237658": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/5ed571e47400d0a33896eb2db3428dc6.png",
+   "name": "Shatter Orbs"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "255237659": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/3485c4751f37951002170d05c4468a87.png",
+   "name": "Sustained Fire"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "255237663": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/e695f6722f6b804915497124a4ca1878.png",
+   "name": "Volatile Flow"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
   }
  },
  "2595839237": {
@@ -1045,6 +2784,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Helmet Armor Mod",
@@ -1066,11 +2812,36 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "Warlock Universal Ornament",
   "plug": {
    "plugCategoryIdentifier": "armor_skins_warlock_head"
+  }
+ },
+ "2625980631": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Summon two Stasis kamas, Silence and Squall, that you throw one after another.\n\nSilence : Creates a flash-freeze blast that freezes and damages targets.\n\nSquall : Creates a Stasis Storm that slows and damages targets caught inside.",
+   "icon": "/common/destiny2_content/icons/a8bbee32ce8f259e7b9e112c0c8a401a.png",
+   "name": "Silence and Squall"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Super Ability",
+  "plug": {
+   "plugCategoryIdentifier": "hunter.stasis.supers"
+  },
+  "talentGrid": {
+   "hudDamageType": 6
   }
  },
  "2626922114": {
@@ -1087,6 +2858,13 @@
    "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism8",
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Prismatic Fragment",
@@ -1108,6 +2886,18 @@
    "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism2",
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Prismatic Fragment",
@@ -1129,6 +2919,18 @@
    "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism6",
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1735777505,
+    "value": 10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Prismatic Fragment",
@@ -1150,6 +2952,18 @@
    "stackUniqueLabel": "v800.plugs.builds.fragments.shared.prism4",
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": -10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Prismatic Fragment",
@@ -1171,6 +2985,18 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 5
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "General Armor Mod",
@@ -1196,9 +3022,121 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 14,
   "itemTypeDisplayName": "Emblem"
+ },
+ "2724608735": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/acccc4fe0cd51007278f1559065e0b12.png",
+   "name": "Super Mod"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 144602215,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_general"
+  }
+ },
+ "2728416796": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Upgrading this weapon to Enhancement 3 will update the right-column trait perk(s).",
+   "icon": "/common/destiny2_content/icons/7cc210a6ed17adcd66f7797da70a6d8f.jpg",
+   "name": "Enhancement 3"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1591432999,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3614673599,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2961396640,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4043523819,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 447667954,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 943549884,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2523465841,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1240592695,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4188031367,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 155624089,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1842278586,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "crafting.plugs.weapons.mods.enhancers"
+  }
  },
  "2742146816": {
   "breakerType": 0,
@@ -1214,6 +3152,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifact Perk",
@@ -1235,6 +3174,29 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "2742146823": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/e7a8b3b1eb71f1d70e31d5642c92c5fb.png",
+   "name": "Sniper's Meditation"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifact Perk",
@@ -1259,9 +3221,32 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 21,
   "itemTypeDisplayName": "Ship"
+ },
+ "2784445581": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this ornament on any eligible Legendary armor item to change its appearance. Once you get a universal ornament, it's unlocked for all characters of the relevant class on your account.",
+   "icon": "/common/destiny2_content/icons/dbf81f9f6eb632d0cf737c615fe1319f.jpg",
+   "name": "Couturier Grips"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Hunter Universal Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_arms"
+  }
  },
  "2800182654": {
   "breakerType": 0,
@@ -1277,11 +3262,51 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1240592695,
+    "value": 12
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Battery",
   "plug": {
    "plugCategoryIdentifier": "batteries"
+  }
+ },
+ "2822142346": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon's projectiles are particularly light and quick.\n  \u2022  Increases projectile speed\n  \u2022  Increases reload speed",
+   "icon": "/common/destiny2_content/icons/2a2b757cd73305126990cd19ad011a2c.png",
+   "name": "High-Velocity Rounds"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2523465841,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Magazine",
+  "plug": {
+   "plugCategoryIdentifier": "magazines_gl"
   }
  },
  "2903198433": {
@@ -1298,6 +3323,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifact Perk",
@@ -1319,6 +3345,29 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "2903198436": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/f9cff3113b9be57572ed6697be195a1a.png",
+   "name": "Counter Energy"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifact Perk",
@@ -1340,6 +3389,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -1361,11 +3411,34 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Clan Perk",
   "plug": {
    "plugCategoryIdentifier": "social.clans.perks"
+  }
+ },
+ "2928496916": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Fires self-propelled micro-missiles that explode on impact for high damage.",
+   "icon": "/common/destiny2_content/icons/0362f949c16fe72358a5c7bb93be3f60.png",
+   "name": "Micro-Missile Frame"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Intrinsic",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
   }
  },
  "2931483505": {
@@ -1382,6 +3455,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -1390,6 +3464,33 @@
   },
   "talentGrid": {
    "hudDamageType": 2
+  }
+ },
+ "2934767476": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/a177413a2eea2ddbefde9c9111ecd04a.png",
+   "name": "Shatterdive"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2223994109,
+    "value": 3
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Aspect",
+  "plug": {
+   "plugCategoryIdentifier": "hunter.stasis.totems"
   }
  },
  "2937665788": {
@@ -1405,6 +3506,7 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -1426,6 +3528,103 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "2957532337": {
+  "breakerType": 0,
+  "classType": 1,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/d1a188f8de499e97d5d2a4123e28eb6a.jpg",
+   "name": "Pathfinder's Helmet"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 3448274439,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
+  "itemSubType": 26,
+  "itemType": 2,
+  "itemTypeDisplayName": "Helmet",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_head"
+  }
+ },
+ "2978337238": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "An expertly tuned NLS drive, providing the best possible performance.",
+   "icon": "/common/destiny2_content/icons/abfaa007b2a86f05c0367e928cfcd896.png",
+   "name": "Custom Drive"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1501155019,
+    "value": 190
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Sparrow Engine",
+  "plug": {
+   "plugCategoryIdentifier": "v300.vehicles.mod.speed"
+  }
+ },
+ "3007133316": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Being in combat for an extended time increases damage, handling, and reload for this weapon for an improved duration until you are out of combat.",
+   "icon": "/common/destiny2_content/icons/23e06f4ced1b3e6476f342978ff5bb37.png",
+   "name": "Frenzy"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Trait",
@@ -1447,6 +3646,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Combat Flair",
@@ -1467,6 +3667,7 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Solar Grenade | Light Ability",
@@ -1491,9 +3692,114 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1480404414,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3555269338,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2837207746,
+    "value": 80
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4043523819,
+    "value": 75
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3022301683,
+    "value": 70
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2961396640,
+    "value": 70
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 925767036,
+    "value": 50
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 50
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 209426660,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2762071195,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3209419233,
+    "value": 0
+   }
+  ],
   "itemSubType": 18,
   "itemType": 3,
   "itemTypeDisplayName": "Sword"
+ },
+ "3067648983": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b77c4592c9bd332a94b75cc0179bb319.png",
+   "name": "Solar Dexterity"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Arms Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_arms"
+  }
  },
  "3121760799": {
   "breakerType": 0,
@@ -1509,6 +3815,18 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2996146975,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": -5
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "General Armor Mod",
@@ -1530,6 +3848,38 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2996146975,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 392767087,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1735777505,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 144602215,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1943323491,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4244567218,
+    "value": 1
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "General Armor Mod",
@@ -1551,6 +3901,7 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "Warlock Ornament",
@@ -1575,6 +3926,13 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1501155019,
+    "value": 0
+   }
+  ],
   "itemSubType": 0,
   "itemType": 22,
   "itemTypeDisplayName": "Vehicle"
@@ -1596,6 +3954,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 0,
   "itemTypeDisplayName": "Emote Collection"
@@ -1614,11 +3973,40 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 2
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Chest Armor Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.v2_chest"
+  }
+ },
+ "3200810407": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "No mod currently selected.",
+   "icon": "/common/destiny2_content/icons/c5f0d737d0cdaf3e1e45167a2096a07c.jpg",
+   "name": "Empty Mod Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Class Item Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_class_item"
   }
  },
  "3220576445": {
@@ -1636,11 +4024,87 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 20,
   "itemType": 19,
   "itemTypeDisplayName": "Shader",
   "plug": {
    "plugCategoryIdentifier": "shader"
+  }
+ },
+ "3229172222": {
+  "breakerType": 0,
+  "classType": 1,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/5744ada76daa869bc1845424670a437a.jpg",
+   "name": "Twisting Echo Mask"
+  },
+  "equippingBlock": {
+   "ammoType": 0,
+   "equipableItemSetHash": 1507061013
+  },
+  "inventory": {
+   "bucketTypeHash": 3448274439,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
+  "itemSubType": 26,
+  "itemType": 2,
+  "itemTypeDisplayName": "Helmet",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_hunter_head"
+  }
+ },
+ "325500297": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Grants slightly increased ammo generation.",
+   "icon": "/common/destiny2_content/icons/26614af76b46d7a5f178eeaeedc79c36.png",
+   "name": "Abundant Ammo"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 12
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Weapon Mod",
+  "plug": {
+   "plugCategoryIdentifier": "v400.weapon.mod_guns"
   }
  },
  "3266153492": {
@@ -1657,6 +4121,13 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 16120457,
+    "value": 11
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -1678,6 +4149,13 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1240592695,
+    "value": 12
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Magazine",
@@ -1699,6 +4177,7 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Power Core",
@@ -1720,11 +4199,109 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4043523819,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 35
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 925767036,
+    "value": 35
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2961396640,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3022301683,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 209426660,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3736848092,
+    "value": 10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Praxic Blade Form",
   "plug": {
    "plugCategoryIdentifier": "v950.new.sword0.forms"
+  }
+ },
+ "3326173065": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/9aec6e93d4d192f57e6cbc8108e8abea.jpg",
+   "name": "Cable Skipper"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v520.plugs.emotes.jump_rope0",
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
+  }
+ },
+ "3353797903": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Moderately improved stats. Increase the tier to forge a Masterwork item.",
+   "icon": "/common/destiny2_content/icons/0ab7e72f178dbec85d531cc7eae34571.jpg",
+   "name": "Tier 4: Charge Time"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2961396640,
+    "value": 4
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.stat.charge_time"
   }
  },
  "3399528164": {
@@ -1741,6 +4318,23 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 11
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2715839340,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": -4
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Barrel",
@@ -1762,6 +4356,18 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 209426660,
+    "value": 5
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Trait",
@@ -1783,6 +4389,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "Warlock Universal Ornament",
@@ -1804,11 +4411,106 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 514071887,
+    "value": 2
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Economic Ghost Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.ghosts_economic"
+  }
+ },
+ "3469412975": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/5fa98c6e62d008621119d1b394e9cae9.png",
+   "name": "Whisper of Shards"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.stasis.trinkets"
+  }
+ },
+ "3470260969": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this shader to change the color of your gear.",
+   "icon": "/common/destiny2_content/icons/9ca22b24529e463cadd15a0d1a5da60f.jpg",
+   "name": "Chatterwhite"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v815.shaders.events.firecracker.legendary.shader0",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Shader",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
+  }
+ },
+ "3471392239": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "This weapon's launch parameters are particularly stable.\n  \u2022  Greatly increases stability\n  \u2022  Increases blast radius\n  \u2022  Decreases projectile speed",
+   "icon": "/common/destiny2_content/icons/0a783b44bf9fc49b4bed0a93dfa21d5d.png",
+   "name": "Confined Launch"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 15
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2523465841,
+    "value": -9
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3614673599,
+    "value": 11
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Launcher Barrel",
+  "plug": {
+   "plugCategoryIdentifier": "tubes"
   }
  },
  "3520307277": {
@@ -1829,6 +4531,28 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
   "itemSubType": 26,
   "itemType": 2,
   "itemTypeDisplayName": "Helmet",
@@ -1850,6 +4574,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 514071887,
+    "value": 2
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Tracking Ghost Mod",
@@ -1871,11 +4602,33 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Intrinsic",
   "plug": {
    "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "3531427692": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "While airborne, sustain your air control with a second or third jump.",
+   "icon": "/common/destiny2_content/icons/7d5eb73f61509271037f810480a2e804.png",
+   "name": "Triple Jump"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Movement Ability",
+  "plug": {
+   "plugCategoryIdentifier": "hunter.stasis.movement"
   }
  },
  "3544049564": {
@@ -1892,6 +4645,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Clan Perk",
@@ -1913,12 +4667,116 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Activity Ghost Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.ghosts_activity_fake"
   }
+ },
+ "3556730800": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 2,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/ef057175e5f1f7055d71f90b794f0777.jpg",
+   "name": "Psi Aeterna IV"
+  },
+  "equippingBlock": {
+   "ammoType": 2
+  },
+  "inventory": {
+   "bucketTypeHash": 2465295065,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1480404414,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3555269338,
+    "value": 20
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4284893193,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3614673599,
+    "value": 68
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2523465841,
+    "value": 63
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 45
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 40
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 30
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 11
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": 26
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1345609583,
+    "value": 68
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2715839340,
+    "value": 71
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2714457168,
+    "value": 20
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3209419233,
+    "value": 0
+   }
+  ],
+  "itemSubType": 13,
+  "itemType": 3,
+  "itemTypeDisplayName": "Pulse Rifle"
  },
  "3581929919": {
   "breakerType": 0,
@@ -1934,11 +4792,100 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Trait",
   "plug": {
    "plugCategoryIdentifier": "frames"
+  }
+ },
+ "3619040074": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/e0dd4e954cebb62915528decaf28360b.png",
+   "name": "Expert Handling"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "3619040075": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/24585408cad390bf80fff7f33c7e20ca.png",
+   "name": "Gravitic-Voltaic Charge"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "3619040077": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/01c73e5250259ab4a59dd3153ce08e51.png",
+   "name": "Fastest Draw"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "36293031": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Honk!\n\nPress [###DestinyNamedSubstitutions.ui_player_action_vehicle_honk_button###] to honk your vehicle's equipped horn.",
+   "icon": "/common/destiny2_content/icons/042b7d55d59ffdf9b7d7f7a9c0b5a245.jpg",
+   "name": "Happy Horn"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Sparrow Mod",
+  "plug": {
+   "plugCategoryIdentifier": "v300.vehicles.mod.horn"
   }
  },
  "3644045871": {
@@ -1955,6 +4902,7 @@
    "stackUniqueLabel": "v800.plugs.builds.melees.warlock.prism0",
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Strand Melee | Darkness Ability",
@@ -1979,6 +4927,7 @@
    "stackUniqueLabel": "v800.plugs.builds.dummies.transcendence_ability",
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 20,
   "itemTypeDisplayName": "Utility Ability",
@@ -2000,6 +4949,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Chest Armor Mod",
@@ -2021,6 +4977,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -2042,11 +4999,40 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Tang",
   "plug": {
    "plugCategoryIdentifier": "v950.new.sword0.blades"
+  }
+ },
+ "3832366019": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/c917bbeedced45dcb28ad86dae47ca0f.png",
+   "name": "Harmonic Siphon"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 1
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Helmet Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_head"
   }
  },
  "3834273538": {
@@ -2063,6 +5049,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifact Perk",
@@ -2084,6 +5071,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifact Perk",
@@ -2105,6 +5093,29 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "3834273541": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/2dacdd67e219bb9ec62226c82bfcfaaf.png",
+   "name": "Reload at Range"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifact Perk",
@@ -2126,11 +5137,43 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4043523819,
+    "value": 10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Blade Focus",
   "plug": {
    "plugCategoryIdentifier": "v950.new.sword0.stat_upgrades"
+  }
+ },
+ "3854296178": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Restores your weapon to its default appearance.",
+   "icon": "/common/destiny2_content/icons/3bb544f2136894a13a73875639f376d5.png",
+   "name": "Default Ornament"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "weapon_tiering_tier5_skins"
+  },
+  "talentGrid": {
+   "hudDamageType": 2
   }
  },
  "3893112950": {
@@ -2151,6 +5194,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 16,
   "itemTypeDisplayName": "Warlock Subclass",
@@ -2172,6 +5216,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Intrinsic",
@@ -2196,9 +5241,113 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1480404414,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3555269338,
+    "value": 25
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2961396640,
+    "value": 30
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4043523819,
+    "value": 70
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1240592695,
+    "value": 47
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 51
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 41
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 31
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 31
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": 25
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1345609583,
+    "value": 63
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2715839340,
+    "value": 77
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2714457168,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3209419233,
+    "value": 0
+   }
+  ],
   "itemSubType": 22,
   "itemType": 3,
   "itemTypeDisplayName": "Linear Fusion Rifle"
+ },
+ "3933525366": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Dodge to perform an evasive maneuver with a steady hand. Dodging automatically collects nearby ammo boxes and reloads all weapons.",
+   "icon": "/common/destiny2_content/icons/6148e0135ab295e24888a4b083e4e480.png",
+   "name": "Marksman's Dodge"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Class Ability",
+  "plug": {
+   "plugCategoryIdentifier": "hunter.stasis.class_abilities"
+  }
  },
  "3938489430": {
   "breakerType": 0,
@@ -2214,6 +5363,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Helmet Armor Mod",
@@ -2235,6 +5391,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Clan Perk",
@@ -2257,11 +5414,66 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 20,
   "itemType": 19,
   "itemTypeDisplayName": "Shader",
   "plug": {
    "plugCategoryIdentifier": "shader"
+  }
+ },
+ "4025934129": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "crafting.plugs.frame_identifiers"
+  }
+ },
+ "4026414261": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Increases this armor's Tuned stat at the cost of a small amount of the Health stat.",
+   "icon": "/common/destiny2_content/icons/73c649c776fd6d731c535106ab8ae36b.png",
+   "name": "+Super / -Health"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 144602215,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": -5
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "core.gear_systems.armor_tiering.plugs.tuning.mods"
   }
  },
  "4026763349": {
@@ -2281,6 +5493,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 17,
   "itemTypeDisplayName": "Clan Banner"
@@ -2299,6 +5512,18 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1943323491,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": -5
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "General Armor Mod",
@@ -2320,6 +5545,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -2341,12 +5567,195 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Leg Armor Mod",
   "plug": {
    "plugCategoryIdentifier": "enhancements.v2_legs"
   }
+ },
+ "4099304157": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this tier 5 weapon ornament to change the appearance of Psi Aeterna IV.",
+   "icon": "/common/destiny2_content/icons/5fb0bd5c48a0f63377837d2ca5fab6f1.jpg",
+   "name": "Infamous Psi Aeterna IV"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Weapon Ornament",
+  "plug": {
+   "plugCategoryIdentifier": "v950_fireteam_pulse_rifle0_skins"
+  }
+ },
+ "4147428506": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 4,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/1ffa0c9fba4b3cd1d64315760fe6978d.jpg",
+   "name": "Eyes Unveiled"
+  },
+  "equippingBlock": {
+   "ammoType": 3
+  },
+  "inventory": {
+   "bucketTypeHash": 953998645,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1480404414,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3555269338,
+    "value": 21
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2961396640,
+    "value": 30
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4043523819,
+    "value": 70
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1240592695,
+    "value": 35
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 155624089,
+    "value": 52
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3871231066,
+    "value": 44
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4188031367,
+    "value": 18
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 45
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": 25
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1345609583,
+    "value": 63
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2715839340,
+    "value": 59
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2714457168,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3209419233,
+    "value": 0
+   }
+  ],
+  "itemSubType": 22,
+  "itemType": 3,
+  "itemTypeDisplayName": "Linear Fusion Rifle"
+ },
+ "4150233535": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b9f04ee498edfcf801919437bdfae2a1.jpg",
+   "name": "Bloodstream"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 4274335291,
+   "stackUniqueLabel": "emblems.crm.emblem238.acquired",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 14,
+  "itemTypeDisplayName": "Emblem"
+ },
+ "415075936": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/3433840d601530eab5b34901af869709.jpg",
+   "name": "EV-38 Laurelbearer"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 2025709351,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1501155019,
+    "value": 0
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 22,
+  "itemTypeDisplayName": "Vehicle"
  },
  "4160037471": {
   "breakerType": 0,
@@ -2362,6 +5771,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 1
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Class Item Armor Mod",
@@ -2383,6 +5799,18 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 5
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": -5
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "General Armor Mod",
@@ -2408,11 +5836,181 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
   "itemSubType": 27,
   "itemType": 2,
   "itemTypeDisplayName": "Gauntlets",
   "plug": {
    "plugCategoryIdentifier": "armor_skins_warlock_arms"
+  }
+ },
+ "4184589900": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b8e7bcaa96ec08540ff225a6d113a0d8.png",
+   "name": "Touch of Winter"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2223994109,
+    "value": 2
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Aspect",
+  "plug": {
+   "plugCategoryIdentifier": "hunter.stasis.totems"
+  }
+ },
+ "4204488676": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/033f50a1d44a2cef3727b8aa98d9cd83.png",
+   "name": "Class Mod"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1943323491,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "General Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_general"
+  }
+ },
+ "4216349042": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Experience mods increase global experience gains.",
+   "icon": "/common/destiny2_content/icons/a901a04711b2f7661fa1108003a64d5b.png",
+   "name": "Experience Mod Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Experience Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_experience"
+  }
+ },
+ "4217417017": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/9a2c53359db42bf87f48304efe7cae7b.png",
+   "name": "Anti-Barrier Hand Cannon"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "4217417018": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b74605a00dc8f942f64a7879359ab828.png",
+   "name": "Anti-Barrier Sniper Rifle"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "4217417021": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/286b844dd82bdc5f4fffa7671e283c60.png",
+   "name": "Unstoppable Bow"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
   }
  },
  "4227065942": {
@@ -2428,11 +6026,78 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "armor_archetypes"
+  }
+ },
+ "4232817859": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/0fd65c61c83cbaafaebeb0a03a0f9456.png",
+   "name": "Protective Breach"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "4232817863": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/af01d655f6082ad2c9eb3ee81b77effa.png",
+   "name": "Targeting Autoloader"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Artifact Perk",
+  "plug": {
+   "plugCategoryIdentifier": "artifact_perks"
+  }
+ },
+ "4248210736": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Restores your gear to its default colors.",
+   "icon": "/common/destiny2_content/icons/96831e244728f0350340bb7d5d05b463.png",
+   "name": "Default Shader"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Restore Defaults",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
   }
  },
  "4287799666": {
@@ -2449,6 +6114,18 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 10
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "General Armor Mod",
@@ -2468,11 +6145,46 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 30
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "450381139": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/72957f7e808d990528dac22b52416cd9.png",
+   "name": "Arc Ammo Generation"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 2
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Chest Armor Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.v2_chest"
   }
  },
  "458552176": {
@@ -2489,6 +6201,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Trait",
@@ -2510,11 +6223,38 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Trait",
   "plug": {
    "plugCategoryIdentifier": "frames"
+  }
+ },
+ "462856096": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 25
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
   }
  },
  "462856101": {
@@ -2529,6 +6269,13 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 4244567218,
+    "value": 20
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -2548,11 +6295,89 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": 20
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "465064635": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 392767087,
+    "value": 29
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "472303353": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/d7131142666edcfbce17e1d5ffbfb90f.jpg",
+   "name": "Cat Ear Dance"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v530.plugs.emotes.cat_ear_dance00",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
+  }
+ },
+ "496047945": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Dealing unique elemental damage grants this weapon a stacking damage bonus for an improved duration. This bonus is increased for kinetic weapons.",
+   "icon": "/common/destiny2_content/icons/ac0323ff44f720a8db7ae9f4dee59af4.png",
+   "name": "Elemental Honing"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
   }
  },
  "5333292": {
@@ -2568,11 +6393,76 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Movement Ability",
   "plug": {
    "plugCategoryIdentifier": "warlock.prism.movement"
+  }
+ },
+ "537774540": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/d764e09a79be71fb5d37e612e610cf18.png",
+   "name": "Whisper of Chains"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1943323491,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.stasis.trinkets"
+  }
+ },
+ "537774541": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/0f69591331f4def8ab2a4bb27c55b2aa.png",
+   "name": "Whisper of Torment"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 119204074,
+    "value": 1
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1735777505,
+    "value": -10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Stasis Fragment",
+  "plug": {
+   "plugCategoryIdentifier": "shared.stasis.trinkets"
   }
  },
  "54024075": {
@@ -2589,6 +6479,7 @@
    "tierType": 3,
    "tierTypeName": "Uncommon"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Enhanced Origin Trait",
@@ -2613,9 +6504,65 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 24,
   "itemTypeDisplayName": "Ghost Shell"
+ },
+ "598607952": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Each final blow with this weapon creates an improved elemental damage explosion.",
+   "icon": "/common/destiny2_content/icons/d17a60978288581d13a4aab6b9fc2b0e.png",
+   "name": "Chain Reaction"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1931675084,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3736848092,
+    "value": 20
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "59871045": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Reloading this weapon automatically gathers nearby ammo.",
+   "icon": "/common/destiny2_content/icons/0b6af1483945356f9ebc56595861c232.png",
+   "name": "Gravity Well"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Origin Trait",
+  "plug": {
+   "plugCategoryIdentifier": "origins"
+  }
  },
  "60382475": {
   "breakerType": 0,
@@ -2632,11 +6579,144 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Emote",
   "plug": {
    "plugCategoryIdentifier": "emote"
+  }
+ },
+ "617966211": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Each final blow increases charge/draw speed for an improved duration.",
+   "icon": "/common/destiny2_content/icons/86e2c776ad294730c87b0ef0f150a748.png",
+   "name": "Successful Warm-Up"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "621911507": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "One-shot handheld Grenade Launcher. Projectiles release a wave of energy when they contact the ground.",
+   "icon": "/common/destiny2_content/icons/30428876335fdd1e164128b9e5a6e4ad.png",
+   "name": "Wave Frame"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3614673599,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1240592695,
+    "value": 2
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 943549884,
+    "value": 2
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4188031367,
+    "value": 2
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 155624089,
+    "value": 2
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2523465841,
+    "value": 2
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1591432999,
+    "value": 2
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Intrinsic",
+  "plug": {
+   "plugCategoryIdentifier": "intrinsics"
+  }
+ },
+ "627959594": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1943323491,
+    "value": 20
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
+  }
+ },
+ "627959599": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "name": ""
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 0
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1943323491,
+    "value": 25
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "armor_stats"
   }
  },
  "633101315": {
@@ -2653,6 +6733,13 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3578062600,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Arms Armor Mod",
@@ -2678,6 +6765,28 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 3897883278,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1935470627,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 1885944937,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 765379354,
+    "value": 0
+   }
+  ],
   "itemSubType": 28,
   "itemType": 2,
   "itemTypeDisplayName": "Chest Armor",
@@ -2699,11 +6808,95 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Trait",
   "plug": {
    "plugCategoryIdentifier": "frames"
+  }
+ },
+ "651347274": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Maximized stats.\n\nApplies additional stats to this weapon equal to the weapon's tier.",
+   "icon": "/common/destiny2_content/icons/7b6b5606aba2c73a3a73341ae5785176.jpg",
+   "name": "Masterworked: Velocity"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2523465841,
+    "value": 10
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 155624089,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1240592695,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 943549884,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 4188031367,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3614673599,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2523465841,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1591432999,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 447667954,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 1842278586,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 2961396640,
+    "value": 0
+   },
+   {
+    "isConditionallyActive": true,
+    "statTypeHash": 3085395333,
+    "value": 0
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v400.plugs.weapons.masterworks.stat.projectile_speed"
   }
  },
  "659359923": {
@@ -2720,6 +6913,7 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -2741,11 +6935,34 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Grips",
   "plug": {
    "plugCategoryIdentifier": "v950.new.sword0.guards"
+  }
+ },
+ "702981643": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Restores your armor to its default appearance.",
+   "icon": "/common/destiny2_content/icons/3bb544f2136894a13a73875639f376d5.png",
+   "name": "Default Ornament"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 21,
+  "itemType": 19,
+  "itemTypeDisplayName": "Restore Defaults",
+  "plug": {
+   "plugCategoryIdentifier": "armor_skins_empty"
   }
  },
  "715484621": {
@@ -2763,6 +6980,7 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Emote",
@@ -2784,6 +7002,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Artifice Armor Mod",
@@ -2805,12 +7024,57 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "Warlock Universal Ornament",
   "plug": {
    "plugCategoryIdentifier": "armor_skins_warlock_chest"
   }
+ },
+ "760030801": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Tracking mods increase the range of the detection of caches and resources out in the field.",
+   "icon": "/common/destiny2_content/icons/83551640a5445d2efa84808b98fe7e70.png",
+   "name": "Tracking Mod Socket"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Tracking Ghost Mod",
+  "plug": {
+   "plugCategoryIdentifier": "enhancements.ghosts_tracking"
+  }
+ },
+ "779216204": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/b3e6dc4fcffc55382626205ca6f7eed8.jpg",
+   "name": "Harper's Shell"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 4023194814,
+   "tierType": 6,
+   "tierTypeName": "Exotic"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 24,
+  "itemTypeDisplayName": "Ghost Shell"
  },
  "780815822": {
   "breakerType": 0,
@@ -2826,11 +7090,40 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
   "plug": {
    "plugCategoryIdentifier": "weapon_tiering.plugs.mods.enhancers"
+  }
+ },
+ "788990507": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Upgrade this armor to improve its 3 lowest stats by 1, up to a maximum of 5 in each when upgraded to a Masterwork.",
+   "icon": "/common/destiny2_content/icons/171c66ca05570c05c95b262ac24d761f.jpg",
+   "name": "Upgrade Armor"
+  },
+  "inventory": {
+   "bucketTypeHash": 3313201758,
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 16120457,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "",
+  "plug": {
+   "plugCategoryIdentifier": "v460.plugs.armor.masterworks"
   }
  },
  "790664812": {
@@ -2846,6 +7139,13 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2223994109,
+    "value": 3
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Arc Aspect | Light Ability",
@@ -2866,11 +7166,121 @@
    "bucketTypeHash": 2422292810,
    "tierType": 0
   },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2223994109,
+    "value": 2
+   }
+  ],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "Void Aspect | Light Ability",
   "plug": {
    "plugCategoryIdentifier": "warlock.prism.aspects"
+  }
+ },
+ "816963252": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Sustained weapon damage or final blows versus powerful targets grant this weapon bonus reload, handling, and damage versus combatants. Gain this bonus immediately for a longer duration when you are revived.",
+   "icon": "/common/destiny2_content/icons/238e2fac2796e394793920e550d11053.png",
+   "name": "Heretical Behavior"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Origin Trait",
+  "plug": {
+   "plugCategoryIdentifier": "origins"
+  }
+ },
+ "839105230": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Lightly vented barrel.\n  \u2022  Greatly controls recoil\n  \u2022  Increases handling speed",
+   "icon": "/common/destiny2_content/icons/8f7fb54687aa52a9c2595d90ce9c9417.png",
+   "name": "Arrowhead Brake"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 2715839340,
+    "value": 30
+   },
+   {
+    "isConditionallyActive": false,
+    "statTypeHash": 943549884,
+    "value": 10
+   }
+  ],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Barrel",
+  "plug": {
+   "plugCategoryIdentifier": "barrels"
+  }
+ },
+ "855168139": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Rapidly defeating targets triggers improved health regeneration. Guardians and powerful combatants count as more than one target.",
+   "icon": "/common/destiny2_content/icons/1e5843177c71ae3f2a4770d01a2f3813.png",
+   "name": "Unrelenting"
+  },
+  "inventory": {
+   "bucketTypeHash": 1469714392,
+   "tierType": 3,
+   "tierTypeName": "Uncommon"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Enhanced Trait",
+  "plug": {
+   "plugCategoryIdentifier": "frames"
+  }
+ },
+ "873720784": {
+  "breakerType": 0,
+  "classType": 1,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/6e441ffa8c8171ce9caf71e51b72fc19.png",
+   "name": "Revenant"
+  },
+  "equippingBlock": {
+   "ammoType": 0
+  },
+  "inventory": {
+   "bucketTypeHash": 3284755031,
+   "stackUniqueLabel": "v500.builds.stasis.hunter.build0",
+   "tierType": 2,
+   "tierTypeName": "Common"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 16,
+  "itemTypeDisplayName": "Hunter Subclass",
+  "talentGrid": {
+   "hudDamageType": 6
   }
  },
  "89777927": {
@@ -2887,6 +7297,7 @@
    "tierType": 6,
    "tierTypeName": "Exotic"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -2908,6 +7319,7 @@
    "tierType": 2,
    "tierTypeName": "Common"
   },
+  "investmentStats": [],
   "itemSubType": 0,
   "itemType": 19,
   "itemTypeDisplayName": "",
@@ -2929,11 +7341,58 @@
    "tierType": 5,
    "tierTypeName": "Legendary"
   },
+  "investmentStats": [],
   "itemSubType": 21,
   "itemType": 19,
   "itemTypeDisplayName": "Weapon Ornament",
   "plug": {
    "plugCategoryIdentifier": "v900_fireteam_linear_fusion_rifle0_skins"
+  }
+ },
+ "965288073": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "Equip this shader to change the color of your gear.",
+   "icon": "/common/destiny2_content/icons/00fdddfc921caaf3ed679b6a7097c6e2.jpg",
+   "name": "Spark of Joy"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v730.shaders.silver.seasonal.legendary.shader3",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 20,
+  "itemType": 19,
+  "itemTypeDisplayName": "Shader",
+  "plug": {
+   "plugCategoryIdentifier": "shader"
+  }
+ },
+ "9762701": {
+  "breakerType": 0,
+  "classType": 3,
+  "defaultDamageType": 0,
+  "displayProperties": {
+   "description": "",
+   "icon": "/common/destiny2_content/icons/5c8cbc26a5779bca50a0a3e23f629997.jpg",
+   "name": "Graceful Spin"
+  },
+  "inventory": {
+   "bucketTypeHash": 2422292810,
+   "stackUniqueLabel": "v470.plugs.emotes.ice_skating_spin0",
+   "tierType": 5,
+   "tierTypeName": "Legendary"
+  },
+  "investmentStats": [],
+  "itemSubType": 0,
+  "itemType": 19,
+  "itemTypeDisplayName": "Emote",
+  "plug": {
+   "plugCategoryIdentifier": "emote"
   }
  }
 }

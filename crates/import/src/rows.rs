@@ -11,6 +11,12 @@ pub fn u32_list(v: &[u32]) -> Value {
     Value::List(v.iter().map(|&x| Value::UInt(x)).collect())
 }
 
+/// `BIGINT[]` value.
+#[must_use]
+pub fn i64_list(v: &[i64]) -> Value {
+    Value::List(v.iter().map(|&x| Value::BigInt(x)).collect())
+}
+
 /// `INTEGER[]` value.
 #[must_use]
 pub fn i32_list(v: &[i32]) -> Value {
@@ -252,7 +258,10 @@ pub struct BuildRow {
     pub artifact_perk_hashes: Vec<u32>,
     pub armor_mod_hashes: Vec<u32>,
     pub item_hashes: Vec<u32>,
-    pub element_hashes: Vec<u32>,
+    /// The fragments' fixed share of each stat (Armor 3.0 order).
+    pub fragment_stats: [i32; 6],
+    /// Element keys per tier; tier 3 gains stat investment after transform.
+    pub tier_elements: [Vec<i64>; 4],
     pub component_count: u16,
     pub unresolved_count: u16,
 }
@@ -285,8 +294,19 @@ impl AppendRow for BuildRow {
             u32_list(&self.artifact_perk_hashes),
             u32_list(&self.armor_mod_hashes),
             u32_list(&self.item_hashes),
-            u32_list(&self.element_hashes),
-            self.element_hashes.len() as u16,
+            Value::Null, // stat_weapons..stat_melee: modal stats, set in transform
+            Value::Null,
+            Value::Null,
+            Value::Null,
+            Value::Null,
+            Value::Null,
+            i32_list(&self.fragment_stats),
+            Value::Null, // stat_levels, stats_promoted: set by the investment stage
+            Value::Null,
+            i64_list(&self.tier_elements[0]),
+            i64_list(&self.tier_elements[1]),
+            i64_list(&self.tier_elements[2]),
+            i64_list(&self.tier_elements[3]),
             self.component_count,
             self.unresolved_count,
             0_i32,

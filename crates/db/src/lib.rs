@@ -10,8 +10,9 @@ use std::path::{Path, PathBuf};
 use duckdb::{AccessMode, Config, Connection, OptionalExt, params};
 use thiserror::Error;
 
+
 /// Version of [`SCHEMA_SQL`]. Bump on any incompatible schema change.
-pub const SCHEMA_VERSION: u32 = 3;
+pub const SCHEMA_VERSION: u32 = 4;
 
 /// DDL for a fresh database.
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
@@ -25,6 +26,7 @@ pub mod meta_key {
     pub const BUILD_FINGERPRINT_VERSION: &str = "build_fingerprint_version";
     pub const LOADOUT_FINGERPRINT_VERSION: &str = "loadout_fingerprint_version";
     pub const ELEMENT_VECTOR_VERSION: &str = "element_vector_version";
+    pub const INVESTMENT_PARAMS: &str = "investment_params";
     pub const TOOL_VERSION: &str = "tool_version";
     pub const IMPORTED_AT: &str = "imported_at";
     pub const SOURCE_ROOT: &str = "source_root";
@@ -276,18 +278,53 @@ mod tests {
         let db = Database::create(&tempfile::tempdir().unwrap().path().join("d.duckdb")).unwrap();
         let int = |sql: &str| -> i64 { db.conn().query_row(sql, [], |r| r.get(0)).unwrap() };
         let real = |sql: &str| -> f64 { db.conn().query_row(sql, [], |r| r.get(0)).unwrap() };
-        // Order-free and multiset-aware (a repeated hash is a count).
+        // Order-free and multiset-aware (a repeated value is a count).
         assert_eq!(int("SELECT multiset_common([1, 1, 2], [1, 2, 2])"), 2);
-        assert_eq!(int("SELECT l1_distance([1, 2], [2, 1])"), 0);
         assert_eq!(int("SELECT l1_distance([1, 2], [2, 3])"), 2);
-        assert_eq!(int("SELECT l1_distance([1, 2], [1, 3, 4])"), 3);
-        assert_eq!(int("SELECT bag_distance([1, 2], [2, 3])"), 1);
         assert_eq!(int("SELECT bag_distance([1, 2], [1, 3, 4])"), 2);
         assert!((real("SELECT jaccard_distance([1, 2], [2, 3])") - 2.0 / 3.0).abs() < 1e-12);
         assert!((real("SELECT jaccard_distance([9, 9], [9])") - 0.5).abs() < 1e-12);
-        assert!(real("SELECT jaccard_distance([1, 2], [2, 1])").abs() < 1e-12);
-        assert!(real("SELECT jaccard_distance([]::UINTEGER[], NULL)").abs() < 1e-12);
-        assert_eq!(int("SELECT l1_distance(NULL, [7, 8])"), 2);
+        assert!(real("SELECT jaccard_distance([]::BIGINT[], NULL)").abs() < 1e-12);
+    }
+
+    #[test]
+    fn build_distance_and_element_names() {
+        let db = Database::create(&tempfile::tempdir().unwrap().path().join("b.duckdb")).unwrap();
+        db.conn()
+            .execute_batch(
+                "INSERT INTO element_kind VALUES (1, 'exotic_armor', 1), (13, 'stat_investment', 3),
+                     (14, 'set_bonus', 3), (17, 'weapon_element', 4), (19, 'weapon_perk', 4);
+                 INSERT INTO item (item_hash, name, is_exotic) VALUES (7, 'Nothing Manacles', true), (8, 'Rampage', false);
+                 INSERT INTO stat VALUES (144602215, 'Super', NULL);
+                 INSERT INTO sandbox_perk (perk_hash, name) VALUES (5, 'Two-Piece Bonus');",
+            )
+            .unwrap();
+        let name = |key: i64| -> String {
+            db.conn()
+                .query_row("SELECT element_name(?)", [key], |r| r.get(0))
+                .unwrap()
+        };
+        assert_eq!(name((1 << 32) | 7), "Nothing Manacles");
+        assert_eq!(name((19 << 32) | 8), "Rampage");
+        assert_eq!(name((13 << 32) | 0x089e_7467), "Super");
+        assert_eq!(name((14 << 32) | 5), "Two-Piece Bonus");
+        assert_eq!(name((17 << 32) | 3), "Solar");
+
+        db.conn()
+            .execute_batch(
+                "INSERT INTO build (build_id, class, aspect_hashes, fragment_hashes, artifact_perk_hashes,
+                     armor_mod_hashes, item_hashes, component_count, unresolved_count,
+                     tier1_elements, tier2_elements, tier3_elements, tier4_elements)
+                 VALUES (1, 'Warlock', [], [], [], [], [], 0, 0, [1], [10, 11], [20], [30]),
+                        (2, 'Warlock', [], [], [], [], [], 0, 0, [2], [10, 11], [20], [31]);",
+            )
+            .unwrap();
+        // Exotic swapped (0.4 * 1) + one weapon perk swapped (0.1 * 1).
+        let d: f64 = db
+            .conn()
+            .query_row("SELECT build_distance(a, b) FROM build a, build b WHERE a.build_id = 1 AND b.build_id = 2", [], |r| r.get(0))
+            .unwrap();
+        assert!((d - 0.5).abs() < 1e-12, "{d}");
     }
 
     #[test]

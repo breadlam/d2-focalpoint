@@ -1378,6 +1378,7 @@ dependencies = [
  "comfy-table",
  "dirs",
  "duckdb",
+ "searchlight-core",
  "searchlight-db",
  "searchlight-import",
  "tempfile",

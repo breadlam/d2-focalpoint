@@ -43,11 +43,15 @@ searchlight import --backups /mnt/saspool/projects/searchlight-backups
    merges sources (a raw PGCR wins over production's parsed copy of the same
    run), dedupes, derives difficulty gates and per-player aggregates, and
    writes the final tables in a scan-friendly order.
-4. **Validate.** Natural-key uniqueness and referential checks must pass
+4. **Investment.** A Rust stage reads each build's modal stats and fragment
+   share, applies the budget-aware stat investment model (ADR 0005), and
+   [`finalize.sql`](../crates/import/src/sql/finalize.sql) assembles the
+   final `build` table in a single insert.
+5. **Validate.** Natural-key uniqueness and referential checks must pass
    (otherwise the import fails and the partial database is kept in the work
    dir for inspection). Warnings and cross-source parity counts are recorded
    in `import_stat`.
-5. **Publish.** The staging database is detached and deleted, metadata written, and the file is
+6. **Publish.** The staging database is detached and deleted, metadata written, and the file is
    moved into place (atomic rename, or copy + rename across filesystems).
 
 The import prints a report; `searchlight info --detailed` shows the same

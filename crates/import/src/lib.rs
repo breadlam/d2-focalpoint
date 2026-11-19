@@ -18,6 +18,7 @@
 pub mod archive;
 pub mod builds;
 pub mod history;
+pub mod investment;
 pub mod layout;
 pub mod manifest;
 pub mod progress;
@@ -82,6 +83,8 @@ pub struct ImportOptions {
     /// DuckDB memory limit, e.g. "64GB" (default: DuckDB's 80% of RAM).
     pub memory_limit: Option<String>,
     pub skip: Vec<OptionalStage>,
+    /// Parameters of the budget-aware stat investment model.
+    pub investment: searchlight_core::InvestmentParams,
 }
 
 /// What an import did.
@@ -95,6 +98,7 @@ pub struct ImportReport {
     pub archive: Option<archive::ArchiveStats>,
     pub history: Option<history::HistoryStats>,
     pub builds: builds::BuildStats,
+    pub investment: investment::InvestmentStats,
     pub checks: Vec<Check>,
     pub table_counts: Vec<(String, i64)>,
     pub timings: Vec<(String, Duration)>,
@@ -183,6 +187,13 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
     timings.append(&mut step_timings);
 
     let t = Instant::now();
+    investment::write_element_kinds(conn)?;
+    let investment = investment::apply(conn, &opts.investment, progress)?;
+    timings.push(("investment".into(), t.elapsed()));
+    let mut finalize_timings = transform::finalize(conn, progress)?;
+    timings.append(&mut finalize_timings);
+
+    let t = Instant::now();
     let checks = validate::run(conn)?;
     timings.push(("validate".into(), t.elapsed()));
     let failed: Vec<&Check> = checks
@@ -205,6 +216,12 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
         history.as_ref(),
         &builds,
         &checks,
+    )?;
+    report_stats.put("investment", "builds", investment.builds)?;
+    report_stats.put(
+        "investment",
+        "builds_with_promotion",
+        investment.builds_with_promotion,
     )?;
 
     conn.execute_batch("DETACH stg")?;
@@ -230,6 +247,7 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
         archive,
         history,
         builds,
+        investment,
         checks,
         table_counts,
         timings,
@@ -413,6 +431,11 @@ impl fmt::Display for ImportReport {
             self.builds.builds,
             self.builds.loadouts,
             self.builds.bad_loadouts
+        )?;
+        writeln!(
+            f,
+            "  stat investment: {} builds read, {} with a budget-limited stat",
+            self.investment.builds, self.investment.builds_with_promotion
         )?;
         writeln!(f, "\nTables:")?;
         for (t, n) in &self.table_counts {

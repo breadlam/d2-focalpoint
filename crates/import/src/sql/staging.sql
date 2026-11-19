@@ -114,3 +114,7 @@ CREATE TABLE stg.activity_def (
     is_playlist        BOOLEAN,
     light_level        INTEGER
 );
+
+-- Builds as extracted, before stats, investment and usage are joined in by
+-- finalize.sql (same columns as main.build).
+CREATE TABLE stg.build AS SELECT * FROM main.build WHERE false;

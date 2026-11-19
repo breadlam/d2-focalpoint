@@ -192,8 +192,15 @@ fn build_backups(root: &Path) {
         .unwrap();
     }
     // A two-segment build timeline on run 2 (the second segment drops a mod).
-    let loadout =
-        String::from_utf8(core_fixture("loadout_prismatic_exotic_class_item.json")).unwrap();
+    // The fixture predates stat capture; give it the stats of the budget
+    // example (Super 200, Weapons 100, Grenade 150, the rest near the floor).
+    let mut with_stats: serde_json::Value =
+        serde_json::from_slice(&core_fixture("loadout_prismatic_exotic_class_item.json")).unwrap();
+    with_stats["stats"] = serde_json::json!({
+        "144602215": 200, "2996146975": 100, "1735777505": 150,
+        "392767087": 20, "4244567218": 18, "1943323491": 12, "1935470627": 500
+    });
+    let loadout = with_stats.to_string();
     let mut changed: serde_json::Value = serde_json::from_str(&loadout).unwrap();
     changed["items"][0]["plug_hashes"]
         .as_array_mut()
@@ -321,6 +328,7 @@ fn imports_a_synthetic_backup_tree() {
         threads: Some(4),
         memory_limit: Some("1GB".into()),
         skip: vec![],
+        investment: searchlight_core::InvestmentParams::default(),
     };
     let report = searchlight_import::run(&opts, &Progress::hidden()).unwrap();
 
@@ -372,26 +380,49 @@ fn imports_a_synthetic_backup_tree() {
     // Builds: three segments in two timelines, two distinct builds.
     assert_eq!(count(&db, "SELECT count(*) FROM segment"), 3);
     assert_eq!(count(&db, "SELECT count(*) FROM build"), 2);
-    // The second segment drops one armor stat mod: its element vector is one
-    // element smaller, and usage is filled in on build.
+    // The second segment drops one armor stat mod. Stat mods matter only
+    // through the stats they produce, and both segments report the same
+    // stats, so the two builds are at distance 0.
     let real = |sql: &str| -> f64 { db.conn().query_row(sql, [], |r| r.get(0)).unwrap() };
+    assert!(
+        real("SELECT build_distance(a, b) FROM build a, build b WHERE a.build_id < b.build_id")
+            .abs()
+            < 1e-12
+    );
+    // Budget-aware investment: Grenade at 150 behind Super 200 and Weapons
+    // 100 was held back, so it reads as the 200 tier.
     assert_eq!(
         count(
             &db,
-            "SELECT l1_distance(a.element_hashes, b.element_hashes) FROM build a, build b WHERE a.build_id < b.build_id"
+            "SELECT count(*) FROM build WHERE stat_levels[4] = 4 AND list_contains(stats_promoted, 'Grenade')"
         ),
-        1
+        2
     );
-    let (big, small) = (
-        count(&db, "SELECT max(element_count) FROM build"),
-        count(&db, "SELECT min(element_count) FROM build"),
+    assert_eq!(
+        count(
+            &db,
+            "SELECT value FROM import_stat WHERE metric = 'builds_with_promotion'"
+        ),
+        2
     );
-    assert_eq!(big - small, 1);
+    assert_eq!(count(&db, "SELECT count(*) FROM element_kind"), 28);
+    let first_exotic: String = db
+        .conn()
+        .query_row(
+            "SELECT element_name(tier1_elements[1]) FROM build LIMIT 1",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
     assert!(
-        (real("SELECT jaccard_distance(a.element_hashes, b.element_hashes) FROM build a, build b WHERE a.build_id < b.build_id")
-            - 1.0 / big as f64)
-            .abs()
-            < 1e-12
+        [
+            "Solipsism",
+            "Praxic Blade",
+            "Spirit of Inmost Light",
+            "Spirit of Synthoceps"
+        ]
+        .contains(&first_exotic.as_str()),
+        "{first_exotic}"
     );
     assert_eq!(count(&db, "SELECT sum(timeline_count) FROM build"), 3);
     assert_eq!(count(&db, "SELECT sum(seconds_used) FROM build"), 1200);

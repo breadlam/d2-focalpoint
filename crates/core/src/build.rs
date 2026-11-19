@@ -542,6 +542,7 @@ mod tests {
                 .then(|| "v610.builds.solar.warlock.build0".into()),
             hud_damage_type: 0,
             item_set_hash: None,
+            stat_effects: Vec::new(),
         }
     }
 

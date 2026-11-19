@@ -73,7 +73,7 @@ ORDER BY started_at, r.instance_id;
 CREATE TEMP TABLE timeline_key AS
 SELECT s.instance_id, s.membership_id, arg_max(b.class, s.duration_s) AS class
 FROM segment s
-JOIN build b USING (build_id)
+JOIN stg.build b USING (build_id)
 GROUP BY ALL;
 
 CREATE TEMP TABLE member_chars AS
@@ -164,20 +164,29 @@ FROM per_build b
 JOIN per_timeline t USING (instance_id, membership_id)
 ORDER BY b.instance_id, b.membership_id, b.build_id;
 
--- step: build usage
-UPDATE build b
-SET timeline_count = u.timelines,
-    player_count   = u.players,
-    seconds_used   = u.seconds
+-- step: build stats
+-- A build's stats: the most common stat line across its segments (99 % of
+-- builds have a single one; ties break deterministically).
+CREATE TABLE stg.build_stats AS
+SELECT build_id, s
 FROM (
     SELECT build_id,
-           count(*)                       AS timelines,
-           count(DISTINCT membership_id)  AS players,
-           sum(duration_s)                AS seconds
-    FROM run_build
-    GROUP BY build_id
-) u
-WHERE b.build_id = u.build_id;
+           [stat_weapons, stat_health, stat_class, stat_grenade, stat_super, stat_melee] AS s,
+           count(*) AS n
+    FROM segment
+    WHERE stat_weapons IS NOT NULL
+    GROUP BY ALL
+)
+QUALIFY row_number() OVER (PARTITION BY build_id ORDER BY n DESC, s) = 1;
+
+-- step: build usage
+CREATE TABLE stg.build_usage AS
+SELECT build_id,
+       count(*)                       AS timelines,
+       count(DISTINCT membership_id)  AS players,
+       sum(duration_s)                AS seconds
+FROM run_build
+GROUP BY build_id;
 
 -- step: activity
 INSERT INTO activity

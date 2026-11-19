@@ -3,7 +3,8 @@
 use searchlight_core::build::{ComponentKind, extract_build};
 use searchlight_core::catalog::{Catalog, parse_item_sets, parse_items};
 use searchlight_core::pgcr::{parse_slice, parse_stored};
-use searchlight_core::vector::{ElementVector, Weights};
+use searchlight_core::stats::{ArmorStat, InvestmentParams, fragment_stats};
+use searchlight_core::vector::{ElementKind, ElementVector, Tier, TierWeights};
 use searchlight_core::{Element, GuardianClass, LoadoutState, Slot};
 
 fn fixture(name: &str) -> Vec<u8> {
@@ -157,53 +158,53 @@ fn element_vector_of_the_prismatic_build() {
     )
     .unwrap();
     let build = extract_build(&loadout, &cat);
-    let v = ElementVector::from_build(&build);
-    let named = |kind: ComponentKind| -> Vec<String> {
+    let v = ElementVector::from_build(&build, &cat);
+    let named = |kind: ElementKind| -> Vec<String> {
         let mut n: Vec<String> = v
             .entries()
             .iter()
             .filter(|e| e.kind == kind)
             .flat_map(|e| {
-                std::iter::repeat_n(cat.item(e.hash).unwrap().name.clone(), usize::from(e.count))
+                let name = cat
+                    .item(e.hash)
+                    .map_or_else(|| e.hash.to_string(), |d| d.name.clone());
+                std::iter::repeat_n(name, usize::from(e.count))
             })
             .collect();
         n.sort();
         n
     };
 
-    // Choices are counted, placement is not: Backup Mag on two weapons is one
-    // element with count 2.
+    // Tier 1: the exotic class item with its two rolled spirits, and the
+    // exotic weapon.
+    assert_eq!(named(ElementKind::ExoticArmor), ["Solipsism"]);
     assert_eq!(
-        named(ComponentKind::WeaponMod),
-        ["Backup Mag", "Backup Mag"]
-    );
-    assert!(named(ComponentKind::WeaponPerk).contains(&"Vorpal Weapon".to_string()));
-    assert_eq!(named(ComponentKind::Aspect).len(), 2);
-    assert_eq!(named(ComponentKind::Fragment).len(), 5);
-    assert_eq!(
-        named(ComponentKind::ArmorPerk),
+        named(ElementKind::ExoticArmorPerk),
         ["Spirit of Inmost Light", "Spirit of Synthoceps"]
     );
+    assert_eq!(named(ElementKind::ExoticWeapon), ["Praxic Blade"]);
+    // Placement is ignored: Backup Mag on two weapons is a count of 2.
+    assert_eq!(named(ElementKind::WeaponMod), ["Backup Mag", "Backup Mag"]);
+    assert!(named(ElementKind::WeaponPerk).contains(&"Vorpal Weapon".to_string()));
+    assert_eq!(named(ElementKind::Frame).len(), 3, "one frame per weapon");
+    let elements: u16 = v
+        .entries()
+        .iter()
+        .filter(|e| e.kind == ElementKind::WeaponElement)
+        .map(|e| e.count)
+        .sum();
+    assert_eq!(elements, 3, "one damage type per weapon");
+    // Two 2-piece sets are active.
     assert_eq!(
-        named(ComponentKind::ArmorMod)
+        v.entries()
             .iter()
-            .filter(|m| *m == "Weapons Font")
+            .filter(|e| e.kind == ElementKind::SetBonus)
             .count(),
         2
     );
-    // Elements determined by another element are not counted.
-    for kind in [
-        ComponentKind::WeaponIntrinsic,
-        ComponentKind::Transcendence,
-        ComponentKind::ArmorSet,
-        ComponentKind::SetBonus,
-    ] {
-        assert!(named(kind).is_empty(), "{kind} should not be an element");
-    }
-    // The multiset encoding has one entry per counted element.
-    assert_eq!(v.multiset().len() as u32, v.total());
+    assert_eq!(named(ElementKind::LegendaryArmor).len(), 4);
 
-    // Dropping one fragment: one slot edit, L1 1, Jaccard 1/total.
+    // Dropping one fragment moves only tier 2.
     let subclass = loadout
         .items
         .iter_mut()
@@ -215,9 +216,57 @@ fn element_vector_of_the_prismatic_build() {
         .position(|&p| cat.item(p).is_some_and(|d| d.name == "Facet of Courage"))
         .unwrap();
     subclass.plug_hashes.remove(facet);
-    let fewer = ElementVector::from_build(&extract_build(&loadout, &cat));
-    let w = Weights::default();
+    let fewer = ElementVector::from_build(&extract_build(&loadout, &cat), &cat);
+    let d = v.tiered_distance(&fewer, &TierWeights::default());
+    assert!(d.per_tier[1] > 0.0);
+    assert!(
+        [d.per_tier[0], d.per_tier[2], d.per_tier[3]]
+            .iter()
+            .all(|x| x.abs() < 1e-12)
+    );
     assert_eq!(v.slot_edits(&fewer), 1);
-    assert!((v.l1_distance(&fewer, &w) - 1.0).abs() < 1e-12);
-    assert!((v.jaccard_distance(&fewer, &w) - 1.0 / f64::from(v.total())).abs() < 1e-12);
+}
+
+#[test]
+fn recent_build_stats_fragments_and_investment() {
+    let cat = catalog();
+    let loadout = LoadoutState::from_json(
+        std::str::from_utf8(&fixture("loadout_recent_with_stats.json")).unwrap(),
+    )
+    .unwrap();
+    let build = extract_build(&loadout, &cat);
+    assert!(
+        build.unresolved_hashes.is_empty(),
+        "{:?}",
+        build.unresolved_hashes
+    );
+
+    // Fragments: Whisper of Torment (Grenade -10), Whisper of Conduction
+    // (Super +10, Health +10), Whisper of Chains (Class +10).
+    let frags = fragment_stats(&build, &cat);
+    assert_eq!(
+        frags,
+        [0, 10, 10, -10, 10, 0],
+        "order: Weapons Health Class Grenade Super Melee"
+    );
+
+    // Observed: Weapons 58, Health 71, Class 91, Grenade 55, Super 106, Melee 96
+    // — a spread build: three stats in the 100 tier, three partial, none
+    // budget-limited (plenty of movable points everywhere).
+    let observed = ArmorStat::ALL.map(|s| loadout.stat(s.hash()).unwrap());
+    assert_eq!(observed, [58, 71, 91, 55, 106, 96]);
+    let inv = InvestmentParams::default().investment(observed, frags);
+    assert_eq!(inv.levels, [1, 1, 2, 1, 2, 2]);
+    assert_eq!(inv.promoted, [false; 6]);
+
+    // Stat investment joins tier 3 alongside set bonuses and armor mods.
+    let v = ElementVector::from_build(&build, &cat).with_investment(&inv);
+    let stat_units: u16 = v
+        .entries()
+        .iter()
+        .filter(|e| e.kind == ElementKind::StatInvestment)
+        .map(|e| e.count)
+        .sum();
+    assert_eq!(stat_units, 9);
+    assert!(v.tier_keys(Tier::ArmorEffects).len() >= 9);
 }

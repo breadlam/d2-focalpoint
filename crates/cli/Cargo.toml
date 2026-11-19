@@ -18,6 +18,7 @@ clap.workspace = true
 comfy-table.workspace = true
 dirs.workspace = true
 duckdb.workspace = true
+searchlight-core.workspace = true
 searchlight-db.workspace = true
 searchlight-import.workspace = true
 tracing.workspace = true

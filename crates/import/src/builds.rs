@@ -17,7 +17,8 @@ use rayon::prelude::*;
 use searchlight_core::build::{Build, ComponentKind, extract_build, loadout_id};
 use searchlight_core::fingerprint::Fingerprinter;
 use searchlight_core::loadout::{LoadoutState, stat_hash};
-use searchlight_core::{Catalog, ElementVector, Slot};
+use searchlight_core::stats::fragment_stats;
+use searchlight_core::{Catalog, ElementVector, Slot, Tier};
 
 use crate::progress::Progress;
 use crate::rows::{BuildComponentRow, BuildRow, LoadoutItemRow, LoadoutRow, SegmentRow};
@@ -60,14 +61,14 @@ pub fn load(
     let bar = progress.bar("build timelines", total);
 
     let (tx, rx) = bounded::<Vec<Processed>>(256);
-    let collector = {
-        let duck = duck.try_clone()?;
-        std::thread::Builder::new()
+    let collector_conn = duck.try_clone()?;
+    // A scoped thread lets the collector borrow the catalog.
+    std::thread::scope(|scope| -> Result<BuildStats> {
+        let collector = std::thread::Builder::new()
             .name("builds-collector".into())
-            .spawn(move || collect(&duck, &rx))?
-    };
+            .spawn_scoped(scope, move || collect(&collector_conn, &rx, catalog))?;
 
-    let produced = ranges
+        let produced = ranges
         .par_iter()
         .map(|&(lo, hi)| -> Result<u64> {
             let conn = sqlite::open(main_db)?;
@@ -120,16 +121,17 @@ pub fn load(
             Ok(bad)
         })
         .sum::<Result<u64>>();
-    drop(tx);
-    // Settle writers before producers: a writer's error is the root cause of
-    // a producer's "writer stopped" error.
-    let mut stats = collector
-        .join()
-        .map_err(|_| anyhow::anyhow!("builds collector panicked"))??;
-    let bad = produced.context("reading build_segment")?;
-    stats.bad_loadouts = bad;
-    bar.finish();
-    Ok(stats)
+        drop(tx);
+        // Settle writers before producers: a writer's error is the root cause of
+        // a producer's "writer stopped" error.
+        let mut stats = collector
+            .join()
+            .map_err(|_| anyhow::anyhow!("builds collector panicked"))??;
+        let bad = produced.context("reading build_segment")?;
+        stats.bad_loadouts = bad;
+        bar.finish();
+        Ok(stats)
+    })
 }
 
 /// Secondary fingerprint of a build's components, used to detect `build_id`
@@ -149,9 +151,10 @@ fn check_fingerprint(b: &Build) -> i64 {
 fn collect(
     duck: &Connection,
     rx: &crossbeam_channel::Receiver<Vec<Processed>>,
+    catalog: &Catalog,
 ) -> Result<BuildStats> {
     let segments = Sink::<SegmentRow>::spawn_parallel(duck, "segment", staging_writers())?;
-    let builds = Sink::<BuildRow>::spawn(duck, "build")?;
+    let builds = Sink::<BuildRow>::spawn(duck, "stg.build")?;
     let components =
         Sink::<BuildComponentRow>::spawn_parallel(duck, "build_component", staging_writers())?;
     let loadouts = Sink::<LoadoutRow>::spawn(duck, "loadout")?;
@@ -181,7 +184,7 @@ fn collect(
                     Entry::Vacant(e) => {
                         e.insert(check_fingerprint(&p.build));
                         unresolved.extend(&p.build.unresolved_hashes);
-                        build_b.push(build_row(&p.build))?;
+                        build_b.push(build_row(&p.build, catalog))?;
                         for c in &p.build.components {
                             comp_b.push(BuildComponentRow {
                                 build_id: p.build.id,
@@ -253,7 +256,7 @@ fn collect(
     Ok(stats)
 }
 
-fn build_row(b: &Build) -> BuildRow {
+fn build_row(b: &Build, catalog: &Catalog) -> BuildRow {
     let mut aspects: Vec<u32> = b.hashes(ComponentKind::Aspect).collect();
     let mut fragments: Vec<u32> = b.hashes(ComponentKind::Fragment).collect();
     let mut artifact_perks: Vec<u32> = b.hashes(ComponentKind::ArtifactPerk).collect();
@@ -292,7 +295,11 @@ fn build_row(b: &Build) -> BuildRow {
         artifact_perk_hashes: artifact_perks,
         armor_mod_hashes: armor_mods,
         item_hashes: b.item_hashes(),
-        element_hashes: ElementVector::from_build(b).multiset(),
+        fragment_stats: fragment_stats(b, catalog),
+        tier_elements: {
+            let v = ElementVector::from_build(b, catalog);
+            Tier::ALL.map(|t| v.tier_keys(t))
+        },
         component_count: b.components.len() as u16,
         unresolved_count: b.unresolved_hashes.len() as u16,
     }

@@ -1,119 +1,281 @@
-//! Element count vectors: a build as a sparse vector of element counts.
+//! Element count vectors and the tiered build distance.
 //!
-//! Conceptually a build is a vector with one coordinate per possible game
-//! element (every super, aspect, fragment, weapon, perk, armor piece, mod,
-//! ...) holding how many of that element the build has. That vector is ~99 %
+//! Conceptually a build is a vector with one coordinate per possible element
+//! (every exotic, super, aspect, fragment, perk, mod, stat investment, ...)
+//! holding how many of that element the build has. That vector is ~99 %
 //! zeros, so an [`ElementVector`] stores only the non-zero coordinates,
-//! sorted, keyed by item hash. A missing key means a count of zero. Item
-//! hashes are Bungie's stable, open-ended identifiers, so new game content
-//! needs no vocabulary, re-indexing or migration, and every operation on the
-//! dense vector is computed exactly by merging two sorted sparse lists.
+//! sorted, keyed by `(element kind, hash)`; a missing key means zero. Hashes
+//! are Bungie's stable identifiers, so new content needs no vocabulary or
+//! migration, and every operation on the dense vector is computed exactly by
+//! merging two sorted sparse lists.
 //!
 //! Placement does not matter: an element counts the same wherever it is
 //! socketed (fragments are unordered; a perk counts the same on any weapon).
 //!
-//! **Which elements count** (see `docs/adr/0004-element-count-vectors.md`):
-//! every build component that is a player *choice*. Components fully
-//! determined by another component are excluded so no choice counts twice:
-//! weapon frame intrinsics (by the weapon), fixed exotic armor perks (by the
-//! exotic; exotic class item rolls *are* counted), Transcendence (by the
-//! subclass), and armor sets / set bonuses (by the armor pieces).
+//! **Tiers** (ADR 0005) rank how much an element defines a build:
 //!
-//! **Distances** (all exact on the sparse form):
+//! 1. exotic armor (and an exotic class item's rolled perks), exotic weapon;
+//! 2. subclass, super, abilities, aspects, fragments, artifact perks;
+//! 3. armor stat investment ([`crate::stats`]), set bonuses, armor mods;
+//! 4. legendary weapons, weapon elements, frames, perks/traits, origin
+//!    traits, weapon mods.
 //!
-//! * [`ElementVector::jaccard_distance`] — weighted Jaccard / Ruzicka distance
-//!   `1 − Σ wᵢ·min(aᵢ, bᵢ) / Σ wᵢ·max(aᵢ, bᵢ)`, in `[0, 1]`; the default for
-//!   clustering because it is comparable across builds of different sizes;
-//! * [`ElementVector::l1_distance`] — `Σ wᵢ·|aᵢ − bᵢ|`, elements added plus
-//!   removed (a swap counts 2);
-//! * [`ElementVector::slot_edits`] — how many slots changed: per element kind,
-//!   `max(|A∖B|, |B∖A|)` (a swap counts 1), for human-readable output.
+//! Legendary armor pieces, archetypes, stat and tuning mods matter only
+//! through the stats they produce, which stat investment captures; they, the
+//! artifact item, Transcendence and armor-set membership are kept in the
+//! vector but carry no weight.
 //!
-//! All three are metrics (symmetric, zero only for equal vectors, triangle
-//! inequality); tests check them against a brute-force dense implementation.
+//! **Distance.** [`ElementVector::tiered_distance`] gives each tier a fixed
+//! share of the total — `Σₜ shareₜ · Jₜ` with `Jₜ` the Jaccard distance
+//! `1 − Σmin/Σmax` over that tier's counts — so tiers with many elements
+//! (perks, artifact perks) cannot drown out tiers with few (exotics). It is a
+//! metric on the weighted elements, in `[0, 1]`. [`ElementVector::l1_distance`]
+//! and [`ElementVector::slot_edits`] describe differences in absolute terms.
 
 use std::cmp::Ordering;
 
 use crate::build::{Build, ComponentKind};
+use crate::catalog::Catalog;
 use crate::slot::Slot;
+use crate::stats::{ArmorStat, Investment};
 
-/// Version of the element-selection rules. Recorded in database metadata;
-/// bump when [`ElementVector::from_build`] changes.
-pub const ELEMENT_VECTOR_VERSION: u8 = 1;
+/// Version of the element rules (kinds, tiers, selection). Recorded in
+/// database metadata; bump when any of them change.
+pub const ELEMENT_VECTOR_VERSION: u8 = 2;
+
+/// Importance tier of an element kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum Tier {
+    Exotics,
+    Kit,
+    ArmorEffects,
+    Weapons,
+}
+
+impl Tier {
+    pub const ALL: [Tier; 4] = [Tier::Exotics, Tier::Kit, Tier::ArmorEffects, Tier::Weapons];
+
+    /// 1-based tier number.
+    #[must_use]
+    pub fn number(self) -> u8 {
+        self as u8 + 1
+    }
+
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Tier::Exotics => "exotics",
+            Tier::Kit => "kit",
+            Tier::ArmorEffects => "armor effects",
+            Tier::Weapons => "weapons",
+        }
+    }
+
+    fn index(self) -> usize {
+        self as usize
+    }
+}
+
+/// What an element is. Codes are persisted (database keys): never reuse or
+/// renumber them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum ElementKind {
+    ExoticArmor,
+    ExoticArmorPerk,
+    ExoticWeapon,
+    Subclass,
+    Super,
+    Grenade,
+    Melee,
+    ClassAbility,
+    Movement,
+    Aspect,
+    Fragment,
+    ArtifactPerk,
+    /// `hash` is a stat hash; `count` is the investment level (1–4).
+    StatInvestment,
+    /// `hash` is a sandbox perk.
+    SetBonus,
+    ArmorMod,
+    Weapon,
+    /// `hash` is a `DamageType` enum value; one per equipped weapon.
+    WeaponElement,
+    Frame,
+    WeaponPerk,
+    OriginTrait,
+    WeaponMod,
+    LegendaryArmor,
+    ArmorArchetype,
+    ArmorStatMod,
+    ArmorTuning,
+    Artifact,
+    Transcendence,
+    /// `hash` is an armor set; `count` is pieces equipped.
+    ArmorSet,
+}
+
+impl ElementKind {
+    pub const ALL: [ElementKind; 28] = [
+        ElementKind::ExoticArmor,
+        ElementKind::ExoticArmorPerk,
+        ElementKind::ExoticWeapon,
+        ElementKind::Subclass,
+        ElementKind::Super,
+        ElementKind::Grenade,
+        ElementKind::Melee,
+        ElementKind::ClassAbility,
+        ElementKind::Movement,
+        ElementKind::Aspect,
+        ElementKind::Fragment,
+        ElementKind::ArtifactPerk,
+        ElementKind::StatInvestment,
+        ElementKind::SetBonus,
+        ElementKind::ArmorMod,
+        ElementKind::Weapon,
+        ElementKind::WeaponElement,
+        ElementKind::Frame,
+        ElementKind::WeaponPerk,
+        ElementKind::OriginTrait,
+        ElementKind::WeaponMod,
+        ElementKind::LegendaryArmor,
+        ElementKind::ArmorArchetype,
+        ElementKind::ArmorStatMod,
+        ElementKind::ArmorTuning,
+        ElementKind::Artifact,
+        ElementKind::Transcendence,
+        ElementKind::ArmorSet,
+    ];
+
+    /// The tier an element counts in, or `None` for unweighted kinds.
+    #[must_use]
+    pub fn tier(self) -> Option<Tier> {
+        use ElementKind as K;
+        Some(match self {
+            K::ExoticArmor | K::ExoticArmorPerk | K::ExoticWeapon => Tier::Exotics,
+            K::Subclass
+            | K::Super
+            | K::Grenade
+            | K::Melee
+            | K::ClassAbility
+            | K::Movement
+            | K::Aspect
+            | K::Fragment
+            | K::ArtifactPerk => Tier::Kit,
+            K::StatInvestment | K::SetBonus | K::ArmorMod => Tier::ArmorEffects,
+            K::Weapon
+            | K::WeaponElement
+            | K::Frame
+            | K::WeaponPerk
+            | K::OriginTrait
+            | K::WeaponMod => Tier::Weapons,
+            K::LegendaryArmor
+            | K::ArmorArchetype
+            | K::ArmorStatMod
+            | K::ArmorTuning
+            | K::Artifact
+            | K::Transcendence
+            | K::ArmorSet => return None,
+        })
+    }
+
+    /// Stable persisted code (1-based position in [`ElementKind::ALL`]).
+    #[must_use]
+    pub fn code(self) -> u8 {
+        self as u8 + 1
+    }
+
+    #[must_use]
+    pub fn from_code(code: u8) -> Option<Self> {
+        Self::ALL.get(usize::from(code).checked_sub(1)?).copied()
+    }
+
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        use ElementKind as K;
+        match self {
+            K::ExoticArmor => "exotic_armor",
+            K::ExoticArmorPerk => "exotic_armor_perk",
+            K::ExoticWeapon => "exotic_weapon",
+            K::Subclass => "subclass",
+            K::Super => "super",
+            K::Grenade => "grenade",
+            K::Melee => "melee",
+            K::ClassAbility => "class_ability",
+            K::Movement => "movement",
+            K::Aspect => "aspect",
+            K::Fragment => "fragment",
+            K::ArtifactPerk => "artifact_perk",
+            K::StatInvestment => "stat_investment",
+            K::SetBonus => "set_bonus",
+            K::ArmorMod => "armor_mod",
+            K::Weapon => "weapon",
+            K::WeaponElement => "weapon_element",
+            K::Frame => "frame",
+            K::WeaponPerk => "weapon_perk",
+            K::OriginTrait => "origin_trait",
+            K::WeaponMod => "weapon_mod",
+            K::LegendaryArmor => "legendary_armor",
+            K::ArmorArchetype => "armor_archetype",
+            K::ArmorStatMod => "armor_stat_mod",
+            K::ArmorTuning => "armor_tuning",
+            K::Artifact => "artifact",
+            K::Transcendence => "transcendence",
+            K::ArmorSet => "armor_set",
+        }
+    }
+}
+
+/// Persisted element key: `(kind code << 32) | hash`.
+#[must_use]
+pub fn element_key(kind: ElementKind, hash: u32) -> i64 {
+    (i64::from(kind.code()) << 32) | i64::from(hash)
+}
+
+/// Inverse of [`element_key`].
+#[must_use]
+pub fn split_key(key: i64) -> Option<(ElementKind, u32)> {
+    let kind = ElementKind::from_code(u8::try_from(key >> 32).ok()?)?;
+    Some((kind, (key & 0xFFFF_FFFF) as u32))
+}
 
 /// One non-zero coordinate.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ElementCount {
-    pub kind: ComponentKind,
+    pub kind: ElementKind,
     pub hash: u32,
     pub count: u16,
 }
 
 /// A build's sparse element count vector, sorted by `(kind, hash)`.
-///
-/// Every item hash belongs to exactly one kind (verified on the real data),
-/// so ordering by kind first keeps each kind's elements contiguous for
-/// per-kind work without changing the key.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub struct ElementVector {
     entries: Vec<ElementCount>,
 }
 
-/// Per-kind weights for the weighted distances (default: every kind 1.0).
-#[derive(Debug, Clone, PartialEq)]
-pub struct Weights {
-    per_kind: Vec<(ComponentKind, f64)>,
-}
+/// Share of the total distance given to each tier (sums to 1 by default).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TierWeights(pub [f64; 4]);
 
-impl Default for Weights {
+impl Default for TierWeights {
+    /// 0.4 / 0.3 / 0.2 / 0.1 for tiers 1–4.
     fn default() -> Self {
-        Self {
-            per_kind: ComponentKind::ALL.iter().map(|&k| (k, 1.0)).collect(),
-        }
+        Self([0.4, 0.3, 0.2, 0.1])
     }
 }
 
-impl Weights {
-    /// Set the weight of one kind (must be finite and non-negative).
-    #[must_use]
-    pub fn with(mut self, kind: ComponentKind, weight: f64) -> Self {
-        assert!(
-            weight.is_finite() && weight >= 0.0,
-            "weights must be finite and non-negative"
-        );
-        if let Some(w) = self.per_kind.iter_mut().find(|(k, _)| *k == kind) {
-            w.1 = weight;
-        }
-        self
-    }
-
-    #[must_use]
-    pub fn of(&self, kind: ComponentKind) -> f64 {
-        self.per_kind
-            .iter()
-            .find(|(k, _)| *k == kind)
-            .map_or(1.0, |&(_, w)| w)
-    }
-}
-
-/// Is this component kind counted as an element (a player choice)?
-/// `ArmorPerk` is decided per component in [`ElementVector::from_build`].
-#[must_use]
-pub fn is_element_kind(kind: ComponentKind) -> bool {
-    !matches!(
-        kind,
-        ComponentKind::WeaponIntrinsic
-            | ComponentKind::Transcendence
-            | ComponentKind::ArmorSet
-            | ComponentKind::SetBonus
-    )
+/// A distance with its per-tier parts (`total = Σ share · per_tier`).
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct TieredDistance {
+    pub total: f64,
+    /// Jaccard distance within each tier, in [`Tier::ALL`] order.
+    pub per_tier: [f64; 4],
 }
 
 impl ElementVector {
     /// Build from `(kind, hash, count)` triples; duplicates are summed and
     /// zero counts dropped.
     #[must_use]
-    pub fn from_counts(counts: impl IntoIterator<Item = (ComponentKind, u32, u16)>) -> Self {
+    pub fn from_counts(counts: impl IntoIterator<Item = (ElementKind, u32, u16)>) -> Self {
         let mut entries: Vec<ElementCount> = counts
             .into_iter()
             .filter(|&(_, _, c)| c > 0)
@@ -131,26 +293,102 @@ impl ElementVector {
         Self { entries }
     }
 
-    /// Project a build onto its element counts (see module docs for the
-    /// selection rules). Placement is ignored: the same perk on two weapons
-    /// is one element with count 2.
+    /// Rebuild from persisted keys (each key repeated once per count).
     #[must_use]
-    pub fn from_build(b: &Build) -> Self {
+    pub fn from_keys(keys: impl IntoIterator<Item = i64>) -> Self {
+        Self::from_counts(
+            keys.into_iter()
+                .filter_map(split_key)
+                .map(|(k, h)| (k, h, 1)),
+        )
+    }
+
+    /// Project a build onto its elements. Stat investment is added separately
+    /// with [`ElementVector::with_investment`] because it needs the build's
+    /// observed stats.
+    #[must_use]
+    pub fn from_build(b: &Build, catalog: &Catalog) -> Self {
+        use ElementKind as E;
         let exotic_class_item = b
             .item_in(Slot::ClassItem)
             .filter(|&h| b.exotic_armor_hash == Some(h));
-        Self::from_counts(
-            b.components
-                .iter()
-                .filter(|c| match c.kind {
-                    // Rolled exotic class item perks are choices; every other
-                    // armor perk is fixed by its item.
-                    ComponentKind::ArmorPerk => {
-                        c.parent_hash.is_some() && c.parent_hash == exotic_class_item
+        let mut counts = Vec::with_capacity(b.components.len() + 3);
+        for c in &b.components {
+            let q = c.quantity.max(1);
+            let kind = match c.kind {
+                ComponentKind::Subclass => E::Subclass,
+                ComponentKind::Super => E::Super,
+                ComponentKind::Grenade => E::Grenade,
+                ComponentKind::Melee => E::Melee,
+                ComponentKind::ClassAbility => E::ClassAbility,
+                ComponentKind::Movement => E::Movement,
+                ComponentKind::Aspect => E::Aspect,
+                ComponentKind::Fragment => E::Fragment,
+                ComponentKind::Transcendence => E::Transcendence,
+                ComponentKind::ArtifactPerk => E::ArtifactPerk,
+                ComponentKind::Artifact => E::Artifact,
+                ComponentKind::Weapon => {
+                    if let Some(dt) = catalog
+                        .item(c.hash)
+                        .map(|d| d.default_damage_type)
+                        .filter(|&d| d != 0)
+                    {
+                        counts.push((E::WeaponElement, u32::from(dt), q));
                     }
-                    k => is_element_kind(k),
-                })
-                .map(|c| (c.kind, c.hash, c.quantity.max(1))),
+                    if b.exotic_weapon_hash == Some(c.hash) {
+                        E::ExoticWeapon
+                    } else {
+                        E::Weapon
+                    }
+                }
+                ComponentKind::WeaponIntrinsic => E::Frame,
+                ComponentKind::WeaponPerk => E::WeaponPerk,
+                ComponentKind::OriginTrait => E::OriginTrait,
+                ComponentKind::WeaponMod => E::WeaponMod,
+                ComponentKind::Armor => {
+                    if b.exotic_armor_hash == Some(c.hash) {
+                        E::ExoticArmor
+                    } else {
+                        E::LegendaryArmor
+                    }
+                }
+                // Only an exotic class item's perks are rolled choices; every
+                // other armor perk is fixed by its item.
+                ComponentKind::ArmorPerk
+                    if c.parent_hash.is_some() && c.parent_hash == exotic_class_item =>
+                {
+                    E::ExoticArmorPerk
+                }
+                ComponentKind::ArmorPerk => continue,
+                ComponentKind::ArmorArchetype => E::ArmorArchetype,
+                ComponentKind::ArmorMod => E::ArmorMod,
+                ComponentKind::ArmorStatMod => E::ArmorStatMod,
+                ComponentKind::ArmorTuning => E::ArmorTuning,
+                ComponentKind::ArmorSet => E::ArmorSet,
+                ComponentKind::SetBonus => E::SetBonus,
+            };
+            counts.push((kind, c.hash, q));
+        }
+        Self::from_counts(counts)
+    }
+
+    /// Add stat investment elements (one per invested stat, count = level),
+    /// replacing any already present.
+    #[must_use]
+    pub fn with_investment(self, investment: &Investment) -> Self {
+        let stats = ArmorStat::ALL.into_iter().map(|s| {
+            (
+                ElementKind::StatInvestment,
+                s.hash(),
+                u16::from(investment.level(s)),
+            )
+        });
+        Self::from_counts(
+            self.entries
+                .into_iter()
+                .filter(|e| e.kind != ElementKind::StatInvestment)
+                .map(|e| (e.kind, e.hash, e.count))
+                .chain(stats),
         )
     }
 
@@ -159,28 +397,23 @@ impl ElementVector {
         &self.entries
     }
 
-    /// Total number of elements (the vector's L1 norm).
+    /// The elements of one tier as persisted keys, each repeated `count`
+    /// times, sorted (the database encoding).
     #[must_use]
-    pub fn total(&self) -> u32 {
-        self.entries.iter().map(|e| u32::from(e.count)).sum()
-    }
-
-    /// The vector as a sorted multiset of hashes (each hash repeated `count`
-    /// times) — the database encoding (`build.element_hashes`).
-    #[must_use]
-    pub fn multiset(&self) -> Vec<u32> {
-        let mut v: Vec<u32> = self
+    pub fn tier_keys(&self, tier: Tier) -> Vec<i64> {
+        let mut keys: Vec<i64> = self
             .entries
             .iter()
-            .flat_map(|e| std::iter::repeat_n(e.hash, usize::from(e.count)))
+            .filter(|e| e.kind.tier() == Some(tier))
+            .flat_map(|e| std::iter::repeat_n(element_key(e.kind, e.hash), usize::from(e.count)))
             .collect();
-        v.sort_unstable();
-        v
+        keys.sort_unstable();
+        keys
     }
 
     /// Visit every coordinate present in either vector as
     /// `(kind, count in self, count in other)`.
-    fn merge(&self, other: &Self, mut visit: impl FnMut(ComponentKind, u16, u16)) {
+    fn merge(&self, other: &Self, mut visit: impl FnMut(ElementKind, u16, u16)) {
         let (left, right) = (&self.entries, &other.entries);
         let (mut li, mut ri) = (0, 0);
         while li < left.len() || ri < right.len() {
@@ -207,37 +440,52 @@ impl ElementVector {
         }
     }
 
-    /// Weighted L1 distance `Σ wᵢ·|aᵢ − bᵢ|`.
+    /// The default build distance: `Σₜ shareₜ · Jₜ` (see module docs).
     #[must_use]
-    pub fn l1_distance(&self, other: &Self, weights: &Weights) -> f64 {
-        let mut d = 0.0;
-        self.merge(other, |k, a, b| {
-            d += weights.of(k) * f64::from(a.abs_diff(b));
+    pub fn tiered_distance(&self, other: &Self, weights: &TierWeights) -> TieredDistance {
+        let mut min_sum = [0u32; 4];
+        let mut max_sum = [0u32; 4];
+        self.merge(other, |kind, a, b| {
+            if let Some(t) = kind.tier() {
+                min_sum[t.index()] += u32::from(a.min(b));
+                max_sum[t.index()] += u32::from(a.max(b));
+            }
+        });
+        let per_tier: [f64; 4] = std::array::from_fn(|t| {
+            if max_sum[t] == 0 {
+                0.0
+            } else {
+                1.0 - f64::from(min_sum[t]) / f64::from(max_sum[t])
+            }
+        });
+        let total = per_tier.iter().zip(weights.0).map(|(d, w)| d * w).sum();
+        TieredDistance { total, per_tier }
+    }
+
+    /// `Σ |aᵢ − bᵢ|` over weighted (tiered) elements: elements added plus
+    /// removed.
+    #[must_use]
+    pub fn l1_distance(&self, other: &Self) -> u32 {
+        let mut d = 0;
+        self.merge(other, |kind, a, b| {
+            if kind.tier().is_some() {
+                d += u32::from(a.abs_diff(b));
+            }
         });
         d
     }
 
-    /// Weighted Jaccard (Ruzicka) distance `1 − Σ wᵢ·min / Σ wᵢ·max`, in
-    /// `[0, 1]`; 0 for two empty vectors.
-    #[must_use]
-    pub fn jaccard_distance(&self, other: &Self, weights: &Weights) -> f64 {
-        let (mut num, mut den) = (0.0, 0.0);
-        self.merge(other, |k, a, b| {
-            let w = weights.of(k);
-            num += w * f64::from(a.min(b));
-            den += w * f64::from(a.max(b));
-        });
-        if den == 0.0 { 0.0 } else { 1.0 - num / den }
-    }
-
-    /// Number of slots that changed: per element kind, `max(|A∖B|, |B∖A|)`.
+    /// How many slots changed among weighted elements: per kind,
+    /// `max(|A∖B|, |B∖A|)` (a swap counts 1).
     #[must_use]
     pub fn slot_edits(&self, other: &Self) -> u32 {
-        // Per kind: (elements only in self, elements only in other).
-        let mut per_kind: Vec<(ComponentKind, u32, u32)> = Vec::new();
-        self.merge(other, |k, a, b| {
-            if per_kind.last().is_none_or(|&(last, _, _)| last != k) {
-                per_kind.push((k, 0, 0));
+        let mut per_kind: Vec<(ElementKind, u32, u32)> = Vec::new();
+        self.merge(other, |kind, a, b| {
+            if kind.tier().is_none() {
+                return;
+            }
+            if per_kind.last().is_none_or(|&(last, _, _)| last != kind) {
+                per_kind.push((kind, 0, 0));
             }
             let e = per_kind.last_mut().expect("just pushed");
             e.1 += u32::from(a.saturating_sub(b));
@@ -252,65 +500,100 @@ impl ElementVector {
 mod tests {
     use super::*;
 
-    const K: [ComponentKind; 3] = [
-        ComponentKind::Aspect,
-        ComponentKind::Fragment,
-        ComponentKind::WeaponPerk,
+    const K: [ElementKind; 4] = [
+        ElementKind::ExoticArmor,
+        ElementKind::Fragment,
+        ElementKind::ArmorMod,
+        ElementKind::WeaponPerk,
     ];
 
-    fn ev(items: &[(ComponentKind, u32, u16)]) -> ElementVector {
+    fn ev(items: &[(ElementKind, u32, u16)]) -> ElementVector {
         ElementVector::from_counts(items.iter().copied())
     }
 
     #[test]
-    fn duplicates_merge_and_order_is_irrelevant() {
+    fn kinds_codes_and_tiers() {
+        for k in ElementKind::ALL {
+            assert_eq!(ElementKind::from_code(k.code()), Some(k));
+            assert_eq!(
+                split_key(element_key(k, 4_000_000_000)),
+                Some((k, 4_000_000_000))
+            );
+        }
+        assert_eq!(ElementKind::from_code(0), None);
+        assert_eq!(ElementKind::ExoticWeapon.tier(), Some(Tier::Exotics));
+        assert_eq!(ElementKind::ArtifactPerk.tier(), Some(Tier::Kit));
+        assert_eq!(ElementKind::SetBonus.tier(), Some(Tier::ArmorEffects));
+        assert_eq!(ElementKind::Frame.tier(), Some(Tier::Weapons));
+        assert_eq!(ElementKind::ArmorArchetype.tier(), None);
+    }
+
+    #[test]
+    fn duplicates_merge_and_keys_round_trip() {
         let a = ev(&[(K[1], 5, 1), (K[1], 3, 1), (K[1], 5, 1)]);
-        let b = ev(&[(K[1], 3, 1), (K[1], 5, 2)]);
-        assert_eq!(a, b);
-        assert_eq!(a.total(), 3);
-        assert_eq!(a.multiset(), vec![3, 5, 5]);
+        assert_eq!(a, ev(&[(K[1], 3, 1), (K[1], 5, 2)]));
+        let keys = a.tier_keys(Tier::Kit);
+        assert_eq!(keys.len(), 3);
+        assert_eq!(ElementVector::from_keys(keys), a);
     }
 
     #[test]
-    fn distances_on_small_examples() {
-        let w = Weights::default();
-        // One aspect swapped.
-        let a = ev(&[(K[0], 1, 1), (K[0], 2, 1)]);
-        let b = ev(&[(K[0], 2, 1), (K[0], 3, 1)]);
-        assert_eq!(a.slot_edits(&b), 1);
-        assert!((a.l1_distance(&b, &w) - 2.0).abs() < 1e-12);
-        assert!((a.jaccard_distance(&b, &w) - 2.0 / 3.0).abs() < 1e-12);
-        // An extra fragment and a swapped one: L1 3, slot edits 2.
-        let c = ev(&[(K[1], 1, 1), (K[1], 2, 1)]);
-        let d = ev(&[(K[1], 1, 1), (K[1], 3, 1), (K[1], 4, 1)]);
-        assert_eq!(c.slot_edits(&d), 2);
-        assert!((c.l1_distance(&d, &w) - 3.0).abs() < 1e-12);
-        // Slot edits never align an aspect with a fragment.
-        let e = ev(&[(K[0], 1, 1)]);
-        let f = ev(&[(K[1], 2, 1)]);
-        assert_eq!(e.slot_edits(&f), 2);
-        // Same perk on two weapons is a count, compared as such.
-        let g = ev(&[(K[2], 9, 2)]);
-        let h = ev(&[(K[2], 9, 1)]);
-        assert_eq!(g.slot_edits(&h), 1);
-        assert!((g.jaccard_distance(&h, &w) - 0.5).abs() < 1e-12);
-        // Empty vectors.
-        assert!(
-            ElementVector::default()
-                .jaccard_distance(&ElementVector::default(), &w)
-                .abs()
-                < 1e-12
-        );
+    fn tier_shares_on_examples() {
+        let w = TierWeights::default();
+        let base = ev(&[
+            (K[0], 1, 1),
+            (K[1], 10, 1),
+            (K[1], 11, 1),
+            (K[2], 20, 1),
+            (K[3], 30, 1),
+        ]);
+        // Swap the exotic armor only: tier 1 goes from {1} to {2}: J1 = 1.
+        let swapped = ev(&[
+            (K[0], 2, 1),
+            (K[1], 10, 1),
+            (K[1], 11, 1),
+            (K[2], 20, 1),
+            (K[3], 30, 1),
+        ]);
+        let d = base.tiered_distance(&swapped, &w);
+        assert!((d.per_tier[0] - 1.0).abs() < 1e-12);
+        assert!((d.total - 0.4).abs() < 1e-12);
+        // A different weapon perk only moves tier 4 (share 0.1).
+        let perk = ev(&[
+            (K[0], 1, 1),
+            (K[1], 10, 1),
+            (K[1], 11, 1),
+            (K[2], 20, 1),
+            (K[3], 31, 1),
+        ]);
+        assert!((base.tiered_distance(&perk, &w).total - 0.1).abs() < 1e-12);
+        // Unweighted kinds never move the distance.
+        let archetype = ev(&[
+            (K[0], 1, 1),
+            (K[1], 10, 1),
+            (K[1], 11, 1),
+            (K[2], 20, 1),
+            (K[3], 30, 1),
+            (ElementKind::ArmorArchetype, 99, 1),
+        ]);
+        assert!(base.tiered_distance(&archetype, &w).total.abs() < 1e-12);
+        assert_eq!(base.slot_edits(&archetype), 0);
+        assert_eq!(base.l1_distance(&swapped), 2);
+        assert_eq!(base.slot_edits(&swapped), 1);
     }
 
     #[test]
-    fn weights_scale_kinds() {
-        let a = ev(&[(K[0], 1, 1), (K[2], 7, 1)]);
-        let b = ev(&[(K[0], 1, 1), (K[2], 8, 1)]);
-        let half_perks = Weights::default().with(ComponentKind::WeaponPerk, 0.5);
-        assert!((a.l1_distance(&b, &half_perks) - 1.0).abs() < 1e-12);
-        // num = 1 (shared aspect), den = 1 + 0.5 + 0.5.
-        assert!((a.jaccard_distance(&b, &half_perks) - 0.5).abs() < 1e-12);
+    fn investment_levels_are_counts() {
+        let mut inv = Investment::default();
+        inv.levels[4] = 4; // Super
+        let a = ElementVector::default().with_investment(&inv);
+        inv.levels[4] = 3;
+        let b = ElementVector::default().with_investment(&inv);
+        // Tier 3 only: min 3 / max 4.
+        let d = a.tiered_distance(&b, &TierWeights::default());
+        assert!((d.per_tier[2] - 0.25).abs() < 1e-12);
+        // Re-applying replaces rather than adds.
+        assert_eq!(b.clone().with_investment(&inv), b);
     }
 
     // --- Brute-force dense reference: the "vector of all possible elements" ---
@@ -322,15 +605,13 @@ mod tests {
         (*seed >> 33) as u32
     }
 
-    /// Vocabulary size of the random test vectors (3 elements per kind).
-    const V: usize = 9;
+    /// Vocabulary: 3 elements of each of the 4 kinds in `K` (one per tier).
+    const V: usize = 12;
 
-    /// Random vector over a tiny vocabulary so vectors overlap often (and the
-    /// brute-force reference stays cheap). Element `i` has kind `K[i / 3]`.
     fn random(seed: &mut u64) -> ElementVector {
         let mut counts = Vec::new();
         for i in 0..V as u32 {
-            let c = lcg(seed) % 3; // 0, 1 or 2
+            let c = lcg(seed) % 3;
             if c > 0 && lcg(seed).is_multiple_of(2) {
                 counts.push((K[(i / 3) as usize], i, c as u16));
             }
@@ -346,22 +627,24 @@ mod tests {
         d
     }
 
-    fn dense_l1(a: &[f64; V], b: &[f64; V], w: &[f64; V]) -> f64 {
-        (0..V).map(|i| w[i] * (a[i] - b[i]).abs()).sum()
+    fn dense_tiered(a: &[f64; V], b: &[f64; V], w: &TierWeights) -> f64 {
+        (0..4)
+            .map(|t| {
+                let idx = t * 3..t * 3 + 3;
+                let num: f64 = idx.clone().map(|i| a[i].min(b[i])).sum();
+                let den: f64 = idx.map(|i| a[i].max(b[i])).sum();
+                w.0[t] * if den == 0.0 { 0.0 } else { 1.0 - num / den }
+            })
+            .sum()
     }
 
-    fn dense_jaccard(a: &[f64; V], b: &[f64; V], w: &[f64; V]) -> f64 {
-        let num: f64 = (0..V).map(|i| w[i] * a[i].min(b[i])).sum();
-        let den: f64 = (0..V).map(|i| w[i] * a[i].max(b[i])).sum();
-        if den == 0.0 { 0.0 } else { 1.0 - num / den }
+    fn dense_l1(a: &[f64; V], b: &[f64; V]) -> f64 {
+        (0..V).map(|i| (a[i] - b[i]).abs()).sum()
     }
 
-    /// Slot edits by brute force: for each kind, the minimum number of slot
-    /// changes (positional Hamming distance under the best alignment), found
-    /// by trying every arrangement of the longer side against the shorter
-    /// side padded with empty slots.
+    /// Slot edits by exhaustive alignment within each kind.
     fn dense_slot_edits(a: &ElementVector, b: &ElementVector) -> u32 {
-        let items = |v: &ElementVector, k: ComponentKind| -> Vec<u32> {
+        let items = |v: &ElementVector, k: ElementKind| -> Vec<u32> {
             v.entries()
                 .iter()
                 .filter(|e| e.kind == k)
@@ -402,16 +685,13 @@ mod tests {
     #[test]
     fn sparse_distances_equal_the_dense_count_vector() {
         let mut seed = 7;
-        let weights = Weights::default().with(K[2], 0.25).with(K[0], 2.0);
-        let w: [f64; V] = std::array::from_fn(|i| weights.of(K[i / 3]));
+        let w = TierWeights([0.5, 0.2, 0.2, 0.1]);
         let vs: Vec<ElementVector> = (0..40).map(|_| random(&mut seed)).collect();
         for a in &vs {
             for b in &vs {
                 let (da, db) = (dense(a), dense(b));
-                assert!((a.l1_distance(b, &weights) - dense_l1(&da, &db, &w)).abs() < 1e-9);
-                assert!(
-                    (a.jaccard_distance(b, &weights) - dense_jaccard(&da, &db, &w)).abs() < 1e-9
-                );
+                assert!((a.tiered_distance(b, &w).total - dense_tiered(&da, &db, &w)).abs() < 1e-9);
+                assert!((f64::from(a.l1_distance(b)) - dense_l1(&da, &db)).abs() < 1e-9);
                 assert_eq!(a.slot_edits(b), dense_slot_edits(a, b), "{a:?} vs {b:?}");
             }
         }
@@ -420,22 +700,25 @@ mod tests {
     #[test]
     fn distances_are_metrics() {
         let mut seed = 11;
-        let w = Weights::default().with(K[1], 0.5);
+        let w = TierWeights::default();
         let vs: Vec<ElementVector> = (0..40).map(|_| random(&mut seed)).collect();
         for a in &vs {
             for b in &vs {
-                let (j, l, s) = (
-                    a.jaccard_distance(b, &w),
-                    a.l1_distance(b, &w),
+                let (t, l, s) = (
+                    a.tiered_distance(b, &w).total,
+                    a.l1_distance(b),
                     a.slot_edits(b),
                 );
-                assert!((j - b.jaccard_distance(a, &w)).abs() < 1e-12);
-                assert!((l - b.l1_distance(a, &w)).abs() < 1e-12);
-                assert_eq!(s, b.slot_edits(a));
+                assert!((t - b.tiered_distance(a, &w).total).abs() < 1e-12);
+                assert_eq!((l, s), (b.l1_distance(a), b.slot_edits(a)));
                 assert_eq!(s == 0, a == b);
+                assert!((0.0..=1.0).contains(&t));
                 for c in &vs {
-                    assert!(a.jaccard_distance(c, &w) <= j + b.jaccard_distance(c, &w) + 1e-12);
-                    assert!(a.l1_distance(c, &w) <= l + b.l1_distance(c, &w) + 1e-12);
+                    assert!(
+                        a.tiered_distance(c, &w).total
+                            <= t + b.tiered_distance(c, &w).total + 1e-12
+                    );
+                    assert!(a.l1_distance(c) <= l + b.l1_distance(c));
                     assert!(a.slot_edits(c) <= s + b.slot_edits(c));
                 }
             }

@@ -1,4 +1,4 @@
-# Analysis database schema (version 3)
+# Analysis database schema (version 4)
 
 The database is a single DuckDB file built by `searchlight import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
@@ -31,7 +31,7 @@ see [data-sources.md](data-sources.md).
                        segment ──► build ──► build_component ──► item
      (instance, membership, idx)    │
                           │         ├─ wide summary columns (aspects, exotics, …)
-                          │         └─ element_hashes  (sparse element count vector)
+                          │         └─ tier1..4_elements (sparse element count vector, ADR 0005)
                           ▼
                        loadout ──► loadout_item          (exact, lossless)
 
@@ -91,15 +91,24 @@ longest-used build). Use this to attribute a run's performance to a build.
 `artifact_perk_hashes[]`, `armor_mod_hashes[]` (with repeats), and
 `item_hashes[]` (every inventory-item hash in the build, for facet filters).
 
-The build's **element count vector** (ADR 0004) is `element_hashes[]`: every
-element that is a player choice (subclass, abilities, aspects, fragments,
-weapons, weapon perks, origin traits, weapon mods, armor pieces, archetypes,
-armor mods, exotic class item rolls, artifact and its perks) as a sorted
-multiset of item hashes, a hash repeated once per copy, regardless of where
-it is socketed. `element_count` is its length. Compare builds with
-`jaccard_distance` (default), `l1_distance` or per-group `bag_distance` (see
-Macros). Usage: `timeline_count` (player-runs), `player_count`,
+The build's **element count vector** (ADRs 0004–0005) is split by tier into
+`tier1_elements[]` (exotics), `tier2_elements[]` (subclass kit, artifact
+perks), `tier3_elements[]` (stat investment, set bonuses, armor mods) and
+`tier4_elements[]` (weapons, elements, frames, perks, weapon mods). Each is a
+sorted multiset of element keys, `(kind code << 32) | hash` (kinds and tiers
+in `element_kind`; `element_name(key)` gives a readable name), with a key
+repeated once per copy and placement ignored. Compare builds with
+`build_distance(a, b)`.
+
+Stats: `stat_weapons` … `stat_melee` are the build's (modal) Armor 3.0 stats;
+`fragment_stats[]` the fragments' fixed share of each; `stat_levels[]` the
+budget-aware investment level 0–4 per stat and `stats_promoted[]` the stats
+read as held back by budget (list order: Weapons, Health, Class, Grenade,
+Super, Melee). Usage: `timeline_count` (player-runs), `player_count`,
 `seconds_used`.
+
+**`element_kind`** — `code`, `name`, `tier` (1–4, NULL = unweighted) of the
+element kinds used in the tier lists.
 
 **`build_component`** — the long form. Natural key
 `(build_id, kind, slot, component_hash, parent_hash)`.
@@ -163,18 +172,14 @@ weapons or builds.
 `item_name(hash)`, `item_names(list)` (sorted names) and `activity_name(hash)`
 resolve hashes in ad-hoc SQL.
 
-Distances between element count vectors (`build.element_hashes`, or any
-two hash lists treated as multisets), equal to the same distances on the
-dense one-coordinate-per-element count vector:
-
-- `jaccard_distance(a, b)` — `1 − Σmin/Σmax`, in `[0, 1]`; the default;
-- `l1_distance(a, b)` — elements added plus removed;
-- `bag_distance(a, b)` — slots changed within one group of interchangeable
-  slots, e.g. `bag_distance(x.fragment_hashes, y.fragment_hashes)`;
-- `multiset_common(a, b)` — `Σ min`, the shared elements.
-
-These are unweighted and meant for ad-hoc queries; weighted and bulk
-comparisons (clustering) use the Rust `ElementVector`.
+`build_distance(a, b)` takes two `build` rows (pass the table aliases) and
+returns the tiered distance `0.4·J₁ + 0.3·J₂ + 0.2·J₃ + 0.1·J₄` (ADR 0005).
+Its building blocks work on any two multisets (lists, a value repeated once
+per copy): `jaccard_distance(a, b)` (`1 − Σmin/Σmax`), `l1_distance(a, b)`
+(added plus removed), `bag_distance(a, b)` (slots changed) and
+`multiset_common(a, b)` (`Σmin`). `element_name(key)` names an element key.
+For nearest-neighbour searches use `searchlight similar <build_id>`, which
+computes the same distance in Rust in parallel.
 
 ## Example queries
 
@@ -216,13 +221,18 @@ JOIN run_player p USING (instance_id, membership_id, character_id)
 WHERE w.item_hash IN (SELECT item_hash FROM item WHERE name = 'Gjallarhorn')
 GROUP BY 1 ORDER BY 1;
 
--- The most-used build and its nearest neighbours by element Jaccard distance.
-WITH top AS (SELECT * FROM build ORDER BY timeline_count DESC LIMIT 1)
-SELECT b.build_id, round(jaccard_distance(top.element_hashes, b.element_hashes), 3) AS distance,
-       l1_distance(top.element_hashes, b.element_hashes) AS elements_differing,
-       b.timeline_count, item_name(b.exotic_armor_hash) AS exotic
-FROM top, build b
-WHERE b.class = top.class AND b.element = top.element
-ORDER BY distance, b.timeline_count DESC
+-- A build's nearest neighbours by the tiered distance (or use `searchlight similar`).
+WITH target AS (SELECT * FROM build WHERE build_id = 8953961516047688000)
+SELECT b.build_id, round(build_distance(target, b), 3) AS distance,
+       item_name(b.exotic_armor_hash) AS exotic, b.timeline_count
+FROM target, build b
+WHERE b.class = target.class AND b.build_id <> target.build_id
+ORDER BY distance
 LIMIT 10;
+
+-- A build's tier-3 elements (stat investment, set bonuses, armor mods) by name.
+SELECT ek.name AS kind, element_name(k) AS element, count(*) AS copies
+FROM (SELECT unnest(tier3_elements) AS k FROM build WHERE build_id = 8953961516047688000)
+JOIN element_kind ek ON ek.code = k >> 32
+GROUP BY ALL ORDER BY kind, element;
 ```

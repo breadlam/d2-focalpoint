@@ -6,8 +6,8 @@
 //! * model the parts of the Bungie manifest we use ([`catalog`]);
 //! * classify socket plugs ([`classify`]) and project a loadout to its
 //!   gameplay-relevant [`build`] with a stable content fingerprint;
-//! * describe a build as a sparse element count [`vector`] with exact
-//!   distances (weighted Jaccard, L1, slot edits).
+//! * read armor [`stats`] as budget-aware investment levels, and describe a
+//!   build as a sparse element count [`vector`] with a tiered distance.
 //!
 //! Everything that touches files or databases lives in `searchlight-import`
 //! and `searchlight-db`.
@@ -20,6 +20,7 @@ pub mod fingerprint;
 pub mod loadout;
 pub mod pgcr;
 pub mod slot;
+pub mod stats;
 pub mod vector;
 
 pub use build::{Build, Component, ComponentKind, extract_build, loadout_id};
@@ -28,4 +29,5 @@ pub use class::{Element, GuardianClass};
 pub use classify::{PlugKind, classify_plug};
 pub use loadout::LoadoutState;
 pub use slot::{Slot, SlotGroup};
-pub use vector::{ElementVector, Weights};
+pub use stats::{ArmorStat, Investment, InvestmentParams};
+pub use vector::{ElementKind, ElementVector, Tier, TierWeights};

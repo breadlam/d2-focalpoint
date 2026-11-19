@@ -76,5 +76,161 @@
   "index": 14,
   "redacted": false,
   "blacklisted": false
+ },
+ "305091568": {
+  "displayProperties": {
+   "description": "",
+   "name": "Oryx's Memory",
+   "iconHash": 0,
+   "hasIcon": false
+  },
+  "setItems": [
+   1965763230,
+   402458066,
+   2892249111,
+   2385145720,
+   1039275747,
+   2766419210,
+   804869182,
+   1265664091,
+   1805631268,
+   558850503,
+   418390881,
+   3912717495,
+   662286992,
+   1913339475,
+   1746069510
+  ],
+  "setPerks": [
+   {
+    "requiredSetCount": 2,
+    "sandboxPerkHash": 846599599
+   },
+   {
+    "requiredSetCount": 4,
+    "sandboxPerkHash": 846599598
+   }
+  ],
+  "hash": 305091568,
+  "index": 36,
+  "redacted": false,
+  "blacklisted": false
+ },
+ "1339137760": {
+  "displayProperties": {
+   "description": "",
+   "name": "Techeun's Regalia",
+   "iconHash": 0,
+   "hasIcon": false
+  },
+  "setItems": [
+   1106068818,
+   2438408214,
+   4263497347,
+   1507307244,
+   1768035391,
+   2367623270,
+   950387978,
+   2009401631,
+   1926755680,
+   1587205659,
+   3466245347,
+   826300973,
+   1228973722,
+   1092257813,
+   3235179552
+  ],
+  "setPerks": [
+   {
+    "requiredSetCount": 2,
+    "sandboxPerkHash": 2458353887
+   },
+   {
+    "requiredSetCount": 4,
+    "sandboxPerkHash": 2458353886
+   }
+  ],
+  "hash": 1339137760,
+  "index": 30,
+  "redacted": false,
+  "blacklisted": false
+ },
+ "1507061013": {
+  "displayProperties": {
+   "description": "",
+   "name": "Yearning Echo",
+   "iconHash": 0,
+   "hasIcon": false
+  },
+  "setItems": [
+   2457568303,
+   3276657033,
+   761993028,
+   3229172222,
+   2607610961,
+   3521164091,
+   4011328661,
+   2708820200,
+   3054810834,
+   1929627565,
+   583828678,
+   167514474,
+   804332155,
+   649961471,
+   567315392
+  ],
+  "setPerks": [
+   {
+    "requiredSetCount": 2,
+    "sandboxPerkHash": 2162040230
+   },
+   {
+    "requiredSetCount": 4,
+    "sandboxPerkHash": 2162040231
+   }
+  ],
+  "hash": 1507061013,
+  "index": 27,
+  "redacted": false,
+  "blacklisted": false
+ },
+ "2586994783": {
+  "displayProperties": {
+   "description": "",
+   "name": "Nezarec's Nightmare",
+   "iconHash": 0,
+   "hasIcon": false
+  },
+  "setItems": [
+   3552360921,
+   155603519,
+   4205026632,
+   2149579211,
+   1402762062,
+   2862524208,
+   3128778747,
+   1020854508,
+   522481959,
+   1485494930,
+   2659095794,
+   3461374774,
+   1563030563,
+   3060334092,
+   2832578527
+  ],
+  "setPerks": [
+   {
+    "requiredSetCount": 2,
+    "sandboxPerkHash": 1567556260
+   },
+   {
+    "requiredSetCount": 4,
+    "sandboxPerkHash": 1567556261
+   }
+  ],
+  "hash": 2586994783,
+  "index": 37,
+  "redacted": false,
+  "blacklisted": false
  }
 }

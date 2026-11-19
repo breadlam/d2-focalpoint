@@ -47,6 +47,9 @@ pub struct ItemDef {
     pub hud_damage_type: u8,
     /// Armor set (`DestinyEquipableItemSetDefinition`) this item belongs to.
     pub item_set_hash: Option<u32>,
+    /// Unconditional stat changes it grants (`investmentStats`):
+    /// `(stat hash, value)`, e.g. a fragment's `(Super, +10)`.
+    pub stat_effects: Vec<(u32, i32)>,
 }
 
 impl ItemDef {
@@ -236,6 +239,16 @@ struct RawTalentGrid {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct RawInvestmentStat {
+    stat_type_hash: u32,
+    #[serde(default)]
+    value: i32,
+    #[serde(default)]
+    is_conditionally_active: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct RawItem {
     #[serde(default)]
     display_properties: RawDisplay,
@@ -259,6 +272,8 @@ struct RawItem {
     plug: Option<RawPlug>,
     #[serde(default)]
     talent_grid: Option<RawTalentGrid>,
+    #[serde(default)]
+    investment_stats: Vec<RawInvestmentStat>,
 }
 
 fn non_empty(s: Option<String>) -> Option<String> {
@@ -301,6 +316,12 @@ pub fn parse_items(json: &[u8]) -> Result<Vec<ItemDef>, serde_json::Error> {
                 stack_unique_label: non_empty(r.inventory.stack_unique_label),
                 hud_damage_type: r.talent_grid.map_or(0, |t| t.hud_damage_type),
                 item_set_hash: equipping.equipable_item_set_hash.filter(|&h| h != 0),
+                stat_effects: r
+                    .investment_stats
+                    .into_iter()
+                    .filter(|s| !s.is_conditionally_active && s.value != 0)
+                    .map(|s| (s.stat_type_hash, s.value))
+                    .collect(),
             }
         })
         .collect())
@@ -437,13 +458,16 @@ mod tests {
         "inventory":{"bucketTypeHash":3284755031,"tierType":2,"stackUniqueLabel":"v610.builds.solar.warlock.build0"},
         "talentGrid":{"hudDamageType":3}},
       "12345": {"displayProperties":{"name":"Touch of Flame"},"plug":{"plugCategoryIdentifier":"warlock.solar.aspects"}},
+      "777": {"displayProperties":{"name":"Echo of Expulsion"},"plug":{"plugCategoryIdentifier":"shared.void.fragments"},
+        "investmentStats":[{"statTypeHash":144602215,"value":10,"isConditionallyActive":false},
+                           {"statTypeHash":1735777505,"value":5,"isConditionallyActive":true}]},
       "not-a-hash": {"displayProperties":{"name":"ignored"}}
     }"#;
 
     #[test]
     fn parses_items_and_skips_non_numeric_keys() {
         let items = parse_items(ITEMS.as_bytes()).unwrap();
-        assert_eq!(items.len(), 3);
+        assert_eq!(items.len(), 4);
         let cat = Catalog::new(items, vec![]);
         let manacles = cat.item(300_502_917).unwrap();
         assert!(manacles.is_exotic());
@@ -456,6 +480,9 @@ mod tests {
 
         let aspect = cat.item(12345).unwrap();
         assert_eq!(aspect.plug_kind(SlotGroup::Subclass), PlugKind::Aspect);
+
+        // Only unconditional stat effects are kept.
+        assert_eq!(cat.item(777).unwrap().stat_effects, vec![(144_602_215, 10)]);
     }
 
     #[test]
