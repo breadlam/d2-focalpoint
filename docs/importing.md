@@ -47,11 +47,15 @@ searchlight import --backups /mnt/saspool/projects/searchlight-backups
    share, applies the budget-aware stat investment model (ADR 0005), and
    [`finalize.sql`](../crates/import/src/sql/finalize.sql) assembles the
    final `build` table in a single insert.
-5. **Validate.** Natural-key uniqueness and referential checks must pass
+5. **Scoring.** [`scoring.rs`](../crates/import/src/scoring.rs) measures
+   every qualified clear against a typical clear of its activity and solo
+   status and writes `activity_reference` and `run_score` (ADR 0006); about
+   7 s.
+6. **Validate.** Natural-key uniqueness and referential checks must pass
    (otherwise the import fails and the partial database is kept in the work
    dir for inspection). Warnings and cross-source parity counts are recorded
    in `import_stat`.
-6. **Publish.** The staging database is detached and deleted, metadata written, and the file is
+7. **Publish.** The staging database is detached and deleted, metadata written, and the file is
    moved into place (atomic rename, or copy + rename across filesystems).
 
 The import prints a report; `searchlight info --detailed` shows the same

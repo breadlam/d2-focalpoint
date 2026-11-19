@@ -1,4 +1,4 @@
-# Analysis database schema (version 4)
+# Analysis database schema (version 5)
 
 The database is a single DuckDB file built by `searchlight import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
@@ -69,6 +69,20 @@ are denormalised from `run` for cheap filtering. `is_clear` = completed with
 `character_level`, `emblem_hash`, `start_s` are `NULL` for `tracked` runs.
 
 **`run_player_weapon`** — kills per weapon (`item_hash`) per character per run.
+
+**`run_score`** — how well each qualified clear went (ADR 0006). One row per
+player and run that met a Searchlight target's gates, was cleared, and had
+kills, in a scored activity (entries of a player who switched characters are
+summed). `kill_index`, `speed` and `survival` measure the run against a
+typical clear of the same activity and solo status, each bounded; `score` is
+their product (1.0 = typical) and `perf` its centred logarithm, the response
+of the ranking model. `has_build` marks runs with a captured build.
+
+**`activity_reference`** — the typical clear per `(activity_hash, is_solo)`:
+median `kills`, `duration_s`, `deaths` over its clears. `is_borrowed` buckets
+(fewer than 50 clears) use the activity-wide reference; activities whose
+median clear has fewer than 20 kills are `NOT is_scored` (Pantheon boss
+encounters). `log_score_mean` is the centre of `perf`.
 
 ### Builds
 
@@ -163,6 +177,7 @@ weapons or builds.
 
 - **`meta`** — `schema_version`, `build_fingerprint_version`,
   `loadout_fingerprint_version`, `tool_version`, `imported_at`,
+  `element_vector_version`, `investment_params`, `score_params`,
   `source_root`, `source_snapshot`, `manifest_version`, `import_seconds`,
   `skipped_stages`.
 - **`import_stat`** — per-stage counters and every validation check's value.

@@ -23,6 +23,7 @@ pub mod layout;
 pub mod manifest;
 pub mod progress;
 pub mod rows;
+pub mod scoring;
 pub mod sink;
 pub mod sqlite;
 pub mod stage;
@@ -85,6 +86,8 @@ pub struct ImportOptions {
     pub skip: Vec<OptionalStage>,
     /// Parameters of the budget-aware stat investment model.
     pub investment: searchlight_core::InvestmentParams,
+    /// Parameters of run performance (ranking).
+    pub scoring: searchlight_core::rank::ScoreParams,
 }
 
 /// What an import did.
@@ -99,6 +102,7 @@ pub struct ImportReport {
     pub history: Option<history::HistoryStats>,
     pub builds: builds::BuildStats,
     pub investment: investment::InvestmentStats,
+    pub scoring: scoring::ScoringStats,
     pub checks: Vec<Check>,
     pub table_counts: Vec<(String, i64)>,
     pub timings: Vec<(String, Duration)>,
@@ -194,6 +198,10 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
     timings.append(&mut finalize_timings);
 
     let t = Instant::now();
+    let scoring = scoring::apply(conn, &opts.scoring, progress)?;
+    timings.push(("scoring".into(), t.elapsed()));
+
+    let t = Instant::now();
     let checks = validate::run(conn)?;
     timings.push(("validate".into(), t.elapsed()));
     let failed: Vec<&Check> = checks
@@ -223,6 +231,14 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
         "builds_with_promotion",
         investment.builds_with_promotion,
     )?;
+    report_stats.put("scoring", "runs", scoring.runs)?;
+    report_stats.put("scoring", "players", scoring.players)?;
+    report_stats.put("scoring", "activities", scoring.activities)?;
+    report_stats.put(
+        "scoring",
+        "unscored_activities",
+        scoring.unscored_activities,
+    )?;
 
     conn.execute_batch("DETACH stg")?;
     remove_db_files(&staging)?;
@@ -248,6 +264,7 @@ fn run_in_pool(opts: &ImportOptions, progress: &Progress) -> Result<ImportReport
         history,
         builds,
         investment,
+        scoring,
         checks,
         table_counts,
         timings,
@@ -300,6 +317,11 @@ fn write_meta(
         meta_key::ELEMENT_VECTOR_VERSION,
         &ELEMENT_VECTOR_VERSION.to_string(),
     )?;
+    db.set_meta(
+        meta_key::INVESTMENT_PARAMS,
+        &format!("{:?}", opts.investment),
+    )?;
+    db.set_meta(meta_key::SCORE_PARAMS, &format!("{:?}", opts.scoring))?;
     db.set_meta(meta_key::SOURCE_ROOT, &layout.root.display().to_string())?;
     db.set_meta(meta_key::SOURCE_SNAPSHOT, &layout.snapshot)?;
     if let Some(v) = manifest_version {
@@ -436,6 +458,14 @@ impl fmt::Display for ImportReport {
             f,
             "  stat investment: {} builds read, {} with a budget-limited stat",
             self.investment.builds, self.investment.builds_with_promotion
+        )?;
+        writeln!(
+            f,
+            "  scoring: {} qualified clears by {} players in {} activities ({} unscored: too few kills)",
+            self.scoring.runs,
+            self.scoring.players,
+            self.scoring.activities,
+            self.scoring.unscored_activities
         )?;
         writeln!(f, "\nTables:")?;
         for (t, n) in &self.table_counts {

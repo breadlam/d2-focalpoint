@@ -14,7 +14,7 @@ pub mod search;
 pub mod similar;
 
 /// Version of [`SCHEMA_SQL`]. Bump on any incompatible schema change.
-pub const SCHEMA_VERSION: u32 = 4;
+pub const SCHEMA_VERSION: u32 = 5;
 
 /// DDL for a fresh database.
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
@@ -29,6 +29,7 @@ pub mod meta_key {
     pub const LOADOUT_FINGERPRINT_VERSION: &str = "loadout_fingerprint_version";
     pub const ELEMENT_VECTOR_VERSION: &str = "element_vector_version";
     pub const INVESTMENT_PARAMS: &str = "investment_params";
+    pub const SCORE_PARAMS: &str = "score_params";
     pub const TOOL_VERSION: &str = "tool_version";
     pub const IMPORTED_AT: &str = "imported_at";
     pub const SOURCE_ROOT: &str = "source_root";

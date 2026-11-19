@@ -93,6 +93,22 @@ const CHECKS: &[(&str, Severity, &str, &str)] = &[
         "SELECT count(*) FROM build WHERE stat_weapons IS NOT NULL AND stat_levels IS NULL",
     ),
     (
+        "invalid_run_scores",
+        Severity::Error,
+        "run scores that are not positive and finite",
+        "SELECT count(*) FROM run_score WHERE NOT (score > 0 AND isfinite(score) AND isfinite(perf))",
+    ),
+    (
+        "qualified_clears_unscored",
+        Severity::Error,
+        "qualified clears with kills in scored activities but no run score",
+        "SELECT count(*) FROM (SELECT DISTINCT p.instance_id, p.membership_id
+             FROM run_player p JOIN run r USING (instance_id)
+             JOIN activity_reference a ON a.activity_hash = r.activity_hash AND a.is_solo = coalesce(r.is_solo, false)
+             WHERE a.is_scored AND r.qualified_target IS NOT NULL AND r.duration_s > 0 AND p.is_clear AND p.kills > 0) q
+         WHERE NOT EXISTS (SELECT 1 FROM run_score s WHERE s.instance_id = q.instance_id AND s.membership_id = q.membership_id)",
+    ),
+    (
         "timeline_without_run",
         Severity::Warning,
         "build timelines whose run is unknown",

@@ -329,6 +329,7 @@ fn imports_a_synthetic_backup_tree() {
         memory_limit: Some("1GB".into()),
         skip: vec![],
         investment: searchlight_core::InvestmentParams::default(),
+        scoring: searchlight_core::rank::ScoreParams::default(),
     };
     let report = searchlight_import::run(&opts, &Progress::hidden()).unwrap();
 
@@ -358,6 +359,31 @@ fn imports_a_synthetic_backup_tree() {
         1
     );
     assert_eq!(count(&db, "SELECT count(*) FROM run_player"), 5);
+    // Scoring: the two qualified Equilibrium clears (50 and 70 kills, solo).
+    // Two solo clears are too few for their own reference, so they borrow
+    // the activity-wide one (median 60 kills) and are centred on its mean.
+    assert_eq!(count(&db, "SELECT count(*) FROM run_score"), 2);
+    assert_eq!(
+        count(
+            &db,
+            "SELECT kills::BIGINT FROM activity_reference WHERE is_borrowed AND is_scored"
+        ),
+        60
+    );
+    assert_eq!(
+        count(
+            &db,
+            "SELECT round(max(kill_index) * 60)::BIGINT FROM run_score"
+        ),
+        70
+    );
+    assert_eq!(
+        count(
+            &db,
+            "SELECT round(abs(sum(perf)) * 1e9)::BIGINT FROM run_score"
+        ),
+        0
+    );
     // Archive and tracked agree on run 1.
     assert_eq!(
         count(&db, "SELECT kills FROM run_player WHERE instance_id = 1"),

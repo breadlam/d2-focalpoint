@@ -334,6 +334,46 @@ CREATE TABLE run_build (
 );
 
 -- ---------------------------------------------------------------------------
+-- Ranking (ADR 0006): qualified clears measured against a typical clear
+-- ---------------------------------------------------------------------------
+
+-- A typical qualified clear per activity and solo status (medians over the
+-- scored population). Buckets with too few clears borrow the activity-wide
+-- reference; activities whose median clear has too few kills are not scored.
+CREATE TABLE activity_reference (
+    activity_hash  UINTEGER NOT NULL,
+    is_solo        BOOLEAN  NOT NULL,
+    clears         BIGINT   NOT NULL,   -- qualified clears with kills in this bucket
+    kills          DOUBLE   NOT NULL,   -- reference (median) kills
+    duration_s     DOUBLE   NOT NULL,   -- reference (median) duration
+    deaths         DOUBLE   NOT NULL,   -- reference (median) deaths
+    is_borrowed    BOOLEAN  NOT NULL,   -- the activity-wide reference is used
+    is_scored      BOOLEAN  NOT NULL,
+    log_score_mean DOUBLE,              -- centre of `run_score.perf`
+    PRIMARY KEY (activity_hash, is_solo)
+);
+
+-- One row per player and qualified clear with kills, in scored activities.
+-- Entries of a player who switched characters mid-run are summed.
+CREATE TABLE run_score (
+    instance_id   BIGINT    NOT NULL,
+    membership_id BIGINT    NOT NULL,
+    activity_hash UINTEGER  NOT NULL,
+    started_at    TIMESTAMP NOT NULL,
+    is_solo       BOOLEAN   NOT NULL,
+    has_build     BOOLEAN   NOT NULL,   -- a build was captured (see run_build)
+    kills         INTEGER   NOT NULL,
+    deaths        INTEGER   NOT NULL,
+    duration_s    INTEGER   NOT NULL,
+    kill_index    DOUBLE    NOT NULL,   -- kills / reference kills
+    speed         DOUBLE    NOT NULL,   -- reference duration / duration, bounded
+    survival      DOUBLE    NOT NULL,   -- death haircut vs the reference's, bounded
+    score         DOUBLE    NOT NULL,   -- kill_index × speed × survival; 1 = typical
+    perf          DOUBLE    NOT NULL,   -- ln(score) centred: the ranking model's response
+    PRIMARY KEY (instance_id, membership_id)
+);
+
+-- ---------------------------------------------------------------------------
 -- Activity history (all modes; the behaviour-model corpus)
 -- ---------------------------------------------------------------------------
 

@@ -70,6 +70,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
             })
             .collect(),
         investment: searchlight_core::InvestmentParams::default(),
+        scoring: searchlight_core::rank::ScoreParams::default(),
     };
     let report = searchlight_import::run(&opts, &Progress::stderr())?;
     println!("{report}");
