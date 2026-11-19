@@ -1,6 +1,6 @@
 # ADR 0003: Slot vectors for popularity, trends and similarity
 
-- **Status:** accepted
+- **Status:** superseded by [ADR 0004](0004-element-count-vectors.md)
 - **Date:** 2026-11-18
 
 ## Context

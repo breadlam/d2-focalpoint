@@ -1,4 +1,4 @@
-# Analysis database schema (version 2)
+# Analysis database schema (version 3)
 
 The database is a single DuckDB file built by `searchlight import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
@@ -31,7 +31,7 @@ see [data-sources.md](data-sources.md).
                        segment ──► build ──► build_component ──► item
      (instance, membership, idx)    │
                           │         ├─ wide summary columns (aspects, exotics, …)
-                          │         └─► build_vector   (slot vector; similarity unit)
+                          │         └─ element_hashes  (sparse element count vector)
                           ▼
                        loadout ──► loadout_item          (exact, lossless)
 
@@ -91,17 +91,15 @@ longest-used build). Use this to attribute a run's performance to a build.
 `artifact_perk_hashes[]`, `armor_mod_hashes[]` (with repeats), and
 `item_hashes[]` (every inventory-item hash in the build, for facet filters).
 
-**`build_vector`** — a build as a vector of slots (ADR 0003), the unit for
-popularity, trends and similarity; many fine-grained builds share one vector
-(`build.vector_id`). Single-item slots: `subclass_hash`, `super_hash`,
-`grenade_hash`, `melee_hash`, `class_ability_hash`, `movement_hash`,
-`kinetic_hash`, `energy_hash`, `power_hash`, `helmet_hash`, `gauntlets_hash`,
-`chest_hash`, `legs_hash`, `class_item_hash`. Multi-item groups (sorted
-multisets): `aspect_hashes`, `fragment_hashes`, `weapon_mod_hashes`,
-`armor_mod_hashes` (general, stat and tuning mods), `class_item_perk_hashes`
-(exotic class item rolls), `artifact_perk_hashes`. Usage: `build_count`,
-`timeline_count` (player-runs), `player_count`, `seconds_used`. Compare two
-vectors with `slot_distance(a, b)` (see Macros).
+The build's **element count vector** (ADR 0004) is `element_hashes[]`: every
+element that is a player choice (subclass, abilities, aspects, fragments,
+weapons, weapon perks, origin traits, weapon mods, armor pieces, archetypes,
+armor mods, exotic class item rolls, artifact and its perks) as a sorted
+multiset of item hashes, a hash repeated once per copy, regardless of where
+it is socketed. `element_count` is its length. Compare builds with
+`jaccard_distance` (default), `l1_distance` or per-group `bag_distance` (see
+Macros). Usage: `timeline_count` (player-runs), `player_count`,
+`seconds_used`.
 
 **`build_component`** — the long form. Natural key
 `(build_id, kind, slot, component_hash, parent_hash)`.
@@ -165,11 +163,18 @@ weapons or builds.
 `item_name(hash)`, `item_names(list)` (sorted names) and `activity_name(hash)`
 resolve hashes in ad-hoc SQL.
 
-`slot_distance(a, b)` takes two `build_vector` rows (pass the table aliases)
-and returns the number of differing slots; `bag_distance(list_a, list_b)` is
-its per-group term, `max(|A∖B|, |B∖A|)` over multisets. These are convenient
-for ad-hoc comparisons; pairwise work over many vectors belongs in Rust
-(`SlotVector::distance`).
+Distances between element count vectors (`build.element_hashes`, or any
+two hash lists treated as multisets), equal to the same distances on the
+dense one-coordinate-per-element count vector:
+
+- `jaccard_distance(a, b)` — `1 − Σmin/Σmax`, in `[0, 1]`; the default;
+- `l1_distance(a, b)` — elements added plus removed;
+- `bag_distance(a, b)` — slots changed within one group of interchangeable
+  slots, e.g. `bag_distance(x.fragment_hashes, y.fragment_hashes)`;
+- `multiset_common(a, b)` — `Σ min`, the shared elements.
+
+These are unweighted and meant for ad-hoc queries; weighted and bulk
+comparisons (clustering) use the Rust `ElementVector`.
 
 ## Example queries
 
@@ -211,12 +216,13 @@ JOIN run_player p USING (instance_id, membership_id, character_id)
 WHERE w.item_hash IN (SELECT item_hash FROM item WHERE name = 'Gjallarhorn')
 GROUP BY 1 ORDER BY 1;
 
--- The most-used slot vectors, and their nearest neighbours by slot distance.
-WITH top AS (SELECT * FROM build_vector ORDER BY timeline_count DESC LIMIT 1)
-SELECT v.vector_id, slot_distance(top, v) AS slots_apart, v.timeline_count,
-       item_name(v.class_item_hash) AS class_item, item_names(v.aspect_hashes) AS aspects
-FROM top, build_vector v
-WHERE v.class = top.class AND v.element = top.element
-ORDER BY slots_apart, v.timeline_count DESC
+-- The most-used build and its nearest neighbours by element Jaccard distance.
+WITH top AS (SELECT * FROM build ORDER BY timeline_count DESC LIMIT 1)
+SELECT b.build_id, round(jaccard_distance(top.element_hashes, b.element_hashes), 3) AS distance,
+       l1_distance(top.element_hashes, b.element_hashes) AS elements_differing,
+       b.timeline_count, item_name(b.exotic_armor_hash) AS exotic
+FROM top, build b
+WHERE b.class = top.class AND b.element = top.element
+ORDER BY distance, b.timeline_count DESC
 LIMIT 10;
 ```

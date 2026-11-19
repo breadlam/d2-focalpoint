@@ -17,12 +17,10 @@ use rayon::prelude::*;
 use searchlight_core::build::{Build, ComponentKind, extract_build, loadout_id};
 use searchlight_core::fingerprint::Fingerprinter;
 use searchlight_core::loadout::{LoadoutState, stat_hash};
-use searchlight_core::{Catalog, Slot, SlotVector};
+use searchlight_core::{Catalog, ElementVector, Slot};
 
 use crate::progress::Progress;
-use crate::rows::{
-    BuildComponentRow, BuildRow, BuildVectorRow, LoadoutItemRow, LoadoutRow, SegmentRow,
-};
+use crate::rows::{BuildComponentRow, BuildRow, LoadoutItemRow, LoadoutRow, SegmentRow};
 use crate::sink::{Batcher, Sink, staging_writers};
 use crate::sqlite;
 
@@ -38,7 +36,6 @@ pub struct BuildStats {
     pub components: u64,
     pub loadouts: u64,
     pub loadout_items: u64,
-    pub vectors: u64,
     /// Distinct plug/item hashes that the manifest could not resolve.
     pub unresolved_hashes: u64,
 }
@@ -149,34 +146,23 @@ fn check_fingerprint(b: &Build) -> i64 {
     fp.finish()
 }
 
-/// Independent hash of a vector's content, to detect `vector_id` collisions.
-fn check_vector(v: &SlotVector) -> u64 {
-    use std::hash::{Hash, Hasher};
-    let mut h = std::hash::DefaultHasher::new();
-    v.hash(&mut h);
-    h.finish()
-}
-
 fn collect(
     duck: &Connection,
     rx: &crossbeam_channel::Receiver<Vec<Processed>>,
 ) -> Result<BuildStats> {
     let segments = Sink::<SegmentRow>::spawn_parallel(duck, "segment", staging_writers())?;
     let builds = Sink::<BuildRow>::spawn(duck, "build")?;
-    let vectors = Sink::<BuildVectorRow>::spawn(duck, "build_vector")?;
     let components =
         Sink::<BuildComponentRow>::spawn_parallel(duck, "build_component", staging_writers())?;
     let loadouts = Sink::<LoadoutRow>::spawn(duck, "loadout")?;
     let items = Sink::<LoadoutItemRow>::spawn_parallel(duck, "loadout_item", staging_writers())?;
     let mut seg_b = Batcher::new(&segments.sender(), BATCH);
     let mut build_b = Batcher::new(&builds.sender(), BATCH);
-    let mut vec_b = Batcher::new(&vectors.sender(), BATCH);
     let mut comp_b = Batcher::new(&components.sender(), BATCH);
     let mut lo_b = Batcher::new(&loadouts.sender(), BATCH);
     let mut item_b = Batcher::new(&items.sender(), BATCH);
 
     let mut seen_builds: HashMap<i64, i64> = HashMap::new();
-    let mut seen_vectors: HashMap<i64, u64> = HashMap::new();
     let mut seen_loadouts: std::collections::HashSet<i64> = std::collections::HashSet::new();
     let mut unresolved: std::collections::HashSet<u32> = std::collections::HashSet::new();
 
@@ -195,27 +181,7 @@ fn collect(
                     Entry::Vacant(e) => {
                         e.insert(check_fingerprint(&p.build));
                         unresolved.extend(&p.build.unresolved_hashes);
-                        let vector = SlotVector::from_build(&p.build);
-                        let vector_id = vector.id();
-                        match seen_vectors.entry(vector_id) {
-                            Entry::Occupied(v) => {
-                                if *v.get() != check_vector(&vector) {
-                                    bail!(
-                                        "vector_id collision on {vector_id} — bump the vector fingerprint version"
-                                    );
-                                }
-                            }
-                            Entry::Vacant(v) => {
-                                v.insert(check_vector(&vector));
-                                vec_b.push(BuildVectorRow {
-                                    vector_id,
-                                    class: p.build.class.as_str().to_string(),
-                                    element: p.build.element.map(searchlight_core::Element::as_str),
-                                    vector,
-                                })?;
-                            }
-                        }
-                        build_b.push(build_row(&p.build, vector_id))?;
+                        build_b.push(build_row(&p.build))?;
                         for c in &p.build.components {
                             comp_b.push(BuildComponentRow {
                                 build_id: p.build.id,
@@ -258,31 +224,22 @@ fn collect(
         }
         seg_b.flush()?;
         build_b.flush()?;
-        vec_b.flush()?;
         comp_b.flush()?;
         lo_b.flush()?;
         item_b.flush()
     })();
     // Batchers hold channel senders; drop them so the writers can finish.
-    drop((seg_b, build_b, vec_b, comp_b, lo_b, item_b));
+    drop((seg_b, build_b, comp_b, lo_b, item_b));
     // Settle writers before producers: a writer's error is the root cause of
     // a producer's "writer stopped" error.
     let finished = [
         segments.finish(),
         builds.finish(),
-        vectors.finish(),
         components.finish(),
         loadouts.finish(),
         items.finish(),
     ];
-    let [
-        segments,
-        builds,
-        vectors,
-        components,
-        loadouts,
-        loadout_items,
-    ] = finished;
+    let [segments, builds, components, loadouts, loadout_items] = finished;
     let stats = BuildStats {
         segments: segments?,
         bad_loadouts: 0,
@@ -290,14 +247,13 @@ fn collect(
         components: components?,
         loadouts: loadouts?,
         loadout_items: loadout_items?,
-        vectors: vectors?,
         unresolved_hashes: unresolved.len() as u64,
     };
     collected?;
     Ok(stats)
 }
 
-fn build_row(b: &Build, vector_id: i64) -> BuildRow {
+fn build_row(b: &Build) -> BuildRow {
     let mut aspects: Vec<u32> = b.hashes(ComponentKind::Aspect).collect();
     let mut fragments: Vec<u32> = b.hashes(ComponentKind::Fragment).collect();
     let mut artifact_perks: Vec<u32> = b.hashes(ComponentKind::ArtifactPerk).collect();
@@ -312,7 +268,6 @@ fn build_row(b: &Build, vector_id: i64) -> BuildRow {
     }
     BuildRow {
         build_id: b.id,
-        vector_id,
         class: b.class.as_str().to_string(),
         element: b.element.map(searchlight_core::Element::as_str),
         subclass_hash: b.item_in(Slot::Subclass),
@@ -337,6 +292,7 @@ fn build_row(b: &Build, vector_id: i64) -> BuildRow {
         artifact_perk_hashes: artifact_perks,
         armor_mod_hashes: armor_mods,
         item_hashes: b.item_hashes(),
+        element_hashes: ElementVector::from_build(b).multiset(),
         component_count: b.components.len() as u16,
         unresolved_count: b.unresolved_hashes.len() as u16,
     }

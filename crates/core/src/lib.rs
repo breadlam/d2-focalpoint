@@ -6,7 +6,8 @@
 //! * model the parts of the Bungie manifest we use ([`catalog`]);
 //! * classify socket plugs ([`classify`]) and project a loadout to its
 //!   gameplay-relevant [`build`] with a stable content fingerprint;
-//! * describe a build as a [`vector`] of slots with a slot-count distance.
+//! * describe a build as a sparse element count [`vector`] with exact
+//!   distances (weighted Jaccard, L1, slot edits).
 //!
 //! Everything that touches files or databases lives in `searchlight-import`
 //! and `searchlight-db`.
@@ -27,4 +28,4 @@ pub use class::{Element, GuardianClass};
 pub use classify::{PlugKind, classify_plug};
 pub use loadout::LoadoutState;
 pub use slot::{Slot, SlotGroup};
-pub use vector::{GroupSlot, SingleSlot, SlotVector};
+pub use vector::{ElementVector, Weights};

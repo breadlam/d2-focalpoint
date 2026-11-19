@@ -3,7 +3,7 @@
 use searchlight_core::build::{ComponentKind, extract_build};
 use searchlight_core::catalog::{Catalog, parse_item_sets, parse_items};
 use searchlight_core::pgcr::{parse_slice, parse_stored};
-use searchlight_core::vector::{GroupSlot, SingleSlot, SlotVector};
+use searchlight_core::vector::{ElementVector, Weights};
 use searchlight_core::{Element, GuardianClass, LoadoutState, Slot};
 
 fn fixture(name: &str) -> Vec<u8> {
@@ -150,43 +150,60 @@ fn malformed_pgcr_is_an_error_not_a_panic() {
 }
 
 #[test]
-fn slot_vector_of_the_prismatic_build() {
+fn element_vector_of_the_prismatic_build() {
     let cat = catalog();
     let mut loadout = LoadoutState::from_json(
         std::str::from_utf8(&fixture("loadout_prismatic_exotic_class_item.json")).unwrap(),
     )
     .unwrap();
-    let v = SlotVector::from_build(&extract_build(&loadout, &cat));
-    let names = |g: GroupSlot| names(&cat, v.group(g).iter().copied());
-
-    assert_eq!(
-        names_of(&cat, v.single(SingleSlot::Super)),
-        ["Winter's Wrath"]
-    );
-    assert_eq!(
-        names_of(&cat, v.single(SingleSlot::ClassItem)),
-        ["Solipsism"]
-    );
-    assert_eq!(v.group(GroupSlot::Aspects).len(), 2);
-    assert_eq!(v.group(GroupSlot::Fragments).len(), 5);
-    let mut spirits = names(GroupSlot::ClassItemPerks);
-    spirits.sort();
-    assert_eq!(spirits, ["Spirit of Inmost Light", "Spirit of Synthoceps"]);
-    // Backup Mag on two weapons.
-    assert_eq!(names(GroupSlot::WeaponMods), ["Backup Mag", "Backup Mag"]);
-    assert_eq!(v.group(GroupSlot::ArtifactPerks).len(), 7);
-    let mods = names(GroupSlot::ArmorMods);
-    assert_eq!(mods.iter().filter(|m| *m == "Weapons Font").count(), 2);
-    assert!(mods.iter().any(|m| m == "Balanced Tuning"), "{mods:?}");
-    // Archetypes, stat rolls, shaders and ornaments are not slots.
-    assert!(
-        !mods
+    let build = extract_build(&loadout, &cat);
+    let v = ElementVector::from_build(&build);
+    let named = |kind: ComponentKind| -> Vec<String> {
+        let mut n: Vec<String> = v
+            .entries()
             .iter()
-            .any(|m| m == "Grenadier" || m.is_empty() || m == "Diametric Crush"),
-        "{mods:?}"
-    );
+            .filter(|e| e.kind == kind)
+            .flat_map(|e| {
+                std::iter::repeat_n(cat.item(e.hash).unwrap().name.clone(), usize::from(e.count))
+            })
+            .collect();
+        n.sort();
+        n
+    };
 
-    // Dropping one fragment is exactly one slot of difference.
+    // Choices are counted, placement is not: Backup Mag on two weapons is one
+    // element with count 2.
+    assert_eq!(
+        named(ComponentKind::WeaponMod),
+        ["Backup Mag", "Backup Mag"]
+    );
+    assert!(named(ComponentKind::WeaponPerk).contains(&"Vorpal Weapon".to_string()));
+    assert_eq!(named(ComponentKind::Aspect).len(), 2);
+    assert_eq!(named(ComponentKind::Fragment).len(), 5);
+    assert_eq!(
+        named(ComponentKind::ArmorPerk),
+        ["Spirit of Inmost Light", "Spirit of Synthoceps"]
+    );
+    assert_eq!(
+        named(ComponentKind::ArmorMod)
+            .iter()
+            .filter(|m| *m == "Weapons Font")
+            .count(),
+        2
+    );
+    // Elements determined by another element are not counted.
+    for kind in [
+        ComponentKind::WeaponIntrinsic,
+        ComponentKind::Transcendence,
+        ComponentKind::ArmorSet,
+        ComponentKind::SetBonus,
+    ] {
+        assert!(named(kind).is_empty(), "{kind} should not be an element");
+    }
+    // The multiset encoding has one entry per counted element.
+    assert_eq!(v.multiset().len() as u32, v.total());
+
+    // Dropping one fragment: one slot edit, L1 1, Jaccard 1/total.
     let subclass = loadout
         .items
         .iter_mut()
@@ -198,10 +215,9 @@ fn slot_vector_of_the_prismatic_build() {
         .position(|&p| cat.item(p).is_some_and(|d| d.name == "Facet of Courage"))
         .unwrap();
     subclass.plug_hashes.remove(facet);
-    let fewer = SlotVector::from_build(&extract_build(&loadout, &cat));
-    assert_eq!(v.distance(&fewer), 1);
-}
-
-fn names_of(cat: &Catalog, hash: Option<u32>) -> Vec<String> {
-    names(cat, hash)
+    let fewer = ElementVector::from_build(&extract_build(&loadout, &cat));
+    let w = Weights::default();
+    assert_eq!(v.slot_edits(&fewer), 1);
+    assert!((v.l1_distance(&fewer, &w) - 1.0).abs() < 1e-12);
+    assert!((v.jaccard_distance(&fewer, &w) - 1.0 / f64::from(v.total())).abs() < 1e-12);
 }

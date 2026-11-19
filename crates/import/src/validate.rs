@@ -87,12 +87,6 @@ const CHECKS: &[(&str, Severity, &str, &str)] = &[
         "SELECT count(*) FROM segment s WHERE NOT EXISTS (SELECT 1 FROM build b WHERE b.build_id = s.build_id)",
     ),
     (
-        "build_unknown_vector",
-        Severity::Error,
-        "builds whose vector is missing",
-        "SELECT count(*) FROM build b WHERE NOT EXISTS (SELECT 1 FROM build_vector v WHERE v.vector_id = b.vector_id)",
-    ),
-    (
         "timeline_without_run",
         Severity::Warning,
         "build timelines whose run is unknown",

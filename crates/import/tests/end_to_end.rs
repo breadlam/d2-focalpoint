@@ -372,24 +372,29 @@ fn imports_a_synthetic_backup_tree() {
     // Builds: three segments in two timelines, two distinct builds.
     assert_eq!(count(&db, "SELECT count(*) FROM segment"), 3);
     assert_eq!(count(&db, "SELECT count(*) FROM build"), 2);
-    // The second segment drops one armor stat mod: a different build *and* a
-    // different slot vector, exactly one slot apart; usage is filled in.
-    assert_eq!(count(&db, "SELECT count(*) FROM build_vector"), 2);
+    // The second segment drops one armor stat mod: its element vector is one
+    // element smaller, and usage is filled in on build.
+    let real = |sql: &str| -> f64 { db.conn().query_row(sql, [], |r| r.get(0)).unwrap() };
     assert_eq!(
         count(
             &db,
-            "SELECT slot_distance(a, b) FROM build_vector a, build_vector b WHERE a.vector_id < b.vector_id"
+            "SELECT l1_distance(a.element_hashes, b.element_hashes) FROM build a, build b WHERE a.build_id < b.build_id"
         ),
         1
     );
-    assert_eq!(
-        count(&db, "SELECT sum(timeline_count) FROM build_vector"),
-        3
+    let (big, small) = (
+        count(&db, "SELECT max(element_count) FROM build"),
+        count(&db, "SELECT min(element_count) FROM build"),
     );
-    assert_eq!(
-        count(&db, "SELECT sum(seconds_used) FROM build_vector"),
-        1200
+    assert_eq!(big - small, 1);
+    assert!(
+        (real("SELECT jaccard_distance(a.element_hashes, b.element_hashes) FROM build a, build b WHERE a.build_id < b.build_id")
+            - 1.0 / big as f64)
+            .abs()
+            < 1e-12
     );
+    assert_eq!(count(&db, "SELECT sum(timeline_count) FROM build"), 3);
+    assert_eq!(count(&db, "SELECT sum(seconds_used) FROM build"), 1200);
     assert_eq!(
         count(&db, "SELECT count(*) FROM run_build WHERE is_primary"),
         2
