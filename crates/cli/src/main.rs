@@ -29,6 +29,8 @@ enum Command {
     Import(commands::import::Args),
     /// Summarise the analysis database
     Info(commands::info::Args),
+    /// Rank builds and players, separating the build from the player
+    Rank(Box<commands::rank::Args>),
     /// Search builds by class, exotics, abilities, perks, mods, activity, ...
     Search(Box<commands::search::Args>),
     /// List a build's nearest neighbours by the tiered build distance
@@ -47,6 +49,7 @@ fn main() -> ExitCode {
     let result = match cli.command {
         Command::Import(args) => commands::import::run(&args, &db),
         Command::Info(args) => commands::info::run(&args, &db),
+        Command::Rank(args) => commands::rank::run(&args, &db),
         Command::Search(args) => commands::search::run(&args, &db),
         Command::Similar(args) => commands::similar::run(&args, &db),
         Command::Sql(args) => commands::sql::run(&args, &db),

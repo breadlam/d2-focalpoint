@@ -11,6 +11,7 @@ use duckdb::{AccessMode, Config, Connection, OptionalExt, params};
 use thiserror::Error;
 
 pub mod filter;
+pub mod rank;
 pub mod search;
 pub mod similar;
 

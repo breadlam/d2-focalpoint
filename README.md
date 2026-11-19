@@ -20,6 +20,10 @@ cargo build --release
 # What is in it?
 ./target/release/searchlight info
 
+# Which builds make their players better in Ultimate Conquest? Who is best?
+./target/release/searchlight rank builds --activity "ultimate conquest" --min-players 10
+./target/release/searchlight rank players --activity "ultimate conquest"
+
 # Which exotics do Hunters wear in Master raid clears?
 ./target/release/searchlight search --class Hunter --activity "master raid" --clears --group-by exotic-armor
 
@@ -64,12 +68,13 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 |---|---|
 | `searchlight import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `searchlight info [--detailed]` | provenance, headline counts, coverage, import statistics |
+| `searchlight rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
+| `searchlight rank players [FACETS] [RUN FILTERS]` | players ranked by skill net of the builds they used (`--min-runs N`, `--sort skill\|runs\|best`); facets list players who used matching builds |
 | `searchlight search [FACETS] [RUN FILTERS]` | builds matching any combination of class, element, exotic armor/weapon, super, aspects, fragments, weapons, perks, mods, artifact perks, armor sets; run filters `--activity`, `--player`, `--solo`, `--clears`, `--since/--until`; `--group-by exotic-armor` (etc.) for popularity reports |
 | `searchlight similar BUILD_ID` | a build's nearest neighbours by tiered distance, with per-tier breakdown (`--other-players`, `--any-class`, `--include-passengers`, `--limit N`) |
 | `searchlight sql "QUERY"` | ad-hoc read-only SQL (`--format tsv`, `--max-rows N`) |
 
-Trend reports, rankings of builds and players, clustering and charts are
-the next milestones; see [docs/architecture.md](docs/architecture.md#adding-a-cli-feature)
+Trend reports, clustering and charts are the next milestones; see [docs/architecture.md](docs/architecture.md#adding-a-cli-feature)
 for where new features go.
 
 ## Documentation

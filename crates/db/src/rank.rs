@@ -1,0 +1,623 @@
+//! Rankings of builds and players that separate the build from the player.
+//!
+//! Every query fits `perf = skill(player) + effect(build group)` with
+//! [`searchlight_core::rank::fit_effects`] over the scored runs (`run_score`)
+//! that the [`RunFilter`] selects:
+//!
+//! * runs without a captured build inform only their player's skill;
+//! * runs with captured builds are split across their builds by share of
+//!   the run, and inform both.
+//!
+//! The run filter's activity, solo and date conditions choose the runs the
+//! model learns from; its player condition and the build [`Facets`] only
+//! choose what is listed, so skills are always net of *every* build their
+//! players used. Effects are reported relative to the average captured
+//! build (see [`Model::effect_offset`]).
+
+use std::collections::{HashMap, HashSet};
+
+use duckdb::params_from_iter;
+use duckdb::types::Value;
+use searchlight_core::rank::{Baseline, FitParams, Observation, fit_effects};
+
+use crate::filter::{Facets, RunFilter};
+use crate::search::GroupBy;
+use crate::{Database, Result};
+
+/// Ranking parameters.
+#[derive(Debug, Clone)]
+pub struct RankOptions {
+    pub facets: Facets,
+    pub runs: RunFilter,
+    /// How builds are grouped (for players: the grouping their skill is
+    /// netted against). `GroupBy::Player` is treated as `Core`.
+    pub group_by: GroupBy,
+    pub fit: FitParams,
+}
+
+impl Default for RankOptions {
+    fn default() -> Self {
+        Self {
+            facets: Facets::default(),
+            runs: RunFilter::default(),
+            group_by: GroupBy::Core,
+            fit: FitParams::default(),
+        }
+    }
+}
+
+/// What the fitted model saw.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Model {
+    /// Scored runs selected.
+    pub runs: usize,
+    /// Of those, runs with a captured build.
+    pub build_runs: usize,
+    pub players: usize,
+    pub groups: usize,
+    pub iterations: usize,
+    pub converged: bool,
+    /// Run-weighted mean build effect, subtracted from reported effects so
+    /// that 0 is the average captured build. Tracked players were chosen for
+    /// standout runs, so their other runs flatter their skill a little and
+    /// raw effects sit below zero on average.
+    pub effect_offset: f64,
+}
+
+/// A build group's ranking. Log-scale values; `exp(x) - 1` is a percentage.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BuildRank {
+    pub key: Vec<String>,
+    /// The build's effect: how its players perform relative to their own
+    /// usual level, relative to the average captured build.
+    pub effect: f64,
+    /// Mean performance with the build, without separating the player.
+    pub raw: f64,
+    /// Mean skill of the players using it (run-weighted).
+    pub player_skill: f64,
+    /// Players who used it for at least half a run in total.
+    pub players: usize,
+    /// Runs, counting a run split across builds by its share.
+    pub runs: f64,
+    pub builds: usize,
+    pub last_used: String,
+}
+
+/// A player's ranking.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlayerRank {
+    pub membership_id: i64,
+    pub name: String,
+    /// Performance relative to a typical clear, net of the builds used.
+    pub skill: f64,
+    pub runs: i64,
+    pub solo_runs: i64,
+    /// Runs with a captured build (matching the facets, if any).
+    pub build_runs: i64,
+    pub best_score: f64,
+    pub last_run: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum BuildSort {
+    #[default]
+    Effect,
+    Raw,
+    Players,
+    Runs,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PlayerSort {
+    #[default]
+    Skill,
+    Runs,
+    Best,
+}
+
+#[derive(Debug)]
+struct PlayerStats {
+    membership_id: i64,
+    runs: i64,
+    solo_runs: i64,
+    best_score: f64,
+    last_run: String,
+}
+
+/// The model's inputs for one selection of runs, as passed to
+/// [`fit_effects`]; public so the priors can be tuned (see
+/// `crates/db/examples/rank_tuning.rs`).
+#[derive(Debug)]
+pub struct ModelData {
+    /// One per player in the selection.
+    pub baselines: Vec<Baseline>,
+    /// Runs with captured builds, one per (run, build), weighted by share.
+    pub observations: Vec<Observation>,
+    /// The run (`instance_id`) of each observation.
+    pub observation_runs: Vec<i64>,
+    pub groups: usize,
+    players: Vec<PlayerStats>,
+    obs_build: Vec<i64>,
+    obs_date: Vec<String>,
+    /// Per group: key and whether its builds match the facets.
+    group_keys: Vec<(bool, Vec<String>)>,
+    total_runs: usize,
+    build_runs: usize,
+}
+
+struct Fitted {
+    data: ModelData,
+    skill: Vec<f64>,
+    effect: Vec<f64>,
+    model: Model,
+}
+
+/// Load the model's inputs for the runs `opts` selects.
+pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
+    let runs = RunFilter {
+        player: None,
+        ..opts.runs.clone()
+    };
+    let mut run_params = Vec::new();
+    let run_where = runs.sql(&mut run_params);
+    let from = "FROM run_score r JOIN activity a ON a.activity_hash = r.activity_hash";
+
+    // Players: their stats over the selection, and the baseline from runs
+    // without a captured build.
+    let mut players = Vec::new();
+    let mut baselines = Vec::new();
+    let mut total_runs = 0_usize;
+    {
+        let sql = format!(
+            "SELECT r.membership_id, count(*), count(*) FILTER (WHERE r.is_solo),
+                    max(r.score), strftime(max(r.started_at), '%Y-%m-%d'),
+                    count(*) FILTER (WHERE NOT r.has_build),
+                    coalesce(sum(r.perf) FILTER (WHERE NOT r.has_build), 0)
+             {from} WHERE {run_where}
+             GROUP BY 1 ORDER BY 1"
+        );
+        let mut stmt = db.conn().prepare(&sql)?;
+        let mut rows = stmt.query(params_from_iter(run_params.iter()))?;
+        while let Some(r) = rows.next()? {
+            let runs: i64 = r.get(1)?;
+            total_runs += usize::try_from(runs).unwrap_or(0);
+            players.push(PlayerStats {
+                membership_id: r.get(0)?,
+                runs,
+                solo_runs: r.get(2)?,
+                best_score: r.get(3)?,
+                last_run: r.get(4)?,
+            });
+            let n: i64 = r.get(5)?;
+            baselines.push(Baseline {
+                weight: n as f64,
+                sum: r.get(6)?,
+            });
+        }
+    }
+    let player_index: HashMap<i64, u32> = players
+        .iter()
+        .enumerate()
+        .map(|(i, p)| (p.membership_id, i as u32))
+        .collect();
+
+    // Group keys for every build seen in the selection.
+    let key = match opts.group_by {
+        GroupBy::Player => GroupBy::Core.key(),
+        g => g.key(),
+    };
+    let mut key_params = Vec::new();
+    let facet_where = opts.facets.sql(db, &mut key_params)?;
+    key_params.extend(run_params.iter().cloned());
+    let key_select: Vec<String> = key.iter().map(|(_, e)| (*e).to_string()).collect();
+    let mut group_of_build: HashMap<i64, u32> = HashMap::new();
+    let mut group_index: HashMap<(bool, Vec<String>), u32> = HashMap::new();
+    let mut group_keys = Vec::new();
+    {
+        let sql = format!(
+            "SELECT b.build_id, ({facet_where}) AS matched, {keys}
+             FROM build b
+             WHERE b.build_id IN (SELECT rb.build_id FROM run_build rb
+                                  JOIN run_score r USING (instance_id, membership_id)
+                                  JOIN activity a ON a.activity_hash = r.activity_hash
+                                  WHERE {run_where})
+             ORDER BY b.build_id",
+            keys = key_select.join(", "),
+        );
+        let mut stmt = db.conn().prepare(&sql)?;
+        let mut rows = stmt.query(params_from_iter(key_params.iter()))?;
+        while let Some(r) = rows.next()? {
+            let build_id: i64 = r.get(0)?;
+            let matched: bool = r.get(1)?;
+            let mut k = Vec::with_capacity(key.len());
+            for i in 0..key.len() {
+                k.push(
+                    r.get::<_, Option<String>>(i + 2)?
+                        .unwrap_or_else(|| "—".into()),
+                );
+            }
+            let id = (matched, k);
+            let next = group_keys.len() as u32;
+            let g = *group_index.entry(id.clone()).or_insert_with(|| {
+                group_keys.push(id);
+                next
+            });
+            group_of_build.insert(build_id, g);
+        }
+    }
+
+    // Observations: runs with captured builds, split by share.
+    let mut observations = Vec::new();
+    let mut obs_build = Vec::new();
+    let mut obs_date = Vec::new();
+    let mut observation_runs = Vec::new();
+    let mut build_run_keys: HashSet<(i64, i64)> = HashSet::new();
+    {
+        let sql = format!(
+            "SELECT r.instance_id, r.membership_id, rb.build_id, r.perf,
+                    coalesce(rb.share / nullif(sum(rb.share) OVER w, 0), 1.0 / count(*) OVER w),
+                    strftime(r.started_at, '%Y-%m-%d')
+             FROM run_score r JOIN run_build rb USING (instance_id, membership_id)
+             JOIN activity a ON a.activity_hash = r.activity_hash
+             WHERE r.has_build AND {run_where}
+             WINDOW w AS (PARTITION BY rb.instance_id, rb.membership_id)
+             ORDER BY r.instance_id, r.membership_id, rb.build_id"
+        );
+        let mut stmt = db.conn().prepare(&sql)?;
+        let mut rows = stmt.query(params_from_iter(run_params.iter()))?;
+        while let Some(r) = rows.next()? {
+            let instance: i64 = r.get(0)?;
+            let member: i64 = r.get(1)?;
+            let build_id: i64 = r.get(2)?;
+            let (Some(&player), Some(&group)) =
+                (player_index.get(&member), group_of_build.get(&build_id))
+            else {
+                continue;
+            };
+            build_run_keys.insert((instance, member));
+            observations.push(Observation {
+                player,
+                group,
+                y: r.get(3)?,
+                weight: r.get(4)?,
+            });
+            obs_build.push(build_id);
+            obs_date.push(r.get(5)?);
+            observation_runs.push(instance);
+        }
+    }
+    Ok(ModelData {
+        baselines,
+        groups: group_keys.len(),
+        observations,
+        observation_runs,
+        players,
+        obs_build,
+        obs_date,
+        group_keys,
+        total_runs,
+        build_runs: build_run_keys.len(),
+    })
+}
+
+fn fit(db: &Database, opts: &RankOptions) -> Result<Fitted> {
+    let data = load_model(db, opts)?;
+    let effects = fit_effects(&data.baselines, data.groups, &data.observations, &opts.fit);
+    let (sum, weight) = data.observations.iter().fold((0.0, 0.0), |(s, w), o| {
+        (
+            s + o.weight * effects.effect[o.group as usize],
+            w + o.weight,
+        )
+    });
+    let effect_offset = if weight > 0.0 { sum / weight } else { 0.0 };
+    let model = Model {
+        runs: data.total_runs,
+        build_runs: data.build_runs,
+        players: data.players.len(),
+        groups: data.groups,
+        iterations: effects.iterations,
+        converged: effects.converged,
+        effect_offset,
+    };
+    Ok(Fitted {
+        data,
+        skill: effects.skill,
+        effect: effects.effect,
+        model,
+    })
+}
+
+#[derive(Default)]
+/// Per-group accumulator for [`rank_builds`].
+struct Acc {
+    /// Use per player, in runs (shares summed).
+    players: HashMap<u32, f64>,
+    builds: HashSet<i64>,
+    weight: f64,
+    perf: f64,
+    skill: f64,
+    last: String,
+}
+
+/// Players who used a group for at least half a run in total; briefer use
+/// (a swap for one encounter) still informs the fit but is not counted.
+fn regular_players(a: &Acc) -> usize {
+    a.players.values().filter(|&&w| w >= 0.5).count()
+}
+
+/// Rank build groups by their effect on their players' performance.
+pub fn rank_builds(
+    db: &Database,
+    opts: &RankOptions,
+    min_players: usize,
+    sort: BuildSort,
+) -> Result<(Model, Vec<&'static str>, Vec<BuildRank>)> {
+    let f = fit(db, opts)?;
+    let key_columns: Vec<&'static str> = match opts.group_by {
+        GroupBy::Player => GroupBy::Core.key(),
+        g => g.key(),
+    }
+    .iter()
+    .map(|(label, _)| *label)
+    .collect();
+
+    let mut acc: Vec<Acc> = (0..f.data.group_keys.len())
+        .map(|_| Acc::default())
+        .collect();
+    for (i, o) in f.data.observations.iter().enumerate() {
+        let a = &mut acc[o.group as usize];
+        *a.players.entry(o.player).or_default() += o.weight;
+        a.builds.insert(f.data.obs_build[i]);
+        a.weight += o.weight;
+        a.perf += o.weight * o.y;
+        a.skill += o.weight * f.skill[o.player as usize];
+        if f.data.obs_date[i] > a.last {
+            a.last.clone_from(&f.data.obs_date[i]);
+        }
+    }
+    let mut rows: Vec<BuildRank> = acc
+        .into_iter()
+        .enumerate()
+        .filter(|(g, a)| f.data.group_keys[*g].0 && a.weight > 0.0)
+        .map(|(g, a)| (g, regular_players(&a), a))
+        .filter(|(_, players, _)| *players >= min_players)
+        .map(|(g, players, a)| BuildRank {
+            key: f.data.group_keys[g].1.clone(),
+            effect: f.effect[g] - f.model.effect_offset,
+            raw: a.perf / a.weight,
+            player_skill: a.skill / a.weight,
+            players,
+            runs: a.weight,
+            builds: a.builds.len(),
+            last_used: a.last,
+        })
+        .collect();
+    let by = |r: &BuildRank| match sort {
+        BuildSort::Effect => r.effect,
+        BuildSort::Raw => r.raw,
+        BuildSort::Players => r.players as f64,
+        BuildSort::Runs => r.runs,
+    };
+    rows.sort_by(|a, b| {
+        by(b)
+            .total_cmp(&by(a))
+            .then(b.runs.total_cmp(&a.runs))
+            .then_with(|| a.key.cmp(&b.key))
+    });
+    Ok((f.model, key_columns, rows))
+}
+
+/// Rank players by skill, net of the builds they used.
+pub fn rank_players(
+    db: &Database,
+    opts: &RankOptions,
+    min_runs: i64,
+    sort: PlayerSort,
+) -> Result<(Model, Vec<PlayerRank>)> {
+    let f = fit(db, opts)?;
+    // Runs with builds matching the facets, per player.
+    let mut matched_runs: HashMap<u32, f64> = HashMap::new();
+    for o in &f.data.observations {
+        if f.data.group_keys[o.group as usize].0 {
+            *matched_runs.entry(o.player).or_default() += o.weight;
+        }
+    }
+    let named: Option<HashSet<i64>> = match &opts.runs.player {
+        None => None,
+        Some(p) => {
+            let mut stmt = db.conn().prepare(
+                "SELECT membership_id FROM player pl
+                 WHERE pl.bungie_name ILIKE '%' || ? || '%' OR pl.display_name ILIKE '%' || ? || '%'",
+            )?;
+            let ids = stmt
+                .query_map([p, p], |r| r.get(0))?
+                .collect::<duckdb::Result<HashSet<i64>>>()?;
+            Some(ids)
+        }
+    };
+    let needs_build = !opts.facets.is_empty();
+    let mut rows: Vec<PlayerRank> = f
+        .data
+        .players
+        .iter()
+        .enumerate()
+        .filter(|(i, p)| {
+            p.runs >= min_runs
+                && (!needs_build || matched_runs.contains_key(&(*i as u32)))
+                && named.as_ref().is_none_or(|n| n.contains(&p.membership_id))
+        })
+        .map(|(i, p)| PlayerRank {
+            membership_id: p.membership_id,
+            name: String::new(),
+            skill: f.skill[i],
+            runs: p.runs,
+            solo_runs: p.solo_runs,
+            build_runs: matched_runs
+                .get(&(i as u32))
+                .map_or(0, |w| w.round() as i64),
+            best_score: p.best_score,
+            last_run: p.last_run.clone(),
+        })
+        .collect();
+    let by = |r: &PlayerRank| match sort {
+        PlayerSort::Skill => r.skill,
+        PlayerSort::Runs => r.runs as f64,
+        PlayerSort::Best => r.best_score,
+    };
+    rows.sort_by(|a, b| {
+        by(b)
+            .total_cmp(&by(a))
+            .then(b.runs.cmp(&a.runs))
+            .then(a.membership_id.cmp(&b.membership_id))
+    });
+    Ok((f.model, rows))
+}
+
+/// Fill in display names for the given rows.
+pub fn name_players(db: &Database, rows: &mut [PlayerRank]) -> Result<()> {
+    if rows.is_empty() {
+        return Ok(());
+    }
+    let ids: Vec<Value> = rows
+        .iter()
+        .map(|r| Value::BigInt(r.membership_id))
+        .collect();
+    let placeholders = vec!["?"; ids.len()].join(", ");
+    let mut stmt = db.conn().prepare(&format!(
+        "SELECT membership_id, coalesce(bungie_name, display_name, membership_id::VARCHAR)
+         FROM player WHERE membership_id IN ({placeholders})"
+    ))?;
+    let names: HashMap<i64, String> = stmt
+        .query_map(params_from_iter(ids.iter()), |r| Ok((r.get(0)?, r.get(1)?)))?
+        .collect::<duckdb::Result<_>>()?;
+    for r in rows {
+        r.name = names
+            .get(&r.membership_id)
+            .cloned()
+            .unwrap_or_else(|| r.membership_id.to_string());
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Players 1-2 are strong (+0.5 on every run), 3-4 weak (-0.5). Each has
+    /// ten runs without a captured build and two with one: the strong
+    /// players wear Alpha Boots (build 10), the weak ones Beta Boots (build
+    /// 20). Neither build changes how anyone performs.
+    fn db() -> (tempfile::TempDir, Database) {
+        let dir = tempfile::tempdir().unwrap();
+        let db = Database::create(&dir.path().join("r.duckdb")).unwrap();
+        db.conn()
+            .execute_batch(
+                "INSERT INTO item (item_hash, name, is_exotic) VALUES (1, 'Alpha Boots', true), (2, 'Beta Boots', true);
+                 INSERT INTO activity (activity_hash, name, target_group) VALUES (100, 'Ultimate Conquest: Test', 'Ultimate Conquest');
+                 INSERT INTO player (membership_id, bungie_name)
+                     VALUES (1, 'Strong#0001'), (2, 'Strong#0002'), (3, 'Weak#0003'), (4, 'Weak#0004');
+                 INSERT INTO build (build_id, class, exotic_armor_hash, aspect_hashes, fragment_hashes,
+                     artifact_perk_hashes, armor_mod_hashes, item_hashes, component_count, unresolved_count,
+                     tier1_elements, tier2_elements, tier3_elements, tier4_elements)
+                 VALUES (10, 'Warlock', 1, [], [], [], [], [], 0, 0, [], [], [], []),
+                        (20, 'Warlock', 2, [], [], [], [], [], 0, 0, [], [], [], []);
+                 INSERT INTO run_score
+                 SELECT 1000 * m + i, m, 100, TIMESTAMP '2026-07-01' + INTERVAL (i) DAY, i = 11, i >= 10,
+                        100, 0, 600, 1, 1, 1, 1, CASE WHEN m <= 2 THEN 0.5 ELSE -0.5 END
+                 FROM range(1, 5) p(m), range(0, 12) r(i);
+                 INSERT INTO run_build
+                 SELECT 1000 * m + i, m, CASE WHEN m <= 2 THEN 10 ELSE 20 END, 1, 0, 600, 1.0, true
+                 FROM range(1, 5) p(m), range(10, 12) r(i);",
+            )
+            .unwrap();
+        (dir, db)
+    }
+
+    fn exact() -> RankOptions {
+        RankOptions {
+            group_by: GroupBy::ExoticArmor,
+            fit: FitParams {
+                player_prior: 1e-9,
+                group_prior: 1e-9,
+                ..FitParams::default()
+            },
+            ..RankOptions::default()
+        }
+    }
+
+    #[test]
+    fn builds_are_judged_against_their_players() {
+        let (_d, db) = db();
+        let (model, columns, rows) = rank_builds(&db, &exact(), 1, BuildSort::Effect).unwrap();
+        assert_eq!(columns, ["class", "exotic armor"]);
+        assert_eq!((model.runs, model.build_runs, model.players), (48, 8, 4));
+        assert!(model.converged);
+        assert_eq!(rows.len(), 2);
+        for r in &rows {
+            assert!(r.effect.abs() < 1e-6, "{r:?}");
+            assert_eq!((r.players, r.builds), (2, 1));
+            assert!((r.runs - 4.0).abs() < 1e-9);
+        }
+        let alpha = rows.iter().find(|r| r.key[1] == "Alpha Boots").unwrap();
+        assert!((alpha.raw - 0.5).abs() < 1e-9, "raw results flatter Alpha");
+        assert!((alpha.player_skill - 0.5).abs() < 1e-6);
+        assert_eq!(alpha.last_used, "2026-07-12");
+    }
+
+    #[test]
+    fn players_rank_by_skill_and_filter() {
+        let (_d, db) = db();
+        let opts = exact();
+        let (_, mut rows) = rank_players(&db, &opts, 1, PlayerSort::Skill).unwrap();
+        name_players(&db, &mut rows).unwrap();
+        let names: Vec<&str> = rows.iter().map(|r| r.name.as_str()).collect();
+        assert_eq!(
+            names,
+            ["Strong#0001", "Strong#0002", "Weak#0003", "Weak#0004"]
+        );
+        assert!((rows[0].skill - 0.5).abs() < 1e-6);
+        assert_eq!(
+            (rows[0].runs, rows[0].solo_runs, rows[0].build_runs),
+            (12, 1, 2)
+        );
+
+        let beta = RankOptions {
+            facets: Facets {
+                exotic_armor: Some("beta boots".into()),
+                ..Facets::default()
+            },
+            ..exact()
+        };
+        let (_, rows) = rank_players(&db, &beta, 1, PlayerSort::Skill).unwrap();
+        let ids: Vec<i64> = rows.iter().map(|r| r.membership_id).collect();
+        assert_eq!(ids, [3, 4], "only players who used a matching build");
+
+        let one_player = RankOptions {
+            runs: RunFilter {
+                player: Some("strong#0002".into()),
+                ..RunFilter::default()
+            },
+            ..exact()
+        };
+        let (_, rows) = rank_players(&db, &one_player, 1, PlayerSort::Skill).unwrap();
+        assert_eq!(rows.len(), 1);
+        let (_, rows) = rank_players(&db, &exact(), 13, PlayerSort::Skill).unwrap();
+        assert!(rows.is_empty(), "min_runs");
+    }
+
+    #[test]
+    fn an_empty_selection_is_not_an_error() {
+        let (_d, db) = db();
+        let opts = RankOptions {
+            runs: RunFilter {
+                activity: Some("no such activity".into()),
+                ..RunFilter::default()
+            },
+            ..exact()
+        };
+        let (model, _, rows) = rank_builds(&db, &opts, 1, BuildSort::Effect).unwrap();
+        assert_eq!((model.runs, rows.len()), (0, 0));
+        let (_, rows) = rank_players(&db, &opts, 1, PlayerSort::Skill).unwrap();
+        assert!(rows.is_empty());
+    }
+}
