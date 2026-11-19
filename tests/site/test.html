@@ -13,30 +13,40 @@
   <p id="verdict">running…</p>
   <script type="module">
     import {
-      DEFAULTS, NONE, RUN_WITH_MIN, facetOptions, formatHash, matches, parseHash, pct, prepare, results, scopeLabel,
+      DEFAULTS, NONE, decodeRecipe, facetOptions, formatHash, parseHash, pct, pickLine, prepare, recipeDiff,
+      recipeIncludes, results, rowRecipes, scopeLabel, topLine,
     } from '../../site/app.js';
 
-    // Three groups; two scopes. Rows: [group, effect, raw, skill, players, runs, last].
+    const names = ['Dawnblade', 'Well of Radiance', 'Phoenix Dive', 'Burst Glide', 'Incinerator Snap',
+      'Solar Grenade', 'Heat Rises', 'Icarus Dash', 'Ember of Char', 'The Mountaintop', 'Fatebringer',
+      'Outlaw', 'Adaptive Frame', 'Hands-On', 'Firepower', 'Getaway Artist', 'Elemental Siphon',
+      'Iron Will', 'Iron Set', 'Grenadier', 'Synthoceps', 'Whisper of Chains'];
+    const kit = [0, 1, 2, 3, 4, 5, [6, 7], [8], []];
+    // Positional recipes: [id, stats, kit, armor, weapons, sets, set bonuses, artifact].
+    const top = ['10', [30, 10, 20, 200, 100, 15], kit,
+      [[3, 15, 1, 19, null, [], [13, 13], []]], [[1, 9, 0, 12, [11], null, null]], [[18, 2]], [17], [16]];
+    const variant = ['11', [30, 10, 20, 190, 100, 15], kit,
+      [[3, 15, 1, 19, null, [], [13, 14], []]], [[1, 10, 0, null, [11], null, null]], [[18, 2]], [17], [16]];
+    const titan = ['20', null, [null, null, null, null, null, null, [], [21], []], [], [], [], [], []];
     const data = {
-      format: 1, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
+      format: 2, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
       icon_base: 'https://www.bungie.net', icons: {},
-      names: ['Ember of Char', 'Whisper of Chains', 'The Mountaintop'],
-      groups: [
-        { class: 'Warlock', element: 'Solar', armor: null, weapon: null, super: 'Well of Radiance',
-          aspects: ['Heat Rises', 'Icarus Dash'],
-          details: { runs: 12, stats: [1, 1, 1, 2, 2, 1], components: { fragments: [[0, 89]], weapons: [[2, 24]] } } },
-        { class: 'Warlock', element: 'Prismatic', armor: 'Getaway Artist', weapon: 'Khvostov 7G-0X', super: 'Song of Flame',
-          aspects: ['Hellion', "Weaver's Call"],
-          details: { runs: 50, stats: [0, 0, 0, 4, 2, 0], components: { fragments: [[1, RUN_WITH_MIN - 1]] } } },
-        { class: 'Titan', element: 'Stasis', armor: 'Synthoceps', weapon: 'Ice Breaker', super: 'Glacial Quake',
-          aspects: ['Howl of the Storm', 'Tectonic Harvest'],
-          details: { runs: 900, stats: [2, 1, 1, 2, 2, 3], components: { fragments: [[1, 60]] } } },
+      dict: names.map((n) => [n, null]),
+      types: [
+        { class: 'Warlock', element: 'Solar', armor: 'Getaway Artist', weapon: null, super: 'Well of Radiance', aspects: ['Heat Rises', 'Icarus Dash'] },
+        { class: 'Titan', element: 'Stasis', armor: 'Synthoceps', weapon: 'Ice Breaker', super: 'Glacial Quake', aspects: ['Howl of the Storm'] },
       ],
+      recipes: [top, variant, titan],
+      // Rows: [type, effect, raw, skill, players, runs, last, top pick, variant picks, more,
+      //        loadout clears, loadout exact builds].
+      // Picks: [recipe, effect, runs, players, last].
       scopes: [
-        { id: 'all', name: 'All activities', kind: 'all', parent: null, clears: 100, build_runs: 10, players: 9,
-          rows: [[0, 0.25, 0.8, 0.2, 9, 12, '2026-09-16'], [1, 0.22, 0.4, 0.1, 40, 52, '2026-09-15'], [2, 0.1, 0.3, 0.1, 800, 1000, '2026-09-16']] },
-        { id: 'ultimate-conquest', name: 'Ultimate Conquest', kind: 'group', parent: null, clears: 50, build_runs: 5, players: 4,
-          rows: [[2, 0.13, 0.27, 0.1, 832, 1000, '2026-09-16'], [1, -0.05, 0.1, 0.1, 2, 3, '2026-09-01']] },
+        { id: 'all', name: 'All activities', kind: 'all', parent: null, clears: 100, build_runs: 10, players: 9, rows: [
+          [0, 0.25, 0.8, 0.2, 9, 12, '2026-09-16', [0, 0.3, 4, 1, '2026-09-15'], [[1, 0.1, 1, 1, '2026-09-10']], 0, 5, 2],
+          [1, 0.1, 0.3, 0.1, 800, 1000, '2026-09-16', [2, 0.5, 6, 3, '2026-09-16'], [], 0, 6, 1]] },
+        { id: 'ultimate-conquest', name: 'Ultimate Conquest', kind: 'group', parent: null, clears: 50, build_runs: 5, players: 4, rows: [
+          [1, 0.13, 0.27, 0.1, 832, 1000, '2026-09-16', [2, 0.2, 3, 2, '2026-09-16'], [], 0, 3, 4],
+          [0, -0.05, 0.1, 0.1, 2, 3, '2026-09-01', [0, 0.1, 1, 1, '2026-09-01'], [], 0, 1, 1]] },
       ],
     };
 
@@ -49,7 +59,7 @@
       log.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: `FAIL ${what}: got ${a}, expected ${e}` }));
     };
     const state = (patch) => ({ ...DEFAULTS, ...patch });
-    const ids = (r) => r.rows.map((row) => row[0]);
+    const types = (r) => r.rows.map((row) => row[0]);
 
     const model = prepare(data);
 
@@ -57,26 +67,55 @@
     eq(pct(0.1), '+11%', 'pct positive');
     eq(pct(-0.5), '−39%', 'pct negative uses a minus sign');
 
-    eq(ids(results(model, state({}))), [0, 1, 2], 'all builds by effect');
-    eq(ids(results(model, state({ min: 10 }))), [1, 2], 'minimum players');
-    eq(ids(results(model, state({ sort: 'players' }))), [2, 1, 0], 'sort by players');
-    eq(ids(results(model, state({ cls: 'Warlock' }))), [0, 1], 'class');
-    eq(ids(results(model, state({ armor: NONE }))), [0], 'no exotic armor');
-    eq(ids(results(model, state({ aspect1: 'Hellion', aspect2: "Weaver's Call" }))), [1], 'both aspects');
-    eq(ids(results(model, state({ aspect1: 'Hellion', aspect2: 'Icarus Dash' }))), [], 'aspects are AND');
-    eq(ids(results(model, state({ with: 'Whisper of Chains' }))), [2], 'run with needs the minimum share');
-    eq(ids(results(model, state({ scope: 'ultimate-conquest', min: 2 }))), [2, 1], 'activity scope');
-    eq(ids(results(model, state({ scope: 'no-such-scope' }))), [0, 1, 2], 'unknown scope falls back to all');
+    // Recipes decode exactly.
+    const r = decodeRecipe(top);
+    eq([r.id, r.kit.super, r.kit.fragments, r.armor[0].slot, r.armor[0].exotic, r.armor[0].mods],
+      ['10', 1, [8], 3, true, [13, 13]], 'decoded kit and armor');
+    eq([r.weapons[0].slot, r.weapons[0].item, r.weapons[0].frame, r.weapons[0].perks], [1, 9, 12, [11]], 'decoded weapon');
+    eq([r.sets, r.setBonuses, r.artifact], [[[18, 2]], [17], [16]], 'decoded sets and artifact');
+    eq(rowRecipes(data.scopes[0].rows[0]), [0, 1], 'a row lists its top recipe and variants');
 
-    // Facet counts honour every other filter but their own.
+    // Listings, filters and sorting.
+    eq(types(results(model, state({}))), [0, 1], 'by build effect');
+    eq(types(results(model, state({ sort: 'recipe' }))), [1, 0], 'by top recipe');
+    eq(types(results(model, state({ min: 10 }))), [1], 'minimum players');
+    eq(types(results(model, state({ cls: 'Warlock' }))), [0], 'class');
+    eq(types(results(model, state({ weapon: NONE }))), [0], 'no exotic weapon');
+    eq(types(results(model, state({ aspect1: 'Heat Rises', aspect2: 'Icarus Dash' }))), [0], 'both aspects');
+    eq(types(results(model, state({ aspect1: 'Heat Rises', aspect2: 'Howl of the Storm' }))), [], 'aspects are AND');
+    eq(types(results(model, state({ has: 'Whisper of Chains' }))), [1], 'includes a fragment');
+    eq(types(results(model, state({ has: 'Fatebringer' }))), [0], 'includes something only a variant has');
+    eq(types(results(model, state({ has: 'Outlaw' }))), [0], 'includes a weapon perk');
+    eq(types(results(model, state({ scope: 'ultimate-conquest', min: 2 }))), [1, 0], 'activity scope');
+    eq(types(results(model, state({ scope: 'no-such-scope' }))), [0, 1], 'unknown scope falls back to all');
+
+    eq([...recipeIncludes(model, 0).entries()].filter(([, k]) => k === 'armor_mod'), [['Hands-On', 'armor_mod']], 'mods are searchable');
+    eq(recipeIncludes(model, 0).get('Getaway Artist'), undefined, 'the exotic armor is a type facet, not an include');
     const cls = facetOptions(model, state({ cls: 'Titan' }), 'cls');
-    eq([...cls.entries()].sort(), [['Titan', 1], ['Warlock', 2]], 'class counts ignore the class filter');
-    const armor = facetOptions(model, state({ cls: 'Warlock' }), 'armor');
-    eq([...armor.entries()].sort(), [[NONE, 1], ['Getaway Artist', 1]], 'armor counts follow the class filter');
-    eq(matches(model, model.groups[2], state({ cls: 'Warlock' }), 'cls'), true, 'skip ignores a facet');
+    eq([...cls.entries()].sort(), [['Titan', 1], ['Warlock', 1]], 'class counts ignore the class filter');
+    eq(facetOptions(model, state({ cls: 'Titan' }), 'has').get('Whisper of Chains'), 1, 'include counts follow other filters');
+    eq(facetOptions(model, state({ cls: 'Titan' }), 'has').get('Fatebringer'), undefined, 'include counts exclude other classes');
+
+    // Exact differences between recipes.
+    const diff = recipeDiff(model, decodeRecipe(top), decodeRecipe(variant));
+    eq(diff, [
+      { label: 'Energy', text: 'The Mountaintop → Fatebringer' },
+      { label: 'Armor mods', text: '+Firepower; −Hands-On' },
+      { label: 'Stats', text: 'Grenade 200 → 190' },
+    ], 'variant differences');
+    eq(recipeDiff(model, decodeRecipe(top), decodeRecipe(top)), [], 'a recipe does not differ from itself');
+
+    // Records.
+    eq(pickLine([0, 0.1, 1, 1, '2026-09-01']), 'Used in 1 clear by 1 player · last 2026-09-01 · +11% for its players', 'a pick');
+    eq(topLine(data.scopes[0].rows[0]),
+      'Used in 4 clears by 1 player · last 2026-09-15 · +35% for its players. Its loadout (same kit and weapons) was used in 5 clears across 2 exact builds.',
+      'the top recipe and its loadout');
+    eq(topLine(data.scopes[1].rows[1]).endsWith('was used in 1 clear.'), true, 'a loadout of one build');
+    eq(topLine(data.scopes[1].rows[0]).endsWith('was used in 3 clears across 4 exact builds.'), true,
+      'the loadout can hold builds that are not listed as variants');
 
     // URL state round-trips and drops defaults.
-    const s = state({ scope: 'ultimate-conquest', cls: 'Titan', armor: 'Synthoceps', min: 10, sort: 'raw' });
+    const s = state({ scope: 'ultimate-conquest', cls: 'Titan', armor: 'Synthoceps', has: 'Whisper of Chains', min: 10, sort: 'recipe' });
     eq(parseHash(formatHash(s)), s, 'hash round trip');
     eq(formatHash(state({})), '', 'defaults give an empty hash');
     eq(parseHash('#min=abc&sort=bogus').min, DEFAULTS.min, 'bad minimum falls back');
@@ -86,8 +125,8 @@
     eq(scopeLabel({ name: 'Ultimate Conquest: Lightblade', parent: 'Ultimate Conquest' }), 'Ultimate Conquest: Lightblade', 'scope label without repetition');
 
     let threw = false;
-    try { prepare({ ...data, format: 99 }); } catch { threw = true; }
-    eq(threw, true, 'unknown data format is rejected');
+    try { prepare({ ...data, format: 1 }); } catch { threw = true; }
+    eq(threw, true, 'data of another format is rejected');
 
     const verdict = document.getElementById('verdict');
     verdict.className = failures ? 'fail' : 'pass';

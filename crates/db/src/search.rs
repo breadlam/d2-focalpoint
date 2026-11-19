@@ -27,6 +27,18 @@ pub enum GroupBy {
     ExoticWeapon,
     Super,
     Aspects,
+    /// A recipe family: the core plus an identical kit — exotic perks,
+    /// abilities, aspects and fragments (codes 1–11 of `element_kind`, so
+    /// not artifact perks). Members differ only in weapons, armor, mods,
+    /// stats or artifact perks.
+    Recipe,
+    /// A loadout: a recipe family plus the same legendary weapons (codes 16
+    /// of `element_kind`). Members differ only in perk rolls, armor, mods,
+    /// stats or artifact perks.
+    Loadout,
+    /// Exact builds, keyed by id only (cheaper than `Build` when the display
+    /// columns are not needed).
+    BuildId,
 }
 
 impl GroupBy {
@@ -57,6 +69,41 @@ impl GroupBy {
                     "array_to_string(item_names(b.aspect_hashes), ', ')",
                 ),
             ],
+            GroupBy::Recipe => &[
+                ("class", "b.class"),
+                ("element", "b.element"),
+                ("exotic armor", "item_name(b.exotic_armor_hash)"),
+                ("exotic weapon", "item_name(b.exotic_weapon_hash)"),
+                ("super", "item_name(b.super_hash)"),
+                (
+                    "aspects",
+                    "array_to_string(item_names(b.aspect_hashes), ', ')",
+                ),
+                (
+                    "kit",
+                    "list_sort(list_filter(list_concat(b.tier1_elements, b.tier2_elements), lambda x: (x >> 32) <= 11))::VARCHAR",
+                ),
+            ],
+            GroupBy::Loadout => &[
+                ("class", "b.class"),
+                ("element", "b.element"),
+                ("exotic armor", "item_name(b.exotic_armor_hash)"),
+                ("exotic weapon", "item_name(b.exotic_weapon_hash)"),
+                ("super", "item_name(b.super_hash)"),
+                (
+                    "aspects",
+                    "array_to_string(item_names(b.aspect_hashes), ', ')",
+                ),
+                (
+                    "kit",
+                    "list_sort(list_filter(list_concat(b.tier1_elements, b.tier2_elements), lambda x: (x >> 32) <= 11))::VARCHAR",
+                ),
+                (
+                    "weapons",
+                    "list_sort(list_filter(b.tier4_elements, lambda x: (x >> 32) = 16))::VARCHAR",
+                ),
+            ],
+            GroupBy::BuildId => &[("build_id", "b.build_id::VARCHAR")],
             GroupBy::Player => &[(
                 "player",
                 "coalesce(pl.bungie_name, pl.display_name, rb.membership_id::VARCHAR)",

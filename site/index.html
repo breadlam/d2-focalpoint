@@ -13,9 +13,10 @@
     <header class="masthead">
       <h1>Focalpoint</h1>
       <p class="lede">
-        Destiny 2 endgame builds ranked by how much they help the players who use them,
-        not by how good those players already are. From <span id="total-clears">…</span>
-        qualified clears captured by Searchlight, <span id="data-range">…</span>.
+        A book of exact Destiny 2 endgame builds, as players equipped them, ranked by how much
+        the build helps the players who use it rather than by how good those players already are.
+        From <span id="total-clears">…</span> qualified clears captured by Searchlight,
+        <span id="data-range">…</span>.
       </p>
     </header>
 
@@ -58,8 +59,8 @@
         <select id="aspect2"></select>
       </div>
       <div class="field span-2">
-        <label for="with">Usually run with <span class="hint">(in at least a quarter of its runs)</span></label>
-        <select id="with"></select>
+        <label for="has">Recipe includes <span class="hint">(a fragment, weapon, perk or mod in a listed recipe)</span></label>
+        <select id="has"></select>
       </div>
       <div class="field">
         <label for="min">Minimum players</label>
@@ -76,6 +77,7 @@
         <label for="sort">Sort by</label>
         <select id="sort">
           <option value="effect">Build effect</option>
+          <option value="recipe">Top recipe</option>
           <option value="raw">Raw result</option>
           <option value="players">Players</option>
           <option value="runs">Runs</option>
@@ -101,24 +103,31 @@
     </section>
 
     <section class="explainer" aria-labelledby="how-heading">
-      <h2 id="how-heading">How builds are ranked</h2>
+      <h2 id="how-heading">How the book is made</h2>
       <dl>
-        <dt>Build effect</dt>
-        <dd>How much better players do with this build than on their own other runs, relative to the
+        <dt>Every recipe is real</dt>
+        <dd>Each recipe is one exact build a player used in a qualified clear: subclass, abilities,
+          aspects, fragments, weapons and their perks, armor pieces with their mods, stats, set bonuses
+          and artifact perks, exactly as equipped. Nothing is averaged or combined.</dd>
+        <dt>Build types are ranked by build effect</dt>
+        <dd>A build type is a class, subclass, exotic armor, exotic weapon, super and aspects. Its
+          effect is how much better players do with it than on their own other runs, relative to the
           average build. A build ranks high only if it lifts the players who use it, so strong players
-          can’t carry a build up the list.</dd>
-        <dt>Raw result</dt>
-        <dd>How the build’s runs went against a typical clear of the same activity, without separating
-          the player. Raw result ≈ build effect + players’ skill.</dd>
-        <dt>Players’ skill</dt>
-        <dd>How the build’s players do on their other runs.</dd>
+          can’t carry a build up the list. Raw result is how its runs went without separating the
+          player; players’ skill is how good its players are.</dd>
+        <dt>The top recipe</dt>
+        <dd>Builds of a type with the same exotic perks, abilities, aspects and fragments form a recipe
+          family; their evidence is pooled, because most exact builds were used in only a few clears.
+          The top recipe is the best-ranked exact build of the type’s best-ranked family, judged the
+          same way: how much its players beat their own usual level with it.</dd>
+        <dt>Variants</dt>
+        <dd>Other exact builds of the same family: the same kit with different weapons, armor, mods,
+          stats or artifact perks. Each lists exactly what differs from the top recipe, and opens to
+          its full recipe.</dd>
         <dt>Run results</dt>
         <dd>Each clear is scored on kills, speed and deaths against a typical clear of the same activity
           with the same solo status, following Searchlight’s original run evaluator. Only clears that met
           Searchlight’s difficulty gates count (fresh start, difficulty tier, feats).</dd>
-        <dt>What a “build” is</dt>
-        <dd>Class, subclass, exotic armor, exotic weapon, super and aspects. “How it’s run” shows the
-          abilities, fragments, weapons and mods its players most often paired with it.</dd>
       </dl>
       <p class="muted">
         Keep in mind: the player matters far more than the build. Player skill explains about a third

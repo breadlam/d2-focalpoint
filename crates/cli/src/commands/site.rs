@@ -40,13 +40,14 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
 
     let rows: usize = data.scopes.iter().map(|s| s.rows.len()).sum();
     println!(
-        "Wrote {} ({} KB) in {:.1}s: {} scopes, {} build groups, {} ranked rows",
+        "Wrote {} ({} KB) in {:.1}s: {} scopes, {} build types, {} listings, {} exact recipes",
         path.display(),
         thousands((json.len() / 1024) as i64),
         started.elapsed().as_secs_f64(),
         data.scopes.len(),
-        thousands(data.groups.len() as i64),
+        thousands(data.types.len() as i64),
         thousands(rows as i64),
+        thousands(data.recipes.len() as i64),
     );
     Ok(())
 }

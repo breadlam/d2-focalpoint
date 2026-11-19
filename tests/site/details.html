@@ -1,5 +1,6 @@
 <!doctype html>
-<!-- Screenshot harness: the site with the first build's details open.
+<!-- Screenshot harness: the site with the first listing's panels open
+     (armor and variants; variants' own full recipes stay closed).
      Serve the repository root and open /tests/site/details.html#<site hash>. -->
 <meta charset="utf-8">
 <style>body { margin: 0; } iframe { display: block; width: 100%; height: 100vh; border: 0; }</style>
@@ -8,8 +9,8 @@
   const frame = document.getElementById('site');
   frame.src = '../../site/index.html' + location.hash;
   frame.addEventListener('load', function open() {
-    const d = frame.contentDocument.querySelector('details.more');
-    if (!d) return setTimeout(open, 100);
-    d.open = true;
+    const card = frame.contentDocument.querySelector('.card');
+    if (!card) return setTimeout(open, 100);
+    card.querySelectorAll(':scope > details, :scope > section > details').forEach((d) => { d.open = true; });
   });
 </script>
