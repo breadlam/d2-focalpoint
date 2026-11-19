@@ -8,7 +8,7 @@
 // facet counts, ranking, recipe differences, URL state) are exported for
 // tests/site/test.html; start() wires them to the page.
 
-export const FORMAT = 3;
+export const FORMAT = 4;
 export const STATS = ['Weapons', 'Health', 'Class', 'Grenade', 'Super', 'Melee'];
 export const ARMOR_SLOTS = ['Helmet', 'Gauntlets', 'Chest', 'Legs', 'Class item'];
 export const WEAPON_SLOTS = ['Kinetic', 'Energy', 'Power'];
@@ -29,7 +29,7 @@ const HASH_KEYS = {
 /** Sort keys: a function of a scope row. */
 export const SORTS = {
   effect: { label: 'Build effect', key: (r) => r[1] },
-  recipe: { label: 'Top recipe', key: (r) => r[7][1] },
+  top: { label: 'Top build', key: (r) => r[7][1] },
   raw: { label: 'Raw result', key: (r) => r[2] },
   players: { label: 'Players', key: (r) => r[4] },
   runs: { label: 'Runs', key: (r) => r[5] },
@@ -69,15 +69,41 @@ export function prepare(data) {
   if (data.format !== FORMAT) {
     throw new Error(`data format ${data.format}, expected ${FORMAT}: re-export with this version of focalpoint`);
   }
+  // Scopes start without listings; parts are added as they load.
+  for (const s of data.scopes) { s.rows = []; s.loaded = new Set(); }
   const scopes = new Map(data.scopes.map((s) => [s.id, s]));
   const appearances = data.types.map(() => []);
-  for (const s of data.scopes) for (const r of s.rows) appearances[r[0]].push({ scope: s, row: r });
+  for (const s of data.scopes) {
+    for (const [type, effect, players] of s.summary) appearances[type].push({ scope: s, effect, players });
+  }
+  const raw = [];
   const decoded = new Map();
   const recipe = (i) => {
-    if (!decoded.has(i)) decoded.set(i, decodeRecipe(data.recipes[i]));
+    if (!decoded.has(i)) decoded.set(i, decodeRecipe(raw[i]));
     return decoded.get(i);
   };
-  return { data, types: data.types, scopes, appearances, recipe, includeCache: new Map(), rowIncludes: new WeakMap() };
+  return { data, types: data.types, scopes, appearances, raw, recipe, includeCache: new Map(), rowIncludes: new WeakMap() };
+}
+
+/** Add a loaded part (`book/<scope>.json`) to its scope; picks are renumbered into the model's recipes. */
+export function addPart(model, scope, file, part) {
+  if (part.format !== FORMAT) throw new Error(`${file}: data format ${part.format}, expected ${FORMAT}`);
+  if (scope.loaded.has(file)) return;
+  const offset = model.raw.length;
+  model.raw.push(...part.recipes);
+  for (const r of part.rows) {
+    r[7][0] += offset;
+    for (const v of r[8]) v[0] += offset;
+    scope.rows.push(r);
+  }
+  scope.loaded.add(file);
+}
+
+/** The parts of a scope that can hold listings with at least `min` players and are not loaded yet. */
+export function missingParts(scope, min) {
+  return scope.parts
+    .filter(([, most, file, count]) => count > 0 && (most === null || min <= most) && !scope.loaded.has(file))
+    .map(([, , file]) => file);
 }
 
 const name = (model, i) => (i === null || i === undefined ? null : model.data.dict[i]?.[0] ?? null);
@@ -493,21 +519,21 @@ function variantItem(model, top, v, mark) {
     h('p', { class: 'recipe-meta' }, pickLine(v), matched ? h('span', { class: 'match-badge' }, ` includes ${mark}`) : null),
     diff.length
       ? h('ul', { class: 'diff' }, diff.map((d) => h('li', {}, h('span', { class: 'diff-label' }, `${d.label}: `), d.text)))
-      : h('p', { class: 'muted' }, 'Same as the top recipe in every listed part.'),
-    lazyDetails('Full recipe', () => loadoutPanel(model, r, mark)));
+      : h('p', { class: 'muted' }, 'Same as the top build in every listed part.'),
+    lazyDetails('Full build', () => loadoutPanel(model, r, mark)));
 }
 
 function elsewhere(model, typeId, current, go) {
   const others = model.appearances[typeId].filter((a) => a.scope.id !== current.id && a.scope.kind !== 'all');
   if (others.length === 0) return null;
-  others.sort((a, b) => b.row[1] - a.row[1]);
+  others.sort((a, b) => b.effect - a.effect);
   return lazyDetails(`Ranked in ${others.length} other activit${others.length === 1 ? 'y' : 'ies'}`, () =>
     h('table', { class: 'elsewhere' },
       h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Activity'), h('th', { scope: 'col' }, 'Effect'), h('th', { scope: 'col' }, 'Players'))),
       h('tbody', {}, others.map((a) => h('tr', {},
         h('td', {}, h('button', { type: 'button', class: 'link', onclick: () => go(a.scope.id) }, scopeLabel(a.scope))),
-        h('td', { class: a.row[1] >= 0 ? 'pos-text' : 'neg-text' }, pct(a.row[1])),
-        h('td', {}, n(a.row[4])))))));
+        h('td', { class: a.effect >= 0 ? 'pos-text' : 'neg-text' }, pct(a.effect)),
+        h('td', {}, n(a.players)))))));
 }
 
 function card(model, row, rank, scope, go, mark) {
@@ -534,9 +560,9 @@ function card(model, row, rank, scope, go, mark) {
         h('p', { class: 'secondary' }, `raw ${pct(raw)} · players’ skill ${pct(skill)}`),
         h('p', { class: 'secondary' }, `${n(players)} players · ${n(Math.round(runs))} runs`),
         h('p', { class: 'secondary' }, `last used ${last}`))),
-    h('section', { class: `recipe${topMatched ? ' matched' : ''}`, 'aria-label': 'Top recipe' },
+    h('section', { class: `recipe${topMatched ? ' matched' : ''}`, 'aria-label': 'Top build' },
       h('div', { class: 'recipe-head' },
-        h('h4', { class: 'recipe-title' }, 'Top recipe'),
+        h('h4', { class: 'recipe-title' }, 'Top build'),
         h('p', { class: 'recipe-meta' }, topLine(row), topMatched ? h('span', { class: 'match-badge' }, ` includes ${mark}`) : null)),
       loadoutPanel(model, recipe, mark)),
     total ? lazyDetails(
@@ -592,8 +618,9 @@ export function bookHash(t) {
 }
 
 /** Run the ranked book in `root`; returns `{ refresh }` for URL changes. */
-export function startBook(root, data) {
+export function startBook(root, data, load) {
   const model = prepare(data);
+  let generation = 0;
   let state = parseHash(location.hash);
   let shown = PAGE;
   const $ = (id) => root.querySelector(`#${id}`);
@@ -677,7 +704,16 @@ export function startBook(root, data) {
     }
   }
 
-  function render() {
+  async function render() {
+    const mine = ++generation;
+    const target = scopeOf(model, state);
+    const missing = missingParts(target, state.min);
+    if (missing.length) {
+      $('summary').textContent = 'Loading…';
+      const parts = await Promise.all(missing.map((f) => load(`data/book/${f}`).then((p) => [f, p])));
+      for (const [f, p] of parts) addPart(model, target, f, p);
+      if (mine !== generation) return; // a newer render took over
+    }
     renderFilters();
     const { scope, rows } = results(model, state);
     renderScopeNote(scope);
@@ -721,7 +757,7 @@ export function boot(root) {
   let book = null;
   let finder = null;
   // A finder result links to its type's ranked listing.
-  const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'Look for this build type in the ranked book →');
+  const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'Look for this build type in the ranked builds →');
 
   async function show() {
     const find = isFind();
@@ -737,7 +773,7 @@ export function boot(root) {
         await finder;
       } else {
         if (book) (await book).refresh();
-        else book = fetchJson('data/focalpoint.json').then((data) => startBook(root, data));
+        else book = fetchJson('data/book/index.json').then((data) => startBook(root, data, fetchJson));
         await book;
       }
     } catch (error) {

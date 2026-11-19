@@ -1,36 +1,41 @@
 # The build-ranking site
 
-`site/` is a static page for GitHub Pages: **a book of exact recipes**. Every
-listing is a build a player actually used in a qualified clear, published
-exactly as equipped — subclass, abilities, aspects, fragments, weapons with
-their frame, perks, origin trait and mod, armor pieces with archetype,
-tuning, stat mods and mods, set bonuses, artifact perks and final stats.
-Nothing is averaged or combined; the ranking tools only choose which builds
-to publish:
+`site/` is a static page for GitHub Pages with two views. **Ranked builds**
+lists build types ranked by build effect, each with exact builds players
+actually used in qualified clears, published exactly as equipped —
+subclass, abilities, aspects, fragments, weapons with their frame, perks,
+origin trait and mod, armor pieces with archetype, tuning, stat mods and
+mods, set bonuses, artifact perks and final stats. Nothing is averaged or
+combined; the ranking tools only choose which builds to show:
 
 1. **Build types** (class, subclass element, exotic armor and weapon, super,
    aspects) are ranked by **build effect** (ADR 0006): how much better
-   players do with the type than on their own other runs.
-2. Within a type, **recipe families** (the same kit: exotic perks,
-   abilities, aspects, fragments) and within the best family, **loadouts**
-   (the same kit and legendary weapons) are ranked the same way, pooling the
-   evidence of near-identical builds.
-3. The listing's **top recipe** is the best-ranked exact build of the best
+   players do with the type than on their own other runs. Solo clears count,
+   measured against other solo clears of the same activity.
+2. Within a type, **families** (the same kit: exotic perks, abilities,
+   aspects, fragments) and within the best family, **loadouts** (the same
+   kit and legendary weapons) are ranked the same way, pooling the evidence
+   of near-identical builds.
+3. The listing's **top build** is the best-ranked exact build of the best
    loadout that was used in at least 3 clears and beat its players' usual
    level (falling back to 2 clears, then to the best loadout).
 4. Its **near-identical variants** are the loadout's other exact builds
    within 8 element changes (a perk roll, a mod, an artifact perk), each
-   listed with exactly what differs and its own full recipe.
+   listed with exactly what differs and its own full build.
 
-Recipes are drawn the way Searchlight drew a build (after the in-game
-loadout screen): weapons and subclass, stats and set bonuses, armor and
-artifact, as icon tiles in aligned columns whose names show on hover, focus
-or tap; narrow screens stack the sections in the same reading order. The page
-uses Searchlight's dark palette.
+"Minimum players" counts the different players who ran a build type in the
+chosen activity (each for at least half a run); their exact builds may
+differ. It defaults to 3; 1 includes build types only one player used.
+
+Builds are drawn the way Searchlight drew them (after the in-game loadout
+screen): weapons and subclass, stats and set bonuses, armor and artifact, as
+icon tiles in aligned columns whose names show on hover, focus or tap;
+narrow screens stack the sections in the same reading order. The page uses
+Searchlight's dark palette.
 
 Pick "All activities", a target group (e.g. "Master Raid") or a single
 activity to get the listings ranked there, and narrow them by class,
-subclass, super, exotics, aspects or a component a listed recipe includes.
+subclass, super, exotics, aspects or a component a listed build includes.
 Filters and activity are kept in the URL, so a view can be shared.
 
 A second view, **Find any build**, searches the **catalog**: every build
@@ -46,9 +51,9 @@ artifact perks). Ranked builds come first, the rest by use.
 | Path | What it is |
 |---|---|
 | `site/index.html`, `site/style.css`, `site/favicon.svg` | the page; no build step, no dependencies |
-| `site/app.js` | an ES module: pure functions (recipe decoding and differences, filtering, facet counts, ranking, URL state) plus the DOM layer |
+| `site/app.js` | an ES module: pure functions (build decoding and differences, filtering, facet counts, ranking, URL state) plus the DOM layer |
 | `site/finder.js` | "Find any build": catalog parsing, filters and rendering (loaded only when the view is opened) |
-| `site/data/focalpoint.json` | the ranked book, exported by `focalpoint site` and committed |
+| `site/data/book/` | the ranked builds: `index.json` and two files per scope, exported by `focalpoint site` and committed |
 | `site/data/catalog/` | the catalog of every build: `index.txt` and shards `sNNN.txt`, exported by `focalpoint site` and committed |
 | `site/.nojekyll` | serve files as they are |
 | `tests/site/test.html` | browser tests for `app.js` |
@@ -64,18 +69,23 @@ more than one), then describes each build group from its captured runs:
 
 ```sh
 focalpoint import --backups ../searchlight-backups   # if the database changed
-focalpoint site                                      # writes site/data/focalpoint.json
-git add site/data/focalpoint.json
+focalpoint site                                      # writes site/data/book/ and site/data/catalog/
+git add -A site/data
 ```
 
-It takes about 90 s: the book needs four model fits per scope (types,
-families, loadouts, exact builds) and writes about 6 MB (1.6 MB compressed,
-which is how GitHub Pages serves it); the catalog writes 219 text files,
-157 MB (46 MB compressed — about what git stores). Recipes are stored once and serialized as positional
-arrays, since they are most of the file. The output is deterministic, so an
-unchanged database gives an unchanged file. A build type is listed in a
-scope once at least 2 players have used it there for half a run
-(`--min-players`); the page defaults to 3.
+It takes about 90 s. The ranked builds need four model fits per scope
+(types, families, loadouts, exact builds); they are split into
+`book/index.json` (names, types, and each scope's listings in brief, for
+"ranked in other activities") and two files per scope: build types with at
+least 3 players, loaded with the page, and those with 1–2 players, loaded
+only when the minimum is lowered. Opening the page fetches about 0.9 MB
+(compressed, which is how GitHub Pages serves it); all 88 files total
+28 MB (about 7 MB compressed). The catalog writes 219 text files, 151 MB
+(46 MB compressed — about what git stores). Exact builds are serialized as
+positional arrays, since they are most of the data. The output is
+deterministic, so an unchanged database gives unchanged files. A build type
+is listed in a scope once at least `--min-players` (default 1) players have
+used it there for half a run.
 
 ## Previewing and testing
 
@@ -101,24 +111,34 @@ The workflow deploys `site/` whenever a push to `master` changes it. One-time
 setup in the GitHub repository: **Settings → Pages → Build and deployment →
 Source: GitHub Actions**.
 
-## Data format (`format: 3`)
+## Data format (`format: 4`)
+
+`book/index.json`:
 
 ```text
 { format, imported_at, first_run, last_run,
   icon_base,                    // "https://www.bungie.net"
-  dict:     [[name, icon, type, damage type]],  // what recipes refer to by index
-  stats:    [[name, icon]],     // the six armor stats in recipe order
+  dict:     [[name, icon, type, damage type]],  // what builds refer to by index
+  stats:    [[name, icon]],     // the six armor stats in build order
   elements: { name: icon },     // damage-type glyphs ("Arc", "Solar", …)
   icons:    { name: path },     // icons for names in build types
   types:    [{ class, element, armor, weapon, super, aspects }],
-  recipes:  [recipe],           // positional, below
   scopes:   [{ id, name, kind: all|group|activity, parent, clears, build_runs, players,
-               rows: [[type, effect, raw, players' skill, players, runs, last used,
-                       top pick, [variant pick], variants not listed,
-                       loadout clears, loadout exact builds]] }] }
+               parts:   [[least players, most players or null, file, listings]],
+               summary: [[type, effect, players]] }] }
+```
 
-pick    = [recipe index, effect, runs, players, last used]
-recipe  = [build id (string), stats [6] or null, kit, [armor piece], [weapon],
+`book/<scope>.json` and `book/<scope>.more.json` (scope ids with `/` as `--`):
+
+```text
+{ format, scope,
+  rows:    [[type, effect, raw, players' skill, players, runs, last used,
+             top pick, [variant pick], variants not listed,
+             loadout clears, loadout exact builds]],
+  recipes: [build] }            // this file's exact builds, positional, below
+
+pick    = [index into this file's recipes, effect, runs, players, last used]
+build   = [build id (string), stats [6] or null, kit, [armor piece], [weapon],
            [[set, pieces, [bonus]]], artifact item, [artifact perk]]
 kit     = [subclass, super, class ability, movement, melee, grenade,
            [aspect], [fragment], [transcendence]]
@@ -128,7 +148,7 @@ weapon  = [slot 0–2 (kinetic, energy, power), item, exotic 0/1, frame, [perk],
            origin trait, mod]
 ```
 
-Numbers inside recipes are indices into `dict`; an entry's type ("Pulse
+Numbers inside builds are indices into `dict`; an entry's type ("Pulse
 Rifle", "Stasis Fragment") feeds the tooltips and a weapon's damage type its
 element glyph. Stats are stored Weapons, Health, Class, Grenade, Super, Melee
 and shown in the game's order. Effects are on the log scale (`exp(x) − 1` is
@@ -150,7 +170,7 @@ spans several shards), and builds within a type by loadout.
 focalpoint-catalog 2
 @meta        key<TAB>value                 imported_at, first_run, last_run, icon_base, builds, shards
 @dict        name<TAB>icon<TAB>type<TAB>damage type   referenced by index from types and shards
-@stats       name<TAB>icon                 the six armor stats in recipe order
+@stats       name<TAB>icon                 the six armor stats in build order
 @elements    name<TAB>icon                 damage-type glyphs
 @activities  name<TAB>target group
 @types       class element armor weapon super aspects builds runs players shards activities   (TAB-separated)
@@ -180,5 +200,5 @@ indices into the index's `@dict`.
 
 Exact builds (equipment only) with counts of runs, players and clears and
 the fitted effects. No player names, Bungie names or membership ids are
-exported (a test checks this for the book; the catalog's fields are listed
+exported (a test checks this for the ranked builds; the catalog's fields are listed
 above).

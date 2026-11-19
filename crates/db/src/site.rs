@@ -38,7 +38,12 @@ use crate::search::GroupBy;
 use crate::{Database, Result, meta_key};
 
 /// Version of the JSON layout; the site checks it.
-pub const SITE_FORMAT_VERSION: u32 = 3;
+pub const SITE_FORMAT_VERSION: u32 = 4;
+
+/// Each scope's listings are split in two files: build types with at least
+/// this many players (the page's default minimum) load with the page; the
+/// rest only when the reader lowers the minimum.
+pub const CORE_PLAYERS: usize = 3;
 
 /// Variants listed per listing (the rest are counted).
 pub const VARIANT_LIMIT: usize = 5;
@@ -65,13 +70,14 @@ pub struct SiteOptions {
 impl Default for SiteOptions {
     fn default() -> Self {
         Self {
-            min_players: 2,
+            min_players: 1,
             rank: RankOptions::default(),
         }
     }
 }
 
-/// Everything the site loads.
+/// Everything the ranked builds view shows, before it is split into files
+/// ([`split`]).
 #[derive(Debug, Serialize)]
 pub struct SiteData {
     pub format: u32,
@@ -148,6 +154,140 @@ pub struct Row(
 /// last used]`.
 #[derive(Debug, Serialize, PartialEq)]
 pub struct Pick(pub u32, pub f64, pub f64, pub usize, pub String);
+
+/// The ranked builds view as files: an index loaded with the page, and two
+/// parts per scope loaded on demand.
+#[derive(Debug)]
+pub struct Book {
+    pub index: BookIndex,
+    /// `(file name, contents)`.
+    pub parts: Vec<(String, BookPart)>,
+}
+
+/// `book/index.json`: names, types and every scope without its listings.
+#[derive(Debug, Serialize)]
+pub struct BookIndex {
+    pub format: u32,
+    pub imported_at: String,
+    pub first_run: String,
+    pub last_run: String,
+    pub icon_base: &'static str,
+    pub dict: Vec<DictEntry>,
+    pub stats: Vec<(String, Option<String>)>,
+    pub elements: BTreeMap<String, String>,
+    pub icons: BTreeMap<String, String>,
+    pub types: Vec<BuildType>,
+    pub scopes: Vec<ScopeMeta>,
+}
+
+/// A scope in the index.
+#[derive(Debug, Serialize)]
+pub struct ScopeMeta {
+    pub id: String,
+    pub name: String,
+    pub kind: &'static str,
+    pub parent: Option<String>,
+    pub clears: usize,
+    pub build_runs: usize,
+    pub players: usize,
+    /// The scope's files: `[least players, most players or null, file, listings]`.
+    pub parts: Vec<PartMeta>,
+    /// Every listing in brief, `[type, effect, players]`, so a listing can
+    /// say where else its build type ranks without loading other scopes.
+    pub summary: Vec<(u32, f64, usize)>,
+}
+
+#[derive(Debug, Serialize, PartialEq)]
+pub struct PartMeta(pub usize, pub Option<usize>, pub String, pub usize);
+
+/// One part of a scope: its listings, with picks indexing `recipes`.
+#[derive(Debug, Serialize)]
+pub struct BookPart {
+    pub format: u32,
+    pub scope: String,
+    pub rows: Vec<Row>,
+    pub recipes: Vec<Recipe>,
+}
+
+/// Split [`SiteData`] into the index and per-scope parts. A part's recipes
+/// are its own (a recipe listed in several scopes is repeated), so each
+/// file stands alone.
+#[must_use]
+pub fn split(data: SiteData) -> Book {
+    let mut parts = Vec::new();
+    let mut scopes = Vec::with_capacity(data.scopes.len());
+    for scope in data.scopes {
+        let summary = scope.rows.iter().map(|r| (r.0, r.1, r.4)).collect();
+        let base = scope.id.replace('/', "--");
+        let (core, more): (Vec<Row>, Vec<Row>) =
+            scope.rows.into_iter().partition(|r| r.4 >= CORE_PLAYERS);
+        let mut metas = Vec::new();
+        for (rows, least, most, file) in [
+            (core, CORE_PLAYERS, None, format!("{base}.json")),
+            (more, 1, Some(CORE_PLAYERS - 1), format!("{base}.more.json")),
+        ] {
+            metas.push(PartMeta(least, most, file.clone(), rows.len()));
+            if rows.is_empty() {
+                continue;
+            }
+            let mut local: HashMap<u32, u32> = HashMap::new();
+            let mut recipes = Vec::new();
+            let mut map = |i: u32| -> u32 {
+                let next = local.len() as u32;
+                *local.entry(i).or_insert_with(|| {
+                    recipes.push(data.recipes[i as usize].clone());
+                    next
+                })
+            };
+            let rows = rows
+                .into_iter()
+                .map(|mut r| {
+                    r.7.0 = map(r.7.0);
+                    for v in &mut r.8 {
+                        v.0 = map(v.0);
+                    }
+                    r
+                })
+                .collect();
+            parts.push((
+                file,
+                BookPart {
+                    format: SITE_FORMAT_VERSION,
+                    scope: scope.id.clone(),
+                    rows,
+                    recipes,
+                },
+            ));
+        }
+        scopes.push(ScopeMeta {
+            id: scope.id,
+            name: scope.name,
+            kind: scope.kind,
+            parent: scope.parent,
+            clears: scope.clears,
+            build_runs: scope.build_runs,
+            players: scope.players,
+            parts: metas,
+            summary,
+        });
+    }
+    Book {
+        index: BookIndex {
+            format: data.format,
+            imported_at: data.imported_at,
+            first_run: data.first_run,
+            last_run: data.last_run,
+            icon_base: data.icon_base,
+            dict: data.dict,
+            stats: data.stats,
+            elements: data.elements,
+            icons: data.icons,
+            types: data.types,
+            scopes,
+        },
+        parts,
+    }
+}
 
 fn round(x: f64, digits: i32) -> f64 {
     let scale = 10_f64.powi(digits);
@@ -827,6 +967,52 @@ pub(crate) mod tests {
         // Aggregates and recipes only: nothing identifies a player.
         let json = serde_json::to_string(&data).unwrap();
         assert!(!json.contains("membership"));
+    }
+
+    #[test]
+    fn the_book_splits_into_an_index_and_parts() {
+        let data = export();
+        let alpha_type = data
+            .types
+            .iter()
+            .position(|t| t.armor.as_deref() == Some("Alpha Boots"))
+            .unwrap() as u32;
+        let top = data.scopes[0]
+            .rows
+            .iter()
+            .find(|r| r.0 == alpha_type)
+            .map(|r| data.recipes[r.7.0 as usize].id.clone())
+            .unwrap();
+        let book = split(data);
+        let all = &book.index.scopes[0];
+        assert_eq!(all.id, "all");
+        // Alpha has 2 players, Beta 2: both in the "more" part (1–2 players).
+        assert_eq!(
+            all.parts,
+            [
+                PartMeta(3, None, "all.json".into(), 0),
+                PartMeta(1, Some(2), "all.more.json".into(), 2)
+            ]
+        );
+        assert_eq!(all.summary.len(), 2);
+        let files: Vec<&str> = book.parts.iter().map(|(f, _)| f.as_str()).collect();
+        assert!(files.contains(&"all.more.json"));
+        assert!(!files.contains(&"all.json"), "empty parts are not written");
+        assert!(
+            files.iter().any(|f| f.contains("--")),
+            "activity ids become file names"
+        );
+        let (_, part) = book
+            .parts
+            .iter()
+            .find(|(f, _)| f == "all.more.json")
+            .unwrap();
+        let row = part.rows.iter().find(|r| r.0 == alpha_type).unwrap();
+        assert_eq!(
+            part.recipes[row.7.0 as usize].id, top,
+            "picks index the part's own recipes"
+        );
+        assert!(row.8.iter().all(|v| (v.0 as usize) < part.recipes.len()));
     }
 
     #[test]

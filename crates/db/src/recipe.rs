@@ -12,7 +12,7 @@ pub(crate) const ARMOR_SLOTS: [&str; 5] = ["helmet", "gauntlets", "chest", "legs
 pub(crate) const WEAPON_SLOTS: [&str; 3] = ["kinetic", "energy", "power"];
 
 /// One exact build, as equipped. Numbers are indices into `dict`.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Recipe {
     /// The build id, as a string (ids exceed JavaScript's safe integers).
     pub id: String,
@@ -60,7 +60,7 @@ impl Serialize for DictEntry {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Kit {
     pub subclass: Option<u32>,
     pub super_: Option<u32>,
@@ -73,7 +73,7 @@ pub struct Kit {
     pub transcendence: Vec<u32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArmorPiece {
     pub slot: &'static str,
     pub item: u32,
@@ -87,7 +87,7 @@ pub struct ArmorPiece {
     pub perks: Vec<u32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Weapon {
     pub slot: &'static str,
     pub item: u32,

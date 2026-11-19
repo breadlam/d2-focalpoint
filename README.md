@@ -85,10 +85,10 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 ## Build-ranking site
 
-[`site/`](site) is a static page for GitHub Pages with two views: a ranked
-book of exact recipes (build types ranked by build effect, each with its
-best-ranked exact build and near-identical variants, per activity), and
-**Find any build**, a search over every collected build exactly as equipped.
+[`site/`](site) is a static page for GitHub Pages with two views: **Ranked
+builds** (build types ranked by build effect, each with its best-ranked
+exact build and near-identical variants, per activity), and **Find any
+build**, a search over every collected build exactly as equipped.
 Refresh its data with `focalpoint site`; see [docs/site.md](docs/site.md)
 for the formats, previewing, tests and publishing.
 

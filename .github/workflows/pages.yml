@@ -1,6 +1,6 @@
 # Publish the static build-ranking site (site/) to GitHub Pages.
 #
-# The data (site/data/focalpoint.json) is exported locally with
+# The data (site/data/book/ and site/data/catalog/) is exported locally with
 # `focalpoint site` and committed: the analysis database is built from
 # private backups and is not available here. See docs/site.md.
 #
@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check the exported data is present
-        run: test -s site/data/focalpoint.json
+        run: test -s site/data/book/index.json && test -s site/data/catalog/index.txt
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

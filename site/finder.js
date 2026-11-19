@@ -304,9 +304,9 @@ function buildCard(cat, b, rank, has, book) {
           h('span', { class: 'exotic' }, icon(cat, t.weapon), h('span', { class: t.weapon === null ? 'muted' : '' }, t.weaponName ?? 'No exotic weapon'))),
         h('p', { class: 'subtitle' }, elementBadge(t.element), ` ${t.class ?? ''}`, t.superName ? ` · ${t.superName}` : ''),
         h('ul', { class: 'aspects' }, t.aspects.map((a, i) => h('li', {}, icon(cat, a, 'chip-icon'), t.aspectNames[i]))))),
-    h('section', { class: 'recipe', 'aria-label': 'Recipe' },
+    h('section', { class: 'recipe', 'aria-label': 'Build' },
       h('div', { class: 'recipe-head' },
-        h('h4', { class: 'recipe-title' }, 'Recipe'),
+        h('h4', { class: 'recipe-title' }, 'Build'),
         h('p', { class: 'recipe-meta' }, buildRecord(b),
           has.length ? h('span', { class: 'match-badge' }, ` · includes ${has.join(', ')}`) : null)),
       loadoutPanel(cat, r, mark)),
@@ -401,7 +401,7 @@ export async function startFinder(root, goBook) {
     }
     if (total > SEARCH_LIMIT) {
       note.textContent = `${n(total)} builds in ${n(types.length)} build types match. Add a class, subclass, exotic, super or aspect `
-        + `(or pick one of the build types below) to search their exact recipes.`;
+        + `(or pick one of the build types below) to search their exact builds.`;
       $('find-summary').textContent = `${n(types.length)} build types`;
       list.replaceChildren();
       fillSelect($('f-has'), [], '', 'Narrow the build types first');

@@ -20,7 +20,7 @@
     </header>
 
     <nav class="tabs" aria-label="Views">
-      <button id="tab-book" type="button" class="tab" aria-selected="true">Ranked recipes</button>
+      <button id="tab-book" type="button" class="tab" aria-selected="true">Ranked builds</button>
       <button id="tab-find" type="button" class="tab" aria-selected="false">Find any build</button>
     </nav>
 
@@ -64,12 +64,13 @@
         <select id="aspect2"></select>
       </div>
       <div class="field span-2">
-        <label for="has">Recipe includes <span class="hint">(a fragment, weapon, perk or mod in a listed recipe)</span></label>
+        <label for="has">Build includes <span class="hint">(a fragment, weapon, perk or mod in a listed build)</span></label>
         <select id="has"></select>
       </div>
       <div class="field">
-        <label for="min">Minimum players</label>
+        <label for="min">Minimum players <span class="hint">(who ran the build type)</span></label>
         <select id="min">
+          <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
           <option value="5">5</option>
@@ -82,7 +83,7 @@
         <label for="sort">Sort by</label>
         <select id="sort">
           <option value="effect">Build effect</option>
-          <option value="recipe">Top recipe</option>
+          <option value="top">Top build</option>
           <option value="raw">Raw result</option>
           <option value="players">Players</option>
           <option value="runs">Runs</option>
@@ -179,10 +180,10 @@
     </div>
 
     <section class="explainer" aria-labelledby="how-heading">
-      <h2 id="how-heading">How the book is made</h2>
+      <h2 id="how-heading">How builds are ranked</h2>
       <dl>
-        <dt>Every recipe is real</dt>
-        <dd>Each recipe is one exact build a player used in a qualified clear: subclass, abilities,
+        <dt>Every build is real</dt>
+        <dd>Each listing shows exact builds players used in qualified clears: subclass, abilities,
           aspects, fragments, weapons and their perks, armor pieces with their mods, stats, set bonuses
           and artifact perks, exactly as equipped. Nothing is averaged or combined.</dd>
         <dt>Build types are ranked by build effect</dt>
@@ -190,19 +191,24 @@
           effect is how much better players do with it than on their own other runs, relative to the
           average build. A build ranks high only if it lifts the players who use it, so strong players
           can’t carry a build up the list. Raw result is how its runs went without separating the
-          player; players’ skill is how good its players are.</dd>
-        <dt>The top recipe</dt>
+          player; players’ skill is how good its players are. Solo clears count too, measured against
+          other solo clears of the same activity.</dd>
+        <dt>Minimum players</dt>
+        <dd>How many different players ran the build type in the chosen activity (each for at least
+          half a run); their exact builds may differ. The default of 3 hides build types only one or
+          two players used; set it to 1 to include them.</dd>
+        <dt>The top build</dt>
         <dd>Builds of a type with the same exotic perks, abilities, aspects and fragments form a
           family, and those that also carry the same weapons form a loadout; their evidence is pooled,
-          because most exact builds were used in only a few clears. The top recipe is the best-ranked
+          because most exact builds were used in only a few clears. The top build is the best-ranked
           exact build of the best loadout that players came back to (at least 3 clears, falling back
           to fewer) and that beat their usual level.</dd>
         <dt>Variants</dt>
         <dd>Other exact builds of the same loadout that differ in at most a few parts — a perk roll,
-          a mod, an artifact perk. Each lists exactly what differs from the top recipe, and opens to
-          its full recipe.</dd>
-        <dt>Reading a recipe</dt>
-        <dd>Recipes are laid out like Searchlight’s build page and the in-game loadout screen:
+          a mod, an artifact perk. Each lists exactly what differs from the top build, and opens to
+          the full build.</dd>
+        <dt>Reading a build</dt>
+        <dd>Builds are laid out like Searchlight’s build page and the in-game loadout screen:
           weapons and subclass, stats and set bonuses, armor and artifact. Hover over, focus or tap
           an icon for its name.</dd>
         <dt>Find any build</dt>

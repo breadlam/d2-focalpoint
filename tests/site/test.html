@@ -13,7 +13,7 @@
   <p id="verdict">running…</p>
   <script type="module">
     import {
-      DEFAULTS, NONE, decodeRecipe, facetOptions, formatHash, parseHash, pct, pickLine, prepare, recipeDiff,
+      DEFAULTS, NONE, addPart, decodeRecipe, facetOptions, formatHash, missingParts, parseHash, pct, pickLine, prepare, recipeDiff,
       recipeIncludes, results, rowRecipes, scopeLabel, topLine, findHash, bookHash,
     } from '../../site/app.js';
     import {
@@ -32,28 +32,32 @@
     const variant = ['11', [30, 10, 20, 190, 100, 15], kit,
       [[3, 15, 1, 19, null, [], [13, 14], []]], [[1, 10, 0, null, [11], null, null]], [[18, 2, [17]]], null, [16]];
     const titan = ['20', null, [null, null, null, null, null, null, [], [21], []], [], [], [], null, []];
+    // The book index (format 4) and its parts: rows are
+    // [type, effect, raw, skill, players, runs, last, top pick, variant picks, more,
+    //  loadout clears, loadout exact builds]; picks are [recipe, effect, runs, players, last].
+    const allRows = [
+      [0, 0.25, 0.8, 0.2, 9, 12, '2026-09-16', [0, 0.3, 4, 1, '2026-09-15'], [[1, 0.1, 1, 1, '2026-09-10']], 0, 5, 2],
+      [1, 0.1, 0.3, 0.1, 800, 1000, '2026-09-16', [2, 0.5, 6, 3, '2026-09-16'], [], 0, 6, 1]];
+    const ucRows = [
+      [1, 0.13, 0.27, 0.1, 832, 1000, '2026-09-16', [0, 0.2, 3, 2, '2026-09-16'], [], 0, 3, 4]];
+    const ucMore = [
+      [0, -0.05, 0.1, 0.1, 2, 3, '2026-09-01', [0, 0.1, 1, 1, '2026-09-01'], [], 0, 1, 1]];
     const data = {
-      format: 3, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
+      format: 4, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
       icon_base: 'https://www.bungie.net', icons: {}, stats: [], elements: {},
       dict: names.map((n) => [n, null, null, null]),
       types: [
         { class: 'Warlock', element: 'Solar', armor: 'Getaway Artist', weapon: null, super: 'Well of Radiance', aspects: ['Heat Rises', 'Icarus Dash'] },
         { class: 'Titan', element: 'Stasis', armor: 'Synthoceps', weapon: 'Ice Breaker', super: 'Glacial Quake', aspects: ['Howl of the Storm'] },
       ],
-      recipes: [top, variant, titan],
-      // Rows: [type, effect, raw, skill, players, runs, last, top pick, variant picks, more,
-      //        loadout clears, loadout exact builds].
-      // Picks: [recipe, effect, runs, players, last].
       scopes: [
-        { id: 'all', name: 'All activities', kind: 'all', parent: null, clears: 100, build_runs: 10, players: 9, rows: [
-          [0, 0.25, 0.8, 0.2, 9, 12, '2026-09-16', [0, 0.3, 4, 1, '2026-09-15'], [[1, 0.1, 1, 1, '2026-09-10']], 0, 5, 2],
-          [1, 0.1, 0.3, 0.1, 800, 1000, '2026-09-16', [2, 0.5, 6, 3, '2026-09-16'], [], 0, 6, 1]] },
-        { id: 'ultimate-conquest', name: 'Ultimate Conquest', kind: 'group', parent: null, clears: 50, build_runs: 5, players: 4, rows: [
-          [1, 0.13, 0.27, 0.1, 832, 1000, '2026-09-16', [2, 0.2, 3, 2, '2026-09-16'], [], 0, 3, 4],
-          [0, -0.05, 0.1, 0.1, 2, 3, '2026-09-01', [0, 0.1, 1, 1, '2026-09-01'], [], 0, 1, 1]] },
+        { id: 'all', name: 'All activities', kind: 'all', parent: null, clears: 100, build_runs: 10, players: 9,
+          parts: [[3, null, 'all.json', 2], [1, 2, 'all.more.json', 0]], summary: [[0, 0.25, 9], [1, 0.1, 800]] },
+        { id: 'ultimate-conquest', name: 'Ultimate Conquest', kind: 'group', parent: null, clears: 50, build_runs: 5, players: 4,
+          parts: [[3, null, 'ultimate-conquest.json', 1], [1, 2, 'ultimate-conquest.more.json', 1]],
+          summary: [[1, 0.13, 832], [0, -0.05, 2]] },
       ],
     };
-
     const log = document.getElementById('log');
     let failures = 0, passes = 0;
     const eq = (actual, expected, what) => {
@@ -66,6 +70,18 @@
     const types = (r) => r.rows.map((row) => row[0]);
 
     const model = prepare(data);
+    const [allScope, ucScope] = data.scopes;
+    eq(missingParts(allScope, 3), ['all.json'], 'the default minimum needs only the 3+ players part');
+    eq(missingParts(ucScope, 1), ['ultimate-conquest.json', 'ultimate-conquest.more.json'], 'a minimum of 1 needs both parts');
+    eq(model.appearances[0].map((a) => [a.scope.id, a.effect]), [['all', 0.25], ['ultimate-conquest', -0.05]], 'appearances come from the index');
+    addPart(model, allScope, 'all.json', { format: 4, rows: allRows, recipes: [top, variant, titan] });
+    addPart(model, ucScope, 'ultimate-conquest.json', { format: 4, rows: ucRows, recipes: [titan] });
+    addPart(model, ucScope, 'ultimate-conquest.more.json', { format: 4, rows: ucMore, recipes: [top] });
+    addPart(model, allScope, 'all.json', { format: 4, rows: allRows, recipes: [] });
+    eq(allScope.rows.length, 2, 'a part is added once');
+    eq([ucScope.rows[0][7][0], ucScope.rows[1][7][0]], [3, 4], 'picks are renumbered into the model');
+    eq(model.recipe(4).id, '10', 'renumbered picks find their recipes');
+    eq(missingParts(ucScope, 1), [], 'loaded parts are not fetched again');
 
     eq(pct(0), '±0%', 'pct zero');
     eq(pct(0.1), '+11%', 'pct positive');
@@ -81,7 +97,7 @@
 
     // Listings, filters and sorting.
     eq(types(results(model, state({}))), [0, 1], 'by build effect');
-    eq(types(results(model, state({ sort: 'recipe' }))), [1, 0], 'by top recipe');
+    eq(types(results(model, state({ sort: 'top' }))), [1, 0], 'by top build');
     eq(types(results(model, state({ min: 10 }))), [1], 'minimum players');
     eq(types(results(model, state({ cls: 'Warlock' }))), [0], 'class');
     eq(types(results(model, state({ weapon: NONE }))), [0], 'no exotic weapon');
@@ -111,15 +127,15 @@
 
     // Records.
     eq(pickLine([0, 0.1, 1, 1, '2026-09-01']), 'Used in 1 clear by 1 player · last 2026-09-01 · +11% for its players', 'a pick');
-    eq(topLine(data.scopes[0].rows[0]),
+    eq(topLine(allScope.rows[0]),
       'Used in 4 clears by 1 player · last 2026-09-15 · +35% for its players. Its loadout (same kit and weapons) was used in 5 clears across 2 exact builds.',
       'the top recipe and its loadout');
-    eq(topLine(data.scopes[1].rows[1]).endsWith('was used in 1 clear.'), true, 'a loadout of one build');
-    eq(topLine(data.scopes[1].rows[0]).endsWith('was used in 3 clears across 4 exact builds.'), true,
+    eq(topLine(ucScope.rows[1]).endsWith('was used in 1 clear.'), true, 'a loadout of one build');
+    eq(topLine(ucScope.rows[0]).endsWith('was used in 3 clears across 4 exact builds.'), true,
       'the loadout can hold builds that are not listed as variants');
 
     // URL state round-trips and drops defaults.
-    const s = state({ scope: 'ultimate-conquest', cls: 'Titan', armor: 'Synthoceps', has: 'Whisper of Chains', min: 10, sort: 'recipe' });
+    const s = state({ scope: 'ultimate-conquest', cls: 'Titan', armor: 'Synthoceps', has: 'Whisper of Chains', min: 10, sort: 'top' });
     eq(parseHash(formatHash(s)), s, 'hash round trip');
     eq(formatHash(state({})), '', 'defaults give an empty hash');
     eq(parseHash('#min=abc&sort=bogus').min, DEFAULTS.min, 'bad minimum falls back');
@@ -129,7 +145,7 @@
     eq(scopeLabel({ name: 'Ultimate Conquest: Lightblade', parent: 'Ultimate Conquest' }), 'Ultimate Conquest: Lightblade', 'scope label without repetition');
 
     let threw = false;
-    try { prepare({ ...data, format: 2 }); } catch { threw = true; }
+    try { prepare({ ...data, format: 3 }); } catch { threw = true; }
     eq(threw, true, 'data of another format is rejected');
 
     // ---- Find any build: the catalog --------------------------------------
@@ -196,7 +212,7 @@
     const fs = fstate({ armor: 'Ballidorse Wrathweavers', act: 'Master Raid|Vault of Glass: Master', has: ['Repurposed Charge', 'Whisper of Chains'], sort: 'clears' });
     eq(parseFindHash(formatFindHash(fs)), fs, 'finder hash round trip');
     eq(formatFindHash(fstate({})), '#view=find', 'finder defaults');
-    eq(findHash(data.types[0]), '#view=find&class=Warlock&element=Solar&armor=Getaway+Artist&weapon=%28none%29&super=Well+of+Radiance&aspect=Heat+Rises&aspect2=Icarus+Dash', 'book to finder link');
+    eq(findHash(model.types[0]), '#view=find&class=Warlock&element=Solar&armor=Getaway+Artist&weapon=%28none%29&super=Well+of+Radiance&aspect=Heat+Rises&aspect2=Icarus+Dash', 'book to finder link');
     eq(bookHash(cat.types[1]), '#class=Titan&element=Stasis&armor=Synthoceps&weapon=%28none%29', 'finder to book link');
 
     const verdict = document.getElementById('verdict');
