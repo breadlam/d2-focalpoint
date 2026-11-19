@@ -70,9 +70,17 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 | `searchlight info [--detailed]` | provenance, headline counts, coverage, import statistics |
 | `searchlight rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
 | `searchlight rank players [FACETS] [RUN FILTERS]` | players ranked by skill net of the builds they used (`--min-runs N`, `--sort skill\|runs\|best`); facets list players who used matching builds |
+| `searchlight site [--out site/data]` | export the rankings for the static site ([docs/site.md](docs/site.md)) |
 | `searchlight search [FACETS] [RUN FILTERS]` | builds matching any combination of class, element, exotic armor/weapon, super, aspects, fragments, weapons, perks, mods, artifact perks, armor sets; run filters `--activity`, `--player`, `--solo`, `--clears`, `--since/--until`; `--group-by exotic-armor` (etc.) for popularity reports |
 | `searchlight similar BUILD_ID` | a build's nearest neighbours by tiered distance, with per-tier breakdown (`--other-players`, `--any-class`, `--include-passengers`, `--limit N`) |
 | `searchlight sql "QUERY"` | ad-hoc read-only SQL (`--format tsv`, `--max-rows N`) |
+
+## Build-ranking site
+
+[`site/`](site) is a static page for GitHub Pages: search builds by class,
+subclass, super, exotics and aspects, or pick an activity for recommended
+builds, all ranked by build effect. Refresh its data with `searchlight site`;
+see [docs/site.md](docs/site.md) for previewing, tests and publishing.
 
 Trend reports, clustering and charts are the next milestones; see [docs/architecture.md](docs/architecture.md#adding-a-cli-feature)
 for where new features go.
@@ -84,7 +92,8 @@ for where new features go.
 - [docs/schema.md](docs/schema.md) — tables, columns, keys, example queries
 - [docs/importing.md](docs/importing.md) — running and tuning the import
 - [docs/architecture.md](docs/architecture.md) — crates, data flow, testing
-- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment)
+- [docs/site.md](docs/site.md) — the static build-ranking site: data export, preview, tests, publishing
+- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking)
 
 ## Development
 

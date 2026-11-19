@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Searchlight Build Rankings</title>
+  <meta name="description" content="Destiny 2 endgame builds ranked by how much they help the players who use them, from Searchlight's captured clears.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app" class="loading">
+    <header class="masthead">
+      <h1>Searchlight build rankings</h1>
+      <p class="lede">
+        Destiny 2 endgame builds ranked by how much they help the players who use them,
+        not by how good those players already are. From <span id="total-clears">…</span>
+        qualified clears, <span id="data-range">…</span>.
+      </p>
+    </header>
+
+    <form id="filters" class="panel" aria-label="Filters">
+      <div class="field span-2">
+        <label for="scope">Activity</label>
+        <select id="scope"></select>
+      </div>
+      <fieldset class="field span-2">
+        <legend>Class</legend>
+        <div class="segmented">
+          <input type="radio" name="class" id="class-any" value=""><label for="class-any">Any<span class="count"></span></label>
+          <input type="radio" name="class" id="class-hunter" value="Hunter"><label for="class-hunter">Hunter<span class="count"></span></label>
+          <input type="radio" name="class" id="class-titan" value="Titan"><label for="class-titan">Titan<span class="count"></span></label>
+          <input type="radio" name="class" id="class-warlock" value="Warlock"><label for="class-warlock">Warlock<span class="count"></span></label>
+        </div>
+      </fieldset>
+      <div class="field">
+        <label for="element">Subclass</label>
+        <select id="element"></select>
+      </div>
+      <div class="field">
+        <label for="sup">Super</label>
+        <select id="sup"></select>
+      </div>
+      <div class="field">
+        <label for="armor">Exotic armor</label>
+        <select id="armor"></select>
+      </div>
+      <div class="field">
+        <label for="weapon">Exotic weapon</label>
+        <select id="weapon"></select>
+      </div>
+      <div class="field">
+        <label for="aspect1">Aspect</label>
+        <select id="aspect1"></select>
+      </div>
+      <div class="field">
+        <label for="aspect2">Second aspect</label>
+        <select id="aspect2"></select>
+      </div>
+      <div class="field span-2">
+        <label for="with">Usually run with <span class="hint">(in at least a quarter of its runs)</span></label>
+        <select id="with"></select>
+      </div>
+      <div class="field">
+        <label for="min">Minimum players</label>
+        <select id="min">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sort">Sort by</label>
+        <select id="sort">
+          <option value="effect">Build effect</option>
+          <option value="raw">Raw result</option>
+          <option value="players">Players</option>
+          <option value="runs">Runs</option>
+        </select>
+      </div>
+      <div class="field actions span-2">
+        <button id="reset" type="button" class="button secondary">Clear filters</button>
+      </div>
+    </form>
+
+    <p id="scope-note" class="note"></p>
+
+    <section class="results-section" aria-labelledby="results-heading">
+      <div class="results-head">
+        <h2 id="results-heading">Builds</h2>
+        <p id="summary" aria-live="polite"></p>
+      </div>
+      <ol id="results" class="results"></ol>
+      <p id="empty" class="empty" hidden>
+        No builds match these filters. Remove a filter, lower the minimum players, or choose a broader activity.
+      </p>
+      <button id="more" type="button" class="button" hidden>Show more</button>
+    </section>
+
+    <section class="explainer" aria-labelledby="how-heading">
+      <h2 id="how-heading">How builds are ranked</h2>
+      <dl>
+        <dt>Build effect</dt>
+        <dd>How much better players do with this build than on their own other runs, relative to the
+          average build. A build ranks high only if it lifts the players who use it, so strong players
+          can’t carry a build up the list.</dd>
+        <dt>Raw result</dt>
+        <dd>How the build’s runs went against a typical clear of the same activity, without separating
+          the player. Raw result ≈ build effect + players’ skill.</dd>
+        <dt>Players’ skill</dt>
+        <dd>How the build’s players do on their other runs.</dd>
+        <dt>Run results</dt>
+        <dd>Each clear is scored on kills, speed and deaths against a typical clear of the same activity
+          with the same solo status, following Searchlight’s original run evaluator. Only clears that met
+          Searchlight’s difficulty gates count (fresh start, difficulty tier, feats).</dd>
+        <dt>What a “build” is</dt>
+        <dd>Class, subclass, exotic armor, exotic weapon, super and aspects. “How it’s run” shows the
+          abilities, fragments, weapons and mods its players most often paired with it.</dd>
+      </dl>
+      <p class="muted">
+        Keep in mind: the player matters far more than the build. Player skill explains about a third
+        of how a clear goes, and the build adds about two points on top. Support builds are undervalued,
+        because their value shows up in teammates’ kills. Builds with few players are estimated
+        roughly and pulled toward average.
+      </p>
+    </section>
+
+    <footer class="footer">
+      <p>Data captured by the Searchlight project (builds.rodeo) from Bungie’s public API.
+        Not affiliated with or endorsed by Bungie. Destiny 2 names and icons © Bungie, Inc.</p>
+    </footer>
+  </main>
+
+  <noscript><p class="note">This page needs JavaScript to load and filter the rankings.</p></noscript>
+
+  <script type="module">
+    import { start } from './app.js';
+
+    const root = document.getElementById('app');
+    try {
+      const response = await fetch('data/searchlight.json');
+      if (!response.ok) throw new Error(`data/searchlight.json: HTTP ${response.status}`);
+      start(root, await response.json());
+    } catch (error) {
+      root.classList.remove('loading');
+      const note = document.getElementById('scope-note');
+      note.classList.add('error');
+      note.textContent = location.protocol === 'file:'
+        ? 'Open this page through a web server (for example: python3 -m http.server -d site); browsers block loading data from file:// pages.'
+        : `Could not load the rankings: ${error.message}`;
+    }
+  </script>
+</body>
+</html>

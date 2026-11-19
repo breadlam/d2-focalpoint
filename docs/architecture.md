@@ -9,9 +9,11 @@ players and trends from it.
 | Crate | Kind | Responsibility |
 |---|---|---|
 | [`searchlight-core`](../crates/core) | library, no I/O | Source formats (`LoadoutState`, PGCR JSON), manifest model (`Catalog`), plug classification, build extraction and fingerprints, stat investment (`stats`), element vectors and distances (`vector`), run scoring and the player/build model (`rank`). Everything here is deterministic and unit-tested, including against real captured fixtures. |
-| [`searchlight-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`. |
+| [`searchlight-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`, and the site export (`site`). |
 | [`searchlight-import`](../crates/import) | library | The ETL: source discovery, local staging, parallel extract into staging tables, SQL transform, stat investment, scoring, validation, publish. |
-| [`searchlight-cli`](../crates/cli) | binary `searchlight` | Command-line interface: `import`, `info`, `search`, `similar`, `rank`, `sql`. |
+| [`searchlight-cli`](../crates/cli) | binary `searchlight` | Command-line interface: `import`, `info`, `search`, `similar`, `rank`, `site`, `sql`. |
+
+The static site in [`site/`](../site) reads only the JSON that `searchlight site` exports ([site.md](site.md)).
 
 Dependency direction: `cli → import → (db, core)`, `cli → db`. `core` depends
 on nothing project-internal, so it can be reused (e.g. by a future web UI or
