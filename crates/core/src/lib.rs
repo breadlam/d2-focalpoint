@@ -5,7 +5,8 @@
 //! * read the source formats Searchlight persisted ([`loadout`], [`pgcr`]);
 //! * model the parts of the Bungie manifest we use ([`catalog`]);
 //! * classify socket plugs ([`classify`]) and project a loadout to its
-//!   gameplay-relevant [`build`] with a stable content fingerprint.
+//!   gameplay-relevant [`build`] with a stable content fingerprint;
+//! * describe a build as a [`vector`] of slots with a slot-count distance.
 //!
 //! Everything that touches files or databases lives in `searchlight-import`
 //! and `searchlight-db`.
@@ -18,6 +19,7 @@ pub mod fingerprint;
 pub mod loadout;
 pub mod pgcr;
 pub mod slot;
+pub mod vector;
 
 pub use build::{Build, Component, ComponentKind, extract_build, loadout_id};
 pub use catalog::{Catalog, ItemDef};
@@ -25,3 +27,4 @@ pub use class::{Element, GuardianClass};
 pub use classify::{PlugKind, classify_plug};
 pub use loadout::LoadoutState;
 pub use slot::{Slot, SlotGroup};
+pub use vector::{GroupSlot, SingleSlot, SlotVector};

@@ -3,6 +3,7 @@
 use searchlight_core::build::{ComponentKind, extract_build};
 use searchlight_core::catalog::{Catalog, parse_item_sets, parse_items};
 use searchlight_core::pgcr::{parse_slice, parse_stored};
+use searchlight_core::vector::{GroupSlot, SingleSlot, SlotVector};
 use searchlight_core::{Element, GuardianClass, LoadoutState, Slot};
 
 fn fixture(name: &str) -> Vec<u8> {
@@ -146,4 +147,61 @@ fn malformed_pgcr_is_an_error_not_a_panic() {
     assert!(parse_stored(b"{not json", &mut buf).is_err());
     assert!(parse_stored(&[0x1f, 0x8b, 0, 1, 2], &mut buf).is_err());
     assert!(parse_slice(br#"{"Response":null,"ErrorCode":5}"#).is_err());
+}
+
+#[test]
+fn slot_vector_of_the_prismatic_build() {
+    let cat = catalog();
+    let mut loadout = LoadoutState::from_json(
+        std::str::from_utf8(&fixture("loadout_prismatic_exotic_class_item.json")).unwrap(),
+    )
+    .unwrap();
+    let v = SlotVector::from_build(&extract_build(&loadout, &cat));
+    let names = |g: GroupSlot| names(&cat, v.group(g).iter().copied());
+
+    assert_eq!(
+        names_of(&cat, v.single(SingleSlot::Super)),
+        ["Winter's Wrath"]
+    );
+    assert_eq!(
+        names_of(&cat, v.single(SingleSlot::ClassItem)),
+        ["Solipsism"]
+    );
+    assert_eq!(v.group(GroupSlot::Aspects).len(), 2);
+    assert_eq!(v.group(GroupSlot::Fragments).len(), 5);
+    let mut spirits = names(GroupSlot::ClassItemPerks);
+    spirits.sort();
+    assert_eq!(spirits, ["Spirit of Inmost Light", "Spirit of Synthoceps"]);
+    // Backup Mag on two weapons.
+    assert_eq!(names(GroupSlot::WeaponMods), ["Backup Mag", "Backup Mag"]);
+    assert_eq!(v.group(GroupSlot::ArtifactPerks).len(), 7);
+    let mods = names(GroupSlot::ArmorMods);
+    assert_eq!(mods.iter().filter(|m| *m == "Weapons Font").count(), 2);
+    assert!(mods.iter().any(|m| m == "Balanced Tuning"), "{mods:?}");
+    // Archetypes, stat rolls, shaders and ornaments are not slots.
+    assert!(
+        !mods
+            .iter()
+            .any(|m| m == "Grenadier" || m.is_empty() || m == "Diametric Crush"),
+        "{mods:?}"
+    );
+
+    // Dropping one fragment is exactly one slot of difference.
+    let subclass = loadout
+        .items
+        .iter_mut()
+        .find(|i| i.slot() == Slot::Subclass)
+        .unwrap();
+    let facet = subclass
+        .plug_hashes
+        .iter()
+        .position(|&p| cat.item(p).is_some_and(|d| d.name == "Facet of Courage"))
+        .unwrap();
+    subclass.plug_hashes.remove(facet);
+    let fewer = SlotVector::from_build(&extract_build(&loadout, &cat));
+    assert_eq!(v.distance(&fewer), 1);
+}
+
+fn names_of(cat: &Catalog, hash: Option<u32>) -> Vec<String> {
+    names(cat, hash)
 }
