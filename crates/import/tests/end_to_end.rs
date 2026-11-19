@@ -372,6 +372,24 @@ fn imports_a_synthetic_backup_tree() {
     // Builds: three segments in two timelines, two distinct builds.
     assert_eq!(count(&db, "SELECT count(*) FROM segment"), 3);
     assert_eq!(count(&db, "SELECT count(*) FROM build"), 2);
+    // The second segment drops one armor stat mod: a different build *and* a
+    // different slot vector, exactly one slot apart; usage is filled in.
+    assert_eq!(count(&db, "SELECT count(*) FROM build_vector"), 2);
+    assert_eq!(
+        count(
+            &db,
+            "SELECT slot_distance(a, b) FROM build_vector a, build_vector b WHERE a.vector_id < b.vector_id"
+        ),
+        1
+    );
+    assert_eq!(
+        count(&db, "SELECT sum(timeline_count) FROM build_vector"),
+        3
+    );
+    assert_eq!(
+        count(&db, "SELECT sum(seconds_used) FROM build_vector"),
+        1200
+    );
     assert_eq!(
         count(&db, "SELECT count(*) FROM run_build WHERE is_primary"),
         2

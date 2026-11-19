@@ -39,6 +39,7 @@ const FACTS: &[(&str, &str)] = &[
     ),
     ("build segments", "SELECT count(*) FROM segment"),
     ("distinct builds", "SELECT count(*) FROM build"),
+    ("distinct slot vectors", "SELECT count(*) FROM build_vector"),
     (
         "players with builds",
         "SELECT count(*) FROM player WHERE build_timeline_count > 0",

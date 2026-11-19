@@ -36,6 +36,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, bail};
 use searchlight_core::build::{BUILD_FINGERPRINT_VERSION, LOADOUT_FINGERPRINT_VERSION};
+use searchlight_core::vector::VECTOR_FINGERPRINT_VERSION;
 use searchlight_db::{Database, meta_key};
 
 pub use layout::SourceLayout;
@@ -277,6 +278,10 @@ fn write_meta(
         meta_key::LOADOUT_FINGERPRINT_VERSION,
         &LOADOUT_FINGERPRINT_VERSION.to_string(),
     )?;
+    db.set_meta(
+        meta_key::VECTOR_FINGERPRINT_VERSION,
+        &VECTOR_FINGERPRINT_VERSION.to_string(),
+    )?;
     db.set_meta(meta_key::SOURCE_ROOT, &layout.root.display().to_string())?;
     db.set_meta(meta_key::SOURCE_SNAPSHOT, &layout.snapshot)?;
     if let Some(v) = manifest_version {
@@ -335,6 +340,7 @@ impl<'a> StatRecorder<'a> {
         self.put("builds", "builds", builds.builds)?;
         self.put("builds", "components", builds.components)?;
         self.put("builds", "loadouts", builds.loadouts)?;
+        self.put("builds", "vectors", builds.vectors)?;
         self.put("builds", "unresolved_hashes", builds.unresolved_hashes)?;
         for c in checks {
             self.0.execute(
@@ -403,9 +409,10 @@ impl fmt::Display for ImportReport {
         }
         writeln!(
             f,
-            "  builds: {} segments → {} distinct builds, {} distinct loadouts ({} unparseable)",
+            "  builds: {} segments → {} distinct builds ({} slot vectors), {} distinct loadouts ({} unparseable)",
             self.builds.segments,
             self.builds.builds,
+            self.builds.vectors,
             self.builds.loadouts,
             self.builds.bad_loadouts
         )?;

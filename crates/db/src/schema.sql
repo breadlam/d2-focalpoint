@@ -1,4 +1,4 @@
--- searchlight-cli analysis database, schema version 1.
+-- searchlight-cli analysis database, schema version 2.
 --
 -- Conventions
 --   * Bungie 64-bit ids (membership, character, instance, item instance) are
@@ -214,6 +214,7 @@ CREATE TABLE run_player_weapon (
 -- The wide columns summarise build_component for convenient filtering.
 CREATE TABLE build (
     build_id             BIGINT PRIMARY KEY,
+    vector_id            BIGINT NOT NULL,   -- build_vector this build projects to
     class                VARCHAR,
     element              VARCHAR,
     subclass_hash        UINTEGER,
@@ -240,6 +241,41 @@ CREATE TABLE build (
     item_hashes          UINTEGER[],   -- every inventory-item hash in the build (facet filters)
     component_count      SMALLINT NOT NULL,
     unresolved_count     SMALLINT NOT NULL  -- plug hashes missing from the manifest
+);
+
+-- A build as a vector of slots (docs/adr/0003-slot-vectors.md): the unit for
+-- popularity, trends and similarity. Single-item slots are hash columns;
+-- unordered multi-item groups are sorted UINTEGER[] multisets. Many builds
+-- (which also differ in weapon rolls, armor archetypes, ...) share a vector.
+CREATE TABLE build_vector (
+    vector_id              BIGINT PRIMARY KEY,
+    class                  VARCHAR,
+    element                VARCHAR,
+    subclass_hash          UINTEGER,
+    super_hash             UINTEGER,
+    grenade_hash           UINTEGER,
+    melee_hash             UINTEGER,
+    class_ability_hash     UINTEGER,
+    movement_hash          UINTEGER,
+    kinetic_hash           UINTEGER,
+    energy_hash            UINTEGER,
+    power_hash             UINTEGER,
+    helmet_hash            UINTEGER,
+    gauntlets_hash         UINTEGER,
+    chest_hash             UINTEGER,
+    legs_hash              UINTEGER,
+    class_item_hash        UINTEGER,
+    aspect_hashes          UINTEGER[] NOT NULL,
+    fragment_hashes        UINTEGER[] NOT NULL,
+    weapon_mod_hashes      UINTEGER[] NOT NULL,
+    armor_mod_hashes       UINTEGER[] NOT NULL,   -- general, stat and tuning mods
+    class_item_perk_hashes UINTEGER[] NOT NULL,   -- exotic class item rolls
+    artifact_perk_hashes   UINTEGER[] NOT NULL,
+    slot_count             SMALLINT NOT NULL,     -- occupied slots (group items count individually)
+    build_count            INTEGER  NOT NULL DEFAULT 0,  -- distinct builds with this vector
+    timeline_count         INTEGER  NOT NULL DEFAULT 0,  -- player-runs that used it
+    player_count           INTEGER  NOT NULL DEFAULT 0,
+    seconds_used           BIGINT   NOT NULL DEFAULT 0   -- total time equipped across runs
 );
 
 -- Long form of a build, one row per component. Natural key:
@@ -342,3 +378,37 @@ CREATE MACRO item_names(hs) AS (
 
 -- activity_name(2727361621) -> 'Equilibrium: Standard'
 CREATE MACRO activity_name(h) AS (SELECT name FROM activity WHERE activity_hash = h);
+
+-- Bag (multiset) distance max(|A\B|, |B\A|): how many slots of a group differ
+-- under the best alignment. bag_distance([1, 2], [2, 3]) -> 1
+CREATE MACRO bag_distance(a, b) AS (
+    greatest(len(coalesce(a, [])), len(coalesce(b, [])))
+    - coalesce(list_sum(list_transform(list_distinct(coalesce(a, [])),
+        lambda x: least(len(list_filter(coalesce(a, []), lambda y: y = x)),
+                        len(list_filter(coalesce(b, []), lambda y: y = x))))), 0)
+);
+
+-- Number of differing slots between two build_vector rows (pass the rows
+-- themselves): SELECT slot_distance(a, b) FROM build_vector a, build_vector b ...
+CREATE MACRO slot_distance(a, b) AS (
+    (a.subclass_hash IS DISTINCT FROM b.subclass_hash)::INTEGER
+    + (a.super_hash IS DISTINCT FROM b.super_hash)::INTEGER
+    + (a.grenade_hash IS DISTINCT FROM b.grenade_hash)::INTEGER
+    + (a.melee_hash IS DISTINCT FROM b.melee_hash)::INTEGER
+    + (a.class_ability_hash IS DISTINCT FROM b.class_ability_hash)::INTEGER
+    + (a.movement_hash IS DISTINCT FROM b.movement_hash)::INTEGER
+    + (a.kinetic_hash IS DISTINCT FROM b.kinetic_hash)::INTEGER
+    + (a.energy_hash IS DISTINCT FROM b.energy_hash)::INTEGER
+    + (a.power_hash IS DISTINCT FROM b.power_hash)::INTEGER
+    + (a.helmet_hash IS DISTINCT FROM b.helmet_hash)::INTEGER
+    + (a.gauntlets_hash IS DISTINCT FROM b.gauntlets_hash)::INTEGER
+    + (a.chest_hash IS DISTINCT FROM b.chest_hash)::INTEGER
+    + (a.legs_hash IS DISTINCT FROM b.legs_hash)::INTEGER
+    + (a.class_item_hash IS DISTINCT FROM b.class_item_hash)::INTEGER
+    + bag_distance(a.aspect_hashes, b.aspect_hashes)
+    + bag_distance(a.fragment_hashes, b.fragment_hashes)
+    + bag_distance(a.weapon_mod_hashes, b.weapon_mod_hashes)
+    + bag_distance(a.armor_mod_hashes, b.armor_mod_hashes)
+    + bag_distance(a.class_item_perk_hashes, b.class_item_perk_hashes)
+    + bag_distance(a.artifact_perk_hashes, b.artifact_perk_hashes)
+);

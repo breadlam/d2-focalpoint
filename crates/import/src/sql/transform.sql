@@ -164,6 +164,24 @@ FROM per_build b
 JOIN per_timeline t USING (instance_id, membership_id)
 ORDER BY b.instance_id, b.membership_id, b.build_id;
 
+-- step: build_vector usage
+UPDATE build_vector v
+SET build_count    = u.builds,
+    timeline_count = u.timelines,
+    player_count   = u.players,
+    seconds_used   = u.seconds
+FROM (
+    SELECT b.vector_id,
+           count(DISTINCT b.build_id)                          AS builds,
+           count(DISTINCT (rb.instance_id, rb.membership_id))  AS timelines,
+           count(DISTINCT rb.membership_id)                    AS players,
+           sum(rb.duration_s)                                  AS seconds
+    FROM build b
+    JOIN run_build rb USING (build_id)
+    GROUP BY b.vector_id
+) u
+WHERE v.vector_id = u.vector_id;
+
 -- step: activity
 INSERT INTO activity
 WITH counts AS (

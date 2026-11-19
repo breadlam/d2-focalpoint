@@ -11,7 +11,7 @@ use duckdb::{AccessMode, Config, Connection, OptionalExt, params};
 use thiserror::Error;
 
 /// Version of [`SCHEMA_SQL`]. Bump on any incompatible schema change.
-pub const SCHEMA_VERSION: u32 = 1;
+pub const SCHEMA_VERSION: u32 = 2;
 
 /// DDL for a fresh database.
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
@@ -24,6 +24,7 @@ pub mod meta_key {
     pub const SCHEMA_VERSION: &str = "schema_version";
     pub const BUILD_FINGERPRINT_VERSION: &str = "build_fingerprint_version";
     pub const LOADOUT_FINGERPRINT_VERSION: &str = "loadout_fingerprint_version";
+    pub const VECTOR_FINGERPRINT_VERSION: &str = "vector_fingerprint_version";
     pub const TOOL_VERSION: &str = "tool_version";
     pub const IMPORTED_AT: &str = "imported_at";
     pub const SOURCE_ROOT: &str = "source_root";
@@ -268,6 +269,40 @@ mod tests {
             .query_row("SELECT activity_name(7)", [], |r| r.get(0))
             .unwrap();
         assert_eq!(act, "Act");
+    }
+
+    #[test]
+    fn distance_macros_match_slot_semantics() {
+        let db = Database::create(&tempfile::tempdir().unwrap().path().join("d.duckdb")).unwrap();
+        let q = |sql: &str| -> i64 { db.conn().query_row(sql, [], |r| r.get(0)).unwrap() };
+        // Bag distance: order-free, multiset-aware, NULL-safe.
+        assert_eq!(q("SELECT bag_distance([1, 2], [2, 1])"), 0);
+        assert_eq!(q("SELECT bag_distance([1, 2], [2, 3])"), 1);
+        assert_eq!(q("SELECT bag_distance([1, 1, 2], [1, 2, 2])"), 1);
+        assert_eq!(q("SELECT bag_distance([1, 2, 3, 4], [1, 2, 3, 4, 5])"), 1);
+        assert_eq!(q("SELECT bag_distance(NULL, [7, 8])"), 2);
+        assert_eq!(q("SELECT bag_distance([]::UINTEGER[], []::UINTEGER[])"), 0);
+
+        db.conn()
+            .execute_batch(
+                "INSERT INTO build_vector (vector_id, super_hash, kinetic_hash, helmet_hash, aspect_hashes,
+                     fragment_hashes, weapon_mod_hashes, armor_mod_hashes, class_item_perk_hashes,
+                     artifact_perk_hashes, slot_count)
+                 VALUES (1, 1, 2, 3, [10, 11], [20, 21, 22], [], [5, 5], [], [], 0),
+                        (2, 1, 9, NULL, [11, 12], [20, 21, 22, 23], [], [5, 6], [], [], 0);",
+            )
+            .unwrap();
+        // kinetic + helmet + one aspect + one extra fragment + one armor mod.
+        assert_eq!(
+            q(
+                "SELECT slot_distance(a, b) FROM build_vector a, build_vector b WHERE a.vector_id = 1 AND b.vector_id = 2"
+            ),
+            5
+        );
+        assert_eq!(
+            q("SELECT slot_distance(a, a) FROM build_vector a WHERE a.vector_id = 2"),
+            0
+        );
     }
 
     #[test]

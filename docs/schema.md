@@ -1,4 +1,4 @@
-# Analysis database schema (version 1)
+# Analysis database schema (version 2)
 
 The database is a single DuckDB file built by `searchlight import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
@@ -30,7 +30,8 @@ see [data-sources.md](data-sources.md).
                           ▼                         ▼
                        segment ──► build ──► build_component ──► item
      (instance, membership, idx)    │
-                          │         └─ wide summary columns (aspects, exotics, …)
+                          │         ├─ wide summary columns (aspects, exotics, …)
+                          │         └─► build_vector   (slot vector; similarity unit)
                           ▼
                        loadout ──► loadout_item          (exact, lossless)
 
@@ -89,6 +90,18 @@ longest-used build). Use this to attribute a run's performance to a build.
 `exotic_armor_hash`, `exotic_weapon_hash`, `artifact_hash`,
 `artifact_perk_hashes[]`, `armor_mod_hashes[]` (with repeats), and
 `item_hashes[]` (every inventory-item hash in the build, for facet filters).
+
+**`build_vector`** — a build as a vector of slots (ADR 0003), the unit for
+popularity, trends and similarity; many fine-grained builds share one vector
+(`build.vector_id`). Single-item slots: `subclass_hash`, `super_hash`,
+`grenade_hash`, `melee_hash`, `class_ability_hash`, `movement_hash`,
+`kinetic_hash`, `energy_hash`, `power_hash`, `helmet_hash`, `gauntlets_hash`,
+`chest_hash`, `legs_hash`, `class_item_hash`. Multi-item groups (sorted
+multisets): `aspect_hashes`, `fragment_hashes`, `weapon_mod_hashes`,
+`armor_mod_hashes` (general, stat and tuning mods), `class_item_perk_hashes`
+(exotic class item rolls), `artifact_perk_hashes`. Usage: `build_count`,
+`timeline_count` (player-runs), `player_count`, `seconds_used`. Compare two
+vectors with `slot_distance(a, b)` (see Macros).
 
 **`build_component`** — the long form. Natural key
 `(build_id, kind, slot, component_hash, parent_hash)`.
@@ -152,6 +165,12 @@ weapons or builds.
 `item_name(hash)`, `item_names(list)` (sorted names) and `activity_name(hash)`
 resolve hashes in ad-hoc SQL.
 
+`slot_distance(a, b)` takes two `build_vector` rows (pass the table aliases)
+and returns the number of differing slots; `bag_distance(list_a, list_b)` is
+its per-group term, `max(|A∖B|, |B∖A|)` over multisets. These are convenient
+for ad-hoc comparisons; pairwise work over many vectors belongs in Rust
+(`SlotVector::distance`).
+
 ## Example queries
 
 > **Item names are not unique.** Reissued or versioned items share a name
@@ -191,4 +210,13 @@ FROM run_player_weapon w
 JOIN run_player p USING (instance_id, membership_id, character_id)
 WHERE w.item_hash IN (SELECT item_hash FROM item WHERE name = 'Gjallarhorn')
 GROUP BY 1 ORDER BY 1;
+
+-- The most-used slot vectors, and their nearest neighbours by slot distance.
+WITH top AS (SELECT * FROM build_vector ORDER BY timeline_count DESC LIMIT 1)
+SELECT v.vector_id, slot_distance(top, v) AS slots_apart, v.timeline_count,
+       item_name(v.class_item_hash) AS class_item, item_names(v.aspect_hashes) AS aspects
+FROM top, build_vector v
+WHERE v.class = top.class AND v.element = top.element
+ORDER BY slots_apart, v.timeline_count DESC
+LIMIT 10;
 ```

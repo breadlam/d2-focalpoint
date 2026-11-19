@@ -228,6 +228,7 @@ impl AppendRow for SegmentRow {
 #[derive(Debug, Clone)]
 pub struct BuildRow {
     pub build_id: i64,
+    pub vector_id: i64,
     pub class: String,
     pub element: Option<&'static str>,
     pub subclass_hash: Option<u32>,
@@ -260,6 +261,7 @@ impl AppendRow for BuildRow {
     fn append(&self, a: &mut Appender<'_>) -> duckdb::Result<()> {
         a.append_row(params![
             self.build_id,
+            self.vector_id,
             self.class,
             self.element,
             self.subclass_hash,
@@ -357,6 +359,52 @@ impl AppendRow for LoadoutItemRow {
             self.item_instance_id,
             u32_list(&self.plug_hashes),
             u32_list(&self.perk_hashes),
+        ])
+    }
+}
+
+/// Final `build_vector` row (usage columns are filled by the transform).
+#[derive(Debug, Clone)]
+pub struct BuildVectorRow {
+    pub vector_id: i64,
+    pub class: String,
+    pub element: Option<&'static str>,
+    pub vector: searchlight_core::SlotVector,
+}
+
+impl AppendRow for BuildVectorRow {
+    fn append(&self, a: &mut Appender<'_>) -> duckdb::Result<()> {
+        use searchlight_core::vector::{GroupSlot as G, SingleSlot as S};
+        let v = &self.vector;
+        a.append_row(params![
+            self.vector_id,
+            self.class,
+            self.element,
+            v.single(S::Subclass),
+            v.single(S::Super),
+            v.single(S::Grenade),
+            v.single(S::Melee),
+            v.single(S::ClassAbility),
+            v.single(S::Movement),
+            v.single(S::Kinetic),
+            v.single(S::Energy),
+            v.single(S::Power),
+            v.single(S::Helmet),
+            v.single(S::Gauntlets),
+            v.single(S::Chest),
+            v.single(S::Legs),
+            v.single(S::ClassItem),
+            u32_list(v.group(G::Aspects)),
+            u32_list(v.group(G::Fragments)),
+            u32_list(v.group(G::WeaponMods)),
+            u32_list(v.group(G::ArmorMods)),
+            u32_list(v.group(G::ClassItemPerks)),
+            u32_list(v.group(G::ArtifactPerks)),
+            v.filled_slots() as u16,
+            0_i32,
+            0_i32,
+            0_i32,
+            0_i64,
         ])
     }
 }
