@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use duckdb::{AccessMode, Config, Connection, OptionalExt, params};
 use thiserror::Error;
 
+pub mod search;
 pub mod similar;
 
 /// Version of [`SCHEMA_SQL`]. Bump on any incompatible schema change.
@@ -54,9 +55,22 @@ pub enum DbError {
     NotSearchlight(PathBuf),
     #[error("no build with id {0}")]
     BuildNotFound(i64),
+    #[error("no item named {name:?}{}", suggest(suggestions))]
+    UnknownName {
+        name: String,
+        suggestions: Vec<String>,
+    },
 }
 
 pub type Result<T, E = DbError> = std::result::Result<T, E>;
+
+fn suggest(suggestions: &[String]) -> String {
+    if suggestions.is_empty() {
+        String::new()
+    } else {
+        format!("; did you mean: {}?", suggestions.join(", "))
+    }
+}
 
 /// The default database path: `$SEARCHLIGHT_DB`, else
 /// `<data dir>/searchlight/searchlight.duckdb` (e.g. `~/.local/share/...`).

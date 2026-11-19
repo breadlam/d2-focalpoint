@@ -20,6 +20,13 @@ cargo build --release
 # What is in it?
 ./target/release/searchlight info
 
+# Which exotics do Hunters wear in Master raid clears?
+./target/release/searchlight search --class Hunter --activity "master raid" --clears --group-by exotic-armor
+
+# Prismatic Warlock builds with two given aspects, then builds like one of them
+./target/release/searchlight search --class Warlock --aspect "Feed the Void" --aspect "Hellion"
+./target/release/searchlight similar <BUILD_ID> --other-players
+
 # Ask anything in SQL
 ./target/release/searchlight sql "
   SELECT class, item_name(exotic_armor_hash) AS exotic, count(*) AS builds
@@ -57,11 +64,12 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 |---|---|
 | `searchlight import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `searchlight info [--detailed]` | provenance, headline counts, coverage, import statistics |
-| `searchlight similar BUILD_ID` | a build's nearest neighbours by tiered distance, with per-tier breakdown (`--any-class`, `--include-passengers`, `--limit N`) |
+| `searchlight search [FACETS] [RUN FILTERS]` | builds matching any combination of class, element, exotic armor/weapon, super, aspects, fragments, weapons, perks, mods, artifact perks, armor sets; run filters `--activity`, `--player`, `--solo`, `--clears`, `--since/--until`; `--group-by exotic-armor` (etc.) for popularity reports |
+| `searchlight similar BUILD_ID` | a build's nearest neighbours by tiered distance, with per-tier breakdown (`--other-players`, `--any-class`, `--include-passengers`, `--limit N`) |
 | `searchlight sql "QUERY"` | ad-hoc read-only SQL (`--format tsv`, `--max-rows N`) |
 
-Build search, reports, rankings, clustering and charts are the next
-milestones; see [docs/architecture.md](docs/architecture.md#adding-a-cli-feature)
+Trend reports, rankings of builds and players, clustering and charts are
+the next milestones; see [docs/architecture.md](docs/architecture.md#adding-a-cli-feature)
 for where new features go.
 
 ## Documentation

@@ -183,6 +183,10 @@ computes the same distance in Rust in parallel.
 
 ## Example queries
 
+For facet searches (class, exotics, aspects, perks, mods, activity, …) and
+popularity counts, `searchlight search` builds these queries for you; it
+matches each name against every item carrying it.
+
 > **Item names are not unique.** Reissued or versioned items share a name
 > across several hashes (e.g. *Nothing Manacles* has more than one), so match
 > names with `IN (SELECT item_hash FROM item WHERE name = ...)`, never `=`.
