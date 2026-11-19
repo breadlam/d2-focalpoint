@@ -41,7 +41,7 @@ use crate::stats::{ArmorStat, Investment};
 
 /// Version of the element rules (kinds, tiers, selection). Recorded in
 /// database metadata; bump when any of them change.
-pub const ELEMENT_VECTOR_VERSION: u8 = 2;
+pub const ELEMENT_VECTOR_VERSION: u8 = 3;
 
 /// Importance tier of an element kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

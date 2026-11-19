@@ -15,14 +15,16 @@
 //! | 4 | the 200 tier |
 //!
 //! Levels start from tolerance bands, then are **budget-aware**: a stat is
-//! *held back by budget* when no other stat holds points that could have
-//! been moved into it. A stat's movable points are what it holds above what
-//! it is keeping — the threshold it reached (100 or 200), or else the
-//! unavoidable floor every de-prioritised stat retains — and never its
-//! fragment points, which are fixed to that stat. A held-back stat is
-//! promoted to the threshold it was reaching for: the player would have gone
-//! further if their armor collection and fragments had allowed it. Fragment
-//! bonuses and penalties shift each stat, and with it the effective budget.
+//! *held back by budget* when the final stat line itself shows it could not
+//! have been higher: stats that reached a threshold offer only their excess
+//! above it, and the stats below 100 hold no more than the unavoidable
+//! remainder (≈ 17 per stat, taken together). A held-back stat is promoted
+//! to the threshold it was reaching for. The final investment is the
+//! indicator — what the player's inventory allowed is unknowable — so
+//! nothing is promoted on speculation; players with weaker armor still land
+//! close to others because adjacent levels share partial credit. Fragment
+//! points are fixed to their stat, so fragments shift both the stat and the
+//! effective budget.
 //!
 //! See `docs/adr/0005-tiered-distance-and-stat-investment.md` for the data
 //! behind the default parameters.
@@ -163,23 +165,30 @@ impl InvestmentParams {
         self.band_cutoffs.iter().filter(|&&c| value >= c).count() as u8
     }
 
-    /// Points a stat could give up without losing a threshold it reached:
-    /// its excess above 200 or 100 if it reached one, else its armor points
-    /// above the floor; never more than its armor-side points above the floor
-    /// (fragment points cannot move).
-    fn movable(&self, observed: i32, armor: i32) -> i32 {
-        let armor_movable = (armor - self.floor).max(0);
-        let kept = if observed >= 200 {
-            Some(200)
-        } else if observed >= 100 {
-            Some(100)
-        } else {
-            None
-        };
-        match kept {
-            Some(threshold) => (observed - threshold).min(armor_movable),
-            None => armor_movable,
+    /// Points the stats other than `k` could have given to `k`, judged only
+    /// from the final stat line (what was in the player's inventory is
+    /// unknowable):
+    ///
+    /// * a stat that reached a threshold keeps it and offers only its excess
+    ///   above 200 or 100;
+    /// * stats below 100 offer their armor points beyond a reserve of
+    ///   `floor` per stat, taken *together* — the unavoidable remainder is
+    ///   spread unevenly ("the remaining 50 spread across three stats");
+    /// * fragment points are fixed to their stat and never offered.
+    fn slack(&self, k: usize, observed: &StatLine, armor: &StatLine) -> i32 {
+        let mut excess = 0;
+        let (mut below_armor, mut below_count) = (0, 0);
+        for j in (0..6).filter(|&j| j != k) {
+            let armor_j = armor[j].max(0);
+            if observed[j] >= 100 {
+                let threshold = if observed[j] >= 200 { 200 } else { 100 };
+                excess += (observed[j] - threshold).min((armor_j - self.floor).max(0));
+            } else {
+                below_armor += armor_j;
+                below_count += 1;
+            }
         }
+        excess + (below_armor - self.floor * below_count).max(0)
     }
 
     /// Read investment from observed stats and the fragments' share of them.
@@ -192,10 +201,7 @@ impl InvestmentParams {
             let band = self.band(value);
             // Points other stats hold beyond what they keep could have been
             // moved into this stat.
-            let slack: i32 = (0..6)
-                .filter(|&j| j != k)
-                .map(|j| self.movable(observed[j], armor[j]))
-                .sum();
+            let slack = self.slack(k, &observed, &armor);
             let invested = value >= self.band_cutoffs[0];
             let held_back = invested && slack <= self.slack_tolerance;
             let level = if !held_back {
@@ -265,6 +271,25 @@ mod tests {
             (inv.level(Health), inv.level(Melee), inv.level(Class)),
             (0, 0, 0)
         );
+    }
+
+    #[test]
+    fn remainder_is_a_shared_reserve() {
+        // "The remaining 50 spread across Health, Melee and Class, none above
+        // 25": uneven, but no more than the reserve in total.
+        let inv = levels(
+            line(&[
+                (Super, 200),
+                (Weapons, 100),
+                (Grenade, 150),
+                (Health, 25),
+                (Melee, 25),
+                (Class, 0),
+            ]),
+            [0; 6],
+        );
+        assert_eq!(inv.level(Grenade), 4);
+        assert!(inv.is_promoted(Grenade));
     }
 
     #[test]
@@ -365,24 +390,28 @@ mod tests {
 
     #[test]
     fn fragments_shift_the_budget() {
-        // Same observed Health 30: as armor points it is slack for Grenade,
-        // but if a fragment provides +20 of it, only 10 armor points remain —
-        // below the floor — so Grenade was in fact held back.
+        // Health 60 from armor is 29 points beyond the shared reserve that
+        // could have gone into Grenade; if a fragment provides 30 of it, the
+        // armor remainder is exactly the reserve and Grenade was held back.
         let observed = line(&[
             (Super, 200),
             (Weapons, 100),
             (Grenade, 135),
-            (Health, 45),
+            (Health, 60),
             (Melee, 15),
             (Class, 5),
         ]);
         let without = levels(observed, [0; 6]);
-        assert_eq!(without.level(Grenade), 3, "45 Health from armor is movable");
+        assert_eq!(
+            without.level(Grenade),
+            3,
+            "Health's armor points are movable"
+        );
         let with_fragment = levels(observed, line(&[(Health, 30)]));
         assert_eq!(
             with_fragment.level(Grenade),
             4,
-            "Health comes from a fragment, not armor"
+            "30 of Health comes from a fragment, not armor"
         );
         // A fragment penalty lowers a stat without making it movable slack.
         let penalised = levels(

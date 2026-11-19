@@ -1,6 +1,6 @@
 # ADR 0005: Tiered build distance and armor stat investment
 
-- **Status:** accepted; the budget rule (§3) is provisional — see "Open problem"
+- **Status:** accepted
 - **Date:** 2026-11-18
 - **Refines:** [ADR 0004](0004-element-count-vectors.md)
 
@@ -53,13 +53,21 @@ Each of the six stats gets a level from tolerance bands — `< 35` → 0,
 `35–74` → 1, `75–124` → 2 (the 100 tier), `125–174` → 3, `≥ 175` → 4 (the
 200 tier) — added to tier 3 as a count, so levels 4 vs 3 get partial credit.
 
-A stat that was **held back by budget** is promoted to the threshold it was
-reaching for (to 100 if below it; to 200 if past ~115). A stat is held back
-when the other stats hold no points that could have been moved into it. A
-stat's movable points are its excess above the threshold it reached (100 or
-200), or else its armor points above an unavoidable floor; fragment points
-are fixed to their stat and never movable, so fragments shift both the stat
-and the effective budget.
+**The final investment is the indicator.** What a player's inventory
+allowed — and so which armor archetypes they could have chosen — is
+unknowable, so intent is read from the final stat line alone, and nothing is
+promoted on speculation. A stat that was **held back by budget** is promoted
+to the threshold it was reaching for (to 100 if below it; to 200 if past
+~115) only when the stat line itself proves it could not have been higher:
+the stats that reached a threshold (100 or 200) offer only their excess above
+it, and the stats below 100 hold no more than the unavoidable remainder — a
+reserve of ≈ 17 points per stat, *taken together*, since the remainder is
+spread unevenly ("the remaining 50 across three stats, none above 25").
+Fragment points are fixed to their stat and never count as movable, so
+fragments shift both the stat and the effective budget. Players with weaker
+armor still land close to stronger-armor players without promotion, because
+adjacent levels share partial credit (Super 160 vs 200 is level 3 vs 4: 75 %
+overlap on that coordinate).
 
 Parameters come from the data: totals are ≈ 490 (median 488); when the top
 stat is ≈ 200 and the second ≥ 100 the third never exceeds 150; in the most
@@ -71,12 +79,13 @@ Expulsion +10 Super, Facet of Grace −10 Health).
 Stats are a property of the build (99.2 % of builds show one stat line
 across all their segments); the modal line is used.
 
-## Open problem: what counts as movable
+### Why promotion is uncommon
 
-On the full data the rule above flags only 7,667 of 594k builds (1.3 %) as
-budget-limited, which contradicts the observation that maxing an effect and
-being held back is typical. Attributing each loadout's stat points to their
-source (via `investmentStats`) shows why:
+On the full data 16,386 of 594k builds (2.8 %) have a budget-limited stat
+(Super 4.7k, Weapons 3.9k, Grenade 3.0k, Class 2.4k, Melee 2.2k, Health 0.5k).
+Being held back is common in play, but the final stat line rarely *proves*
+it, because most stat points come from fixed sources. Attributing each
+loadout's points via `investmentStats`:
 
 | Source | Points per loadout | Redirectable by the player? |
 |---|---:|---|
@@ -87,11 +96,10 @@ source (via `investmentStats`) shows why:
 | tuning (mostly conditional) | ≈ 6 | yes |
 | fragments | ≈ 2 net | yes (but chosen for their effects) |
 
-The rule treats every point above a 17-point floor as movable, but most
-points sit where the player's armor pieces put them. A better definition of
-movable points — based on stat mods, tuning and the choice of pieces — is
-pending; the levels and promotion flags will change when it lands
-(`InvestmentParams` and `ELEMENT_VECTOR_VERSION` are recorded in `meta`).
+Inferring intent from the levers (stat mods, tuning) or from archetype choice
+was considered and rejected: both depend on the inventory we cannot see. A
+first version applied the reserve per stat, which missed uneven remainders
+and flagged only 1.3 %.
 
 ## Consequences
 
