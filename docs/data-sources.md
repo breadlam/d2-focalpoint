@@ -99,7 +99,12 @@ live rows (disjoint) → **17.73M distinct reports**, 2025-03-19 → 2026-09-17
    production's parsed tables, ~11.9M player rows overlap and ~300 (0.003 %)
    disagree on some stat — production recorded those rows from a different
    fetch than the archived copy. The raw report wins.
-8. **Partial last days.** Runs end 2026-09-17 although the snapshot is from
+8. **Checkpoint bots and passengers.** Some captured players never kill and
+   never clear: 8,361 players and 5 % of build timelines, led by checkpoint
+   bot accounts (e.g. one with 2,972 runs) that hold Master raid/dungeon
+   checkpoints for others to join. Their rows are kept as reported; filter
+   on `run_player.kills > 0` (or `is_clear`) when ranking builds or players.
+9. **Partial last days.** Runs end 2026-09-17 although the snapshot is from
    09-20: the gatherer stalled when the disk filled.
 
 ## Manifest
