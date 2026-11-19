@@ -10,6 +10,8 @@ repository.workspace = true
 [dependencies]
 dirs.workspace = true
 duckdb.workspace = true
+rayon.workspace = true
+searchlight-core.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

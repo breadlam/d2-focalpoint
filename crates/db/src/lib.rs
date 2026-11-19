@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use duckdb::{AccessMode, Config, Connection, OptionalExt, params};
 use thiserror::Error;
 
+pub mod similar;
 
 /// Version of [`SCHEMA_SQL`]. Bump on any incompatible schema change.
 pub const SCHEMA_VERSION: u32 = 4;
@@ -51,6 +52,8 @@ pub enum DbError {
     },
     #[error("{0} is not a searchlight database (no schema_version)")]
     NotSearchlight(PathBuf),
+    #[error("no build with id {0}")]
+    BuildNotFound(i64),
 }
 
 pub type Result<T, E = DbError> = std::result::Result<T, E>;

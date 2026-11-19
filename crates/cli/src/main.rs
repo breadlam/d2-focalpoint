@@ -29,6 +29,8 @@ enum Command {
     Import(commands::import::Args),
     /// Summarise the analysis database
     Info(commands::info::Args),
+    /// List a build's nearest neighbours by the tiered build distance
+    Similar(commands::similar::Args),
     /// Run an ad-hoc SQL query against the database
     #[command(
         after_help = "Example:\n  searchlight sql \"SELECT item_name(exotic_armor_hash) AS exotic, count(*) AS builds\n                   FROM build GROUP BY 1 ORDER BY 2 DESC LIMIT 10\""
@@ -43,6 +45,7 @@ fn main() -> ExitCode {
     let result = match cli.command {
         Command::Import(args) => commands::import::run(&args, &db),
         Command::Info(args) => commands::info::run(&args, &db),
+        Command::Similar(args) => commands::similar::run(&args, &db),
         Command::Sql(args) => commands::sql::run(&args, &db),
     };
     match result {

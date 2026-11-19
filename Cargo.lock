@@ -1403,6 +1403,8 @@ version = "0.1.0"
 dependencies = [
  "dirs",
  "duckdb",
+ "rayon",
+ "searchlight-core",
  "tempfile",
  "thiserror",
 ]

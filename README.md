@@ -57,6 +57,7 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 |---|---|
 | `searchlight import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `searchlight info [--detailed]` | provenance, headline counts, coverage, import statistics |
+| `searchlight similar BUILD_ID` | a build's nearest neighbours by tiered distance, with per-tier breakdown (`--any-class`, `--include-passengers`, `--limit N`) |
 | `searchlight sql "QUERY"` | ad-hoc read-only SQL (`--format tsv`, `--max-rows N`) |
 
 Build search, reports, rankings, clustering and charts are the next
