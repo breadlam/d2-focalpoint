@@ -7,7 +7,8 @@
 //! * classify socket plugs ([`classify`]) and project a loadout to its
 //!   gameplay-relevant [`build`] with a stable content fingerprint;
 //! * read armor [`stats`] as budget-aware investment levels, and describe a
-//!   build as a sparse element count [`vector`] with a tiered distance.
+//!   build as a sparse element count [`vector`] with a tiered distance;
+//! * score runs and separate a build's value from its player's ([`rank`]).
 //!
 //! Everything that touches files or databases lives in `searchlight-import`
 //! and `searchlight-db`.
@@ -19,6 +20,7 @@ pub mod classify;
 pub mod fingerprint;
 pub mod loadout;
 pub mod pgcr;
+pub mod rank;
 pub mod slot;
 pub mod stats;
 pub mod vector;
