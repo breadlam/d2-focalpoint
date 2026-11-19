@@ -99,6 +99,12 @@ const CHECKS: &[(&str, Severity, &str, &str)] = &[
         "SELECT count(*) FROM (SELECT DISTINCT instance_id, membership_id FROM segment) s WHERE NOT EXISTS (SELECT 1 FROM run_player p WHERE p.instance_id = s.instance_id AND p.membership_id = s.membership_id)",
     ),
     (
+        "timeline_unattributed",
+        Severity::Warning,
+        "build timelines not attributed to any character row",
+        "SELECT count(*) FROM (SELECT DISTINCT instance_id, membership_id FROM segment) s WHERE NOT EXISTS (SELECT 1 FROM run_player p WHERE p.instance_id = s.instance_id AND p.membership_id = s.membership_id AND p.has_build)",
+    ),
+    (
         "runs_without_players",
         Severity::Warning,
         "runs whose report lists no players",

@@ -25,20 +25,50 @@ fn gzip(bytes: &[u8]) -> Vec<u8> {
     e.finish().unwrap()
 }
 
+/// A bare archived report. `entries` are `(membership, character, class, kills)`.
+fn pgcr_json_entries(instance_id: i64, activity: u32, entries: &[(i64, i64, &str, u32)]) -> String {
+    let stat = |v: u32| serde_json::json!({ "basic": { "value": v } });
+    let entries: Vec<_> = entries
+        .iter()
+        .map(|&(membership_id, character_id, class, kills)| {
+            serde_json::json!({
+                "characterId": character_id.to_string(),
+                "player": {
+                    "destinyUserInfo": {
+                        "membershipType": 3, "membershipId": membership_id.to_string(),
+                        "displayName": "Tester", "bungieGlobalDisplayName": "Tester",
+                        "bungieGlobalDisplayNameCode": 42
+                    },
+                    "characterClass": class, "lightLevel": 550, "emblemHash": 9
+                },
+                "values": {
+                    "kills": stat(kills), "deaths": stat(1), "completed": stat(1),
+                    "completionReason": stat(0), "activityDurationSeconds": stat(600),
+                    "timePlayedSeconds": stat(590)
+                },
+                "extended": { "weapons": [ { "referenceId": 1001, "values": { "uniqueWeaponKills": stat(kills) } } ] }
+            })
+        })
+        .collect();
+    serde_json::json!({
+        "period": "2026-07-01T12:00:00Z",
+        "activityWasStartedFromBeginning": true,
+        "activityDifficultyTier": 11,
+        "activityDetails": {
+            "referenceId": activity, "directorActivityHash": activity,
+            "instanceId": instance_id.to_string(), "mode": 82, "modes": [82, 7], "isPrivate": false
+        },
+        "entries": entries
+    })
+    .to_string()
+}
+
 /// A bare archived report with one Warlock entry.
 fn pgcr_json(instance_id: i64, activity: u32, membership_id: i64, kills: u32) -> String {
-    format!(
-        r#"{{"period":"2026-07-01T12:00:00Z","activityWasStartedFromBeginning":true,"activityDifficultyTier":11,
-            "activityDetails":{{"referenceId":{activity},"directorActivityHash":{activity},"instanceId":"{instance_id}",
-                                 "mode":82,"modes":[82,7],"isPrivate":false}},
-            "entries":[{{"characterId":"{char}","player":{{"destinyUserInfo":{{"membershipType":3,
-                "membershipId":"{membership_id}","displayName":"Tester","bungieGlobalDisplayName":"Tester",
-                "bungieGlobalDisplayNameCode":42}},"characterClass":"Warlock","lightLevel":550,"emblemHash":9}},
-              "values":{{"kills":{{"basic":{{"value":{kills}}}}},"deaths":{{"basic":{{"value":1}}}},
-                "completed":{{"basic":{{"value":1}}}},"completionReason":{{"basic":{{"value":0}}}},
-                "activityDurationSeconds":{{"basic":{{"value":600}}}},"timePlayedSeconds":{{"basic":{{"value":590}}}}}},
-              "extended":{{"weapons":[{{"referenceId":1001,"values":{{"uniqueWeaponKills":{{"basic":{{"value":{kills}}}}}}}}}]}}}}]}}"#,
-        char = membership_id + 1
+    pgcr_json_entries(
+        instance_id,
+        activity,
+        &[(membership_id, membership_id + 1, "Warlock", kills)],
     )
 }
 
@@ -180,6 +210,11 @@ fn build_backups(root: &Path) {
         .unwrap();
     }
     main.execute(
+        "INSERT INTO build_segment VALUES (6, 100, 0, 0, 600, ?1)",
+        params![loadout],
+    )
+    .unwrap();
+    main.execute(
         "INSERT INTO player_activity VALUES (100, 101, 1, '2026-07-01T12:00:00Z', 2727361621, 82, 50, 1, 0, 600, 0, 1, 1)",
         [],
     )
@@ -206,6 +241,18 @@ fn build_backups(root: &Path) {
                 )
                 .unwrap();
             }
+            // Run 6 lists the player on two characters; only the Warlock
+            // matches the captured (Warlock) build timeline.
+            let two_chars = pgcr_json_entries(
+                6,
+                2_727_361_621,
+                &[(100, 101, "Warlock", 30), (100, 102, "Titan", 5)],
+            );
+            c.execute(
+                "INSERT INTO pgcr_raw VALUES (6, 6, '2026-07-01T12:00:00Z', 2727361621, 1000, ?1)",
+                params![gzip(two_chars.as_bytes())],
+            )
+            .unwrap();
             // One corrupt report must be counted, not fatal.
             c.execute(
                 "INSERT INTO pgcr_raw VALUES (4, 4, '2026-07-01T12:00:00Z', 1, 1000, X'1f8b0000')",
@@ -277,18 +324,18 @@ fn imports_a_synthetic_backup_tree() {
     };
     let report = searchlight_import::run(&opts, &Progress::hidden()).unwrap();
 
-    // Archive: 2 shards × 3 rows → one copy per instance is parsed; only the
+    // Archive: 2 shards × 4 rows → one copy per instance is parsed; only the
     // chosen copy of the corrupt report is attempted.
     let a = report.archive.as_ref().unwrap();
-    assert_eq!((a.rows_read, a.duplicates, a.parse_errors), (6, 3, 1));
-    assert_eq!(a.runs, 2);
+    assert_eq!((a.rows_read, a.duplicates, a.parse_errors), (8, 4, 1));
+    assert_eq!(a.runs, 3);
 
     let db = Database::open_read_only(&out).unwrap();
-    // Runs 1 (both sources → archive), 2 (tracked only), 3 (archive only).
-    assert_eq!(count(&db, "SELECT count(*) FROM run"), 3);
+    // Runs 1 (both sources → archive), 2 (tracked only), 3 and 6 (archive only).
+    assert_eq!(count(&db, "SELECT count(*) FROM run"), 4);
     assert_eq!(
         count(&db, "SELECT count(*) FROM run WHERE source = 'archive'"),
-        2
+        3
     );
     assert_eq!(count(&db, "SELECT count(*) FROM run WHERE is_tracked"), 2);
     assert_eq!(
@@ -302,7 +349,7 @@ fn imports_a_synthetic_backup_tree() {
         count(&db, "SELECT feat_count FROM run WHERE instance_id = 2"),
         1
     );
-    assert_eq!(count(&db, "SELECT count(*) FROM run_player"), 3);
+    assert_eq!(count(&db, "SELECT count(*) FROM run_player"), 5);
     // Archive and tracked agree on run 1.
     assert_eq!(
         count(&db, "SELECT kills FROM run_player WHERE instance_id = 1"),
@@ -315,23 +362,39 @@ fn imports_a_synthetic_backup_tree() {
         ),
         0
     );
-    assert_eq!(count(&db, "SELECT count(*) FROM run_player_weapon"), 3);
+    assert_eq!(count(&db, "SELECT count(*) FROM run_player_weapon"), 5);
     // The later re-fetch of run 3 won.
     assert_eq!(
         count(&db, "SELECT kills FROM run_player WHERE instance_id = 3"),
         91
     );
 
-    // Builds: two segments, two distinct builds, run 2 flagged.
-    assert_eq!(count(&db, "SELECT count(*) FROM segment"), 2);
+    // Builds: three segments in two timelines, two distinct builds.
+    assert_eq!(count(&db, "SELECT count(*) FROM segment"), 3);
     assert_eq!(count(&db, "SELECT count(*) FROM build"), 2);
     assert_eq!(
         count(&db, "SELECT count(*) FROM run_build WHERE is_primary"),
+        2
+    );
+    // Each timeline is attributed to exactly one character: in run 6 only
+    // the Warlock matches the captured Warlock build, not the Titan.
+    assert_eq!(
+        count(&db, "SELECT count(*) FROM run_player WHERE has_build"),
+        2
+    );
+    assert_eq!(
+        count(
+            &db,
+            "SELECT count(*) FROM run_player WHERE instance_id = 6 AND has_build AND class = 'Warlock'"
+        ),
         1
     );
     assert_eq!(
-        count(&db, "SELECT count(*) FROM run_player WHERE has_build"),
-        1
+        count(
+            &db,
+            "SELECT value FROM import_stat WHERE metric = 'timeline_unattributed'"
+        ),
+        0
     );
     let exotic: String = db
         .conn()

@@ -68,8 +68,20 @@ WHERE TRY_CAST(r.period AS TIMESTAMP) IS NOT NULL
 ORDER BY started_at, r.instance_id;
 
 -- step: run_player
+-- A build timeline belongs to one character: the one whose class matches the
+-- captured build. (A report can list a player on several characters.)
 CREATE TEMP TABLE timeline_key AS
-SELECT DISTINCT instance_id, membership_id FROM segment;
+SELECT s.instance_id, s.membership_id, arg_max(b.class, s.duration_s) AS class
+FROM segment s
+JOIN build b USING (build_id)
+GROUP BY ALL;
+
+CREATE TEMP TABLE member_chars AS
+SELECT e.instance_id, e.membership_id, count(DISTINCT e.character_id) AS chars
+FROM stg.entry e
+JOIN run_choice c ON c.instance_id = e.instance_id AND c.src = e.src
+JOIN timeline_key t ON t.instance_id = e.instance_id AND t.membership_id = e.membership_id
+GROUP BY ALL;
 
 INSERT INTO run_player
 SELECT DISTINCT ON (e.instance_id, e.membership_id, e.character_id)
@@ -95,11 +107,14 @@ SELECT DISTINCT ON (e.instance_id, e.membership_id, e.character_id)
        coalesce(e.completed, false) AND e.completion_reason = 0 AS is_clear,
        e.time_played_s,
        e.start_s,
-       t.instance_id IS NOT NULL AS has_build
+       t.instance_id IS NOT NULL
+         AND (m.chars = 1 OR t.class = 'Unknown' OR t.class = e.class OR e.class NOT IN ('Titan', 'Hunter', 'Warlock'))
+         AS has_build
 FROM stg.entry e
 JOIN run_choice c ON c.instance_id = e.instance_id AND c.src = e.src
 JOIN run r ON r.instance_id = e.instance_id
 LEFT JOIN timeline_key t ON t.instance_id = e.instance_id AND t.membership_id = e.membership_id
+LEFT JOIN member_chars m ON m.instance_id = e.instance_id AND m.membership_id = e.membership_id
 -- Tie-breakers make the pick deterministic if a report lists a character twice.
 ORDER BY e.instance_id, e.membership_id, e.character_id,
          e.time_played_s DESC, e.kills DESC, e.deaths, e.start_s;
