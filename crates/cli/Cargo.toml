@@ -21,6 +21,7 @@ duckdb.workspace = true
 searchlight-core.workspace = true
 searchlight-db.workspace = true
 searchlight-import.workspace = true
+serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 

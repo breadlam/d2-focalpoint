@@ -35,6 +35,8 @@ enum Command {
     Search(Box<commands::search::Args>),
     /// List a build's nearest neighbours by the tiered build distance
     Similar(commands::similar::Args),
+    /// Export the data for the static build-ranking site (site/)
+    Site(commands::site::Args),
     /// Run an ad-hoc SQL query against the database
     #[command(
         after_help = "Example:\n  searchlight sql \"SELECT item_name(exotic_armor_hash) AS exotic, count(*) AS builds\n                   FROM build GROUP BY 1 ORDER BY 2 DESC LIMIT 10\""
@@ -52,6 +54,7 @@ fn main() -> ExitCode {
         Command::Rank(args) => commands::rank::run(&args, &db),
         Command::Search(args) => commands::search::run(&args, &db),
         Command::Similar(args) => commands::similar::run(&args, &db),
+        Command::Site(args) => commands::site::run(&args, &db),
         Command::Sql(args) => commands::sql::run(&args, &db),
     };
     match result {

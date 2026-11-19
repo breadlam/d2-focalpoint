@@ -14,6 +14,7 @@ pub mod filter;
 pub mod rank;
 pub mod search;
 pub mod similar;
+pub mod site;
 
 /// Version of [`SCHEMA_SQL`]. Bump on any incompatible schema change.
 pub const SCHEMA_VERSION: u32 = 5;
