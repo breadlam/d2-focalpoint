@@ -26,6 +26,11 @@ pub struct Args {
     #[arg(long)]
     pub include_passengers: bool,
 
+    /// Skip builds used by the target build's own players (find who else
+    /// plays something similar)
+    #[arg(long)]
+    pub other_players: bool,
+
     #[arg(long, value_enum, default_value_t)]
     pub format: Format,
 }
@@ -70,6 +75,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         limit: args.limit,
         same_class: !args.any_class,
         include_passengers: args.include_passengers,
+        other_players_only: args.other_players,
         ..SimilarOptions::default()
     };
     let result = nearest_builds(&db, args.build_id, &opts)?;

@@ -1,5 +1,7 @@
 //! Nearest builds by the tiered build distance (ADR 0005).
 
+use std::fmt::Write as _;
+
 use duckdb::types::Value;
 use duckdb::{OptionalExt, params};
 use rayon::prelude::*;
@@ -16,6 +18,9 @@ pub struct SimilarOptions {
     /// Include builds only ever used by players who never got a kill with
     /// them (checkpoint bots and passengers; excluded by default).
     pub include_passengers: bool,
+    /// Skip builds used by any player of the target build, to find who
+    /// *else* plays something similar.
+    pub other_players_only: bool,
     pub weights: TierWeights,
 }
 
@@ -25,6 +30,7 @@ impl Default for SimilarOptions {
             limit: 10,
             same_class: true,
             include_passengers: false,
+            other_players_only: false,
             weights: TierWeights::default(),
         }
     }
@@ -117,6 +123,14 @@ pub fn nearest_builds(db: &Database, build_id: i64, opts: &SimilarOptions) -> Re
             " AND build_id IN (SELECT DISTINCT rb.build_id FROM run_build rb
                  JOIN run_player p ON p.instance_id = rb.instance_id AND p.membership_id = rb.membership_id
                  WHERE p.has_build AND p.kills > 0)",
+        );
+    }
+    if opts.other_players_only {
+        // The target id is a trusted integer, inlined to keep binding simple.
+        let _ = write!(
+            sql,
+            " AND build_id NOT IN (SELECT build_id FROM run_build WHERE membership_id IN
+                 (SELECT membership_id FROM run_build WHERE build_id = {build_id}))"
         );
     }
     let mut stmt = conn.prepare(&sql)?;
@@ -259,6 +273,25 @@ mod tests {
         assert!((s.neighbours[0].distance.total - 0.1).abs() < 1e-12);
         assert!((s.neighbours[1].distance.total - 0.4).abs() < 1e-12);
         assert_eq!(s.neighbours[0].slot_edits, 1);
+    }
+
+    #[test]
+    fn other_players_only_skips_the_target_players_builds() {
+        let (_dir, db) = db();
+        // Member 7 also used build 1, so their builds 2-4 are skipped; only
+        // the passenger's build 5 remains (when passengers are included).
+        db.conn()
+            .execute_batch("INSERT INTO run_build VALUES (14, 7, 1, 1, 0, 60, 1.0, true)")
+            .unwrap();
+        let opts = SimilarOptions {
+            other_players_only: true,
+            include_passengers: true,
+            same_class: false,
+            ..SimilarOptions::default()
+        };
+        let s = nearest_builds(&db, 1, &opts).unwrap();
+        let order: Vec<i64> = s.neighbours.iter().map(|n| n.summary.build_id).collect();
+        assert_eq!(order, [5]);
     }
 
     #[test]
