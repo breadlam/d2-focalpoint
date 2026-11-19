@@ -14,8 +14,12 @@
   <script type="module">
     import {
       DEFAULTS, NONE, decodeRecipe, facetOptions, formatHash, parseHash, pct, pickLine, prepare, recipeDiff,
-      recipeIncludes, results, rowRecipes, scopeLabel, topLine,
+      recipeIncludes, results, rowRecipes, scopeLabel, topLine, findHash, bookHash,
     } from '../../site/app.js';
+    import {
+      FIND_DEFAULTS, activityFacet, formatFindHash, includeFacet, matchingBuilds, matchingTypes, parseFindHash,
+      parseIndex, parseShard, shardsOf, typeFacet,
+    } from '../../site/finder.js';
 
     const names = ['Dawnblade', 'Well of Radiance', 'Phoenix Dive', 'Burst Glide', 'Incinerator Snap',
       'Solar Grenade', 'Heat Rises', 'Icarus Dash', 'Ember of Char', 'The Mountaintop', 'Fatebringer',
@@ -127,6 +131,69 @@
     let threw = false;
     try { prepare({ ...data, format: 1 }); } catch { threw = true; }
     eq(threw, true, 'data of another format is rejected');
+
+    // ---- Find any build: the catalog --------------------------------------
+    const T = '\t';
+    const indexText = [
+      'focalpoint-catalog 1', '@meta', `icon_base${T}https://www.bungie.net`,
+      '@dict',
+      `Ballidorse Wrathweavers${T}/b.jpg`, `Praxic Blade${T}`, `Winter's Wrath${T}`, `Frostpulse${T}`,
+      `Glacial Harvest${T}`, `Repurposed Charge${T}`, `Whisper of Chains${T}`, `Shadebinder${T}`,
+      `Exodus Down${T}`, `Synthoceps${T}`,
+      '@activities', `Vault of Glass: Master${T}Master Raid`, `Equilibrium${T}Equilibrium`,
+      '@types',
+      ['Warlock', 'Stasis', '0', '1', '2', '3,4', '2', '5', '2', '0', '0,1'].join(T),
+      ['Titan', 'Stasis', '9', '-', '-', '-', '1', '1', '1', '0', '1'].join(T),
+    ].join('\n') + '\n';
+    const shardText = [
+      'focalpoint-shard 1',
+      '@kits', '7 2 - - - - 3,4 6 -',
+      '@weapons', '0 1 1 - - - -',
+      '@armor', '1 0 1 - - - - -',
+      '@artifact', '-',
+      '@sets', '8:4 5', '- -',
+      '@builds',
+      'aaaaaaaa 0 0 0 0 0 0 1e,a,a,1e,2s,a 3 1 2 1 fz9 2s 0',
+      'bbbbbbbb 0 0 0 0 0 1 - 2 1 0 0 fz8 - 1',
+      'cccccccc 1 0 - - 0 1 - 1 1 1 0 fz7 - 1',
+    ].join('\n') + '\n';
+    const cat = parseIndex(indexText);
+    const builds = parseShard(shardText);
+    const fstate = (patch) => ({ ...FIND_DEFAULTS, has: [], ...patch });
+    const bids = (list) => list.map((b) => b.id);
+
+    eq(cat.types.length, 2, 'catalog types');
+    eq([cat.types[0].armorName, cat.types[0].weaponName, cat.types[0].superName, cat.types[0].aspectNames],
+      ['Ballidorse Wrathweavers', 'Praxic Blade', "Winter's Wrath", ['Frostpulse', 'Glacial Harvest']], 'type names');
+    eq(cat.types[1].weaponName, null, 'no exotic weapon');
+    eq([...typeFacet(cat, fstate({}), 'cls').entries()].sort(), [['Titan', 1], ['Warlock', 2]], 'class facet counts builds');
+    eq(matchingTypes(cat, fstate({ armor: 'Ballidorse Wrathweavers', weapon: 'Praxic Blade' })).map((t) => t.id), [0], 'type filters');
+    eq(matchingTypes(cat, fstate({ weapon: NONE })).map((t) => t.id), [1], 'no exotic weapon filter');
+    eq(matchingTypes(cat, fstate({ act: 'Master Raid' })).map((t) => t.id), [0], 'activity group filter');
+    eq(activityFacet(cat, fstate({})).get('Equilibrium|Equilibrium'), 3, 'activity facet');
+    eq(shardsOf(cat.types), [0], 'shards of types');
+
+    eq(builds.length, 3, 'shard builds');
+    const a = builds[0];
+    eq([a.recipe.kit.subclass, a.recipe.kit.fragments, a.recipe.armor[0].item, a.recipe.armor[0].exotic, a.recipe.weapons[0].item],
+      [7, [6], 0, true, 1], 'decoded catalog recipe');
+    eq([a.recipe.sets, a.recipe.setBonuses, a.recipe.stats], [[[8, 4]], [5], [50, 10, 10, 50, 100, 10]], 'sets and stats');
+    eq([a.runs, a.clears, a.qualified, a.effect, a.activities], [3, 2, 1, 0.1, [0]], 'build record');
+    eq(builds[1].effect, null, 'an unranked build');
+
+    const ballidorse = matchingTypes(cat, fstate({ armor: 'Ballidorse Wrathweavers' }));
+    eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({}))), ['aaaaaaaa', 'bbbbbbbb'], 'ranked builds first');
+    eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({ has: ['Repurposed Charge'] }))), ['aaaaaaaa'], 'includes a set bonus');
+    eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({ has: ['Repurposed Charge', 'Whisper of Chains'] }))), ['aaaaaaaa'], 'includes are AND');
+    eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({ act: 'Equilibrium' }))), ['bbbbbbbb'], 'activity at build level');
+    eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({ sort: 'recent' }))), ['aaaaaaaa', 'bbbbbbbb'], 'sort by recency');
+    eq(includeFacet(cat, builds.slice(0, 2)).get('Repurposed Charge'), ['set_bonus', 1], 'includes facet');
+
+    const fs = fstate({ armor: 'Ballidorse Wrathweavers', act: 'Master Raid|Vault of Glass: Master', has: ['Repurposed Charge', 'Whisper of Chains'], sort: 'clears' });
+    eq(parseFindHash(formatFindHash(fs)), fs, 'finder hash round trip');
+    eq(formatFindHash(fstate({})), '#view=find', 'finder defaults');
+    eq(findHash(data.types[0]), '#view=find&class=Warlock&element=Solar&armor=Getaway+Artist&weapon=%28none%29&super=Well+of+Radiance&aspect=Heat+Rises&aspect2=Icarus+Dash', 'book to finder link');
+    eq(bookHash(cat.types[1]), '#class=Titan&element=Stasis&armor=Synthoceps&weapon=%28none%29', 'finder to book link');
 
     const verdict = document.getElementById('verdict');
     verdict.className = failures ? 'fail' : 'pass';

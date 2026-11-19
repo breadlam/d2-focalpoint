@@ -13,13 +13,18 @@
     <header class="masthead">
       <h1>Focalpoint</h1>
       <p class="lede">
-        A book of exact Destiny 2 endgame builds, as players equipped them, ranked by how much
-        the build helps the players who use it rather than by how good those players already are.
-        From <span id="total-clears">…</span> qualified clears captured by Searchlight,
-        <span id="data-range">…</span>.
+        Exact Destiny 2 endgame builds captured by Searchlight, as players equipped them, ranked by
+        how much the build helps the players who use it rather than by how good those players
+        already are.
       </p>
     </header>
 
+    <nav class="tabs" aria-label="Views">
+      <button id="tab-book" type="button" class="tab" aria-selected="true">Ranked recipes</button>
+      <button id="tab-find" type="button" class="tab" aria-selected="false">Find any build</button>
+    </nav>
+
+    <div id="book-view">
     <form id="filters" class="panel" aria-label="Filters">
       <div class="field span-2">
         <label for="scope">Activity</label>
@@ -101,6 +106,77 @@
       </p>
       <button id="more" type="button" class="button" hidden>Show more</button>
     </section>
+    </div>
+
+    <div id="find-view" hidden>
+      <p class="view-intro">
+        Every build Searchlight collected, exactly as equipped, whether or not it was used in a
+        qualified clear. Narrow by build type, then by anything a build includes.
+      </p>
+      <form id="find-filters" class="panel" aria-label="Find filters">
+        <div class="field span-2">
+          <label for="f-act">Used in</label>
+          <select id="f-act"></select>
+        </div>
+        <fieldset class="field span-2">
+          <legend>Class</legend>
+          <div class="segmented">
+            <input type="radio" name="f-class" id="f-class-any" value=""><label for="f-class-any">Any<span class="count"></span></label>
+            <input type="radio" name="f-class" id="f-class-hunter" value="Hunter"><label for="f-class-hunter">Hunter<span class="count"></span></label>
+            <input type="radio" name="f-class" id="f-class-titan" value="Titan"><label for="f-class-titan">Titan<span class="count"></span></label>
+            <input type="radio" name="f-class" id="f-class-warlock" value="Warlock"><label for="f-class-warlock">Warlock<span class="count"></span></label>
+          </div>
+        </fieldset>
+        <div class="field">
+          <label for="f-element">Subclass</label>
+          <select id="f-element"></select>
+        </div>
+        <div class="field">
+          <label for="f-sup">Super</label>
+          <select id="f-sup"></select>
+        </div>
+        <div class="field">
+          <label for="f-armor">Exotic armor</label>
+          <select id="f-armor"></select>
+        </div>
+        <div class="field">
+          <label for="f-weapon">Exotic weapon</label>
+          <select id="f-weapon"></select>
+        </div>
+        <div class="field">
+          <label for="f-aspect1">Aspect</label>
+          <select id="f-aspect1"></select>
+        </div>
+        <div class="field">
+          <label for="f-aspect2">Second aspect</label>
+          <select id="f-aspect2"></select>
+        </div>
+        <div class="field span-2">
+          <label for="f-has">Includes <span class="hint">(fragments, weapons, perks, mods, set bonuses, artifact perks; all must match)</span></label>
+          <select id="f-has"></select>
+          <ul id="f-chips" class="chip-filters" aria-label="Required components"></ul>
+        </div>
+        <div class="field">
+          <label for="f-sort">Sort by</label>
+          <select id="f-sort"></select>
+        </div>
+        <div class="field actions">
+          <button id="f-reset" type="button" class="button secondary">Clear filters</button>
+        </div>
+      </form>
+
+      <p id="find-note" class="note"></p>
+
+      <section class="results-section" aria-labelledby="find-heading">
+        <div class="results-head">
+          <h2 id="find-heading">Builds</h2>
+          <p id="find-summary" aria-live="polite"></p>
+        </div>
+        <ol id="find-results" class="results"></ol>
+        <div id="find-types"></div>
+        <button id="find-more" type="button" class="button" hidden>Show more</button>
+      </section>
+    </div>
 
     <section class="explainer" aria-labelledby="how-heading">
       <h2 id="how-heading">How the book is made</h2>
@@ -124,6 +200,11 @@
         <dd>Other exact builds of the same family: the same kit with different weapons, armor, mods,
           stats or artifact perks. Each lists exactly what differs from the top recipe, and opens to
           its full recipe.</dd>
+        <dt>Find any build</dt>
+        <dd>The second view searches every build Searchlight collected — about 594,000, ranked or
+          not — exactly as equipped. Its filters work on build types first; once they narrow the
+          search enough, the page downloads just those builds and matches everything they include.
+          Ranked builds come first, the rest by how often they were used.</dd>
         <dt>Run results</dt>
         <dd>Each clear is scored on kills, speed and deaths against a typical clear of the same activity
           with the same solo status, following Searchlight’s original run evaluator. Only clears that met
@@ -146,21 +227,9 @@
   <noscript><p class="note">This page needs JavaScript to load and filter the rankings.</p></noscript>
 
   <script type="module">
-    import { start } from './app.js';
+    import { boot } from './app.js';
 
-    const root = document.getElementById('app');
-    try {
-      const response = await fetch('data/focalpoint.json');
-      if (!response.ok) throw new Error(`data/focalpoint.json: HTTP ${response.status}`);
-      start(root, await response.json());
-    } catch (error) {
-      root.classList.remove('loading');
-      const note = document.getElementById('scope-note');
-      note.classList.add('error');
-      note.textContent = location.protocol === 'file:'
-        ? 'Open this page through a web server (for example: python3 -m http.server -d site); browsers block loading data from file:// pages.'
-        : `Could not load the rankings: ${error.message}`;
-    }
+    boot(document.getElementById('app'));
   </script>
 </body>
 </html>

@@ -9,7 +9,7 @@ players and trends from it.
 | Crate | Kind | Responsibility |
 |---|---|---|
 | [`focalpoint-core`](../crates/core) | library, no I/O | Source formats (`LoadoutState`, PGCR JSON), manifest model (`Catalog`), plug classification, build extraction and fingerprints, stat investment (`stats`), element vectors and distances (`vector`), run scoring and the player/build model (`rank`). Everything here is deterministic and unit-tested, including against real captured fixtures. |
-| [`focalpoint-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`, and the site export (`site`). |
+| [`focalpoint-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`, and the site export: exact recipes (`recipe`), the ranked book (`site`) and the catalog of every build (`catalog`). |
 | [`focalpoint-import`](../crates/import) | library | The ETL: source discovery, local staging, parallel extract into staging tables, SQL transform, stat investment, scoring, validation, publish. |
 | [`focalpoint-cli`](../crates/cli) | binary `focalpoint` | Command-line interface: `import`, `info`, `search`, `similar`, `rank`, `site`, `sql`. |
 

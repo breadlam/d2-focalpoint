@@ -27,13 +27,23 @@ activity to get the listings ranked there, and narrow them by class,
 subclass, super, exotics, aspects or a component a listed recipe includes.
 Filters and activity are kept in the URL, so a view can be shared.
 
+A second view, **Find any build**, searches the **catalog**: every build
+Searchlight collected (594,233), exactly as equipped, whether or not it was
+used in a qualified clear. Its filters work on build types first (class,
+subclass, super, exotics, aspects, activity); once they select at most
+45,000 builds, the page downloads just the shards holding them and matches
+everything the builds include (fragments, weapons, perks, mods, set bonuses,
+artifact perks). Ranked builds come first, the rest by use.
+
 ## Files
 
 | Path | What it is |
 |---|---|
 | `site/index.html`, `site/style.css`, `site/favicon.svg` | the page; no build step, no dependencies |
 | `site/app.js` | an ES module: pure functions (recipe decoding and differences, filtering, facet counts, ranking, URL state) plus the DOM layer |
-| `site/data/focalpoint.json` | the data, exported by `focalpoint site` and committed |
+| `site/finder.js` | "Find any build": catalog parsing, filters and rendering (loaded only when the view is opened) |
+| `site/data/focalpoint.json` | the ranked book, exported by `focalpoint site` and committed |
+| `site/data/catalog/` | the catalog of every build: `index.txt` and shards `sNNN.txt`, exported by `focalpoint site` and committed |
 | `site/.nojekyll` | serve files as they are |
 | `tests/site/test.html` | browser tests for `app.js` |
 | `tests/site/details.html` | a screenshot harness that opens the first listing's panels |
@@ -52,9 +62,10 @@ focalpoint site                                      # writes site/data/focalpoi
 git add site/data/focalpoint.json
 ```
 
-It takes about 45 s (four model fits per scope: types, families, loadouts,
-exact builds) and writes about 6 MB (1.6 MB compressed, which is how GitHub
-Pages serves it). Recipes are stored once and serialized as positional
+It takes about 90 s: the book needs four model fits per scope (types,
+families, loadouts, exact builds) and writes about 6 MB (1.6 MB compressed,
+which is how GitHub Pages serves it); the catalog writes 219 text files,
+157 MB (46 MB compressed — about what git stores). Recipes are stored once and serialized as positional
 arrays, since they are most of the file. The output is deterministic, so an
 unchanged database gives an unchanged file. A build type is listed in a
 scope once at least 2 players have used it there for half a run
@@ -114,8 +125,47 @@ Numbers inside recipes are indices into `dict`. Effects are on the log scale
 (`crates/db/src/site.rs`) and `FORMAT` (`site/app.js`) together when the
 layout changes; the page refuses data of another format.
 
+## Catalog format (`focalpoint-catalog 1`)
+
+Plain text, numbers in base 36, `-` for none, lists comma-separated.
+Players reuse a weapon roll, an armor piece or a kit across many builds, so
+builds refer to **parts** stored once per shard. Build types are sorted by
+name and packed into shards of about 3,000 builds (a type larger than that
+spans several shards), and builds within a type by loadout.
+
+`index.txt` (≈ 3.3 MB, 0.7 MB compressed) — loaded when the view opens:
+
+```text
+focalpoint-catalog 1
+@meta        key<TAB>value                 imported_at, first_run, last_run, icon_base, builds, shards
+@dict        name<TAB>icon path            referenced by index from types and shards
+@activities  name<TAB>target group
+@types       class element armor weapon super aspects builds runs players shards activities   (TAB-separated)
+```
+
+`sNNN.txt` (≈ 750 KB, 220 KB compressed) — loaded when a search needs it.
+Each section's lines are numbered from 0 within the shard:
+
+```text
+focalpoint-shard 1
+@kits      subclass super class-ability movement melee grenade aspects fragments transcendence
+@weapons   slot(0 kinetic,1 energy,2 power) item exotic(0/1) frame origin mod perks
+@armor     slot(0 helmet … 4 class item) item exotic archetype tuning stat-mods mods perks
+@artifact  perks
+@sets      set:pieces,… bonuses
+@builds    id type kit weapons armor artifact sets stats runs players clears qualified last-day effect activities
+```
+
+In `@builds`, `id` is the build id's last 8 base-36 digits; `type` indexes
+`@types` in the index; `kit`, `weapons`, `armor`, `artifact` and `sets` index
+the shard's own sections; `stats` are the six final stats; `qualified` counts
+qualified clears; `last-day` is days since 1970; `effect` is the exact
+build's effect in thousandths (`-` if not ranked). Names everywhere are
+indices into the index's `@dict`.
+
 ## What the data contains
 
-Exact builds (equipment only) with per-scope counts of runs and players and
+Exact builds (equipment only) with counts of runs, players and clears and
 the fitted effects. No player names, Bungie names or membership ids are
-exported (a test checks this).
+exported (a test checks this for the book; the catalog's fields are listed
+above).

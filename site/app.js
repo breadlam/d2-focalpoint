@@ -81,10 +81,8 @@ export function prepare(data) {
 
 const name = (model, i) => (i === null || i === undefined ? null : model.data.dict[i][0]);
 
-/** The searchable components of one recipe: Map(name → kind). */
-export function recipeIncludes(model, index) {
-  if (model.includeCache.has(index)) return model.includeCache.get(index);
-  const r = model.recipe(index);
+/** The searchable components of a decoded recipe: Map(name → kind). */
+export function componentsOf(model, r) {
   const m = new Map();
   const add = (i, kind) => { const n = name(model, i); if (n && !m.has(n)) m.set(n, kind); };
   r.kit.fragments.forEach((i) => add(i, 'fragment'));
@@ -93,8 +91,13 @@ export function recipeIncludes(model, index) {
   for (const a of r.armor) { a.mods.forEach((i) => add(i, 'armor_mod')); if (a.exotic) a.perks.forEach((i) => add(i, 'exotic_perk')); }
   r.setBonuses.forEach((i) => add(i, 'set_bonus'));
   r.artifact.forEach((i) => add(i, 'artifact'));
-  model.includeCache.set(index, m);
   return m;
+}
+
+/** The searchable components of one listed recipe (cached). */
+export function recipeIncludes(model, index) {
+  if (!model.includeCache.has(index)) model.includeCache.set(index, componentsOf(model, model.recipe(index)));
+  return model.includeCache.get(index);
 }
 
 /** Recipes listed for a row: the top recipe, then its variants. */
@@ -275,7 +278,7 @@ export function scopeLabel(scope) {
 // ---------------------------------------------------------------------------
 
 /** Create an element: h('div', { class: 'x' }, child, 'text', ...). */
-function h(tag, attrs = {}, ...children) {
+export function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (v === null || v === undefined || v === false) continue;
@@ -291,9 +294,9 @@ function h(tag, attrs = {}, ...children) {
 }
 
 const fmt = new Intl.NumberFormat('en-US');
-const n = (x) => fmt.format(x);
+export const n = (x) => fmt.format(x);
 
-function img(model, path, cls) {
+export function img(model, path, cls) {
   return path ? h('img', { class: cls, src: model.data.icon_base + path, alt: '', loading: 'lazy', width: 40, height: 40 }) : null;
 }
 
@@ -303,7 +306,7 @@ function typeIcon(model, nameText, cls = 'icon') {
 }
 
 /** A dictionary entry as an icon and its name; `mark` highlights a filter match. */
-function thing(model, i, { cls = 'thing', count = 1, mark = '' } = {}) {
+export function thing(model, i, { cls = 'thing', count = 1, mark = '' } = {}) {
   if (i === null || i === undefined) return null;
   const [label, icon] = model.data.dict[i];
   return h('span', { class: `${cls}${mark && label === mark ? ' match' : ''}` },
@@ -311,13 +314,13 @@ function thing(model, i, { cls = 'thing', count = 1, mark = '' } = {}) {
 }
 
 /** Things with repeats collapsed to ×N, in first-seen order. */
-function things(model, list, opts) {
+export function things(model, list, opts) {
   const counts = new Map();
   for (const i of list) counts.set(i, (counts.get(i) ?? 0) + 1);
   return [...counts].map(([i, c]) => thing(model, i, { ...opts, count: c }));
 }
 
-function elementBadge(element) {
+export function elementBadge(element) {
   return element ? h('span', { class: `badge el-${element.toLowerCase()}` }, element) : null;
 }
 
@@ -328,7 +331,7 @@ function effectBar(x) {
     h('span', { class: `fill ${v >= 0 ? 'pos' : 'neg'}`, style: `width:${(Math.abs(v) * 50).toFixed(1)}%` }));
 }
 
-const plural = (x, word) => `${n(x)} ${word}${x === 1 ? '' : 's'}`;
+export const plural = (x, word) => `${n(x)} ${word}${x === 1 ? '' : 's'}`;
 
 /** An exact build's record: "Used in 2 clears by 1 player · last … · +9% for its players". */
 export function pickLine(p) {
@@ -345,13 +348,13 @@ export function topLine(row) {
     + (builds > 1 ? ` across ${plural(builds, 'exact build')}.` : '.');
 }
 
-function statLine(stats) {
+export function statLine(stats) {
   if (!stats) return null;
   return h('ul', { class: 'stat-line', 'aria-label': 'Stats' },
     STATS.map((s, i) => h('li', {}, h('span', { class: 'stat-name' }, s), h('span', { class: 'stat-value' }, stats[i]))));
 }
 
-function weaponRow(model, w, mark) {
+export function weaponRow(model, w, mark) {
   return h('li', { class: 'weapon' },
     h('span', { class: 'slot-label' }, WEAPON_SLOTS[w.slot]),
     h('div', { class: 'weapon-body' },
@@ -364,7 +367,7 @@ function weaponRow(model, w, mark) {
 }
 
 /** The always-visible part of a recipe: abilities, kit, weapons, stats. */
-function recipeSummary(model, r, mark) {
+export function recipeSummary(model, r, mark) {
   const k = r.kit;
   return h('div', { class: 'recipe-summary' },
     h('div', { class: 'recipe-block' },
@@ -380,7 +383,7 @@ function recipeSummary(model, r, mark) {
 }
 
 /** The expandable rest of a recipe: armor, sets, artifact, transcendence. */
-function recipeRest(model, r, mark) {
+export function recipeRest(model, r, mark) {
   return h('div', { class: 'recipe-rest' },
     h('div', { class: 'recipe-block wide' },
       h('h4', {}, 'Armor'),
@@ -407,7 +410,7 @@ function recipeRest(model, r, mark) {
 }
 
 /** A details element whose body is built on first open. */
-function lazyDetails(summary, build, cls = 'more') {
+export function lazyDetails(summary, build, cls = 'more') {
   const d = h('details', { class: cls }, h('summary', {}, summary));
   d.addEventListener('toggle', () => { if (d.open && d.childElementCount === 1) d.append(build()); });
   return d;
@@ -472,10 +475,11 @@ function card(model, row, rank, scope, go, mark) {
       `${total} near-identical variant${total === 1 ? '' : 's'}${more ? ` (showing the best ${variants.length})` : ''}`,
       () => h('ol', { class: 'variants' }, variants.map((v) => variantItem(model, recipe, v, mark))),
       'more variants-details') : null,
-    elsewhere(model, row[0], scope, go));
+    elsewhere(model, row[0], scope, go),
+    h('a', { class: 'browse-link', href: findHash(t) }, 'Every collected build of this type →'));
 }
 
-function fillSelect(select, options, value, anyLabel) {
+export function fillSelect(select, options, value, anyLabel) {
   select.replaceChildren(h('option', { value: '' }, anyLabel), ...options);
   select.value = value;
   if (select.value !== value) {
@@ -485,13 +489,42 @@ function fillSelect(select, options, value, anyLabel) {
   }
 }
 
-function optionList(counts, label = (v) => v) {
+export function optionList(counts, label = (v) => v) {
   return [...counts.entries()]
     .sort((a, b) => (a[0] === NONE ? -1 : b[0] === NONE ? 1 : a[0].localeCompare(b[0])))
     .map(([v, c]) => h('option', { value: v }, `${label(v)} (${c})`));
 }
 
-export function start(root, data) {
+/** The finder's URL for one build type of the book (names as filters). */
+export function findHash(t) {
+  const p = new URLSearchParams({ view: 'find' });
+  const set = (key, v) => { if (v) p.set(key, v); };
+  set('class', t.class);
+  set('element', t.element);
+  set('armor', t.armor ?? NONE);
+  set('weapon', t.weapon ?? NONE);
+  set('super', t.super);
+  set('aspect', t.aspects[0]);
+  set('aspect2', t.aspects[1]);
+  return `#${p}`;
+}
+
+/** The ranked book's URL for a build type (names as filters). */
+export function bookHash(t) {
+  const p = new URLSearchParams();
+  const set = (key, v) => { if (v) p.set(key, v); };
+  set('class', t.class);
+  set('element', t.element);
+  set('armor', t.armorName ?? NONE);
+  set('weapon', t.weaponName ?? NONE);
+  set('super', t.superName);
+  set('aspect', t.aspectNames[0]);
+  set('aspect2', t.aspectNames[1]);
+  return `#${p}`;
+}
+
+/** Run the ranked book in `root`; returns `{ refresh }` for URL changes. */
+export function startBook(root, data) {
   const model = prepare(data);
   let state = parseHash(location.hash);
   let shown = PAGE;
@@ -566,7 +599,8 @@ export function start(root, data) {
   function renderScopeNote(scope) {
     const note = $('scope-note');
     note.replaceChildren(
-      `Ranked from ${n(scope.clears)} qualified clears by ${n(scope.players)} players; `,
+      `Ranked from ${n(scope.clears)} qualified clears by ${n(scope.players)} players, `
+        + `${data.first_run} to ${data.last_run}; `,
       h('strong', {}, n(scope.build_runs)), ' of them had a captured build.');
     if (scope.build_runs < THIN_SCOPE) {
       const parent = scope.parent && data.scopes.find((s) => s.kind === 'group' && s.name === scope.parent);
@@ -597,10 +631,68 @@ export function start(root, data) {
   $('sort').addEventListener('change', (e) => update({ sort: e.target.value }));
   $('reset').addEventListener('click', () => update({ ...DEFAULTS, scope: state.scope }));
   $('more').addEventListener('click', () => { shown += PAGE; update({}, { resetPage: false }); });
-  window.addEventListener('hashchange', () => { state = parseHash(location.hash); shown = PAGE; render(); });
 
-  $('data-range').textContent = `${data.first_run} to ${data.last_run}`;
-  $('total-clears').textContent = n(scopeOf(model, { scope: 'all' }).clears);
   render();
-  root.classList.remove('loading');
+  return { refresh: () => { state = parseHash(location.hash); shown = PAGE; render(); } };
+}
+
+const isFind = () => new URLSearchParams(location.hash.replace(/^#/, '')).get('view') === 'find';
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`);
+  return response.json();
+}
+
+/**
+ * Start the page: the ranked book or "Find any build", as the URL says.
+ * Each view's data is fetched the first time the view is shown.
+ */
+export function boot(root) {
+  const $ = (id) => root.querySelector(`#${id}`);
+  let book = null;
+  let finder = null;
+  // A finder result links to its type's ranked listing.
+  const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'Look for this build type in the ranked book →');
+
+  async function show() {
+    const find = isFind();
+    $('book-view').hidden = find;
+    $('find-view').hidden = !find;
+    $('tab-book').setAttribute('aria-selected', String(!find));
+    $('tab-find').setAttribute('aria-selected', String(find));
+    const note = $(find ? 'find-note' : 'scope-note');
+    try {
+      if (find) {
+        if (finder) (await finder).refresh();
+        else finder = import('./finder.js').then((m) => m.startFinder(root, bookLink));
+        await finder;
+      } else {
+        if (book) (await book).refresh();
+        else book = fetchJson('data/focalpoint.json').then((data) => startBook(root, data));
+        await book;
+      }
+    } catch (error) {
+      if (find) finder = null; else book = null;
+      note.classList.add('error');
+      note.textContent = location.protocol === 'file:'
+        ? 'Open this page through a web server (for example: python3 -m http.server -d site); browsers block loading data from file:// pages.'
+        : `Could not load the data: ${error.message}`;
+    }
+    root.classList.remove('loading');
+  }
+
+  // The tabs keep the shared filters (class, exotics, aspects, …).
+  $('tab-find').addEventListener('click', () => {
+    const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+    p.set('view', 'find');
+    location.hash = p.toString();
+  });
+  $('tab-book').addEventListener('click', () => {
+    const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+    p.delete('view');
+    location.hash = p.toString();
+  });
+  window.addEventListener('hashchange', show);
+  show();
 }
