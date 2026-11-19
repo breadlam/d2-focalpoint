@@ -83,3 +83,7 @@ git-ignored `.cargo/config.toml`:
 [build]
 target-dir = "/home/<you>/.cache/searchlight-cli/target"
 ```
+
+## License
+
+[MIT](LICENSE)
