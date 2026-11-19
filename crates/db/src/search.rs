@@ -16,8 +16,9 @@ use crate::{Database, Result};
 pub enum GroupBy {
     #[default]
     Build,
-    /// The build as players describe it: class, exotics, super and aspects
-    /// (builds differing only in fragments, mods or weapons fall together).
+    /// The build as players describe it: class, subclass element, exotics,
+    /// super and aspects (builds differing only in fragments, mods or
+    /// weapons fall together).
     Core,
     Player,
     Class,
@@ -47,6 +48,7 @@ impl GroupBy {
             ],
             GroupBy::Core => &[
                 ("class", "b.class"),
+                ("element", "b.element"),
                 ("exotic armor", "item_name(b.exotic_armor_hash)"),
                 ("exotic weapon", "item_name(b.exotic_weapon_hash)"),
                 ("super", "item_name(b.super_hash)"),

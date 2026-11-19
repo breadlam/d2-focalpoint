@@ -45,7 +45,7 @@ searchlight rank players --exotic-armor \"Getaway Artist\" --min-runs 20"
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum Group {
-    /// Class, exotics, super and aspects
+    /// Class, subclass element, exotics, super and aspects
     Core,
     /// Exact builds (every component)
     Build,

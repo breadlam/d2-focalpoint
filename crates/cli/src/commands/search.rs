@@ -13,7 +13,7 @@ use crate::output::{Format, render, thousands};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum Group {
     Build,
-    /// Class, exotics, super and aspects
+    /// Class, subclass element, exotics, super and aspects
     Core,
     Player,
     Class,

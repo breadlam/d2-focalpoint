@@ -93,7 +93,7 @@ build (five folds by run) from a fit on the rest:
 
 | Grouping | Player skill alone | Skill + build (best priors) | Builds add |
 |---|---:|---:|---:|
-| core: class, exotics, super, aspects | 33.8 % | 35.9 % (3, 10) | 2.1 points |
+| core: class, element, exotics, super, aspects | 33.8 % | 35.9 % (3, 10) | 2.1 points |
 | exotic armor only | 33.8 % | 35.2 % (3, 30) | 1.4 points |
 | exact build | 33.8 % | 35.2 % (1, 1) | 1.4 points |
 

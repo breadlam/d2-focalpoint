@@ -108,6 +108,10 @@ impl Facets {
 pub struct RunFilter {
     /// Substring of an activity name or Searchlight target group.
     pub activity: Option<String>,
+    /// Exactly this Searchlight target group (e.g. "Master Raid").
+    pub target_group: Option<String>,
+    /// Exactly this activity name (names repeat across difficulty hashes).
+    pub activity_name: Option<String>,
     /// Substring of a player's Bungie name or display name.
     pub player: Option<String>,
     pub solo: bool,
@@ -129,6 +133,14 @@ impl RunFilter {
             );
             params.push(Value::Text(a.clone()));
             params.push(Value::Text(a.clone()));
+        }
+        if let Some(g) = &self.target_group {
+            sql.push_str(" AND a.target_group = ?");
+            params.push(Value::Text(g.clone()));
+        }
+        if let Some(n) = &self.activity_name {
+            sql.push_str(" AND a.name = ?");
+            params.push(Value::Text(n.clone()));
         }
         if let Some(p) = &self.player {
             sql.push_str(

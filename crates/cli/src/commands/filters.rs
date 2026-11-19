@@ -80,6 +80,8 @@ impl RunArgs {
     pub fn to_filter(&self) -> RunFilter {
         RunFilter {
             activity: self.activity.clone(),
+            target_group: None,
+            activity_name: None,
             player: self.player.clone(),
             solo: self.solo,
             since: self.since.clone(),
