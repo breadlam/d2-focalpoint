@@ -259,9 +259,11 @@ Findings:
   24-minute Normal solo world record — with 931 kills against a fireteam's
   2,360; solo King's Fall (Master) a median 8 minutes. A fifth to two
   fifths of Master dungeon solo clears beat the fastest 1% of fireteam
-  clears, some in a minute or two; Conquests, Ops and Equilibrium 0–7%. So
-  the premium counts only solo clears at least as long as the fastest 1% of
-  fireteam clears, and raids (activity mode 4) get none.
+  clears, some in a minute or two; Conquests, Ops and Equilibrium 0–7% —
+  and Conquests and Ops cannot be resumed, so theirs are real clears. So in
+  content with checkpoints the premium counts only solo clears at least as
+  long as the fastest 1% of fireteam clears, and raids (activity mode 4)
+  get none.
 - Credited per activity (full-looking fresh solo clears only; never below
   ×1; no raids), the all-activities ranking keeps a rank correlation of +0.88–0.92 with
   today's; a third of each class's top 10% changes, and 88–96% of the
