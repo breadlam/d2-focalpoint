@@ -60,11 +60,11 @@ pub enum SoloScoring {
     /// measured instead of fixed. Same factors and bounds as `run_score`
     /// (`ScoreParams::default`), centred like the fireteam clears.
     AgainstFireteam,
-    /// Other solo clears, plus the activity's solo premium: the median, over
-    /// its solo clears, of how much better each scores against the fireteam
-    /// reference than against other solo clears ([`solo_credit_sql`]).
-    /// Soloists stay ranked among themselves; soloing content made for a
-    /// fireteam earns what it typically takes, never less than nothing.
+    /// Other solo clears, plus the activity's solo premium
+    /// ([`solo_credit_sql`]) for solo clears that started from the
+    /// beginning. Soloists stay ranked among themselves; soloing content
+    /// made for a fireteam earns what it typically takes, never less than
+    /// nothing.
     ActivityCredit,
 }
 
@@ -90,42 +90,85 @@ pub(crate) fn against_fireteam(s: &str, t: &str) -> (String, String) {
     (log_score, kill_index)
 }
 
+/// Per activity, the fireteam clears a solo clear is compared with:
+/// `(activity_hash, kills, duration_s, deaths, centre, from_qualified)`.
+///
+/// The activity's own fireteam reference (`activity_reference`) when it has
+/// enough qualified fireteam clears; otherwise one built the same way from
+/// its unqualified fireteam clears — cleared, started from the beginning,
+/// in the same period as the scored runs. Searchlight's qualification gates
+/// can exclude fireteams entirely: five Grandmaster Conquests qualified solo
+/// runs only (`solo_only`), though all are fireteam content with hundreds of
+/// thousands of fireteam runs recorded.
+#[must_use]
+pub fn team_reference_sql() -> String {
+    let p = focalpoint_core::rank::ScoreParams::default();
+    let (log_score, _) = against_fireteam("pool", "med");
+    format!(
+        "WITH own AS (
+             SELECT activity_hash, kills, duration_s, deaths, log_score_mean AS centre
+             FROM activity_reference
+             WHERE NOT is_solo AND is_scored AND NOT is_borrowed AND kills > 0
+                   AND log_score_mean IS NOT NULL),
+         pool AS (
+             SELECT p.activity_hash, sum(p.kills) AS kills, sum(p.deaths) AS deaths,
+                    any_value(r.duration_s) AS duration_s
+             FROM run_player p JOIN run r USING (instance_id)
+             WHERE r.roster_size > 1 AND r.duration_s > 0 AND r.started_from_beginning
+                   AND r.started_at >= (SELECT min(started_at) FROM run_score)
+                   AND p.activity_hash IN (
+                       SELECT activity_hash FROM activity_reference
+                       WHERE NOT is_solo AND is_scored AND is_borrowed)
+             GROUP BY p.instance_id, p.membership_id, p.activity_hash
+             HAVING bool_or(p.is_clear) AND sum(p.kills) > 0),
+         med AS (
+             SELECT activity_hash, median(kills) AS kills, median(duration_s) AS duration_s,
+                    median(deaths) AS deaths
+             FROM pool GROUP BY 1 HAVING count(*) >= {min_clears})
+         SELECT activity_hash, kills, duration_s, deaths, centre, true AS from_qualified FROM own
+         UNION ALL
+         SELECT med.activity_hash, any_value(med.kills), any_value(med.duration_s),
+                any_value(med.deaths), avg({log_score}), false
+         FROM pool JOIN med USING (activity_hash) GROUP BY med.activity_hash",
+        min_clears = p.min_reference_clears,
+    )
+}
+
 /// Per activity, the log solo premium of [`SoloScoring::ActivityCredit`]:
-/// `(activity_hash, log_credit, solo_clears, kill_index)`. Activities
-/// qualify when their fireteam reference is their own (not borrowed: enough
-/// fireteam clears to compare with) and their soloists typically do at least
-/// a fireteam member's share of the killing (median kill index ≥ 1 — full
-/// clears, not partial ones); the premium is never negative.
+/// `(activity_hash, log_credit, solo_clears, kill_index)` — the median, over
+/// the activity's solo clears that started from the beginning, of how much
+/// better each scores against the fireteam clears ([`team_reference_sql`])
+/// than against other solo clears; never negative. Where kills cannot
+/// measure a soloist's work (short boss encounters), the measured premium
+/// falls below one and no credit is given.
 #[must_use]
 pub fn solo_credit_sql() -> String {
     let (log_score, kill_index) = against_fireteam("s", "t");
     format!(
         "SELECT s.activity_hash,
-                greatest(0, median({log_score} - t.log_score_mean - s.perf)) AS log_credit,
+                greatest(0, median({log_score} - t.centre - s.perf)) AS log_credit,
                 count(*) AS solo_clears, median({kill_index}) AS kill_index
          FROM run_score s
-         JOIN activity_reference t
-              ON t.activity_hash = s.activity_hash AND NOT t.is_solo AND t.is_scored AND NOT t.is_borrowed
-         WHERE s.is_solo AND t.kills > 0 AND t.log_score_mean IS NOT NULL
-         GROUP BY 1
-         HAVING median({kill_index}) >= {MIN_SOLO_KILL_INDEX}"
+         JOIN run USING (instance_id)
+         JOIN ({team}) t ON t.activity_hash = s.activity_hash
+         WHERE s.is_solo AND run.started_from_beginning
+         GROUP BY 1",
+        team = team_reference_sql(),
     )
 }
-
-/// A solo premium needs the activity's soloists to do, typically, at least
-/// this share of a fireteam member's killing: full clears, not partial ones.
-pub const MIN_SOLO_KILL_INDEX: f64 = 1.0;
 
 impl SoloScoring {
     /// The joins the performance expression needs, after `run_score r`.
     fn join(self) -> String {
         match self {
             Self::AgainstSolo => String::new(),
-            Self::AgainstFireteam => "LEFT JOIN activity_reference team
-                     ON team.activity_hash = r.activity_hash AND NOT team.is_solo AND team.is_scored"
-                .into(),
+            Self::AgainstFireteam => format!(
+                "LEFT JOIN ({}) team ON team.activity_hash = r.activity_hash",
+                team_reference_sql()
+            ),
             Self::ActivityCredit => format!(
-                "LEFT JOIN ({}) credit ON credit.activity_hash = r.activity_hash",
+                "LEFT JOIN ({}) credit ON credit.activity_hash = r.activity_hash
+                 LEFT JOIN run fresh ON fresh.instance_id = r.instance_id",
                 solo_credit_sql()
             ),
         }
@@ -139,14 +182,14 @@ impl SoloScoring {
             Self::AgainstFireteam => {
                 let (log_score, _) = against_fireteam("r", "team");
                 format!(
-                    "CASE WHEN r.is_solo AND team.kills > 0 AND team.log_score_mean IS NOT NULL
-                          THEN {log_score} - team.log_score_mean
+                    "CASE WHEN r.is_solo AND team.kills > 0
+                          THEN {log_score} - team.centre
                           ELSE r.perf END"
                 )
             }
-            Self::ActivityCredit => {
-                "r.perf + CASE WHEN r.is_solo THEN coalesce(credit.log_credit, 0) ELSE 0 END".into()
-            }
+            Self::ActivityCredit => "r.perf + CASE WHEN r.is_solo AND fresh.started_from_beginning
+                               THEN coalesce(credit.log_credit, 0) ELSE 0 END"
+                .into(),
         }
     }
 }

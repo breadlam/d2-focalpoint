@@ -1200,7 +1200,43 @@ fn key_label(key: &[String]) -> String {
 }
 
 fn run_solo(db: &Database, a: &SoloArgs, format: Format) -> Result<()> {
-    println!("## Scored clears by activity group");
+    let share = |x: f64| format!("{:.1}%", 100.0 * x);
+    println!("## How Searchlight qualified and captured runs");
+    let header = [
+        "activity group",
+        "runs",
+        "qualified",
+        "solo: qualified",
+        "solo: unqualified",
+        "qualified solo, fresh",
+        "roster p99",
+        "build captured: solo clears",
+        "fireteam clears",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = solo::qualification(db)?
+        .into_iter()
+        .map(|q| {
+            vec![
+                q.group,
+                thousands(q.runs as i64),
+                thousands(q.qualified as i64),
+                share(q.solo_qualified),
+                share(q.solo_unqualified),
+                share(q.fresh_solo),
+                q.roster_p99.to_string(),
+                share(q.build_solo),
+                share(q.build_fireteam),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Runs are attempts; a group whose qualified runs are all solo while its unqualified runs are not was gated \
+to solo runs. Build capture is per scored clear."
+    );
+
+    println!("\n## Scored clears by activity group");
     let header = [
         "activity group",
         "clears",
@@ -1228,15 +1264,18 @@ fn run_solo(db: &Database, a: &SoloArgs, format: Format) -> Result<()> {
         .collect();
     println!("{}", render(format, &header, &rows));
 
-    println!("\n## Solo clears against the fireteam clears of the same activity (medians)");
+    println!(
+        "\n## Solo clears that started from the beginning, against the fireteam clears of the same activity (medians)"
+    );
     let header = [
         "activity group",
-        "solo clears",
+        "fresh solo clears",
+        "all solo clears",
+        "minutes",
         "kill index",
         "speed",
         "survival",
-        "credit (quartiles)",
-        "at kill cap",
+        "premium (quartiles)",
     ]
     .map(String::from);
     let rows: Vec<Vec<String>> = solo::premium(db)?
@@ -1245,31 +1284,28 @@ fn run_solo(db: &Database, a: &SoloArgs, format: Format) -> Result<()> {
             vec![
                 p.group,
                 thousands(p.solo_clears as i64),
+                thousands(p.all_solo_clears as i64),
+                format!("{:.0}", p.duration / 60.0),
                 format!("{:.2}", p.kill_index),
                 format!("{:.2}", p.speed),
                 format!("{:.2}", p.survival),
                 format!("×{:.2} (×{:.2}–×{:.2})", p.credit, p.credit_q1, p.credit_q3),
-                format!("{:.0}%", 100.0 * p.at_kill_cap),
             ]
         })
         .collect();
     println!("{}", render(format, &header, &rows));
     println!(
-        "Credit: how much better a solo clear scores against the fireteam reference than against other solo clears \
-(Searchlight used a flat ×2)."
+        "Premium: how much better a solo clear scores against the fireteam clears than against other solo clears \
+(Searchlight used a flat ×2). The fireteam clears are the qualified ones, or unqualified ones where too few qualified."
     );
 
-    println!(
-        "\n## Per-activity solo premium (credited when the fireteam reference is the activity's own and soloists' median kill index ≥ {})",
-        focalpoint_db::rank::MIN_SOLO_KILL_INDEX
-    );
+    println!("\n## Per-activity solo premium as credited (never below ×1)");
     let header = [
         "activity group",
         "activity",
-        "solo clears",
-        "fireteam clears",
+        "fresh solo clears",
+        "fireteam reference",
         "kill index",
-        "measured",
         "credited",
     ]
     .map(String::from);
@@ -1281,19 +1317,19 @@ fn run_solo(db: &Database, a: &SoloArgs, format: Format) -> Result<()> {
                 c.group,
                 c.activity,
                 thousands(c.solo_clears as i64),
-                if c.borrowed {
-                    format!("{} (borrowed)", c.fireteam_clears)
+                if c.from_qualified {
+                    "qualified"
                 } else {
-                    thousands(c.fireteam_clears as i64)
-                },
+                    "unqualified"
+                }
+                .to_string(),
                 format!("{:.2}", c.kill_index),
-                format!("×{:.2}", c.measured),
                 format!("×{:.2}", c.credited),
             ]
         })
         .collect();
     println!("{}", render(format, &header, &rows));
-    println!("(Activities with at least 20 solo clears.)\n");
+    println!("(Activities with at least 20 fresh solo clears.)\n");
 
     eprintln!("ranking build types three ways…");
     let per_run = solo::shifts(db, SoloScoring::AgainstFireteam)?;

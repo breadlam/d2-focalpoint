@@ -1,12 +1,17 @@
-//! Soloing content made for a fireteam: how much of it was captured, what a
+//! Soloing content made for a fireteam: how Searchlight captured it, what a
 //! solo clear looks like against the fireteam clears of the same activity,
-//! and what crediting it ([`SoloScoring::AgainstFireteam`]) would do to the
+//! and what crediting it ([`SoloScoring::ActivityCredit`]) would do to the
 //! build rankings.
 //!
-//! Searchlight doubled a solo clear's score ("soloing this content is
-//! extraordinary"); ADR 0006 measures solo clears against other solo clears
-//! instead, so a build that carries one player through a fireteam's work
-//! earns nothing for it.
+//! Every activity Searchlight collected is fireteam content (three- or
+//! six-player). Searchlight doubled a solo clear's score ("soloing this
+//! content is extraordinary"); ADR 0006 measures solo clears against other
+//! solo clears instead, so a build that carries one player through a
+//! fireteam's work earns nothing for it. Two things in how Searchlight
+//! collected runs shape what the data can show: its qualification gates
+//! (five Grandmaster Conquests qualified solo runs only), and its choice of
+//! players to monitor — whose builds were captured — by an evaluator that
+//! doubled solo scores.
 
 use std::collections::HashMap;
 
@@ -14,8 +19,67 @@ use super::spearman;
 use crate::filter::RunFilter;
 use crate::rank::{
     BuildRank, BuildSort, RankOptions, SoloScoring, against_fireteam, rank_builds, solo_credit_sql,
+    team_reference_sql,
 };
 use crate::{Database, Result};
+
+/// How Searchlight qualified and captured one activity group's runs.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Qualification {
+    pub group: String,
+    /// Runs (attempts) recorded, and those that met the group's gates.
+    pub runs: usize,
+    pub qualified: usize,
+    /// Solo share of qualified and of unqualified runs.
+    pub solo_qualified: f64,
+    pub solo_unqualified: f64,
+    /// Share of qualified solo runs that started from the beginning.
+    pub fresh_solo: f64,
+    /// 99th percentile of entries in a report (players, with swaps).
+    pub roster_p99: i64,
+    /// Share of scored solo and fireteam clears with a captured build.
+    pub build_solo: f64,
+    pub build_fireteam: f64,
+}
+
+/// Qualification and build capture by activity group.
+pub fn qualification(db: &Database) -> Result<Vec<Qualification>> {
+    let mut stmt = db.conn().prepare(
+        "WITH q AS (
+             SELECT a.target_group AS grp, count(*) AS runs,
+                    count(*) FILTER (WHERE r.qualified_target IS NOT NULL) AS qualified,
+                    coalesce(avg(r.is_solo::INT) FILTER (WHERE r.qualified_target IS NOT NULL), 0) AS sq,
+                    coalesce(avg(r.is_solo::INT) FILTER (WHERE r.qualified_target IS NULL), 0) AS su,
+                    coalesce(avg(r.started_from_beginning::INT)
+                        FILTER (WHERE r.qualified_target IS NOT NULL AND r.is_solo), 0) AS fresh,
+                    quantile_disc(r.roster_size, 0.99) AS p99
+             FROM run r JOIN activity a USING (activity_hash)
+             WHERE a.target_group IS NOT NULL GROUP BY 1),
+         b AS (
+             SELECT a.target_group AS grp,
+                    coalesce(avg(s.has_build::INT) FILTER (WHERE s.is_solo), 0) AS bs,
+                    coalesce(avg(s.has_build::INT) FILTER (WHERE NOT s.is_solo), 0) AS bf
+             FROM run_score s JOIN activity a USING (activity_hash) GROUP BY 1)
+         SELECT q.grp, q.runs, q.qualified, q.sq, q.su, q.fresh, q.p99,
+                coalesce(b.bs, 0), coalesce(b.bf, 0)
+         FROM q LEFT JOIN b USING (grp) ORDER BY q.grp",
+    )?;
+    let rows = stmt.query_map([], |r| {
+        let n = |i: usize| r.get::<_, i64>(i).map(|v| usize::try_from(v).unwrap_or(0));
+        Ok(Qualification {
+            group: r.get(0)?,
+            runs: n(1)?,
+            qualified: n(2)?,
+            solo_qualified: r.get(3)?,
+            solo_unqualified: r.get(4)?,
+            fresh_solo: r.get(5)?,
+            roster_p99: r.get::<_, Option<i64>>(6)?.unwrap_or(0),
+            build_solo: r.get(7)?,
+            build_fireteam: r.get(8)?,
+        })
+    })?;
+    Ok(rows.collect::<duckdb::Result<_>>()?)
+}
 
 /// Qualified clears of one activity group.
 #[derive(Debug, Clone, PartialEq)]
@@ -51,46 +115,50 @@ pub fn volume(db: &Database) -> Result<Vec<Volume>> {
     Ok(rows.collect::<duckdb::Result<_>>()?)
 }
 
-/// What solo clears of one activity group look like against the fireteam
-/// clears of the same activities (medians over solo clears).
+/// What fresh solo clears of one activity group look like against the
+/// fireteam clears of the same activities (medians).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Premium {
     pub group: String,
+    /// Solo clears that started from the beginning, and all solo clears.
     pub solo_clears: usize,
+    pub all_solo_clears: usize,
     /// The factors of `run_score`, against the fireteam reference.
     pub kill_index: f64,
     pub speed: f64,
     pub survival: f64,
-    /// The credit a solo clear would earn: `exp` of the median difference
-    /// between its fireteam-referenced and solo-referenced performance.
+    /// How much better a solo clear scores against the fireteam clears than
+    /// against other solo clears: median and quartiles.
     pub credit: f64,
-    /// … its quartiles.
     pub credit_q1: f64,
     pub credit_q3: f64,
-    /// Share of solo clears at the kill index's upper bound.
-    pub at_kill_cap: f64,
+    /// Median duration in seconds.
+    pub duration: f64,
 }
 
-/// Solo clears against the fireteam reference, by activity group.
+/// Fresh solo clears against the fireteam reference, by activity group.
 pub fn premium(db: &Database) -> Result<Vec<Premium>> {
     let (log_score, kill_index) = against_fireteam("r", "t");
     let p = focalpoint_core::rank::ScoreParams::default();
     let mut stmt = db.conn().prepare(&format!(
         "WITH s AS (
-             SELECT coalesce(a.target_group, '(untargeted)') AS grp,
+             SELECT coalesce(a.target_group, '(untargeted)') AS grp, run.started_from_beginning AS fresh,
+                    r.duration_s,
                     {kill_index} AS kill_index,
                     least(greatest(t.duration_s / greatest(r.duration_s, 1), {s0}), {s1}) AS speed,
                     least(greatest((1 + {d} * t.deaths) / (1 + {d} * r.deaths), {v0}), {v1}) AS survival,
-                    {log_score} - t.log_score_mean - r.perf AS log_credit
+                    {log_score} - t.centre - r.perf AS log_credit
              FROM run_score r JOIN activity a USING (activity_hash)
-             JOIN activity_reference t
-                  ON t.activity_hash = r.activity_hash AND NOT t.is_solo AND t.is_scored
-             WHERE r.is_solo AND t.kills > 0 AND t.log_score_mean IS NOT NULL)
-         SELECT grp, count(*), median(kill_index), median(speed), median(survival),
-                quantile_cont(log_credit, [0.25, 0.5, 0.75]),
-                avg((kill_index >= {k1})::INTEGER)
+             JOIN run USING (instance_id)
+             JOIN ({team}) t ON t.activity_hash = r.activity_hash
+             WHERE r.is_solo)
+         SELECT grp, count(*) FILTER (WHERE fresh), count(*),
+                median(kill_index) FILTER (WHERE fresh), median(speed) FILTER (WHERE fresh),
+                median(survival) FILTER (WHERE fresh),
+                quantile_cont(log_credit, [0.25, 0.5, 0.75]) FILTER (WHERE fresh),
+                median(duration_s) FILTER (WHERE fresh)
          FROM s GROUP BY 1 ORDER BY 2 DESC, 1",
-        k1 = p.kill_bounds.1,
+        team = team_reference_sql(),
         s0 = p.speed_bounds.0,
         s1 = p.speed_bounds.1,
         d = p.death_rate,
@@ -98,7 +166,7 @@ pub fn premium(db: &Database) -> Result<Vec<Premium>> {
         v1 = p.survival_bounds.1,
     ))?;
     let rows = stmt.query_map([], |r| {
-        let q: Vec<f64> = match r.get::<_, duckdb::types::Value>(5)? {
+        let q: Vec<f64> = match r.get::<_, duckdb::types::Value>(6)? {
             duckdb::types::Value::List(v) => v
                 .into_iter()
                 .filter_map(|x| match x {
@@ -109,16 +177,18 @@ pub fn premium(db: &Database) -> Result<Vec<Premium>> {
             _ => Vec::new(),
         };
         let at = |i: usize| q.get(i).copied().map_or(f64::NAN, f64::exp);
+        let n = |i: usize| r.get::<_, i64>(i).map(|v| usize::try_from(v).unwrap_or(0));
         Ok(Premium {
             group: r.get(0)?,
-            solo_clears: usize::try_from(r.get::<_, i64>(1)?).unwrap_or(0),
-            kill_index: r.get(2)?,
-            speed: r.get(3)?,
-            survival: r.get(4)?,
+            solo_clears: n(1)?,
+            all_solo_clears: n(2)?,
+            kill_index: r.get::<_, Option<f64>>(3)?.unwrap_or(f64::NAN),
+            speed: r.get::<_, Option<f64>>(4)?.unwrap_or(f64::NAN),
+            survival: r.get::<_, Option<f64>>(5)?.unwrap_or(f64::NAN),
             credit_q1: at(0),
             credit: at(1),
             credit_q3: at(2),
-            at_kill_cap: r.get(6)?,
+            duration: r.get::<_, Option<f64>>(7)?.unwrap_or(f64::NAN),
         })
     })?;
     Ok(rows.collect::<duckdb::Result<_>>()?)
@@ -129,49 +199,36 @@ pub fn premium(db: &Database) -> Result<Vec<Premium>> {
 pub struct Credit {
     pub group: String,
     pub activity: String,
+    /// Solo clears that started from the beginning.
     pub solo_clears: usize,
-    pub fireteam_clears: usize,
-    /// The fireteam reference is borrowed (too few fireteam clears).
-    pub borrowed: bool,
+    /// Where the fireteam reference comes from: qualified fireteam clears,
+    /// or (when too few qualified) unqualified ones.
+    pub from_qualified: bool,
     /// Median kill index of the solo clears against the fireteam reference.
     pub kill_index: f64,
-    /// The median premium as measured, and as credited (1 when the activity
-    /// does not qualify).
-    pub measured: f64,
+    /// The credited premium (never below 1).
     pub credited: f64,
 }
 
-/// Every scored activity with solo clears, most solo clears first.
+/// Every activity with a premium, most fresh solo clears first.
 pub fn credits(db: &Database) -> Result<Vec<Credit>> {
-    let (log_score, kill_index) = against_fireteam("s", "t");
     let mut stmt = db.conn().prepare(&format!(
-        "WITH m AS (
-             SELECT s.activity_hash, count(*) AS solo_clears, median({kill_index}) AS kill_index,
-                    median({log_score} - t.log_score_mean - s.perf) AS log_credit,
-                    any_value(t.clears) AS fireteam_clears, any_value(t.is_borrowed) AS borrowed
-             FROM run_score s
-             JOIN activity_reference t
-                  ON t.activity_hash = s.activity_hash AND NOT t.is_solo AND t.is_scored
-             WHERE s.is_solo AND t.kills > 0 AND t.log_score_mean IS NOT NULL
-             GROUP BY 1)
-         SELECT coalesce(a.target_group, '(untargeted)'), a.name, m.solo_clears, m.fireteam_clears,
-                m.borrowed, m.kill_index, exp(m.log_credit), exp(coalesce(c.log_credit, 0))
-         FROM m JOIN activity a USING (activity_hash)
-         LEFT JOIN ({credit}) c USING (activity_hash)
-         ORDER BY m.solo_clears DESC, a.name",
+        "SELECT coalesce(a.target_group, '(untargeted)'), a.name, c.solo_clears, t.from_qualified,
+                c.kill_index, exp(c.log_credit)
+         FROM ({credit}) c JOIN activity a USING (activity_hash)
+         JOIN ({team}) t USING (activity_hash)
+         ORDER BY c.solo_clears DESC, a.name",
         credit = solo_credit_sql(),
+        team = team_reference_sql(),
     ))?;
     let rows = stmt.query_map([], |r| {
-        let n = |i: usize| r.get::<_, i64>(i).map(|v| usize::try_from(v).unwrap_or(0));
         Ok(Credit {
             group: r.get(0)?,
             activity: r.get::<_, Option<String>>(1)?.unwrap_or_default(),
-            solo_clears: n(2)?,
-            fireteam_clears: n(3)?,
-            borrowed: r.get(4)?,
-            kill_index: r.get(5)?,
-            measured: r.get(6)?,
-            credited: r.get(7)?,
+            solo_clears: usize::try_from(r.get::<_, i64>(2)?).unwrap_or(0),
+            from_qualified: r.get(3)?,
+            kill_index: r.get(4)?,
+            credited: r.get(5)?,
         })
     })?;
     Ok(rows.collect::<duckdb::Result<_>>()?)
@@ -341,6 +398,7 @@ mod tests {
     #[test]
     fn solo_volume_and_premium_read_the_database() {
         let (_d, db) = crate::site::tests::db();
+        assert!(qualification(&db).is_ok());
         assert!(volume(&db).is_ok());
         assert!(premium(&db).is_ok());
         assert!(credits(&db).is_ok());

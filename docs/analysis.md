@@ -216,39 +216,48 @@ Findings, activities (one per subclass):
 
 Searchlight doubled a solo clear's score; ADR 0006 measures solo clears
 against other solo clears of the same activity instead, so a build that
-carries one player through a fireteam's work earns nothing for it. The
-study: scored clears and solo clears per activity group; solo clears
-against the fireteam reference of their activity (kill index, speed,
-survival and the **premium** — how much better a solo clear scores against
-the fireteam clears than against other solo clears); the per-activity
-premium of `SoloScoring::ActivityCredit` with which activities qualify; and
-the all-activities build ranking with solo clears credited, per class.
-`focalpoint rank builds --solo-scoring credit|fireteam` ranks that way
-(`alone`, the default, is today's scoring).
+carries one player through a fireteam's work earns nothing for it. Every
+activity Searchlight collected is fireteam content (three- or six-player).
+The study: how Searchlight qualified and captured runs per activity group;
+scored and solo clears; solo clears that started from the beginning against
+the fireteam clears of their activity (kill index, speed, survival and the
+**premium** — how much better a solo clear scores against the fireteam
+clears than against other solo clears); the per-activity premium of
+`SoloScoring::ActivityCredit`; and the all-activities build ranking with
+solo clears credited, per class. `focalpoint rank builds --solo-scoring
+credit|fireteam` ranks that way (`alone`, the default, is today's scoring).
 
 Findings:
 
-- "Solo" is a one-player post-game report. Grandmaster Conquest is solo
-  content (69,882 of 69,885 clears), so it has no fireteam baseline. Raids,
-  Pantheon and The Desert Perpetual are six-player content whose few solo
-  "clears" (130, 498, 476) mostly look partial: a kill index of 0.1–0.3
-  against the fireteam at maximum speed.
-- Where solo clears are full clears of fireteam content, a soloist makes
-  2.5–3× a fireteam member's kills at 0.75–0.95× the pace: the premium is
-  ×1.5–2.2 in Ultimate Ops, ×2.8 in Equilibrium, ×3.0–3.1 in Ultimate
-  Conquest, ×2.4–3.3 in Master dungeons and ×6.1 in Root of Nightmares
-  (Master) — Searchlight's ×2, measured, and in proportion to the fireteam
-  the content was made for.
-- Credited per activity (premium only where the fireteam reference is the
-  activity's own and soloists' median kill index is ≥ 1; never below ×1),
-  the all-activities ranking keeps a rank correlation of +0.90–0.93 with
-  today's, but a third of each class's top 10% changes, and 86–91% of the
+- **Searchlight's gates shape the data** (its target slate, see
+  `docs/data-sources.md`). Five Grandmaster Conquests qualified solo runs
+  only (`solo_only`): 280,989 of their 280,994 qualified runs are solo,
+  while 482,433 of their 482,745 unqualified runs are fireteam runs. Their
+  qualified clears are all solo clears of three-player content, and their
+  fireteam baseline has to come from unqualified fireteam clears (cleared,
+  started from the beginning, same period). Elsewhere qualification does not
+  favour solo runs.
+- **Solo play was captured far more often.** A solo clear had a captured
+  build 5–13× as often as a fireteam clear in most groups (Equilibrium
+  11.6% against 1.7%, Master dungeons 17.8% against 1.4%), 56× in Master
+  raids and 135× in Pantheon: Searchlight chose the players it monitored with an evaluator that
+  doubled solo scores, and builds were captured for monitored players. The
+  build data leans solo.
+- Fresh solo clears make 2.6–2.8× a fireteam member's kills at 0.64–0.95×
+  the pace. The premium: ×1.2–1.5 in Grandmaster Conquests (soloists there
+  are slower and die more than fireteams), ×1.5–2.2 in Ultimate Ops, ×2.8 in
+  Equilibrium, ×3.0–3.1 in Ultimate Conquest, ×2.4–3.3 in Master dungeons
+  and ×6.1 in Root of Nightmares (Master) — Searchlight's ×2, measured.
+- Pantheon and The Desert Perpetual solo clears are mostly fresh (96% and
+  84%) five-minute boss encounters with a tenth to a third of a fireteam
+  member's kills: kills cannot measure soloing there (Searchlight captured
+  Pantheon without using it to judge players), the measured premium is
+  below one, and none is credited.
+- Credited per activity (fresh solo clears only; never below ×1), the
+  all-activities ranking keeps a rank correlation of +0.88–0.92 with
+  today's; a third of each class's top 10% changes, and 88–96% of the
   credited top 10% have a solo clear (67–70% of the rest). The builds
   elite players take into fireteam content alone rise: Fortune's Favor +
   Wolfsbane Shadowshot (soloed by 139 players) from 29th to 1st of Hunter
-  build types; Getaway Artist + Praxic Blade Song of Flame (103) from 53rd
-  to 10th of Warlock's.
-- Scoring every solo clear against the fireteam reference run by run gives
-  nearly the same ranking, but penalises soloists where kills do not
-  measure the work (boss encounters) and credits partial runs.
-
+  build types; Hallowfire Heart + Tractor Cannon Hammer of Sol from 13th
+  to 1st of Titan's.

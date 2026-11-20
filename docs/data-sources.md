@@ -48,6 +48,31 @@ snapshots/web_*.sql.gz, *.json             web analytics dumps, model/report art
 Production's per-run scoring (`score = kills/time ÷ (1+deaths) × 2 if solo`) is
 not stored; the CLI computes its own metrics from raw stats.
 
+## Target gates
+
+A run's `qualified_target` is production's tag for a run that met its
+target's gates. Every target is fireteam content (three- or six-player);
+the gates, from Searchlight's target slate (`targets.toml`, server snapshot
+of 2026-07-08):
+
+| Target | Gates |
+|---|---|
+| Grandmaster Conquest: Heliostat | none (team runs allowed) |
+| Grandmaster Conquest (Scarlet Keep, Heist Mars, Disgraced, Arms Dealer, Defiant EDZ) | **solo runs only** |
+| Ultimate Conquest | none |
+| Ultimate Pinnacle Op, Ultimate Fireteam Op | difficulty tier ≥ 11; captured, not used to judge players |
+| Master Raid, Master Dungeon | started from the beginning |
+| Equilibrium | 4+ feats; started from the beginning |
+| The Desert Perpetual | 3+ feats |
+| Pantheon 2.0 | started from the beginning; captured, not used to judge players |
+
+All targets share a freshness floor (2026-06-09). The solo-only gate is
+why the five Grandmaster Conquests' qualified clears are all solo although
+482k fireteam runs of them are recorded (`focalpoint analyze solo`).
+Production also chose the players it monitored — and so whose builds were
+captured — with an evaluator that doubled solo scores, so solo clears have
+a captured build far more often than fireteam clears.
+
 ## Raw PGCR archive
 
 Every fetched PGCR for a target activity or any raid/dungeon was stored
