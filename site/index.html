@@ -3,15 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Focalpoint Build Rankings</title>
+  <title>Skinwalker</title>
   <meta name="description" content="Destiny 2 endgame builds ranked by how much they help the players who use them, from Searchlight's captured clears.">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="brand/rahool-mask.png" type="image/png">
+  <link rel="apple-touch-icon" href="brand/rahool-mask.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main id="app" class="loading">
     <header class="masthead">
-      <h1>Focalpoint</h1>
+      <h1 class="brand"><img class="brand-mark" src="brand/rahool-mask.png" alt="" width="40" height="40"><span class="wordmark">Skinwalker</span></h1>
       <p class="lede">
         Exact Destiny 2 endgame builds captured by Searchlight, as players equipped them, ranked by
         how much the build helps the players who use it rather than by how good those players
@@ -35,9 +36,9 @@
         <legend>Class</legend>
         <div class="segmented">
           <input type="radio" name="class" id="class-any" value=""><label for="class-any">Any<span class="count"></span></label>
-          <input type="radio" name="class" id="class-hunter" value="Hunter"><label for="class-hunter">Hunter<span class="count"></span></label>
-          <input type="radio" name="class" id="class-titan" value="Titan"><label for="class-titan">Titan<span class="count"></span></label>
-          <input type="radio" name="class" id="class-warlock" value="Warlock"><label for="class-warlock">Warlock<span class="count"></span></label>
+          <input type="radio" name="class" id="class-hunter" value="Hunter"><label for="class-hunter"><span class="class-icon cls-hunter" aria-hidden="true"></span>Hunter<span class="count"></span></label>
+          <input type="radio" name="class" id="class-titan" value="Titan"><label for="class-titan"><span class="class-icon cls-titan" aria-hidden="true"></span>Titan<span class="count"></span></label>
+          <input type="radio" name="class" id="class-warlock" value="Warlock"><label for="class-warlock"><span class="class-icon cls-warlock" aria-hidden="true"></span>Warlock<span class="count"></span></label>
         </div>
       </fieldset>
       <div class="field">
@@ -119,9 +120,9 @@
         <fieldset class="field span-2">
           <legend>Class</legend>
           <div class="segmented">
-            <input type="radio" name="hl-class" id="hl-hunter" value="Hunter"><label for="hl-hunter">Hunter</label>
-            <input type="radio" name="hl-class" id="hl-titan" value="Titan"><label for="hl-titan">Titan</label>
-            <input type="radio" name="hl-class" id="hl-warlock" value="Warlock"><label for="hl-warlock">Warlock</label>
+            <input type="radio" name="hl-class" id="hl-hunter" value="Hunter"><label for="hl-hunter"><span class="class-icon cls-hunter" aria-hidden="true"></span>Hunter</label>
+            <input type="radio" name="hl-class" id="hl-titan" value="Titan"><label for="hl-titan"><span class="class-icon cls-titan" aria-hidden="true"></span>Titan</label>
+            <input type="radio" name="hl-class" id="hl-warlock" value="Warlock"><label for="hl-warlock"><span class="class-icon cls-warlock" aria-hidden="true"></span>Warlock</label>
           </div>
         </fieldset>
       </form>
@@ -151,9 +152,9 @@
           <legend>Class</legend>
           <div class="segmented">
             <input type="radio" name="f-class" id="f-class-any" value=""><label for="f-class-any">Any<span class="count"></span></label>
-            <input type="radio" name="f-class" id="f-class-hunter" value="Hunter"><label for="f-class-hunter">Hunter<span class="count"></span></label>
-            <input type="radio" name="f-class" id="f-class-titan" value="Titan"><label for="f-class-titan">Titan<span class="count"></span></label>
-            <input type="radio" name="f-class" id="f-class-warlock" value="Warlock"><label for="f-class-warlock">Warlock<span class="count"></span></label>
+            <input type="radio" name="f-class" id="f-class-hunter" value="Hunter"><label for="f-class-hunter"><span class="class-icon cls-hunter" aria-hidden="true"></span>Hunter<span class="count"></span></label>
+            <input type="radio" name="f-class" id="f-class-titan" value="Titan"><label for="f-class-titan"><span class="class-icon cls-titan" aria-hidden="true"></span>Titan<span class="count"></span></label>
+            <input type="radio" name="f-class" id="f-class-warlock" value="Warlock"><label for="f-class-warlock"><span class="class-icon cls-warlock" aria-hidden="true"></span>Warlock<span class="count"></span></label>
           </div>
         </fieldset>
         <div class="field">
@@ -282,6 +283,8 @@
     <footer class="footer">
       <p>Data captured by the Searchlight project (builds.rodeo) from Bungie’s public API.
         Not affiliated with or endorsed by Bungie. Destiny 2 names and icons © Bungie, Inc.</p>
+      <p>Skinwalker is set in <a href="brand/OFL.txt">Jost</a> (SIL Open Font License); class symbols are
+        public domain (<a href="brand/class-icons/LICENSE">CC0</a>).</p>
     </footer>
   </main>
 

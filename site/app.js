@@ -1,4 +1,4 @@
-// Focalpoint build rankings: a book of exact recipes, read from
+// Skinwalker, Focalpoint's build-ranking site: a book of exact recipes, read from
 // data/focalpoint.json, which `focalpoint site` exports (see docs/site.md).
 //
 // Build types are ranked by build effect; each listing publishes the
@@ -367,6 +367,12 @@ export function elementBadge(element) {
   return element ? h('span', { class: `badge el-${element.toLowerCase()}` }, element) : null;
 }
 
+/** A class name led by its symbol, as Searchlight showed classes. */
+export function className(cls) {
+  return cls ? h('span', { class: 'class-name' },
+    h('span', { class: `class-icon cls-${cls.toLowerCase()}`, 'aria-hidden': 'true' }), cls) : null;
+}
+
 export const plural = (x, word) => `${n(x)} ${word}${x === 1 ? '' : 's'}`;
 
 /** An exact build's record: "Used in 2 clears by 1 player · last … · +9% for its players". */
@@ -586,7 +592,7 @@ export function typeIdentity(model, t) {
     h('h3', { class: 'exotics' },
       h('span', { class: 'exotic' }, typeIcon(model, t.armor), h('span', { class: t.armor ? '' : 'muted' }, t.armor ?? 'No exotic armor')),
       h('span', { class: 'exotic' }, typeIcon(model, t.weapon), h('span', { class: t.weapon ? '' : 'muted' }, t.weapon ?? 'No exotic weapon'))),
-    h('p', { class: 'subtitle' }, elementBadge(t.element), ` ${t.class ?? ''}`, t.super ? ` · ${t.super}` : ''),
+    h('p', { class: 'subtitle' }, elementBadge(t.element), ' ', className(t.class), t.super ? ` · ${t.super}` : ''),
     h('ul', { class: 'aspects' }, t.aspects.map((a) => h('li', {}, typeIcon(model, a, 'chip-icon'), a))));
 }
 

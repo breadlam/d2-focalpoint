@@ -7,7 +7,7 @@
 // The pure functions are exported for tests/site/test.html.
 
 import {
-  INCLUDE_KINDS, NONE, componentsOf, elementBadge, fillSelect, h, loadoutPanel, n, optionList, plural, shareButton,
+  INCLUDE_KINDS, NONE, className, componentsOf, elementBadge, fillSelect, h, loadoutPanel, n, optionList, plural, shareButton,
 } from './app.js';
 
 export const CATALOG_FORMAT = 3;
@@ -309,7 +309,7 @@ function buildCard(cat, b, rank, has, book) {
         h('h3', { class: 'exotics' },
           h('span', { class: 'exotic' }, icon(cat, t.armor), h('span', { class: t.armor === null ? 'muted' : '' }, t.armorName ?? 'No exotic armor')),
           h('span', { class: 'exotic' }, icon(cat, t.weapon), h('span', { class: t.weapon === null ? 'muted' : '' }, t.weaponName ?? 'No exotic weapon'))),
-        h('p', { class: 'subtitle' }, elementBadge(t.element), ` ${t.class ?? ''}`, t.superName ? ` · ${t.superName}` : ''),
+        h('p', { class: 'subtitle' }, elementBadge(t.element), ' ', className(t.class), t.superName ? ` · ${t.superName}` : ''),
         h('ul', { class: 'aspects' }, t.aspects.map((a, i) => h('li', {}, icon(cat, a, 'chip-icon'), t.aspectNames[i]))))),
     h('section', { class: 'recipe', 'aria-label': 'Build' },
       h('div', { class: 'recipe-head' },

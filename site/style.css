@@ -50,13 +50,49 @@ h1, h2, h3, h4 { line-height: 1.2; }
 .pos-text { color: var(--pos); }
 .neg-text { color: var(--neg); }
 
-/* Masthead */
+/* Masthead: Searchlight's dashboard wordmark — the Rahool mask (Festival of
+   the Lost) and the name in Jost, an open Futura clone (Futura is the
+   Destiny logo face), in caps with wide tracking. */
 
-.masthead h1 {
-  margin: 0 0 8px;
-  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
-  letter-spacing: -0.01em;
+@font-face {
+  font-family: "Jost";
+  src: url("brand/Jost-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
 }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+
+.brand-mark { width: 40px; height: 40px; flex: none; }
+
+.wordmark {
+  font-family: "Jost", system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+}
+
+/* Class symbols, tinted to the text around them. */
+.class-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.3em;
+  vertical-align: -0.15em;
+  background-color: currentColor;
+  -webkit-mask: no-repeat center / contain;
+  mask: no-repeat center / contain;
+}
+.cls-hunter { -webkit-mask-image: url("brand/class-icons/hunter.svg"); mask-image: url("brand/class-icons/hunter.svg"); }
+.cls-titan { -webkit-mask-image: url("brand/class-icons/titan.svg"); mask-image: url("brand/class-icons/titan.svg"); }
+.cls-warlock { -webkit-mask-image: url("brand/class-icons/warlock.svg"); mask-image: url("brand/class-icons/warlock.svg"); }
 
 .lede {
   margin: 0 0 20px;
@@ -733,5 +769,6 @@ button.link:hover { text-decoration: underline; }
   .panel { gap: 10px 10px; padding: 12px; }
   select { padding: 7px 6px; font-size: 0.9rem; }
   .segmented label { padding: 8px 2px; font-size: 0.88rem; }
+  .segmented .class-icon { display: none; }
   .exotics { font-size: 1rem; }
 }

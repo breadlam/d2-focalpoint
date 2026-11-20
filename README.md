@@ -86,7 +86,8 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 ## Build-ranking site
 
-[`site/`](site) is a static page for GitHub Pages with three views: **Ranked
+[`site/`](site), branded **Skinwalker** as Searchlight's dashboard was, is a
+static page for GitHub Pages with three views: **Ranked
 builds** (build types ranked by build effect, each with its best-ranked
 exact build and near-identical variants, per activity), **Highlights** (a
 few builds per class as well ranked and as unlike each other as the data

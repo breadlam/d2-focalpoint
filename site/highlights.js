@@ -1,4 +1,4 @@
-// Focalpoint highlights: per class and subclass, exact builds that are as
+// Skinwalker highlights: per class and subclass, exact builds that are as
 // well ranked and as unlike each other as the data allows — for the neutral
 // game (workhorses that hold up across activities: up to three per classic
 // subclass and six Prismatic) and for each activity (up to one per
