@@ -1,12 +1,13 @@
 //! `focalpoint site` — export the data behind the static site in `site/`
 //! (see `docs/site.md`): the ranked builds and highlights (`book/`) and the
-//! catalog of every collected build (`catalog/`).
+//! catalog of every collected build (`catalog/`), and write the count of
+//! builds into the page's intro.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use focalpoint_db::Database;
 use focalpoint_db::catalog::catalog;
 use focalpoint_db::site::{SiteOptions, site_data, split};
@@ -22,6 +23,11 @@ pub struct Args {
     /// Players a build type needs in an activity to be listed for it
     #[arg(long, default_value_t = 1)]
     pub min_players: usize,
+
+    /// The page whose intro states the count of builds [default: index.html
+    /// beside `--out`, if there is one]
+    #[arg(long)]
+    pub page: Option<PathBuf>,
 }
 
 pub fn run(args: &Args, db: &Path) -> Result<()> {
@@ -80,7 +86,58 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         thousands(cat.types as i64),
         cat.shards.len(),
     );
+
+    let page = args
+        .page
+        .clone()
+        .or_else(|| Some(args.out.parent()?.join("index.html")).filter(|p| p.exists()));
+    if let Some(page) = page {
+        let html =
+            fs::read_to_string(&page).with_context(|| format!("reading {}", page.display()))?;
+        let stamped = with_intro(&html, &intro(cat.builds))
+            .with_context(|| format!("stamping {}", page.display()))?;
+        if stamped != html {
+            fs::write(&page, stamped).with_context(|| format!("writing {}", page.display()))?;
+        }
+        println!(
+            "Wrote the intro of {}: {}",
+            page.display(),
+            intro(cat.builds)
+        );
+    }
     Ok(())
+}
+
+/// The page's intro, which link previews show.
+fn intro(builds: usize) -> String {
+    format!(
+        "Search {} Destiny 2 endgame builds",
+        thousands(builds as i64)
+    )
+}
+
+/// `html` with `intro` as its meta description and its lede. Link previews
+/// don't run scripts, so the count is written into the page itself.
+fn with_intro(html: &str, intro: &str) -> Result<String> {
+    let html = replace_between(
+        html,
+        r#"<meta name="description" content=""#,
+        r#"">"#,
+        intro,
+    )?;
+    replace_between(&html, r#"<p class="lede">"#, "</p>", intro)
+}
+
+/// `text` with what lies between the first `open` and the `close` after it
+/// replaced by `with`.
+fn replace_between(text: &str, open: &str, close: &str, with: &str) -> Result<String> {
+    let Some(start) = text.find(open).map(|i| i + open.len()) else {
+        bail!("no {open}");
+    };
+    let Some(len) = text[start..].find(close) else {
+        bail!("no {close} after {open}");
+    };
+    Ok(format!("{}{with}{}", &text[..start], &text[start + len..]))
 }
 
 /// Write `files` into `<out>/<name>/`, replacing what was there, via a
@@ -102,4 +159,23 @@ fn replace_dir(out: &Path, name: &str, files: &[(String, Vec<u8>)]) -> Result<us
     }
     fs::rename(&tmp, &dir).with_context(|| format!("replacing {}", dir.display()))?;
     Ok(bytes)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_intro_is_the_description_and_the_lede() {
+        let page = r#"<head><meta name="description" content="Old words."></head>
+<p class="lede">Old words, at length.</p><p class="lede">Kept.</p>"#;
+        let stamped = with_intro(page, &intro(594_340)).unwrap();
+        assert_eq!(
+            stamped,
+            r#"<head><meta name="description" content="Search 594,340 Destiny 2 endgame builds"></head>
+<p class="lede">Search 594,340 Destiny 2 endgame builds</p><p class="lede">Kept.</p>"#
+        );
+        assert_eq!(with_intro(&stamped, &intro(594_340)).unwrap(), stamped);
+        assert!(with_intro("<p>no intro</p>", "x").is_err());
+    }
 }

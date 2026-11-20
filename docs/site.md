@@ -86,7 +86,7 @@ artifact perks). Ranked builds come first, the rest by use.
 
 | Path | What it is |
 |---|---|
-| `site/index.html`, `site/style.css` | the page; no build step, no dependencies |
+| `site/index.html`, `site/style.css` | the page; no build step, no dependencies. `focalpoint site` writes the count of searchable builds into its intro (meta description and lede), since link previews don't run scripts |
 | `site/brand/` | Searchlight's brand assets: the Rahool mask (`rahool-mask.png`, rendered at 192 px from Searchlight's SVG; also the favicon), `Jost-Light.ttf` with its licence (`OFL.txt`), and the class symbols (`class-icons/`, CC0) |
 | `site/app.js` | an ES module: pure functions (build decoding and differences, filtering, facet counts, ranking, URL state) plus the DOM layer |
 | `site/highlights.js` | "Highlights": URL state and rendering (loaded only when the view is opened) |
@@ -107,8 +107,8 @@ more than one), then describes each build group from its captured runs:
 
 ```sh
 focalpoint import --backups ../searchlight-backups   # if the database changed
-focalpoint site                                      # writes site/data/book/ and site/data/catalog/
-git add -A site/data
+focalpoint site                                      # writes site/data/book/, site/data/catalog/ and the intro
+git add -A site/data site/index.html
 ```
 
 It takes about 90 s. The ranked builds need four model fits per scope
