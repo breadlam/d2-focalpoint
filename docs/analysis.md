@@ -13,7 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
-| `analyze partial` | Which content allows partial clears or partial participation, and how does the run score treat them? | the solo premium's full-clear test (ADR 0008); scoring of partial participation (open) |
+| `analyze partial` | Which content allows partial clears or partial participation, and how does the run score treat them? | the solo premium's full-clear test (ADR 0008); scoring partial participants by kill rate over time played (ADR 0009) |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
 | `analyze highlights [--set S] [--class C] [--sweep]` | Why was each highlight picked, and how do picks change with the quality weight? | `QUALITY_WEIGHT` (ADR 0007) |
@@ -27,14 +27,17 @@ over a grid of player, group and — with `--contexts` — build × activity
 group priors. "Explained" is the share of the variance of held-out
 performance; an infinite group prior is player skill alone.
 
-Findings (core build types):
+Findings (core build types, with solo clears credited, ADR 0008, and
+partial participants scored by kill rate, ADR 0009):
 
-- player skill alone explains 33.8%; build effects add 2.1 points (best:
-  player 3, group 10);
-- with build × activity group effects the best model explains 38.0% (player
-  3, group 10–30, context 3): **activity-specific effects double what builds
-  explain**. The remaining ~62% is run-to-run variation (teammates,
-  modifiers, luck).
+- player skill alone explains 41.6%; build effects add 4.0 points (best:
+  player 1, group 10);
+- with build × activity group effects the best model explains 47.2% (player
+  1, group 10–30, context 3): activity-specific effects add 1.7 points more.
+  The remaining ~53% is run-to-run variation (teammates, modifiers, luck).
+- Before both changes, skill alone explained 33.8%, builds 2.1 points more
+  and activity-specific effects as much again (38.0%; player 3, group
+  10–30, context 3).
 
 ## `analyze completeness`
 
@@ -246,9 +249,11 @@ Findings:
   build data leans solo.
 - Fresh solo clears make 2.6–2.8× a fireteam member's kills at 0.64–0.95×
   the pace. The premium: ×1.2–1.5 in Grandmaster Conquests (soloists there
-  are slower and die more than fireteams), ×1.5–2.2 in Ultimate Ops, ×2.8 in
-  Equilibrium, ×3.0–3.1 in Ultimate Conquest, ×2.4–3.3 in Master dungeons
+  are slower and die more than fireteams), ×1.5–2.2 in Ultimate Ops, ×2.6 in
+  Equilibrium, ×3.0–3.1 in Ultimate Conquest, ×2.2–3.2 in Master dungeons
   and ×6.1 in Root of Nightmares (Master) — Searchlight's ×2, measured.
+  (Equilibrium and Master dungeons were ×2.8 and ×2.4–3.3 before partial
+  participants left the fireteam reference, ADR 0009.)
 - Pantheon and The Desert Perpetual solo clears are mostly fresh (96% and
   84%) five-minute boss encounters with a tenth to a third of a fireteam
   member's kills: kills cannot measure soloing there (Searchlight captured
@@ -283,9 +288,9 @@ sustained; its target slate required fresh starts for checkpointed content
 and Ops. `run_score` (ADR 0006) measures kills against the activity's
 reference kills and pace against the whole run. The study: checkpoints and
 late joins per activity group (every recorded run); kill rates of fireteam,
-full-length solo and very fast solo clears; and the run score of fireteam
-players present for all or part of a run, now and as a kill rate over time
-played.
+full-length solo and very fast solo clears; and the score of fireteam
+players by the share of the run they were present for, as scored and under
+whole-run scoring.
 
 Findings:
 
@@ -298,10 +303,17 @@ Findings:
   dungeons and raids (full-length solo clears 11–16; fireteam players 4–5):
   add-dense stretches, not full clears. In Pantheon and The Desert
   Perpetual such clears are boss-only (1 kill a minute).
-- Fireteam players present for the whole run score the same either way
-  (1.00–1.04). The 208k fireteam clears in checkpointed content where the
-  player was present for about half the run (7% of scored clears) score
-  0.50–0.70 now — penalised for absence — and 1.08–1.42 as a kill rate over
-  time played: joining for a later stretch is not a typical stretch, so
-  neither measure is neutral for them.
+- Nearly every fireteam member plays 98–100% of the run; 208k fireteam
+  clears (7.3%; 8–12% in checkpointed content, under 0.05% in Conquests and
+  Ops) were played for under 90% of it, spread evenly from a few minutes
+  to most of the run.
+- Whole-run scoring penalises them for absence: 0.80 of typical at 80–90%
+  presence down to 0.17 under 10%. Searchlight's rate against the fireteam
+  reference overshoots instead (1.08–1.42 by group): a stretch someone
+  joins for is not a typical stretch.
+- Against other partial participants of the same activity, kill rate over
+  time played is close to neutral at every presence level (0.95–1.14),
+  provided deaths are measured against the deaths expected in the time
+  played (against the bucket's median deaths, 0.86–1.41). ADR 0009 scores
+  them that way.
 

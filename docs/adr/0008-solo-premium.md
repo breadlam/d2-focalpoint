@@ -53,7 +53,8 @@ perf(solo clear) = perf against solo clears + ln(premium of its activity)
 - **The fireteam clears** are the activity's qualified fireteam clears, or,
   where too few qualified (the solo-gated Grandmaster Conquests), its
   unqualified fireteam clears — cleared, started from the beginning, in the
-  same period (`rank::team_reference_sql`).
+  same period (`rank::team_reference_sql`). Players present for under 90%
+  of the run are left out of both (ADR 0009).
 - **A solo clear looks like a full clear** when it started from the
   beginning and, in content with checkpoints, took at least as long as the
   fastest 1% of the activity's fireteam clears. Conquests and Ops cannot be
@@ -90,5 +91,8 @@ builds add 6.6 points and activity-specific build effects a further 1.9.
 - Solo raid clears, real or not, earn nothing extra. If real solo raid
   clears can be told apart later (say, by encounter timing), the raid rule
   can be revisited.
-- Partial "clears" still count as fast clears in the scoring itself (solo
-  and fireteam alike, speed bounded at 2×); only the premium excludes them.
+- Partial "clears" — resumed runs — still count as fast clears in the
+  scoring itself (solo and fireteam alike, speed bounded at 2×); only the
+  premium excludes them. Partial *participants*, fireteam members who
+  joined late or left early, are scored by kill rate over time played
+  (ADR 0009).

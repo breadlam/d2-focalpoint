@@ -12,7 +12,9 @@ combined; the ranking tools only choose which builds to show:
    aspects) are ranked by **build effect** (ADR 0006): how much better
    players do with the type than on their own other runs. Solo clears count,
    measured against other solo clears of the same activity plus that
-   activity's solo premium (ADR 0008).
+   activity's solo premium (ADR 0008); players who joined late or left
+   early are measured by kill rate over their time played against others
+   who did (ADR 0009).
 2. Within a type, **families** (the same kit: exotic perks, abilities,
    aspects, fragments) and within the best family, **loadouts** (the same
    kit and legendary weapons) are ranked the same way, pooling the evidence

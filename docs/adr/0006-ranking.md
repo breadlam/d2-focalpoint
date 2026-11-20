@@ -32,7 +32,9 @@ report entry per character; they are summed.
 Activities differ wildly (median kills per clear range from 1 to 538, median
 durations from 4 to 164 minutes), so each factor is measured against a
 **reference**: the median kills, duration and deaths of qualified clears of
-the same activity *and solo status* (`activity_reference`).
+the same activity *and solo status* (`activity_reference`; amended by ADR
+0009: fireteam members present for under 90% of the run have a bucket of
+their own and are measured by kill rate over time played).
 
 - `kill_index = kills / reference kills`, bounded to 0.1–4×;
 - `speed = reference duration / duration`, bounded to 0.5–2× (as before);

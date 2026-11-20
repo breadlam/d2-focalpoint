@@ -1,4 +1,4 @@
-# Analysis database schema (version 6)
+# Analysis database schema (version 7)
 
 The database is a single DuckDB file built by `focalpoint import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
@@ -74,12 +74,16 @@ are denormalised from `run` for cheap filtering. `is_clear` = completed with
 player and run that met a Searchlight target's gates, was cleared, and had
 kills, in a scored activity (entries of a player who switched characters are
 summed). `kill_index`, `speed` and `survival` measure the run against a
-typical clear of the same activity and solo status, each bounded; `score` is
+typical clear of the same activity by the same kind of player — solo,
+fireteam member, or partial participant (`is_partial`: a fireteam member
+whose `played_s` is under 90% of the run's `duration_s`, measured by kill
+rate over time played with `speed` 1; ADR 0009) — each bounded; `score` is
 their product (1.0 = typical) and `perf` its centred logarithm, the response
 of the ranking model. `has_build` marks runs with a captured build.
 
-**`activity_reference`** — the typical clear per `(activity_hash, is_solo)`:
-median `kills`, `duration_s`, `deaths` over its clears. `is_borrowed` buckets
+**`activity_reference`** — the typical clear per `(activity_hash, is_solo,
+is_partial)`: median `kills`, `duration_s` (time played for partial
+participants), `deaths` over its clears. `is_borrowed` buckets
 (fewer than 50 clears) use the activity-wide reference; activities whose
 median clear has fewer than 20 kills are `NOT is_scored` (Pantheon boss
 encounters). `log_score_mean` is the centre of `perf`.
