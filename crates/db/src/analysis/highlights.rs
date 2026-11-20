@@ -10,7 +10,7 @@ use focalpoint_core::highlight::{Pick, Playstyle};
 use focalpoint_core::vector::ElementVector;
 
 use super::diversity::{CHOSEN, CRITERIA, Pair, Profile};
-use crate::highlight::{Candidate, NEUTRAL, candidates, playstyles, select};
+use crate::highlight::{Candidate, NEUTRAL, all_candidates, playstyles, select};
 use crate::site::SiteData;
 
 /// One pick, explained.
@@ -141,6 +141,8 @@ pub struct SurveyRow {
     /// The plain top `count` by rank that one player used.
     pub top_one_player: usize,
     pub soft: SoftPicks,
+    /// The soft picks' exemplar builds, in pick order.
+    pub soft_builds: Vec<i64>,
 }
 
 /// Rank-first under `ok`, comparing profiles as needed; stops at `count`.
@@ -166,8 +168,10 @@ fn rank_first_lazy(
 }
 
 /// Survey one set and class: `count` picks by the strict hard rules, the
-/// loosened hard rules and the soft selection at `quality_weight`.
+/// loosened hard rules and the soft selection at `quality_weight`, among
+/// the candidates whose exemplar build `keep` accepts.
 #[must_use]
+#[allow(clippy::too_many_arguments)]
 pub fn survey<S: BuildHasher>(
     data: &SiteData,
     vectors: &HashMap<i64, ElementVector, S>,
@@ -176,8 +180,12 @@ pub fn survey<S: BuildHasher>(
     count: usize,
     quality_weight: f64,
     min_players: usize,
+    keep: &dyn Fn(i64) -> bool,
 ) -> SurveyRow {
-    let cands = candidates(data, set, class);
+    let cands: Vec<Candidate> = all_candidates(data, set, class)
+        .into_iter()
+        .filter(|c| keep(c.build_id))
+        .collect();
     let scope_id = if set == NEUTRAL { "all" } else { set };
     let rows = &data
         .scopes
@@ -245,5 +253,6 @@ pub fn survey<S: BuildHasher>(
             one_player: picks.iter().filter(|&&i| players(i) <= 1).count(),
             one_run: picks.iter().filter(|&&i| runs(i) <= 1.0).count(),
         },
+        soft_builds: picks.iter().map(|&i| cands[i].build_id).collect(),
     }
 }

@@ -5,8 +5,9 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use anyhow::{Result, bail};
+use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
-use focalpoint_db::analysis::{breadth, diversity, highlights as hl, priors};
+use focalpoint_db::analysis::{breadth, completeness, diversity, highlights as hl, priors};
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, load_model};
 use focalpoint_db::search::GroupBy;
@@ -45,6 +46,13 @@ distinct build types per class under several criteria, and how per-activity sets
 all-activities set."
     )]
     Diversity(DiversityArgs),
+    /// Which captured builds are missing significant parts, and what that does to highlights
+    #[command(
+        after_help = "Counts builds by aspects and fragments, checks fragment counts against \
+each aspect pair's usual count, compares the evidence behind complete and incomplete builds, and \
+surveys the highlights with incomplete builds left out."
+    )]
+    Completeness(CompletenessArgs),
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -96,6 +104,15 @@ pub struct DiversityArgs {
 }
 
 #[derive(Debug, clap::Args)]
+pub struct CompletenessArgs {
+    /// Highlights per set and class in the survey
+    #[arg(long, default_value_t = 5)]
+    pub count: usize,
+    #[arg(long, default_value_t = QUALITY_WEIGHT)]
+    pub quality_weight: f64,
+}
+
+#[derive(Debug, clap::Args)]
 pub struct HighlightArgs {
     /// `neutral` or a scope id (see --sets)
     #[arg(long, default_value = NEUTRAL)]
@@ -133,6 +150,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Priors(a) => run_priors(&db, a, args.format),
         What::Breadth(a) => run_breadth(&db, a, args.format),
         What::Diversity(a) => run_diversity(&db, a, args.format),
+        What::Completeness(a) => run_completeness(&db, a, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -553,9 +571,13 @@ fn quantile(mut xs: Vec<f64>, q: f64) -> f64 {
     xs[((xs.len() - 1) as f64 * q).round() as usize]
 }
 
-fn run_survey(db: &Database, a: &HighlightArgs, format: Format) -> Result<()> {
-    let data = site(db, None, a.context_prior)?;
-    let vectors = build_vectors(db)?;
+/// The survey of every set and class, among candidates `keep` accepts.
+fn survey_rows(
+    data: &SiteData,
+    vectors: &HashMap<i64, ElementVector>,
+    a: &HighlightArgs,
+    keep: &dyn Fn(i64) -> bool,
+) -> Vec<hl::SurveyRow> {
     let mut sets = vec![NEUTRAL.to_string()];
     sets.extend(
         data.scopes
@@ -565,18 +587,26 @@ fn run_survey(db: &Database, a: &HighlightArgs, format: Format) -> Result<()> {
     );
     let mut rows = Vec::new();
     for set in &sets {
-        for class in highlight::classes(&data, set) {
+        for class in highlight::classes(data, set) {
             rows.push(hl::survey(
-                &data,
-                &vectors,
+                data,
+                vectors,
                 set,
                 &class,
                 a.count,
                 a.quality_weight,
                 a.min_players,
+                keep,
             ));
         }
     }
+    rows
+}
+
+fn run_survey(db: &Database, a: &HighlightArgs, format: Format) -> Result<()> {
+    let data = site(db, None, a.context_prior)?;
+    let vectors = build_vectors(db)?;
+    let rows = survey_rows(&data, &vectors, a, &|id| !data.incomplete.contains(&id));
     let k = a.count;
     println!(
         "{k} picks per set and class. Hard rules: no shared exotic, kit distance ≥ 0.7, best-ranked first — \
@@ -619,7 +649,12 @@ strict: top half of build types with ≥ {} players; loose: every build type. So
         })
         .collect();
     println!("{}", render(format, &header, &table));
+    survey_summary(&rows, k);
+    Ok(())
+}
 
+/// The survey's summary lines.
+fn survey_summary(rows: &[hl::SurveyRow], k: usize) {
     let total = rows.len();
     let full = |f: &dyn Fn(&hl::SurveyRow) -> usize| rows.iter().filter(|r| f(r) >= k).count();
     let filled: Vec<&hl::SurveyRow> = rows.iter().filter(|r| r.soft.picks >= k).collect();
@@ -690,5 +725,192 @@ strict: top half of build types with ≥ {} players; loose: every build type. So
         worst(&|r| r.hard_loose_worst_rank),
         worst(&|r| r.soft.worst_rank),
     );
+}
+
+fn run_completeness(db: &Database, a: &CompletenessArgs, format: Format) -> Result<()> {
+    let parts = completeness::parts(db)?;
+    println!(
+        "## Builds by aspects and fragments ({} builds)",
+        thousands(parts.len() as i64)
+    );
+    let header = [
+        "aspects",
+        "fragments",
+        "builds",
+        "share",
+        "no armor mods",
+        "no artifact perks",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = completeness::distribution(&parts)
+        .into_iter()
+        .map(|(asp, frag, n, no_mods, no_art)| {
+            vec![
+                asp.to_string(),
+                if frag >= 6 {
+                    "6+".into()
+                } else {
+                    frag.to_string()
+                },
+                thousands(n as i64),
+                format!("{:.2}%", 100.0 * n as f64 / parts.len() as f64),
+                format!("{no_mods} ({:.0}%)", 100.0 * no_mods as f64 / n as f64),
+                format!("{no_art} ({:.0}%)", 100.0 * no_art as f64 / n as f64),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+
+    println!("\n## Two-aspect builds against their aspect pair's usual fragment count");
+    let gaps = completeness::fragment_gaps(db)?;
+    if let Some(&(_, _, _, least)) = gaps.first() {
+        println!("The smallest usual fragment count of any aspect pair: {least}.");
+    }
+    let header = ["fragments", "at least the pair's usual", "fewer"].map(String::from);
+    let rows: Vec<Vec<String>> = gaps
+        .iter()
+        .map(|&(f, ok, short, _)| {
+            vec![f.to_string(), thousands(ok as i64), thousands(short as i64)]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+
+    println!(
+        "\n## Evidence (complete: two aspects, ≥ {} fragments, four abilities, armor mods)",
+        completeness::MIN_FRAGMENTS
+    );
+    let (complete, incomplete) = completeness::evidence(db, &parts)?;
+    let header = [
+        "builds",
+        "count",
+        "used in scored runs",
+        "one player",
+        "one run",
+        "runs per build",
+        "most players",
+    ]
+    .map(String::from);
+    let row = |name: &str, e: &completeness::Evidence| {
+        vec![
+            name.to_string(),
+            thousands(e.builds as i64),
+            thousands(e.used as i64),
+            format!("{:.0}%", 100.0 * e.one_player as f64 / e.used.max(1) as f64),
+            format!("{:.0}%", 100.0 * e.one_run as f64 / e.used.max(1) as f64),
+            format!("{:.2}", e.runs as f64 / e.used.max(1) as f64),
+            e.most_players.to_string(),
+        ]
+    };
+    println!(
+        "{}",
+        render(
+            format,
+            &header,
+            &[row("complete", &complete), row("incomplete", &incomplete)]
+        )
+    );
+
+    let data = site(db, None, NEUTRAL_CONTEXT_PRIOR)?;
+    let vectors = build_vectors(db)?;
+    // The ranked builds view: listings whose top build is incomplete.
+    let is_complete = |id: i64| parts.get(&id).is_some_and(completeness::Parts::complete);
+    let exemplar =
+        |r: &focalpoint_db::site::Row| data.recipes[r.7.0 as usize].id.parse::<i64>().ok();
+    let (mut listings, mut incomplete_tops, mut players) = (0_usize, 0_usize, Vec::new());
+    for r in data.scopes.iter().flat_map(|s| &s.rows) {
+        listings += 1;
+        if exemplar(r).is_some_and(|id| !is_complete(id)) {
+            incomplete_tops += 1;
+            players.push(r.4);
+        }
+    }
+    let types_without_aspects = data.types.iter().filter(|t| t.aspects.is_empty()).count();
+    println!(
+        "\n## Ranked builds\nListings whose top build is incomplete: {incomplete_tops} of {} ({:.1}%), across every scope; \
+their build types had {} player(s) at most. Build types with no aspects at all: {types_without_aspects} of {}.",
+        thousands(listings as i64),
+        100.0 * incomplete_tops as f64 / listings.max(1) as f64,
+        players.iter().max().copied().unwrap_or(0),
+        thousands(data.types.len() as i64)
+    );
+    let args = HighlightArgs {
+        set: NEUTRAL.into(),
+        class: None,
+        count: a.count,
+        quality_weight: a.quality_weight,
+        context_prior: NEUTRAL_CONTEXT_PRIOR,
+        sweep: false,
+        weights: Vec::new(),
+        sets: false,
+        survey: true,
+        min_players: 3,
+    };
+    let before = survey_rows(&data, &vectors, &args, &|_| true);
+    let incomplete_picks: usize = before
+        .iter()
+        .map(|r| r.soft_builds.iter().filter(|&&id| !is_complete(id)).count())
+        .sum();
+    let sets_hit = before
+        .iter()
+        .filter(|r| r.soft_builds.iter().any(|&id| !is_complete(id)))
+        .count();
+    let picks: usize = before.iter().map(|r| r.soft.picks).sum();
+    println!(
+        "\n## Highlights ({} per set and class)\nPicks that would be incomplete if every build were a candidate: {incomplete_picks} of {picks}, in {sets_hit} of {} sets × classes.",
+        a.count,
+        before.len()
+    );
+    // Each incomplete pick with its build type's evidence and what it lacks.
+    let mut listing: HashMap<(&str, i64), (u32, usize, f64)> = HashMap::new();
+    for scope in &data.scopes {
+        let set = if scope.id == "all" {
+            NEUTRAL
+        } else {
+            scope.id.as_str()
+        };
+        for r in &scope.rows {
+            if let Ok(id) = data.recipes[r.7.0 as usize].id.parse::<i64>() {
+                listing.insert((set, id), (r.0, r.4, r.5));
+            }
+        }
+    }
+    let header = [
+        "set",
+        "class",
+        "players",
+        "runs",
+        "aspects",
+        "fragments",
+        "armor mods",
+        "build type",
+    ]
+    .map(String::from);
+    let mut rows = Vec::new();
+    for r in &before {
+        for &id in r.soft_builds.iter().filter(|&&id| !is_complete(id)) {
+            let p = parts.get(&id).copied().unwrap_or_default();
+            let (t, players, runs) = listing
+                .get(&(r.set.as_str(), id))
+                .copied()
+                .unwrap_or((0, 0, 0.0));
+            rows.push(vec![
+                r.set.clone(),
+                r.class.clone(),
+                players.to_string(),
+                format!("{runs:.0}"),
+                p.aspects.to_string(),
+                p.fragments.to_string(),
+                p.armor_mods.to_string(),
+                label(&data, t),
+            ]);
+        }
+    }
+    println!("{}", render(format, &header, &rows));
+
+    println!("\nWith incomplete builds left out:");
+    let after = survey_rows(&data, &vectors, &args, &is_complete);
+    survey_summary(&after, a.count);
+    println!("\nFor comparison, with every build:");
+    survey_summary(&before, a.count);
     Ok(())
 }

@@ -3,6 +3,8 @@
 //!
 //! * [`priors`] — the ranking model's ridge priors, by cross-validation
 //!   (ADR 0006; the neutral game's context prior, ADR 0007);
+//! * [`completeness`] — which captured builds are missing significant parts
+//!   (aspects, fragments, mods), and how much evidence they carry;
 //! * [`breadth`] — whether a build type's all-activities rank depends on how
 //!   many activity groups it was used in, and how the neutral-game ranking
 //!   changes that;
@@ -13,6 +15,7 @@
 //! Each returns plain data; the CLI renders it.
 
 pub mod breadth;
+pub mod completeness;
 pub mod diversity;
 pub mod highlights;
 pub mod priors;

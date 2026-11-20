@@ -6,9 +6,11 @@
 //! players it had, represented by its exemplar build. Their quality is the
 //! build type's effect in the scope — for the neutral game, the part of its
 //! all-activities effect that holds across activity groups
-//! ([`crate::rank::RankOptions::context_prior`]). Nothing is filtered out:
-//! a build type seen once competes on its (shrunk) effect and on what it
-//! adds to the picks.
+//! ([`crate::rank::RankOptions::context_prior`]). A build type seen once
+//! competes on its (shrunk) effect and on what it adds to the picks; the one
+//! boundary is completeness: an exemplar missing part of its kit or its
+//! armor mods (`analysis::completeness`) is not a candidate — it would look
+//! unlike everything only because of what was not captured.
 
 use std::collections::HashMap;
 use std::hash::BuildHasher;
@@ -100,9 +102,18 @@ pub fn classes(data: &SiteData, set: &str) -> Vec<String> {
     out
 }
 
-/// A set's candidates of one class, best first.
+/// A set's candidates of one class, best first: every listing whose
+/// exemplar build is complete ([`SiteData::incomplete`]).
 #[must_use]
 pub fn candidates(data: &SiteData, set: &str, class: &str) -> Vec<Candidate> {
+    let mut out = all_candidates(data, set, class);
+    out.retain(|c| !data.incomplete.contains(&c.build_id));
+    out
+}
+
+/// A set's candidates of one class, best first, complete or not.
+#[must_use]
+pub fn all_candidates(data: &SiteData, set: &str, class: &str) -> Vec<Candidate> {
     let Some(scope) = scope_of(data, set) else {
         return Vec::new();
     };

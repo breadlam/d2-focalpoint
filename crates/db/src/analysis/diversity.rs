@@ -19,7 +19,7 @@ use std::hash::BuildHasher;
 
 use focalpoint_core::vector::{ElementKind, ElementVector, Tier, TierWeights};
 
-use crate::highlight::candidates;
+use crate::highlight::all_candidates;
 use crate::site::SiteData;
 
 /// What the study needs of one build.
@@ -185,7 +185,7 @@ pub fn field<S: BuildHasher>(
             pairs: Vec::new(),
         };
     };
-    let cands: Vec<_> = candidates(data, scope, class)
+    let cands: Vec<_> = all_candidates(data, scope, class)
         .into_iter()
         .filter(|c| s.rows[c.row].4 >= min_players)
         .collect();

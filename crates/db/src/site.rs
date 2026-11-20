@@ -29,7 +29,7 @@
 //! ([`crate::highlight`]): a few listings as well ranked and as unlike each
 //! other as the data allows.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use serde::Serialize;
 
@@ -126,6 +126,11 @@ pub struct SiteData {
     /// (the neutral-game ranking); empty when `all` was not computed.
     #[serde(skip)]
     pub neutral: HashMap<u32, f64>,
+    /// Published builds missing part of their kit or their armor mods
+    /// ([`crate::analysis::completeness::Parts::complete`]): not highlight
+    /// candidates.
+    #[serde(skip)]
+    pub incomplete: HashSet<i64>,
 }
 
 /// A build type: the build as players describe it.
@@ -772,6 +777,17 @@ pub fn site_data(
         }
     }
 
+    let parts = crate::analysis::completeness::parts(db)?;
+    let incomplete: HashSet<i64> = recipe_ids
+        .iter()
+        .copied()
+        .filter(|id| {
+            !parts
+                .get(id)
+                .is_some_and(crate::analysis::completeness::Parts::complete)
+        })
+        .collect();
+
     progress("loading recipes");
     let mut dict = Dict::default();
     let recipes = recipes(db, &recipe_ids, &mut dict)?;
@@ -799,6 +815,7 @@ pub fn site_data(
         scopes,
         highlights: Vec::new(),
         neutral,
+        incomplete,
     };
     data.highlights = highlight_sets(&data, &vectors, opts.highlight_count, opts.quality_weight);
     Ok(data)
@@ -1080,8 +1097,27 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn highlights_cover_the_neutral_game_and_every_activity() {
+    fn incomplete_builds_are_not_highlighted() {
+        // The fixture's builds have one aspect and one fragment.
         let data = export();
+        assert!(!data.incomplete.is_empty());
+        assert!(
+            data.highlights
+                .iter()
+                .all(|s| s.classes.iter().all(|c| c.picks.is_empty())),
+            "{:?}",
+            data.highlights
+        );
+    }
+
+    #[test]
+    fn highlights_cover_the_neutral_game_and_every_activity() {
+        let (_d, db) = db();
+        let mut data = site_data(&db, &SiteOptions::default(), |_| {}).unwrap();
+        // Treat the fixture's partial kits as complete to see the picks.
+        data.incomplete.clear();
+        let vectors = build_vectors(&db).unwrap();
+        data.highlights = highlight_sets(&data, &vectors, HIGHLIGHT_COUNT, QUALITY_WEIGHT);
         let ids: Vec<&str> = data.highlights.iter().map(|s| s.id.as_str()).collect();
         assert_eq!(ids[0], "neutral");
         assert!(

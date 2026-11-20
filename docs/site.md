@@ -55,7 +55,9 @@ Filters and activity are kept in the URL, so a view can be shared.
 and as unlike each other as the data allows (ADR 0007): for the **neutral
 game** (workhorses, ranked by the part of their effect that holds across
 activity groups) and for every activity group and activity. There are no
-cut-offs: every ranked build type is a candidate, and each pick says how
+player or rank cut-offs: every ranked build type whose exemplar build is
+complete (two aspects, four or more fragments, four abilities, armor mods)
+is a candidate, and each pick says how
 much of its playstyle (subclass, super, aspects, exotics, abilities,
 fragments) is new compared with the picks above. Neutral picks also say
 how many activity groups the build type was used in.

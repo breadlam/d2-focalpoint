@@ -72,7 +72,17 @@ The neutral top 10% is no longer dominated by specialists: builds with
 Per class and set (the neutral game, every activity group and activity),
 the candidates are **every** ranked build type — no player minimum, no rank
 cut-off — represented by its exemplar build (the "top build" of ADR 0006's
-book). `focalpoint_core::highlight::select_diverse` greedily maximises
+book), **if that build is complete**: two aspects, at least four fragments,
+all four abilities and armor mods (`analysis::completeness`). An incomplete
+capture looks unlike everything only because of what it lacks — Warlock's
+neutral five held a Void Vortex build seen once, with no aspects or
+fragments, sharing its exotic weapon with another pick. The line is in the
+data: 99.2% of builds have two aspects and 4–6 fragments, no aspect pair is
+usually run with fewer than four, and the other 0.8% lack armor mods ten
+times as often. Without the rule, 31 of 682 five-pick highlights (in 29 of
+138 sets) were incomplete, every one a build type of one or two players;
+with it every set still fills and the distances and ranks are unchanged
+(`focalpoint analyze completeness`). `focalpoint_core::highlight::select_diverse` greedily maximises
 
 ```text
 2 · w · quality_i + ln(novelty_i)
@@ -120,6 +130,9 @@ their exact builds; the site's **Highlights** view shows 3, 5 or 10.
 
 ## Consequences
 
+- Completeness is the one hard boundary. Incomplete builds stay in the
+  ranked builds view and the catalog (1.8% of listings have an incomplete
+  top build); only highlights leave them out.
 - Low-evidence build types compete on their shrunk effect. Under the model
   a single exceptional run is weak evidence, but not none, and
   several neutral picks are build types one player used once. Each card

@@ -10,6 +10,7 @@ for further processing). The numbers below are from the import of
 | Command | Question | Drives |
 |---|---|---|
 | `analyze priors [--contexts] [--grouping …]` | Which ridge priors predict held-out runs best? | `FitParams::default`, `NEUTRAL_CONTEXT_PRIOR` (ADR 0006, 0007) |
+| `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
 | `analyze highlights [--set S] [--class C] [--sweep]` | Why was each highlight picked, and how do picks change with the quality weight? | `QUALITY_WEIGHT` (ADR 0007) |
@@ -31,6 +32,37 @@ Findings (core build types):
   3, group 10–30, context 3): **activity-specific effects double what builds
   explain**. The remaining ~62% is run-to-run variation (teammates,
   modifiers, luck).
+
+## `analyze completeness`
+
+Counts builds by aspects and fragments (with how many of each cell lack
+armor mods or artifact perks), checks two-aspect builds against their
+aspect pair's usual (modal) fragment count, compares the evidence behind
+complete and incomplete builds, counts ranked listings whose top build is
+incomplete, and lists the highlight picks that would be incomplete without
+the rule, with the survey summary with and without them.
+
+Findings:
+
+- Every captured build has a subclass, super, abilities, three weapons and
+  five armor pieces. 99.2% have two aspects and 4–6 fragments; the other
+  0.8% (4,785) lack armor mods and artifact perks far more often (e.g. 61%
+  and 66% of the 1,088 builds with no aspects, against about 1%), the mark of
+  a loadout read mid-change or sockets the API did not return.
+- No aspect pair is usually run with fewer than four fragments, so two
+  aspects and ≤ 3 fragments (2,940 builds) means unfilled slots. Four
+  fragments where the pair usually has five (7,778) is kept: a slot left
+  empty is plausible.
+- Complete (two aspects, ≥ 4 fragments, four abilities, armor mods):
+  586,193 builds; incomplete: 8,147. Exact builds are always one player's,
+  so evidence is judged at the build type: every incomplete highlight pick
+  was a build type of one or two players.
+- Without the rule, 31 of 682 five-pick highlights (29 of 138 sets) were
+  incomplete; leaving incomplete builds out changes neither how many sets
+  fill nor the picks' distances and ranks.
+- 737 of 41,892 ranked listings (1.8%) have an incomplete top build, some
+  of build types with up to 64 players; 55 of 10,669 build types have no
+  aspects at all.
 
 ## `analyze breadth`
 
