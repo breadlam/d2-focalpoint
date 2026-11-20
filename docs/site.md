@@ -149,6 +149,10 @@ The workflow deploys `site/` whenever a push to `master` changes it. One-time
 setup in the GitHub repository: **Settings → Pages → Build and deployment →
 Source: GitHub Actions**.
 
+It uploads in one job and deploys in another. If the deploy fails, use
+**Re-run failed jobs** or start a new run (**Run workflow**): re-running the
+whole run uploads a second artifact, and the deploy refuses two.
+
 ## Data format (`format: 6`)
 
 `book/index.json`:
