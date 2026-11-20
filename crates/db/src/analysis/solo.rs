@@ -11,7 +11,8 @@
 //! collected runs shape what the data can show: its qualification gates
 //! (five Grandmaster Conquests qualified solo runs only), and its choice of
 //! players to monitor — whose builds were captured — by an evaluator that
-//! doubled solo scores.
+//! doubled solo scores. Solo raid "clears" do not hold up as full clears
+//! ([`clear_checks`]), so raids get no premium.
 
 use std::collections::HashMap;
 
@@ -189,6 +190,71 @@ pub fn premium(db: &Database) -> Result<Vec<Premium>> {
             credit: at(1),
             credit_q3: at(2),
             duration: r.get::<_, Option<f64>>(7)?.unwrap_or(f64::NAN),
+        })
+    })?;
+    Ok(rows.collect::<duckdb::Result<_>>()?)
+}
+
+/// How one activity's solo clears compare with its fireteam clears in
+/// length and kills: do they look like full clears?
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClearCheck {
+    pub group: String,
+    pub activity: String,
+    /// The PGCR's activity mode (raids are [`crate::rank::RAID_MODE`]).
+    pub mode: Option<i64>,
+    pub solo_clears: usize,
+    /// Minutes: solo median, 10th percentile and fastest; fireteam median
+    /// and 1st percentile.
+    pub solo_median: f64,
+    pub solo_p10: f64,
+    pub solo_fastest: f64,
+    pub fireteam_median: f64,
+    pub fireteam_p1: f64,
+    /// Share of solo clears faster than the fastest 1% of fireteam clears.
+    pub solo_faster_than_p1: f64,
+    /// Median kills of a solo clear, and of a whole fireteam in one clear.
+    pub solo_kills: f64,
+    pub team_kills: f64,
+}
+
+/// Clear lengths and kills of every activity with at least `min_solo` solo
+/// clears, most solo clears first.
+pub fn clear_checks(db: &Database, min_solo: usize) -> Result<Vec<ClearCheck>> {
+    let mut stmt = db.conn().prepare(&format!(
+        "WITH inst AS (
+             SELECT r.instance_id, r.activity_hash, bool_and(r.is_solo) AS solo,
+                    any_value(r.duration_s) / 60.0 AS minutes, sum(r.kills) AS kills
+             FROM run_score r GROUP BY 1, 2),
+         team AS (
+             SELECT activity_hash, median(minutes) AS med, quantile_cont(minutes, 0.01) AS p1,
+                    median(kills) AS kills
+             FROM inst WHERE NOT solo GROUP BY 1)
+         SELECT coalesce(a.target_group, '(untargeted)'), a.name, any_value(rn.mode),
+                count(*), median(i.minutes), quantile_cont(i.minutes, 0.1), min(i.minutes),
+                any_value(t.med), any_value(t.p1), avg((i.minutes < t.p1)::INTEGER),
+                median(i.kills), any_value(t.kills)
+         FROM inst i JOIN activity a USING (activity_hash) JOIN team t USING (activity_hash)
+         JOIN run rn USING (instance_id)
+         WHERE i.solo
+         GROUP BY a.target_group, a.name
+         HAVING count(*) >= {min_solo}
+         ORDER BY 4 DESC, 2"
+    ))?;
+    let rows = stmt.query_map([], |r| {
+        Ok(ClearCheck {
+            group: r.get(0)?,
+            activity: r.get::<_, Option<String>>(1)?.unwrap_or_default(),
+            mode: r.get(2)?,
+            solo_clears: usize::try_from(r.get::<_, i64>(3)?).unwrap_or(0),
+            solo_median: r.get(4)?,
+            solo_p10: r.get(5)?,
+            solo_fastest: r.get(6)?,
+            fireteam_median: r.get(7)?,
+            fireteam_p1: r.get(8)?,
+            solo_faster_than_p1: r.get(9)?,
+            solo_kills: r.get(10)?,
+            team_kills: r.get(11)?,
         })
     })?;
     Ok(rows.collect::<duckdb::Result<_>>()?)
@@ -402,5 +468,6 @@ mod tests {
         assert!(volume(&db).is_ok());
         assert!(premium(&db).is_ok());
         assert!(credits(&db).is_ok());
+        assert!(clear_checks(&db, 1).is_ok());
     }
 }

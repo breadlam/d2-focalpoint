@@ -47,12 +47,11 @@ pub struct RankOptions {
     pub solo: SoloScoring,
 }
 
-/// What a solo clear's performance is measured against.
+/// What a solo clear's performance is measured against (ADR 0008).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SoloScoring {
-    /// Other solo clears of the activity (ADR 0006): soloing earns nothing
-    /// by itself.
-    #[default]
+    /// Other solo clears of the activity (ADR 0006 as first written):
+    /// soloing earns nothing by itself.
     AgainstSolo,
     /// The activity's fireteam clears: a solo clear of content made for a
     /// fireteam earns what it takes — every kill is the soloist's, and there
@@ -64,7 +63,8 @@ pub enum SoloScoring {
     /// ([`solo_credit_sql`]) for solo clears that started from the
     /// beginning. Soloists stay ranked among themselves; soloing content
     /// made for a fireteam earns what it typically takes, never less than
-    /// nothing.
+    /// nothing. The default.
+    #[default]
     ActivityCredit,
 }
 
@@ -91,7 +91,9 @@ pub(crate) fn against_fireteam(s: &str, t: &str) -> (String, String) {
 }
 
 /// Per activity, the fireteam clears a solo clear is compared with:
-/// `(activity_hash, kills, duration_s, deaths, centre, from_qualified)`.
+/// `(activity_hash, kills, duration_s, deaths, centre, from_qualified,
+/// min_duration)` — `min_duration` being the 1st percentile of their
+/// durations: no full clear is faster than the fastest fireteams.
 ///
 /// The activity's own fireteam reference (`activity_reference`) when it has
 /// enough qualified fireteam clears; otherwise one built the same way from
@@ -105,9 +107,12 @@ pub fn team_reference_sql() -> String {
     let p = focalpoint_core::rank::ScoreParams::default();
     let (log_score, _) = against_fireteam("pool", "med");
     format!(
-        "WITH own AS (
-             SELECT activity_hash, kills, duration_s, deaths, log_score_mean AS centre
-             FROM activity_reference
+        "WITH fast AS (
+             SELECT activity_hash, quantile_cont(duration_s, 0.01) AS min_duration
+             FROM run_score WHERE NOT is_solo GROUP BY 1),
+         own AS (
+             SELECT activity_hash, kills, duration_s, deaths, log_score_mean AS centre, min_duration
+             FROM activity_reference JOIN fast USING (activity_hash)
              WHERE NOT is_solo AND is_scored AND NOT is_borrowed AND kills > 0
                    AND log_score_mean IS NOT NULL),
          pool AS (
@@ -123,35 +128,49 @@ pub fn team_reference_sql() -> String {
              HAVING bool_or(p.is_clear) AND sum(p.kills) > 0),
          med AS (
              SELECT activity_hash, median(kills) AS kills, median(duration_s) AS duration_s,
-                    median(deaths) AS deaths
+                    median(deaths) AS deaths, quantile_cont(duration_s, 0.01) AS min_duration
              FROM pool GROUP BY 1 HAVING count(*) >= {min_clears})
-         SELECT activity_hash, kills, duration_s, deaths, centre, true AS from_qualified FROM own
+         SELECT activity_hash, kills, duration_s, deaths, centre, true AS from_qualified, min_duration
+         FROM own
          UNION ALL
          SELECT med.activity_hash, any_value(med.kills), any_value(med.duration_s),
-                any_value(med.deaths), avg({log_score}), false
+                any_value(med.deaths), avg({log_score}), false, any_value(med.min_duration)
          FROM pool JOIN med USING (activity_hash) GROUP BY med.activity_hash",
         min_clears = p.min_reference_clears,
     )
 }
 
+/// The Destiny activity mode of raids (`DestinyActivityModeType.Raid`).
+/// Solo raid clears get no premium: the data cannot tell full solo clears
+/// of six-player content from partial ones (solo Root of Nightmares Master
+/// "clears" below the Normal solo world record, King's Fall Master in a
+/// median 8 minutes), and kills do not measure boss encounters (Pantheon).
+pub const RAID_MODE: i32 = 4;
+
 /// Per activity, the log solo premium of [`SoloScoring::ActivityCredit`]:
-/// `(activity_hash, log_credit, solo_clears, kill_index)` — the median, over
-/// the activity's solo clears that started from the beginning, of how much
-/// better each scores against the fireteam clears ([`team_reference_sql`])
-/// than against other solo clears; never negative. Where kills cannot
-/// measure a soloist's work (short boss encounters), the measured premium
-/// falls below one and no credit is given.
+/// `(activity_hash, log_credit, solo_clears, kill_index, min_duration)` —
+/// the median, over the activity's solo clears that look like full clears,
+/// of how much better each scores against the fireteam clears
+/// ([`team_reference_sql`]) than against other solo clears; never negative.
+/// A solo clear looks like a full clear when it started from the beginning
+/// and took at least `min_duration` (the fastest 1% of fireteam clears):
+/// a fifth to two fifths of Master dungeon solo "clears" are faster than
+/// that, some in a minute or two. Raids ([`RAID_MODE`]) get none. Where
+/// kills cannot measure a soloist's work the measured premium falls below
+/// one and no credit is given.
 #[must_use]
 pub fn solo_credit_sql() -> String {
     let (log_score, kill_index) = against_fireteam("s", "t");
     format!(
         "SELECT s.activity_hash,
                 greatest(0, median({log_score} - t.centre - s.perf)) AS log_credit,
-                count(*) AS solo_clears, median({kill_index}) AS kill_index
+                count(*) AS solo_clears, median({kill_index}) AS kill_index,
+                any_value(t.min_duration) AS min_duration
          FROM run_score s
          JOIN run USING (instance_id)
          JOIN ({team}) t ON t.activity_hash = s.activity_hash
-         WHERE s.is_solo AND run.started_from_beginning
+         WHERE s.is_solo AND run.started_from_beginning AND coalesce(run.mode, 0) <> {RAID_MODE}
+               AND s.duration_s >= t.min_duration
          GROUP BY 1",
         team = team_reference_sql(),
     )
@@ -159,19 +178,35 @@ pub fn solo_credit_sql() -> String {
 
 impl SoloScoring {
     /// The joins the performance expression needs, after `run_score r`.
-    fn join(self) -> String {
-        match self {
+    fn join(self, db: &Database) -> Result<String> {
+        Ok(match self {
             Self::AgainstSolo => String::new(),
             Self::AgainstFireteam => format!(
                 "LEFT JOIN ({}) team ON team.activity_hash = r.activity_hash",
                 team_reference_sql()
             ),
-            Self::ActivityCredit => format!(
-                "LEFT JOIN ({}) credit ON credit.activity_hash = r.activity_hash
-                 LEFT JOIN run fresh ON fresh.instance_id = r.instance_id",
-                solo_credit_sql()
-            ),
-        }
+            Self::ActivityCredit => {
+                let credits = db.solo_credits()?;
+                let table = if credits.is_empty() {
+                    "SELECT NULL::UINTEGER AS activity_hash, NULL::DOUBLE AS log_credit,
+                            NULL::DOUBLE AS min_duration WHERE false"
+                        .to_string()
+                } else {
+                    let rows: Vec<String> = credits
+                        .iter()
+                        .map(|(h, c, d)| format!("({h}, {c}, {d})"))
+                        .collect();
+                    format!(
+                        "SELECT * FROM (VALUES {}) v(activity_hash, log_credit, min_duration)",
+                        rows.join(", ")
+                    )
+                };
+                format!(
+                    "LEFT JOIN ({table}) credit ON credit.activity_hash = r.activity_hash
+                     LEFT JOIN run fresh ON fresh.instance_id = r.instance_id"
+                )
+            }
+        })
     }
 
     /// A run's performance: `run_score.perf`, or its credited counterpart
@@ -188,7 +223,8 @@ impl SoloScoring {
                 )
             }
             Self::ActivityCredit => "r.perf + CASE WHEN r.is_solo AND fresh.started_from_beginning
-                               THEN coalesce(credit.log_credit, 0) ELSE 0 END"
+                                    AND r.duration_s >= credit.min_duration
+                               THEN credit.log_credit ELSE 0 END"
                 .into(),
         }
     }
@@ -329,7 +365,7 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
     };
     let mut run_params = Vec::new();
     let run_where = runs.sql(&mut run_params);
-    let solo_join = opts.solo.join();
+    let solo_join = opts.solo.join(db)?;
     let perf = opts.solo.perf();
     let from = format!(
         "FROM run_score r JOIN activity a ON a.activity_hash = r.activity_hash {solo_join}"

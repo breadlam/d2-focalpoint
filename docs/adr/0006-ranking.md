@@ -44,7 +44,8 @@ the same activity *and solo status* (`activity_reference`).
 Within one activity and solo status, runs keep the evaluator's order except
 where a bound applies (a test checks the proportionality). Differences:
 
-- **Solo** runs are compared with solo runs instead of doubling the score.
+- **Solo** runs are compared with solo runs instead of doubling the score
+  (amended by ADR 0008: plus the activity's measured solo premium).
   Doubling on top of kills measured against fireteams would make every solo
   run outrank every fireteam run; `--solo` ranks soloists among themselves.
   Buckets with fewer than 50 clears (e.g. solo Master raids) borrow the
@@ -103,7 +104,8 @@ rest:
 teammates, modifiers, luck.) Before kills were bounded, a few farmers'
 extreme runs made player skill look like 58 %.
 
-Defaults: player prior 3, group prior 10 (best for the default grouping).
+Defaults: player prior 3, group prior 10 (best for the default grouping;
+re-chosen with solo clears credited in ADR 0008: player prior 1).
 Exact builds do no better than core builds: nearly every exact build is one
 player's. Letting a build's effect differ by activity group explains more
 again (ADR 0007).

@@ -101,7 +101,7 @@ pub struct BuildArgs {
     #[arg(long, value_enum, default_value_t = BuildOrder::Effect)]
     pub sort: BuildOrder,
     /// What solo clears are measured against
-    #[arg(long, value_enum, default_value_t = Solo::Alone)]
+    #[arg(long, value_enum, default_value_t = Solo::Credit)]
     pub solo_scoring: Solo,
     #[arg(long, default_value_t = 20)]
     pub limit: usize,
@@ -112,9 +112,9 @@ pub struct BuildArgs {
 /// What solo clears are measured against (see `focalpoint analyze solo`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum Solo {
-    /// Other solo clears of the activity (default)
+    /// Other solo clears of the activity, with no premium
     Alone,
-    /// Other solo clears, plus the activity's measured solo premium
+    /// Other solo clears, plus the activity's measured solo premium (default; ADR 0008)
     Credit,
     /// The activity's fireteam clears, run by run
     Fireteam,

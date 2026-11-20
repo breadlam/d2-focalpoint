@@ -1299,7 +1299,59 @@ to solo runs. Build capture is per scored clear."
 (Searchlight used a flat ×2). The fireteam clears are the qualified ones, or unqualified ones where too few qualified."
     );
 
-    println!("\n## Per-activity solo premium as credited (never below ×1)");
+    println!(
+        "\n## Do solo clears look like full clears? (activities with ≥ 20 solo clears; minutes)"
+    );
+    let header = [
+        "activity group",
+        "activity",
+        "mode",
+        "solo clears",
+        "solo median",
+        "solo p10",
+        "fastest",
+        "fireteam median",
+        "fireteam p1",
+        "solo faster than fireteam p1",
+        "kills: solo",
+        "fireteam (all players)",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = solo::clear_checks(db, 20)?
+        .into_iter()
+        .map(|c| {
+            vec![
+                c.group,
+                c.activity,
+                c.mode.map_or_else(
+                    || "—".into(),
+                    |m| {
+                        if m == i64::from(focalpoint_db::rank::RAID_MODE) {
+                            "raid".into()
+                        } else {
+                            m.to_string()
+                        }
+                    },
+                ),
+                thousands(c.solo_clears as i64),
+                format!("{:.0}", c.solo_median),
+                format!("{:.0}", c.solo_p10),
+                format!("{:.0}", c.solo_fastest),
+                format!("{:.0}", c.fireteam_median),
+                format!("{:.0}", c.fireteam_p1),
+                format!("{:.0}%", 100.0 * c.solo_faster_than_p1),
+                format!("{:.0}", c.solo_kills),
+                format!("{:.0}", c.team_kills),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Raids get no premium: their solo clears are often faster than the fastest fireteams (Root of Nightmares Master \
+below the 24-minute Normal solo world record) with a fraction of a fireteam's kills."
+    );
+
+    println!("\n## Per-activity solo premium as credited (never below ×1; none for raids)");
     let header = [
         "activity group",
         "activity",

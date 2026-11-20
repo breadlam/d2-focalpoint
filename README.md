@@ -107,7 +107,7 @@ for where new features go.
 - [docs/architecture.md](docs/architecture.md) — crates, data flow, testing
 - [docs/site.md](docs/site.md) — the static build-ranking site: data export, preview, tests, publishing
 - [docs/analysis.md](docs/analysis.md) — the analyses behind the design (`focalpoint analyze`) and their findings
-- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game)
+- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game; the solo premium)
 
 ## Development
 

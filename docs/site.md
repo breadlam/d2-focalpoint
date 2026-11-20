@@ -11,7 +11,8 @@ combined; the ranking tools only choose which builds to show:
 1. **Build types** (class, subclass element, exotic armor and weapon, super,
    aspects) are ranked by **build effect** (ADR 0006): how much better
    players do with the type than on their own other runs. Solo clears count,
-   measured against other solo clears of the same activity.
+   measured against other solo clears of the same activity plus that
+   activity's solo premium (ADR 0008).
 2. Within a type, **families** (the same kit: exotic perks, abilities,
    aspects, fragments) and within the best family, **loadouts** (the same
    kit and legendary weapons) are ranked the same way, pooling the evidence

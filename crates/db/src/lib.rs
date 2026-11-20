@@ -98,6 +98,9 @@ pub fn default_path() -> PathBuf {
 pub struct Database {
     conn: Connection,
     path: PathBuf,
+    /// Per activity, the log solo premium (`rank::solo_credit_sql`),
+    /// computed on first use: every ranking needs it.
+    solo_credits: std::sync::OnceLock<Vec<(u32, f64, f64)>>,
 }
 
 impl Database {
@@ -109,6 +112,7 @@ impl Database {
         let db = Self {
             conn,
             path: path.to_path_buf(),
+            solo_credits: std::sync::OnceLock::new(),
         };
         db.set_meta(meta_key::SCHEMA_VERSION, &SCHEMA_VERSION.to_string())?;
         Ok(db)
@@ -124,6 +128,7 @@ impl Database {
         let db = Self {
             conn,
             path: path.to_path_buf(),
+            solo_credits: std::sync::OnceLock::new(),
         };
         db.check_schema()?;
         Ok(db)
@@ -152,6 +157,23 @@ impl Database {
     #[must_use]
     pub fn conn(&self) -> &Connection {
         &self.conn
+    }
+
+    /// Per activity, the log solo premium of `SoloScoring::ActivityCredit`
+    /// and the shortest solo clear it applies to (seconds), computed once
+    /// per connection.
+    pub fn solo_credits(&self) -> Result<&[(u32, f64, f64)]> {
+        if let Some(c) = self.solo_credits.get() {
+            return Ok(c);
+        }
+        let mut stmt = self.conn.prepare(&format!(
+            "SELECT activity_hash, log_credit, min_duration FROM ({}) WHERE log_credit > 0 ORDER BY 1",
+            rank::solo_credit_sql()
+        ))?;
+        let credits = stmt
+            .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
+            .collect::<duckdb::Result<Vec<(u32, f64, f64)>>>()?;
+        Ok(self.solo_credits.get_or_init(|| credits))
     }
 
     #[must_use]

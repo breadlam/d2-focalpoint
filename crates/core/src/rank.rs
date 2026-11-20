@@ -158,11 +158,11 @@ pub struct FitParams {
 
 impl Default for FitParams {
     /// Priors chosen by five-fold cross-validation on the Searchlight data
-    /// with builds grouped by their core (ADR 0006, `focalpoint analyze
-    /// priors`).
+    /// with builds grouped by their core and solo clears credited (ADR 0006,
+    /// ADR 0008, `focalpoint analyze priors`).
     fn default() -> Self {
         Self {
-            player_prior: 3.0,
+            player_prior: 1.0,
             group_prior: 10.0,
             max_iterations: 500,
             tolerance: 1e-7,

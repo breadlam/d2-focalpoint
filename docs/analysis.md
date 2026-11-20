@@ -12,7 +12,7 @@ for further processing). The numbers below are from the import of
 | `analyze priors [--contexts] [--grouping …]` | Which ridge priors predict held-out runs best? | `FitParams::default`, `NEUTRAL_CONTEXT_PRIOR` (ADR 0006, 0007) |
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
-| `analyze solo [--min-players N] [--top N]` | How much fireteam content was soloed, what a solo clear takes against the fireteam clears, and what crediting it would do to the rankings? | solo credit in the ranking (proposed) |
+| `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
 | `analyze highlights [--set S] [--class C] [--sweep]` | Why was each highlight picked, and how do picks change with the quality weight? | `QUALITY_WEIGHT` (ADR 0007) |
@@ -253,8 +253,16 @@ Findings:
   member's kills: kills cannot measure soloing there (Searchlight captured
   Pantheon without using it to judge players), the measured premium is
   below one, and none is credited.
-- Credited per activity (fresh solo clears only; never below ×1), the
-  all-activities ranking keeps a rank correlation of +0.88–0.92 with
+- **Not every flagged clear is a full clear.** Solo Root of Nightmares
+  (Master) clears run a median 54 minutes, fastest 14 — a tenth under the
+  24-minute Normal solo world record — with 931 kills against a fireteam's
+  2,360; solo King's Fall (Master) a median 8 minutes. A fifth to two
+  fifths of Master dungeon solo clears beat the fastest 1% of fireteam
+  clears, some in a minute or two; Conquests, Ops and Equilibrium 0–7%. So
+  the premium counts only solo clears at least as long as the fastest 1% of
+  fireteam clears, and raids (activity mode 4) get none.
+- Credited per activity (full-looking fresh solo clears only; never below
+  ×1; no raids), the all-activities ranking keeps a rank correlation of +0.88–0.92 with
   today's; a third of each class's top 10% changes, and 88–96% of the
   credited top 10% have a solo clear (67–70% of the rest). The builds
   elite players take into fireteam content alone rise: Fortune's Favor +
