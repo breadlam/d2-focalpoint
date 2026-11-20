@@ -13,6 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
 | `analyze highlights [--set S] [--class C] [--sweep]` | Why was each highlight picked, and how do picks change with the quality weight? | `QUALITY_WEIGHT` (ADR 0007) |
+| `analyze highlights --survey [--count K] [--quality-weight W]` | Across every activity and class, what distances, ranks and evidence do K picks have when the constraints are loosened? | how many highlights the data supports |
 
 ## `analyze priors`
 
@@ -108,3 +109,39 @@ Findings (ten picks):
 
 Diversity is cheap: about one point of mean effect. Weights of 5 and above
 let exotic swaps of a pick in (largest similarity 0.45–0.69).
+
+### `--survey`: loosening the constraints
+
+For every set (the neutral game, each activity group and activity) and
+class, `K` picks three ways: the **strict** hard rules of the diversity
+study (no shared exotic, kit distance ≥ 0.7, best-ranked first, from the
+top half of build types with ≥ 3 players); the same rules **loosened** to
+every build type; and the **soft** selection (no thresholds). It reports the
+smallest kit and playstyle distances between the soft picks, whether they
+meet the hard rule anyway, the effect given up against the plain top `K`,
+the worst rank picked, and how many picks one player used.
+
+Findings (138 sets × classes):
+
+| | 3 picks | 5 picks | 10 picks |
+|---|---|---|---|
+| sets filled: strict / loosened hard rules / soft | 58 / 136 / 136 | 23 / 132 / 136 | 3 / 71 / 133 |
+| loosened hard rules: median worst rank (sets with ≥ 50 build types) | 5 | 15 | 87 |
+| soft, `w = 2`: median smallest kit distance (p10) | 1.00 (0.56) | 0.68 (0.40) | 0.47 (0.29) |
+| soft, `w = 2`: sets meeting the hard rule anyway | 84 / 136 | 38 / 136 | 0 / 133 |
+| soft, `w = 0.5`: median smallest kit distance; sets meeting the rule | — | 1.00; 78 / 136 | 0.59; 3 / 133 |
+| soft: mean effect given up (median, `w = 2` / `0.5`) | 0.3 points | 0.8 / 1.4 points | 1.1 / 2.1 points |
+| one-player picks: plain top K / loosened hard / soft `w = 2` | 40% / 50% / 46% | 46% / 60% / 54% | 54% / 72% / 68% |
+
+- The strict study's empty sets came from its player minimum and top-half
+  pool, not from the distinctness rule: loosened, the hard rule fills five
+  picks in 132 of 138 sets (Titan: Pantheon from 32 build types, worst rank
+  6; The Desert Perpetual from 110, worst rank 8).
+- Three picks are mutually distinct almost everywhere; five usually are
+  (more so at a lower quality weight); ten are not — the tenth pick shares
+  its subclass and super with an earlier one, and the hard rule can fill
+  ten in only half the sets, reaching rank ~87 to do it.
+- Diversity costs about a point of mean effect throughout.
+- Most collected build types were one player's: even the plain top five are
+  46% one-player; loosening adds roughly another 10 points of that.
+

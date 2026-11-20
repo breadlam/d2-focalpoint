@@ -118,6 +118,13 @@ pub struct HighlightArgs {
     /// List the highlight sets and exit
     #[arg(long)]
     pub sets: bool,
+    /// Survey every set and class: picks under the strict and loosened hard
+    /// rules and the soft selection, with their distances, ranks and evidence
+    #[arg(long)]
+    pub survey: bool,
+    /// The survey's strict rules count only build types with this many players
+    #[arg(long, default_value_t = 3)]
+    pub min_players: usize,
 }
 
 pub fn run(args: &Args, db: &Path) -> Result<()> {
@@ -425,6 +432,9 @@ fn run_diversity(db: &Database, a: &DiversityArgs, format: Format) -> Result<()>
 }
 
 fn run_highlights(db: &Database, a: &HighlightArgs, format: Format) -> Result<()> {
+    if a.survey {
+        return run_survey(db, a, format);
+    }
     let scopes = if a.sets {
         None
     } else if a.set == NEUTRAL {
@@ -532,5 +542,153 @@ fn run_highlights(db: &Database, a: &HighlightArgs, format: Format) -> Result<()
             .collect();
         println!("{}\n", render(format, &header, &rows));
     }
+    Ok(())
+}
+
+fn quantile(mut xs: Vec<f64>, q: f64) -> f64 {
+    xs.sort_by(f64::total_cmp);
+    if xs.is_empty() {
+        return f64::NAN;
+    }
+    xs[((xs.len() - 1) as f64 * q).round() as usize]
+}
+
+fn run_survey(db: &Database, a: &HighlightArgs, format: Format) -> Result<()> {
+    let data = site(db, None, a.context_prior)?;
+    let vectors = build_vectors(db)?;
+    let mut sets = vec![NEUTRAL.to_string()];
+    sets.extend(
+        data.scopes
+            .iter()
+            .filter(|s| s.kind != "all")
+            .map(|s| s.id.clone()),
+    );
+    let mut rows = Vec::new();
+    for set in &sets {
+        for class in highlight::classes(&data, set) {
+            rows.push(hl::survey(
+                &data,
+                &vectors,
+                set,
+                &class,
+                a.count,
+                a.quality_weight,
+                a.min_players,
+            ));
+        }
+    }
+    let k = a.count;
+    println!(
+        "{k} picks per set and class. Hard rules: no shared exotic, kit distance ≥ 0.7, best-ranked first — \
+strict: top half of build types with ≥ {} players; loose: every build type. Soft: quality weight {}.\n",
+        a.min_players, a.quality_weight
+    );
+    let header = [
+        "set",
+        "class",
+        "build types",
+        format!("≥ {} players", a.min_players).as_str(),
+        "strict",
+        "loose (worst rank)",
+        "soft: min kit",
+        "shared exotics",
+        "min distance",
+        "effect (top)",
+        "worst rank",
+        "1 player",
+    ]
+    .map(String::from);
+    let table: Vec<Vec<String>> = rows
+        .iter()
+        .map(|r| {
+            let s = &r.soft;
+            vec![
+                r.set.clone(),
+                r.class.clone(),
+                r.candidates.to_string(),
+                r.established.to_string(),
+                r.hard_strict.to_string(),
+                format!("{} ({})", r.hard_loose, r.hard_loose_worst_rank),
+                format!("{:.2}", s.min_kit),
+                s.shared_exotic_pairs.to_string(),
+                format!("{:.2}", s.min_distance),
+                format!("{} ({})", pct(s.mean_quality), pct(s.top_quality)),
+                s.worst_rank.to_string(),
+                format!("{}/{}", s.one_player, s.picks),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &table));
+
+    let total = rows.len();
+    let full = |f: &dyn Fn(&hl::SurveyRow) -> usize| rows.iter().filter(|r| f(r) >= k).count();
+    let filled: Vec<&hl::SurveyRow> = rows.iter().filter(|r| r.soft.picks >= k).collect();
+    let meets = filled
+        .iter()
+        .filter(|r| r.soft.min_kit >= 0.7 && r.soft.shared_exotic_pairs == 0)
+        .count();
+    let picks: usize = rows.iter().map(|r| r.soft.picks).sum();
+    let one_player: usize = rows.iter().map(|r| r.soft.one_player).sum();
+    let one_run: usize = rows.iter().map(|r| r.soft.one_run).sum();
+    let kits: Vec<f64> = filled.iter().map(|r| r.soft.min_kit).collect();
+    let dists: Vec<f64> = filled.iter().map(|r| r.soft.min_distance).collect();
+    let cost: Vec<f64> = filled
+        .iter()
+        .map(|r| 100.0 * (r.soft.top_quality.exp() - r.soft.mean_quality.exp()))
+        .collect();
+    println!(
+        "Sets × classes: {total}. Filled to {k} picks: strict hard rules {}, loosened hard rules {}, soft {}.",
+        full(&|r| r.hard_strict),
+        full(&|r| r.hard_loose),
+        filled.len()
+    );
+    println!(
+        "Soft picks meeting the hard rule anyway (no shared exotic, kit ≥ 0.7 between every pair): {meets} of {} sets.",
+        filled.len()
+    );
+    println!(
+        "Smallest kit distance between two soft picks, per set: p10 {:.2} · median {:.2} · p90 {:.2}; smallest playstyle distance: p10 {:.2} · median {:.2}.",
+        quantile(kits.clone(), 0.1),
+        quantile(kits.clone(), 0.5),
+        quantile(kits, 0.9),
+        quantile(dists.clone(), 0.1),
+        quantile(dists, 0.5)
+    );
+    println!(
+        "Mean effect given up against the plain top {k}: median {:.1} points, p90 {:.1}.",
+        quantile(cost.clone(), 0.5),
+        quantile(cost, 0.9)
+    );
+    println!(
+        "Soft picks one player used: {one_player} of {picks} ({:.0}%); used in a single run: {one_run} ({:.0}%).",
+        100.0 * one_player as f64 / picks.max(1) as f64,
+        100.0 * one_run as f64 / picks.max(1) as f64
+    );
+    let share = |f: &dyn Fn(&hl::SurveyRow) -> (usize, usize)| {
+        let (a, b) = rows
+            .iter()
+            .map(f)
+            .fold((0, 0), |(x, y), (p, q)| (x + p, y + q));
+        100.0 * a as f64 / b.max(1) as f64
+    };
+    println!(
+        "One-player picks elsewhere: plain top {k} {:.0}%, loosened hard rules {:.0}%.",
+        share(&|r| (r.top_one_player, r.candidates.min(k))),
+        share(&|r| (r.hard_loose_one_player, r.hard_loose)),
+    );
+    let worst = |f: &dyn Fn(&hl::SurveyRow) -> usize| {
+        quantile(
+            rows.iter()
+                .filter(|r| r.candidates >= 50)
+                .map(|r| f(r) as f64)
+                .collect(),
+            0.5,
+        )
+    };
+    println!(
+        "Median worst rank of a pick, sets with ≥ 50 build types: loosened hard rules {:.0}, soft {:.0}.",
+        worst(&|r| r.hard_loose_worst_rank),
+        worst(&|r| r.soft.worst_rank),
+    );
     Ok(())
 }
