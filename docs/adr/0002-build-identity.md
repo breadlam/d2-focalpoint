@@ -47,6 +47,16 @@ bump the version (a golden-value unit test guards the encoding). The importer
 verifies there are no collisions with a second, independent fingerprint and
 aborts if one is found.
 
+Build fingerprint versions:
+
+1. Initial rules.
+2. A build's artifact perks are the artifact item's **socketed** (applied)
+   perks. Version 1 also merged the character progression's perk list, which
+   holds every perk the player had *unlocked* — up to 12 more than the 7
+   applied — so builds that differed only in unlocked perks counted as
+   different builds. The progression list is now used only when the artifact
+   item has no socketed perks (5,164 older captures).
+
 ### Plug classification fixes
 
 Classification is by manifest `plugCategoryIdentifier` plus the host slot.

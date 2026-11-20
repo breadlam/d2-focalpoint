@@ -27,6 +27,19 @@ combined; the ranking tools only choose which builds to show:
 chosen activity (each for at least half a run); their exact builds may
 differ. It defaults to 3; 1 includes build types only one player used.
 
+Listings lead with plain usage (players, runs, last used). The ranking
+numbers — build effect, raw result, players' skill — sit under "Ranking
+details": Searchlight's players were already among the best, so most builds
+sit near zero and a very good build can read slightly negative, which
+without that context sends the wrong message. The list is still ordered by
+build effect ("Best ranked").
+
+Every build has **Copy link to this build**: a finder URL with the build
+type's names and the build's short id (`&build=<id>`), which opens exactly
+that build, with a way to see the rest of its type. Links keep working
+across exports as long as the build's identity rules (ADR 0002) do not
+change.
+
 Builds are drawn the way Searchlight drew them (after the in-game loadout
 screen): weapons and subclass, stats and set bonuses, armor and artifact, as
 icon tiles in aligned columns whose names show on hover, focus or tap;

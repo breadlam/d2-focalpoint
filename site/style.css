@@ -388,42 +388,10 @@ button.link:hover { text-decoration: underline; }
 
 .metrics { text-align: right; }
 
-.effect-value {
-  font-size: 1.6rem;
-  font-weight: 750;
-  font-variant-numeric: tabular-nums;
-}
 
-.effect-label {
-  display: block;
-  font-size: 0.72rem;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
 
-.bar {
-  position: relative;
-  display: block;
-  height: 6px;
-  margin: 8px 0 6px;
-  background: var(--surface-2);
-  border-radius: 3px;
-}
 
-.bar::after {
-  content: "";
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
-  left: 50%;
-  width: 1px;
-  background: var(--muted);
-}
 
-.fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
-.fill.pos { left: 50%; background: var(--pos); }
-.fill.neg { right: 50%; background: var(--neg); }
 
 .secondary {
   margin: 2px 0;
@@ -665,6 +633,24 @@ button.link:hover { text-decoration: underline; }
   .gear { grid-template-columns: 44px minmax(0, 1fr); }
   .tile.item { width: 44px; max-width: 44px; }
 }
+
+/* Usage, ranking details and sharing */
+
+.usage { margin: 6px 0 2px; font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.usage strong { font-size: 1.1rem; color: var(--text); }
+.ranking-details p { margin: 6px 0; max-width: 80ch; font-size: 0.88rem; }
+
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.button.share { padding: 6px 12px; font-size: 0.88rem; }
+.share-status { font-size: 0.85rem; color: var(--pos); }
+.share-url { width: min(100%, 40em); padding: 4px 6px; font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px; }
 
 /* Expandable sections */
 

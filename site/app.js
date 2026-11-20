@@ -8,7 +8,7 @@
 // facet counts, ranking, recipe differences, URL state) are exported for
 // tests/site/test.html; start() wires them to the page.
 
-export const FORMAT = 4;
+export const FORMAT = 5;
 export const STATS = ['Weapons', 'Health', 'Class', 'Grenade', 'Super', 'Melee'];
 export const ARMOR_SLOTS = ['Helmet', 'Gauntlets', 'Chest', 'Legs', 'Class item'];
 export const WEAPON_SLOTS = ['Kinetic', 'Energy', 'Power'];
@@ -28,7 +28,7 @@ const HASH_KEYS = {
 };
 /** Sort keys: a function of a scope row. */
 export const SORTS = {
-  effect: { label: 'Build effect', key: (r) => r[1] },
+  effect: { label: 'Best ranked', key: (r) => r[1] },
   top: { label: 'Top build', key: (r) => r[7][1] },
   raw: { label: 'Raw result', key: (r) => r[2] },
   players: { label: 'Players', key: (r) => r[4] },
@@ -50,7 +50,7 @@ export function pct(x) {
 
 /** Expand a positional recipe (see docs/site.md) into an object. */
 export function decodeRecipe(r) {
-  const [id, stats, kit, armor, weapons, sets, artifactItem, artifact] = r;
+  const [id, stats, kit, armor, weapons, sets, artifactItem, artifact, artifactUnlocked] = r;
   const [subclass, sup, classAbility, movement, melee, grenade, aspects, fragments, transcendence] = kit;
   const setEntries = sets.map(([set, pieces, bonuses]) => ({ set, pieces, bonuses }));
   return {
@@ -61,6 +61,7 @@ export function decodeRecipe(r) {
     weapons: weapons.map(([slot, item, exotic, frame, perks, origin, mod]) =>
       ({ slot, item, exotic: exotic === 1, frame, perks, origin, mod })),
     sets: setEntries, setBonuses: setEntries.flatMap((e) => e.bonuses), artifactItem, artifact,
+    artifactUnlocked: artifactUnlocked === 1,
   };
 }
 
@@ -366,20 +367,12 @@ export function elementBadge(element) {
   return element ? h('span', { class: `badge el-${element.toLowerCase()}` }, element) : null;
 }
 
-/** A diverging bar for a log-scale effect (±50% fills one side). */
-function effectBar(x) {
-  const v = Math.max(-1, Math.min(1, (Math.exp(x) - 1) / 0.5));
-  return h('span', { class: 'bar', 'aria-hidden': 'true' },
-    h('span', { class: `fill ${v >= 0 ? 'pos' : 'neg'}`, style: `width:${(Math.abs(v) * 50).toFixed(1)}%` }));
-}
-
 export const plural = (x, word) => `${n(x)} ${word}${x === 1 ? '' : 's'}`;
 
 /** An exact build's record: "Used in 2 clears by 1 player · last … · +9% for its players". */
 export function pickLine(p) {
-  const [, effect, runs, players, last] = p;
-  return `Used in ${plural(Math.max(1, Math.round(runs)), 'clear')} by ${plural(players, 'player')} · `
-    + `last ${last} · ${pct(effect)} for its players`;
+  const [, , runs, players, last] = p;
+  return `Used in ${plural(Math.max(1, Math.round(runs)), 'clear')} by ${plural(players, 'player')} · last ${last}`;
 }
 
 /** The top recipe's record, with how often its loadout was used. */
@@ -482,7 +475,9 @@ function artifactBlock(model, r, mark) {
     r.artifactItem !== null ? h('div', { class: 'gear' }, tile(model, r.artifactItem, { cls: 'item' }),
       h('div', { class: 'gear-body' },
         h('div', { class: 'gear-name' }, h('span', { class: 'gear-title' }, name(model, r.artifactItem))),
-        h('p', { class: 'muted small' }, `Applied artifact perks (${r.artifact.length})`))) : null,
+        h('p', { class: 'muted small' }, r.artifactUnlocked
+          ? `Unlocked artifact perks (${r.artifact.length}); which were applied wasn’t captured`
+          : `Applied artifact perks (${r.artifact.length})`))) : null,
     h('div', { class: 'kit-tiles' }, r.artifact.map((i) => tile(model, i, { mark }))));
 }
 
@@ -504,6 +499,55 @@ export function loadoutPanel(model, r, mark = '') {
       artifactBlock(model, r, mark)));
 }
 
+/**
+ * A build's short id: the last 8 base-36 digits of its id, as the catalog
+ * writes them (`short_id` in crates/db/src/catalog.rs).
+ */
+export function shortId(id) {
+  return (BigInt.asUintN(64, BigInt(id)) % (36n ** 8n)).toString(36).padStart(8, '0');
+}
+
+/** A link to one build in the finder: its build type's names plus its short id. */
+export function buildLink(t, id) {
+  return `${findHash(t)}&build=${shortId(id)}`;
+}
+
+/** "Copy link": copies the page URL for `hash`, and says so. */
+export function shareButton(hash) {
+  const status = h('span', { class: 'share-status', role: 'status' });
+  const url = () => `${location.origin}${location.pathname}${hash}`;
+  const button = h('button', {
+    type: 'button',
+    class: 'button secondary share',
+    onclick: async () => {
+      try {
+        await navigator.clipboard.writeText(url());
+        status.textContent = 'Link copied';
+      } catch {
+        // No clipboard (insecure page, permissions): show the link to copy by hand.
+        status.replaceChildren(h('input', { class: 'share-url', value: url(), readonly: true, 'aria-label': 'Link to this build' }));
+        status.querySelector('input').select();
+      }
+    },
+  }, 'Copy link to this build');
+  return h('div', { class: 'share-row' }, button, status);
+}
+
+/**
+ * The ranking numbers, kept out of the way: they compare players with their
+ * own usual level, among already-elite players, so a strong build can read
+ * slightly negative.
+ */
+function rankingDetails(effect, raw, skill) {
+  return lazyDetails('Ranking details', () => h('div', { class: 'ranking-details' },
+    h('p', {}, `Build effect ${pct(effect)} · raw result ${pct(raw)} · players’ skill ${pct(skill)}`),
+    h('p', { class: 'muted' },
+      'Build effect is how players did with this build type compared with their own other runs. Searchlight’s '
+      + 'players were already among the best, so most builds sit near zero and a small negative number can still '
+      + 'be a very good build; the list is ordered by it. Raw result is how its runs went against a typical clear; '
+      + 'players’ skill is how good its players are.')));
+}
+
 /** A details element whose body is built on first open. */
 export function lazyDetails(summary, build, cls = 'more') {
   const d = h('details', { class: cls }, h('summary', {}, summary));
@@ -511,7 +555,7 @@ export function lazyDetails(summary, build, cls = 'more') {
   return d;
 }
 
-function variantItem(model, top, v, mark) {
+function variantItem(model, top, v, mark, t) {
   const r = model.recipe(v[0]);
   const diff = recipeDiff(model, top, r);
   const matched = mark && recipeIncludes(model, v[0]).has(mark);
@@ -520,7 +564,7 @@ function variantItem(model, top, v, mark) {
     diff.length
       ? h('ul', { class: 'diff' }, diff.map((d) => h('li', {}, h('span', { class: 'diff-label' }, `${d.label}: `), d.text)))
       : h('p', { class: 'muted' }, 'Same as the top build in every listed part.'),
-    lazyDetails('Full build', () => loadoutPanel(model, r, mark)));
+    lazyDetails('Full build', () => h('div', {}, loadoutPanel(model, r, mark), shareButton(buildLink(t, r.id)))));
 }
 
 function elsewhere(model, typeId, current, go) {
@@ -553,22 +597,20 @@ function card(model, row, rank, scope, go, mark) {
         h('p', { class: 'subtitle' }, elementBadge(t.element), ` ${t.class ?? ''}`, t.super ? ` · ${t.super}` : ''),
         h('ul', { class: 'aspects' }, t.aspects.map((a) => h('li', {}, typeIcon(model, a, 'chip-icon'), a)))),
       h('div', { class: 'metrics' },
-        h('div', { class: 'effect' },
-          h('span', { class: `effect-value ${effect >= 0 ? 'pos-text' : 'neg-text'}` }, pct(effect)),
-          h('span', { class: 'effect-label' }, 'build effect')),
-        effectBar(effect),
-        h('p', { class: 'secondary' }, `raw ${pct(raw)} · players’ skill ${pct(skill)}`),
-        h('p', { class: 'secondary' }, `${n(players)} players · ${n(Math.round(runs))} runs`),
+        h('p', { class: 'usage' }, h('strong', {}, n(players)), ` player${players === 1 ? '' : 's'} · `,
+          h('strong', {}, n(Math.round(runs))), ` run${Math.round(runs) === 1 ? '' : 's'}`),
         h('p', { class: 'secondary' }, `last used ${last}`))),
     h('section', { class: `recipe${topMatched ? ' matched' : ''}`, 'aria-label': 'Top build' },
       h('div', { class: 'recipe-head' },
         h('h4', { class: 'recipe-title' }, 'Top build'),
         h('p', { class: 'recipe-meta' }, topLine(row), topMatched ? h('span', { class: 'match-badge' }, ` includes ${mark}`) : null)),
-      loadoutPanel(model, recipe, mark)),
+      loadoutPanel(model, recipe, mark),
+      shareButton(buildLink(t, recipe.id))),
     total ? lazyDetails(
       `${total} near-identical variant${total === 1 ? '' : 's'}${more ? ` (showing the best ${variants.length})` : ''}`,
-      () => h('ol', { class: 'variants' }, variants.map((v) => variantItem(model, recipe, v, mark))),
+      () => h('ol', { class: 'variants' }, variants.map((v) => variantItem(model, recipe, v, mark, t))),
       'more variants-details') : null,
+    rankingDetails(effect, raw, skill),
     elsewhere(model, row[0], scope, go),
     h('a', { class: 'browse-link', href: findHash(t) }, 'Every collected build of this type →'));
 }

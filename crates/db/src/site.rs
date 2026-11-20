@@ -38,7 +38,7 @@ use crate::search::GroupBy;
 use crate::{Database, Result, meta_key};
 
 /// Version of the JSON layout; the site checks it.
-pub const SITE_FORMAT_VERSION: u32 = 4;
+pub const SITE_FORMAT_VERSION: u32 = 5;
 
 /// Each scope's listings are split in two files: build types with at least
 /// this many players (the page's default minimum) load with the page; the

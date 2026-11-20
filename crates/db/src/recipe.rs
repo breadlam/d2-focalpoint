@@ -26,6 +26,9 @@ pub struct Recipe {
     /// The artifact item ("Hunter's Journal") and its applied perks.
     pub artifact_item: Option<u32>,
     pub artifact: Vec<u32>,
+    /// The artifact perks are the character's *unlocked* perks (older
+    /// captures recorded no applied ones), not the applied perks.
+    pub artifact_unlocked: bool,
 }
 
 /// An armor set: how many pieces are equipped and the bonuses they activate.
@@ -105,7 +108,8 @@ fn slot_index(slots: &[&str], slot: &str) -> usize {
     slots.iter().position(|s| *s == slot).unwrap_or(usize::MAX)
 }
 
-/// `[id, stats, kit, armor, weapons, sets, artifact item, artifact perks]`
+/// `[id, stats, kit, armor, weapons, sets, artifact item, artifact perks,
+/// artifact perks are unlocked rather than applied (0/1)]`
 impl Serialize for Recipe {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
         (
@@ -117,6 +121,7 @@ impl Serialize for Recipe {
             &self.sets,
             self.artifact_item,
             &self.artifact,
+            u8::from(self.artifact_unlocked),
         )
             .serialize(s)
     }
@@ -291,15 +296,9 @@ pub(crate) fn recipes(db: &Database, ids: &[i64], dict: &mut Dict) -> Result<Vec
         .prepare(&components_sql(&format!("bc.build_id IN ({list})")))?;
     let mut rows = stmt.query([])?;
     while let Some(r) = rows.next()? {
-        let id: i64 = r.get(0)?;
-        let kind: String = r.get(1)?;
-        let slot: String = r.get(2)?;
-        let hash: u32 = r.get(3)?;
-        let quantity: i32 = r.get(4)?;
-        let exotic: bool = r.get(5)?;
-        let parent: Option<u32> = r.get(6)?;
-        if let Some(recipe) = by_id.get_mut(&id) {
-            recipe.add(dict, &kind, &slot, hash, quantity, exotic, parent);
+        let row = ComponentRow::read(r)?;
+        if let Some(recipe) = by_id.get_mut(&row.build_id) {
+            recipe.add(dict, &row);
         }
     }
     Ok(ids
@@ -312,20 +311,55 @@ pub(crate) fn recipes(db: &Database, ids: &[i64], dict: &mut Dict) -> Result<Vec
         .collect())
 }
 
+/// One `build_component` row, as [`components_sql`] selects it.
+pub(crate) struct ComponentRow {
+    pub build_id: i64,
+    pub kind: String,
+    pub slot: String,
+    pub hash: u32,
+    pub quantity: i32,
+    pub exotic: bool,
+    pub parent: Option<u32>,
+    pub position: i32,
+}
+
+impl ComponentRow {
+    pub(crate) fn read(r: &duckdb::Row<'_>) -> duckdb::Result<Self> {
+        Ok(Self {
+            build_id: r.get(0)?,
+            kind: r.get(1)?,
+            slot: r.get(2)?,
+            hash: r.get(3)?,
+            quantity: r.get(4)?,
+            exotic: r.get(5)?,
+            parent: r.get(6)?,
+            position: r.get(7)?,
+        })
+    }
+}
+
 impl Recipe {
     /// Add one `build_component` row. Parents (armor pieces, weapons) must
     /// come before their mods and perks — see [`components_sql`].
-    #[allow(clippy::too_many_arguments)]
-    pub(crate) fn add(
-        &mut self,
-        dict: &mut Dict,
-        kind: &str,
-        slot: &str,
-        hash: u32,
-        quantity: i32,
-        exotic: bool,
-        parent: Option<u32>,
-    ) {
+    pub(crate) fn add(&mut self, dict: &mut Dict, row: &ComponentRow) {
+        let ComponentRow {
+            kind,
+            slot,
+            hash,
+            quantity,
+            exotic,
+            parent,
+            position,
+            ..
+        } = row;
+        let (kind, slot, hash, quantity, exotic, parent) = (
+            kind.as_str(),
+            slot.as_str(),
+            *hash,
+            *quantity,
+            *exotic,
+            *parent,
+        );
         let recipe = self;
         let k = &mut recipe.kit;
         match kind {
@@ -342,6 +376,10 @@ impl Recipe {
                 let d = dict.id(NS_ITEM, hash);
                 if !recipe.artifact.contains(&d) {
                     recipe.artifact.push(d);
+                }
+                // Perks from the progression list carry no socket position.
+                if i32::from(focalpoint_core::Component::UNSOCKETED) == *position {
+                    recipe.artifact_unlocked = true;
                 }
             }
             "artifact" => recipe.artifact_item = Some(dict.id(NS_ITEM, hash)),
@@ -446,7 +484,7 @@ impl Recipe {
 pub(crate) fn components_sql(condition: &str) -> String {
     format!(
         "SELECT bc.build_id, bc.kind, coalesce(bc.slot, ''), bc.component_hash, bc.quantity,
-                coalesce(i.is_exotic, false), bc.parent_hash
+                coalesce(i.is_exotic, false), bc.parent_hash, bc.position
          FROM build_component bc LEFT JOIN item i ON i.item_hash = bc.component_hash
          WHERE {condition}
          ORDER BY bc.build_id, bc.kind IN ('armor', 'weapon') DESC, bc.position, bc.kind, bc.component_hash"
@@ -489,7 +527,7 @@ mod tests {
         };
         assert_eq!(
             serde_json::to_string(&r).unwrap(),
-            r#"["10",null,[null,null,null,null,null,null,[],[],[]],[],[],[],null,[]]"#
+            r#"["10",null,[null,null,null,null,null,null,[],[],[]],[],[],[],null,[],0]"#
         );
     }
 }

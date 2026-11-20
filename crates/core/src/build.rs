@@ -21,7 +21,7 @@ use crate::slot::{Slot, SlotGroup};
 
 /// Version of the build identity rules. Bump whenever [`extract_build`] would
 /// assign a different `build_id` to the same loadout.
-pub const BUILD_FINGERPRINT_VERSION: u8 = 1;
+pub const BUILD_FINGERPRINT_VERSION: u8 = 2;
 
 /// Version of the exact-loadout fingerprint ([`loadout_id`]).
 pub const LOADOUT_FINGERPRINT_VERSION: u8 = 1;
@@ -406,9 +406,14 @@ pub fn extract_build(loadout: &LoadoutState, catalog: &Catalog) -> Build {
         }
     }
 
-    // Artifact perks reported via progressions (older captures) complement the
-    // artifact item's socketed perks; merge without double counting.
-    if let Some(artifact) = &loadout.artifact {
+    // The applied artifact perks are the artifact item's socketed perks. The
+    // progression list holds every perk the player has *unlocked*, so it is
+    // only a fallback for older captures whose artifact has no socketed perks.
+    let socketed_artifact = set
+        .0
+        .keys()
+        .any(|(kind, _, _, _)| *kind == ComponentKind::ArtifactPerk);
+    if let (Some(artifact), false) = (&loadout.artifact, socketed_artifact) {
         let artifact_item = loadout.item_in(Slot::Artifact).map(|i| i.item_hash);
         for &perk in &artifact.active_perks {
             let key = (
@@ -745,8 +750,35 @@ mod tests {
     }
 
     #[test]
-    fn progression_only_artifact_perks_are_unsocketed() {
+    fn unlocked_artifact_perks_are_not_applied_perks() {
+        // The artifact item socket holds 601; the progression also lists 602,
+        // unlocked but not applied.
         let mut l = loadout();
+        l.artifact.as_mut().unwrap().active_perks.push(602);
+        let b = extract_build(&l, &catalog());
+        let perks: Vec<u32> = b
+            .components
+            .iter()
+            .filter(|c| c.kind == ComponentKind::ArtifactPerk)
+            .map(|c| c.hash)
+            .collect();
+        assert_eq!(perks, [601]);
+        assert_eq!(
+            b.id,
+            extract_build(&loadout(), &catalog()).id,
+            "same build either way"
+        );
+    }
+
+    #[test]
+    fn progression_perks_stand_in_when_the_artifact_has_no_sockets() {
+        // Older captures: the artifact item carries no perks.
+        let mut l = loadout();
+        for item in &mut l.items {
+            if item.item_hash == 600 {
+                item.plug_hashes.clear();
+            }
+        }
         l.artifact.as_mut().unwrap().active_perks.push(602);
         let b = extract_build(&l, &catalog());
         let perk = b.components.iter().find(|c| c.hash == 602).unwrap();
@@ -755,6 +787,10 @@ mod tests {
         assert!(
             i16::try_from(perk.position).is_ok(),
             "must fit SQL SMALLINT"
+        );
+        assert!(
+            b.components.iter().any(|c| c.hash == 601),
+            "the progression's 601 too"
         );
     }
 

@@ -14,10 +14,10 @@
   <script type="module">
     import {
       DEFAULTS, NONE, addPart, decodeRecipe, facetOptions, formatHash, missingParts, parseHash, pct, pickLine, prepare, recipeDiff,
-      recipeIncludes, results, rowRecipes, scopeLabel, topLine, findHash, bookHash,
+      recipeIncludes, results, rowRecipes, scopeLabel, topLine, findHash, bookHash, shortId, buildLink,
     } from '../../site/app.js';
     import {
-      FIND_DEFAULTS, activityFacet, formatFindHash, includeFacet, matchingBuilds, matchingTypes, parseFindHash,
+      FIND_DEFAULTS, activityFacet, buildHash, formatFindHash, includeFacet, matchingBuilds, matchingTypes, parseFindHash,
       parseIndex, parseShard, shardsOf, typeFacet,
     } from '../../site/finder.js';
 
@@ -28,10 +28,10 @@
     const kit = [0, 1, 2, 3, 4, 5, [6, 7], [8], []];
     // Positional recipes: [id, stats, kit, armor, weapons, [[set, pieces, [bonus]]], artifact item, artifact perks].
     const top = ['10', [30, 10, 20, 200, 100, 15], kit,
-      [[3, 15, 1, 19, null, [], [13, 13], []]], [[1, 9, 0, 12, [11], null, null]], [[18, 2, [17]]], null, [16]];
+      [[3, 15, 1, 19, null, [], [13, 13], []]], [[1, 9, 0, 12, [11], null, null]], [[18, 2, [17]]], null, [16], 0];
     const variant = ['11', [30, 10, 20, 190, 100, 15], kit,
-      [[3, 15, 1, 19, null, [], [13, 14], []]], [[1, 10, 0, null, [11], null, null]], [[18, 2, [17]]], null, [16]];
-    const titan = ['20', null, [null, null, null, null, null, null, [], [21], []], [], [], [], null, []];
+      [[3, 15, 1, 19, null, [], [13, 14], []]], [[1, 10, 0, null, [11], null, null]], [[18, 2, [17]]], null, [16], 0];
+    const titan = ['20', null, [null, null, null, null, null, null, [], [21], []], [], [], [], null, [16], 1];
     // The book index (format 4) and its parts: rows are
     // [type, effect, raw, skill, players, runs, last, top pick, variant picks, more,
     //  loadout clears, loadout exact builds]; picks are [recipe, effect, runs, players, last].
@@ -43,7 +43,7 @@
     const ucMore = [
       [0, -0.05, 0.1, 0.1, 2, 3, '2026-09-01', [0, 0.1, 1, 1, '2026-09-01'], [], 0, 1, 1]];
     const data = {
-      format: 4, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
+      format: 5, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
       icon_base: 'https://www.bungie.net', icons: {}, stats: [], elements: {},
       dict: names.map((n) => [n, null, null, null]),
       types: [
@@ -74,10 +74,10 @@
     eq(missingParts(allScope, 3), ['all.json'], 'the default minimum needs only the 3+ players part');
     eq(missingParts(ucScope, 1), ['ultimate-conquest.json', 'ultimate-conquest.more.json'], 'a minimum of 1 needs both parts');
     eq(model.appearances[0].map((a) => [a.scope.id, a.effect]), [['all', 0.25], ['ultimate-conquest', -0.05]], 'appearances come from the index');
-    addPart(model, allScope, 'all.json', { format: 4, rows: allRows, recipes: [top, variant, titan] });
-    addPart(model, ucScope, 'ultimate-conquest.json', { format: 4, rows: ucRows, recipes: [titan] });
-    addPart(model, ucScope, 'ultimate-conquest.more.json', { format: 4, rows: ucMore, recipes: [top] });
-    addPart(model, allScope, 'all.json', { format: 4, rows: allRows, recipes: [] });
+    addPart(model, allScope, 'all.json', { format: 5, rows: allRows, recipes: [top, variant, titan] });
+    addPart(model, ucScope, 'ultimate-conquest.json', { format: 5, rows: ucRows, recipes: [titan] });
+    addPart(model, ucScope, 'ultimate-conquest.more.json', { format: 5, rows: ucMore, recipes: [top] });
+    addPart(model, allScope, 'all.json', { format: 5, rows: allRows, recipes: [] });
     eq(allScope.rows.length, 2, 'a part is added once');
     eq([ucScope.rows[0][7][0], ucScope.rows[1][7][0]], [3, 4], 'picks are renumbered into the model');
     eq(model.recipe(4).id, '10', 'renumbered picks find their recipes');
@@ -92,7 +92,8 @@
     eq([r.id, r.kit.super, r.kit.fragments, r.armor[0].slot, r.armor[0].exotic, r.armor[0].mods],
       ['10', 1, [8], 3, true, [13, 13]], 'decoded kit and armor');
     eq([r.weapons[0].slot, r.weapons[0].item, r.weapons[0].frame, r.weapons[0].perks], [1, 9, 12, [11]], 'decoded weapon');
-    eq([r.sets, r.setBonuses, r.artifactItem, r.artifact], [[{ set: 18, pieces: 2, bonuses: [17] }], [17], null, [16]], 'decoded sets and artifact');
+    eq([r.sets, r.setBonuses, r.artifactItem, r.artifact, r.artifactUnlocked], [[{ set: 18, pieces: 2, bonuses: [17] }], [17], null, [16], false], 'decoded sets and artifact');
+    eq(decodeRecipe(titan).artifactUnlocked, true, 'unlocked (not applied) artifact perks are flagged');
     eq(rowRecipes(data.scopes[0].rows[0]), [0, 1], 'a row lists its top recipe and variants');
 
     // Listings, filters and sorting.
@@ -126,10 +127,17 @@
     eq(recipeDiff(model, decodeRecipe(top), decodeRecipe(top)), [], 'a recipe does not differ from itself');
 
     // Records.
-    eq(pickLine([0, 0.1, 1, 1, '2026-09-01']), 'Used in 1 clear by 1 player · last 2026-09-01 · +11% for its players', 'a pick');
+    eq(pickLine([0, 0.1, 1, 1, '2026-09-01']), 'Used in 1 clear by 1 player · last 2026-09-01', 'a pick, without its effect');
     eq(topLine(allScope.rows[0]),
-      'Used in 4 clears by 1 player · last 2026-09-15 · +35% for its players. Its loadout (same kit and weapons) was used in 5 clears across 2 exact builds.',
-      'the top recipe and its loadout');
+      'Used in 4 clears by 1 player · last 2026-09-15. Its loadout (same kit and weapons) was used in 5 clears across 2 exact builds.',
+      'the top build and its loadout');
+
+    // Share links: short ids match the catalog's (crates/db/src/catalog.rs).
+    eq(shortId('2821109907461'), '00000005', 'short id');
+    eq(shortId('-1'), '1264sgsf', 'short id of a negative build id');
+    eq(buildLink(model.types[0], '2821109907461'),
+      '#view=find&class=Warlock&element=Solar&armor=Getaway+Artist&weapon=%28none%29&super=Well+of+Radiance&aspect=Heat+Rises&aspect2=Icarus+Dash&build=00000005',
+      'a book build links to the finder');
     eq(topLine(ucScope.rows[1]).endsWith('was used in 1 clear.'), true, 'a loadout of one build');
     eq(topLine(ucScope.rows[0]).endsWith('was used in 3 clears across 4 exact builds.'), true,
       'the loadout can hold builds that are not listed as variants');
@@ -145,13 +153,13 @@
     eq(scopeLabel({ name: 'Ultimate Conquest: Lightblade', parent: 'Ultimate Conquest' }), 'Ultimate Conquest: Lightblade', 'scope label without repetition');
 
     let threw = false;
-    try { prepare({ ...data, format: 3 }); } catch { threw = true; }
+    try { prepare({ ...data, format: 4 }); } catch { threw = true; }
     eq(threw, true, 'data of another format is rejected');
 
     // ---- Find any build: the catalog --------------------------------------
     const T = '\t';
     const indexText = [
-      'focalpoint-catalog 2', '@meta', `icon_base${T}https://www.bungie.net`,
+      'focalpoint-catalog 3', '@meta', `icon_base${T}https://www.bungie.net`,
       '@dict',
       `Ballidorse Wrathweavers${T}/b.jpg`, `Praxic Blade${T}`, `Winter's Wrath${T}`, `Frostpulse${T}`,
       `Glacial Harvest${T}`, `Repurposed Charge${T}`, `Whisper of Chains${T}`, `Shadebinder${T}`,
@@ -164,11 +172,11 @@
       ['Titan', 'Stasis', '9', '-', '-', '-', '1', '1', '1', '0', '1'].join(T),
     ].join('\n') + '\n';
     const shardText = [
-      'focalpoint-shard 2',
+      'focalpoint-shard 3',
       '@kits', '7 2 - - - - 3,4 6 -',
       '@weapons', '0 1 1 - - - -',
       '@armor', '1 0 1 - - - - -',
-      '@artifact', '- -',
+      '@artifact', '- - 1',
       '@sets', '8:4:5', '-',
       '@builds',
       'aaaaaaaa 0 0 0 0 0 0 1e,a,a,1e,2s,a 3 1 2 1 fz9 2s 0',
@@ -177,7 +185,7 @@
     ].join('\n') + '\n';
     const cat = parseIndex(indexText);
     const builds = parseShard(shardText);
-    const fstate = (patch) => ({ ...FIND_DEFAULTS, has: [], ...patch });
+    const fstate = (patch) => ({ ...FIND_DEFAULTS, has: [], build: '', ...patch });
     const bids = (list) => list.map((b) => b.id);
 
     eq(cat.types.length, 2, 'catalog types');
@@ -196,7 +204,7 @@
     eq([a.recipe.kit.subclass, a.recipe.kit.fragments, a.recipe.armor[0].item, a.recipe.armor[0].exotic, a.recipe.weapons[0].item],
       [7, [6], 0, true, 1], 'decoded catalog recipe');
     eq([a.recipe.sets, a.recipe.setBonuses, a.recipe.stats], [[{ set: 8, pieces: 4, bonuses: [5] }], [5], [50, 10, 10, 50, 100, 10]], 'sets and stats');
-    eq([a.recipe.artifactItem, a.recipe.artifact], [null, []], 'artifact');
+    eq([a.recipe.artifactItem, a.recipe.artifact, a.recipe.artifactUnlocked], [null, [], true], 'artifact');
     eq([cat.data.stats[0], cat.data.elements.Stasis, cat.dict[8][2]], [['Weapons', '/w.png'], '/stasis.png', 'Armor set'], 'catalog stats, elements and types');
     eq([a.runs, a.clears, a.qualified, a.effect, a.activities], [3, 2, 1, 0.1, [0]], 'build record');
     eq(builds[1].effect, null, 'an unranked build');
@@ -208,6 +216,10 @@
     eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({ act: 'Equilibrium' }))), ['bbbbbbbb'], 'activity at build level');
     eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({ sort: 'recent' }))), ['aaaaaaaa', 'bbbbbbbb'], 'sort by recency');
     eq(includeFacet(cat, builds.slice(0, 2)).get('Repurposed Charge'), ['set_bonus', 1], 'includes facet');
+    eq(bids(matchingBuilds(cat, builds, ballidorse, fstate({ build: 'bbbbbbbb' }))), ['bbbbbbbb'], 'a shared build alone');
+    eq(parseFindHash(buildHash(cat.types[0], 'aaaaaaaa')).build, 'aaaaaaaa', 'a finder build link');
+    eq(bids(matchingBuilds(cat, builds, matchingTypes(cat, parseFindHash(buildHash(cat.types[0], 'aaaaaaaa'))),
+      parseFindHash(buildHash(cat.types[0], 'aaaaaaaa')))), ['aaaaaaaa'], 'a build link finds its build');
 
     const fs = fstate({ armor: 'Ballidorse Wrathweavers', act: 'Master Raid|Vault of Glass: Master', has: ['Repurposed Charge', 'Whisper of Chains'], sort: 'clears' });
     eq(parseFindHash(formatFindHash(fs)), fs, 'finder hash round trip');

@@ -7,23 +7,23 @@
 // The pure functions are exported for tests/site/test.html.
 
 import {
-  INCLUDE_KINDS, NONE, componentsOf, elementBadge, fillSelect, h, loadoutPanel, n, optionList, pct, plural,
+  INCLUDE_KINDS, NONE, componentsOf, elementBadge, fillSelect, h, loadoutPanel, n, optionList, plural, shareButton,
 } from './app.js';
 
-export const CATALOG_FORMAT = 2;
+export const CATALOG_FORMAT = 3;
 /** The most builds the page downloads to search their recipes. */
 export const SEARCH_LIMIT = 45000;
 const PAGE = 30;
 
 export const FIND_DEFAULTS = Object.freeze({
-  cls: '', element: '', armor: '', weapon: '', sup: '', aspect1: '', aspect2: '', act: '', has: [], sort: 'rank',
+  cls: '', element: '', armor: '', weapon: '', sup: '', aspect1: '', aspect2: '', act: '', has: [], sort: 'rank', build: '',
 });
 const FIND_KEYS = {
   cls: 'class', element: 'element', armor: 'armor', weapon: 'weapon', sup: 'super',
-  aspect1: 'aspect', aspect2: 'aspect2', act: 'act', sort: 'sort',
+  aspect1: 'aspect', aspect2: 'aspect2', act: 'act', sort: 'sort', build: 'build',
 };
 export const FIND_SORTS = {
-  rank: 'Build effect, then clears',
+  rank: 'Best ranked, then clears',
   clears: 'Clears',
   runs: 'Runs',
   recent: 'Most recent',
@@ -101,7 +101,7 @@ export function parseShard(text) {
           statMods: nums(f[5]), mods: nums(f[6]), perks: nums(f[7]),
         });
         break;
-      case 'artifact': artifact.push({ item: num(f[0]), perks: nums(f[1]) }); break;
+      case 'artifact': artifact.push({ item: num(f[0]), perks: nums(f[1]), unlocked: f[2] === '1' }); break;
       case 'sets': {
         const entries = f[0] === '-' ? [] : f[0].split(',').map((x) => {
           const [s, p, b] = x.split(':');
@@ -122,6 +122,7 @@ export function parseShard(text) {
             armor: nums(f[4]).map((i) => armor[i]),
             sets: set.entries, setBonuses: set.bonuses,
             artifactItem: artifact[num(f[5])].item, artifact: artifact[num(f[5])].perks,
+            artifactUnlocked: artifact[num(f[5])].unlocked,
           },
           runs: num(f[8]), players: num(f[9]), clears: num(f[10]), qualified: num(f[11]),
           lastDay: num(f[12]), effect: f[13] === '-' ? null : Number.parseInt(f[13], 36) / 1000,
@@ -213,6 +214,7 @@ function components(cat, b) {
 export function matchingBuilds(cat, builds, types, state) {
   const ids = new Set(types.map((t) => t.id));
   const out = builds.filter((b) => ids.has(b.type)
+    && (!state.build || b.id === state.build)
     && activityMatches(cat, b.activities, state.act)
     && state.has.every((x) => components(cat, b).has(x)));
   const effect = (b) => (b.effect === null ? -Infinity : b.effect);
@@ -282,12 +284,17 @@ function icon(cat, i, cls = 'icon') {
 }
 
 function buildRecord(b) {
-  const parts = [
-    `Used in ${plural(b.runs, 'run')} (${plural(b.clears, 'clear')}, ${n(b.qualified)} qualified) by ${plural(b.players, 'player')}`,
-    `last ${day(b.lastDay)}`,
-    b.effect === null ? 'not ranked: too few qualified clears' : `${pct(b.effect)} for its players`,
-  ];
-  return parts.join(' · ');
+  return `Used in ${plural(b.runs, 'run')} (${plural(b.clears, 'clear')}, ${n(b.qualified)} qualified) `
+    + `by ${plural(b.players, 'player')} · last ${day(b.lastDay)}`;
+}
+
+/** The finder URL of one build: its type's names and its id. */
+export function buildHash(t, id) {
+  return formatFindHash({
+    ...FIND_DEFAULTS, has: [], build: id,
+    cls: t.class ?? '', element: t.element ?? '', armor: t.armorName ?? NONE, weapon: t.weaponName ?? NONE,
+    sup: t.superName ?? '', aspect1: t.aspectNames[0] ?? '', aspect2: t.aspectNames[1] ?? '',
+  });
 }
 
 function buildCard(cat, b, rank, has, book) {
@@ -309,7 +316,8 @@ function buildCard(cat, b, rank, has, book) {
         h('h4', { class: 'recipe-title' }, 'Build'),
         h('p', { class: 'recipe-meta' }, buildRecord(b),
           has.length ? h('span', { class: 'match-badge' }, ` · includes ${has.join(', ')}`) : null)),
-      loadoutPanel(cat, r, mark)),
+      loadoutPanel(cat, r, mark),
+      shareButton(buildHash(t, b.id))),
     bookLink);
 }
 
@@ -339,7 +347,8 @@ export async function startFinder(root, goBook) {
   let generation = 0;
 
   const update = (patch, { resetPage = true } = {}) => {
-    state = { ...state, ...patch };
+    // A shared link pins one build; changing anything else lets it go.
+    state = { ...state, build: '', ...patch };
     if (resetPage) shown = PAGE;
     const hash = formatFindHash(state);
     if (hash !== location.hash) history.replaceState(null, '', hash);
@@ -420,8 +429,16 @@ export async function startFinder(root, goBook) {
     const typeIds = new Set(types.map((t) => t.id));
     const base = builds.filter((b) => typeIds.has(b.type));
     const found = matchingBuilds(cat, base, types, state);
-    note.textContent = `Every collected build of ${plural(types.length, 'build type')}: ${plural(total, 'build')}. `
-      + 'Ranked builds come first; builds without qualified clears are listed by use.';
+    if (state.build) {
+      note.replaceChildren(found.length
+        ? 'A shared build. '
+        : 'The shared build is not in this data (the link may come from an earlier export). ',
+      h('button', { type: 'button', class: 'link', onclick: () => update({ build: '' }) },
+        `Show all ${plural(total, 'build')} of this build type`));
+    } else {
+      note.textContent = `Every collected build of ${plural(types.length, 'build type')}: ${plural(total, 'build')}. `
+        + 'Ranked builds come first; builds without qualified clears are listed by use.';
+    }
     // "Includes" options narrow the current matches.
     const opts = includeFacet(cat, found);
     const grouped = new Map();

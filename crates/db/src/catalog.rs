@@ -20,12 +20,12 @@ use std::collections::{BTreeMap, HashMap};
 use std::fmt::Write as _;
 
 use crate::rank::{BuildSort, RankOptions, rank_builds};
-use crate::recipe::{ArmorPiece, Dict, NS_ITEM, Recipe, Weapon, components_sql};
+use crate::recipe::{ArmorPiece, ComponentRow, Dict, NS_ITEM, Recipe, Weapon, components_sql};
 use crate::search::GroupBy;
 use crate::{Database, Result, meta_key};
 
 /// Version of the text layout; the site checks it.
-pub const CATALOG_FORMAT_VERSION: u32 = 2;
+pub const CATALOG_FORMAT_VERSION: u32 = 3;
 
 /// Builds per shard (a type larger than this spans several shards).
 pub const SHARD_BUILDS: usize = 3000;
@@ -286,19 +286,11 @@ fn recipes(
     let mut stmt = db.conn().prepare(&components_sql("TRUE"))?;
     let mut rows = stmt.query([])?;
     while let Some(r) = rows.next()? {
-        let id: i64 = r.get(0)?;
-        let Some(&i) = pos.get(&id) else { continue };
-        let kind: String = r.get(1)?;
-        let slot: String = r.get(2)?;
-        builds[i].recipe.add(
-            dict,
-            &kind,
-            &slot,
-            r.get(3)?,
-            r.get(4)?,
-            r.get(5)?,
-            r.get(6)?,
-        );
+        let row = ComponentRow::read(r)?;
+        let Some(&i) = pos.get(&row.build_id) else {
+            continue;
+        };
+        builds[i].recipe.add(dict, &row);
     }
     for b in builds.iter_mut() {
         b.recipe.finish();
@@ -385,9 +377,15 @@ fn sets_line(r: &Recipe) -> String {
     }))
 }
 
-/// `item perks` — the artifact and its applied perks.
+/// `item perks unlocked` — the artifact, its perks, and 1 when those are the
+/// character's unlocked perks rather than the applied ones.
 fn artifact_line(r: &Recipe) -> String {
-    format!("{} {}", opt(r.artifact_item), ids(&r.artifact))
+    format!(
+        "{} {} {}",
+        opt(r.artifact_item),
+        ids(&r.artifact),
+        u8::from(r.artifact_unlocked)
+    )
 }
 
 /// The loadout of a build, for ordering similar builds together.
@@ -700,8 +698,12 @@ mod tests {
             "the set, its pieces and its bonus"
         );
         let artifact = &section(shard, "artifact")[usize::from_str_radix(f[5], 36).unwrap()];
-        let (item, perks) = artifact.split_once(' ').unwrap();
-        assert_eq!((item, name(perks).as_str()), ("-", "Elemental Siphon"));
+        let art: Vec<&str> = artifact.split(' ').collect();
+        assert_eq!(
+            (art[0], name(art[1]).as_str(), art[2]),
+            ("-", "Elemental Siphon", "0"),
+            "a socketed (applied) perk"
+        );
         assert_eq!(section(&cat.index, "stats").len(), 6, "the six armor stats");
         assert_eq!(
             (f[8], f[9], f[10], f[11]),
