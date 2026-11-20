@@ -74,6 +74,7 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 | Command | Purpose |
 |---|---|
+| `focalpoint analyze priors\|breadth\|diversity\|highlights` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight ([docs/analysis.md](docs/analysis.md)) |
 | `focalpoint import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `focalpoint info [--detailed]` | provenance, headline counts, coverage, import statistics |
 | `focalpoint rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
@@ -85,10 +86,12 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 ## Build-ranking site
 
-[`site/`](site) is a static page for GitHub Pages with two views: **Ranked
+[`site/`](site) is a static page for GitHub Pages with three views: **Ranked
 builds** (build types ranked by build effect, each with its best-ranked
-exact build and near-identical variants, per activity), and **Find any
-build**, a search over every collected build exactly as equipped.
+exact build and near-identical variants, per activity), **Highlights** (a
+few builds per class as well ranked and as unlike each other as the data
+allows, for the neutral game and each activity), and **Find any build**, a
+search over every collected build exactly as equipped.
 Refresh its data with `focalpoint site`; see [docs/site.md](docs/site.md)
 for the formats, previewing, tests and publishing.
 
@@ -103,7 +106,8 @@ for where new features go.
 - [docs/importing.md](docs/importing.md) — running and tuning the import
 - [docs/architecture.md](docs/architecture.md) — crates, data flow, testing
 - [docs/site.md](docs/site.md) — the static build-ranking site: data export, preview, tests, publishing
-- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking)
+- [docs/analysis.md](docs/analysis.md) — the analyses behind the design (`focalpoint analyze`) and their findings
+- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game)
 
 ## Development
 

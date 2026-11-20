@@ -8,10 +8,10 @@ players and trends from it.
 
 | Crate | Kind | Responsibility |
 |---|---|---|
-| [`focalpoint-core`](../crates/core) | library, no I/O | Source formats (`LoadoutState`, PGCR JSON), manifest model (`Catalog`), plug classification, build extraction and fingerprints, stat investment (`stats`), element vectors and distances (`vector`), run scoring and the player/build model (`rank`). Everything here is deterministic and unit-tested, including against real captured fixtures. |
-| [`focalpoint-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`, and the site export: exact recipes (`recipe`), the ranked book (`site`) and the catalog of every build (`catalog`). |
+| [`focalpoint-core`](../crates/core) | library, no I/O | Source formats (`LoadoutState`, PGCR JSON), manifest model (`Catalog`), plug classification, build extraction and fingerprints, stat investment (`stats`), element vectors and distances (`vector`), run scoring and the player/build model (`rank`), diverse well-ranked picks (`highlight`). Everything here is deterministic and unit-tested, including against real captured fixtures. |
+| [`focalpoint-db`](../crates/db) | library | The DuckDB schema (`schema.sql`), schema versioning, create / read-only open, metadata helpers, default database location, and the query APIs behind the CLI: shared facets and run filters (`filter`), `search`, `similar`, `rank`, the site export: exact recipes (`recipe`), the ranked book (`site`), highlights (`highlight`) and the catalog of every build (`catalog`), and the analyses behind the design (`analysis`). |
 | [`focalpoint-import`](../crates/import) | library | The ETL: source discovery, local staging, parallel extract into staging tables, SQL transform, stat investment, scoring, validation, publish. |
-| [`focalpoint-cli`](../crates/cli) | binary `focalpoint` | Command-line interface: `import`, `info`, `search`, `similar`, `rank`, `site`, `sql`. |
+| [`focalpoint-cli`](../crates/cli) | binary `focalpoint` | Command-line interface: `analyze`, `import`, `info`, `search`, `similar`, `rank`, `site`, `sql`. |
 
 The static site in [`site/`](../site) reads only the JSON that `focalpoint site` exports ([site.md](site.md)).
 
@@ -60,6 +60,10 @@ Key properties:
    database.
 3. Add a subcommand module under `crates/cli/src/commands/` that parses
    arguments, calls the query layer, and renders with `output.rs`.
+4. An analysis that informs a design decision goes in
+   `focalpoint_db::analysis` (returning plain data) with a subcommand of
+   `focalpoint analyze`, and its findings in `docs/analysis.md`, so it can be
+   rerun after a re-import rather than living in a one-off script.
 
 ## Testing
 

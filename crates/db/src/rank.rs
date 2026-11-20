@@ -13,12 +13,18 @@
 //! choose what is listed, so skills are always net of *every* build their
 //! players used. Effects are reported relative to the average captured
 //! build (see [`Model::effect_offset`]).
+//!
+//! With [`RankOptions::context_prior`] the fit also has build × activity
+//! group effects (`fit_effects_in_context`), and the reported effect is the
+//! part that holds across activity groups: the **neutral-game** ranking.
 
 use std::collections::{HashMap, HashSet};
 
 use duckdb::params_from_iter;
 use duckdb::types::Value;
-use focalpoint_core::rank::{Baseline, FitParams, Observation, fit_effects};
+use focalpoint_core::rank::{
+    Baseline, Contexts, FitParams, Observation, fit_effects, fit_effects_in_context,
+};
 
 use crate::filter::{Facets, RunFilter};
 use crate::search::GroupBy;
@@ -33,6 +39,10 @@ pub struct RankOptions {
     /// netted against). `GroupBy::Player` is treated as `Core`.
     pub group_by: GroupBy,
     pub fit: FitParams,
+    /// When set, also fit a build × activity group effect with this ridge
+    /// prior (pseudo-runs), and report only the part of a build's effect
+    /// that holds across activity groups: the neutral-game ranking.
+    pub context_prior: Option<f64>,
 }
 
 impl Default for RankOptions {
@@ -42,9 +52,14 @@ impl Default for RankOptions {
             runs: RunFilter::default(),
             group_by: GroupBy::Core,
             fit: FitParams::default(),
+            context_prior: None,
         }
     }
 }
+
+/// The context prior chosen by five-fold cross-validation together with the
+/// other priors (`focalpoint analyze priors --contexts`; ADR 0007).
+pub const NEUTRAL_CONTEXT_PRIOR: f64 = 3.0;
 
 /// What the fitted model saw.
 #[derive(Debug, Clone, PartialEq)]
@@ -125,8 +140,8 @@ struct PlayerStats {
 }
 
 /// The model's inputs for one selection of runs, as passed to
-/// [`fit_effects`]; public so the priors can be tuned (see
-/// `crates/db/examples/rank_tuning.rs`).
+/// [`fit_effects`]; public so the priors can be tuned
+/// ([`crate::analysis::priors`]).
 #[derive(Debug)]
 pub struct ModelData {
     /// One per player in the selection.
@@ -135,6 +150,10 @@ pub struct ModelData {
     pub observations: Vec<Observation>,
     /// The run (`instance_id`) of each observation.
     pub observation_runs: Vec<i64>,
+    /// The activity group (Searchlight target group) of each observation's
+    /// run, indexing [`ModelData::context_names`].
+    pub observation_contexts: Vec<u32>,
+    pub context_names: Vec<String>,
     pub groups: usize,
     players: Vec<PlayerStats>,
     obs_build: Vec<i64>,
@@ -251,12 +270,15 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
     let mut obs_build = Vec::new();
     let mut obs_date = Vec::new();
     let mut observation_runs = Vec::new();
+    let mut observation_contexts = Vec::new();
+    let mut context_index: HashMap<String, u32> = HashMap::new();
+    let mut context_names = Vec::new();
     let mut build_run_keys: HashSet<(i64, i64)> = HashSet::new();
     {
         let sql = format!(
             "SELECT r.instance_id, r.membership_id, rb.build_id, r.perf,
                     coalesce(rb.share / nullif(sum(rb.share) OVER w, 0), 1.0 / count(*) OVER w),
-                    strftime(r.started_at, '%Y-%m-%d')
+                    strftime(r.started_at, '%Y-%m-%d'), coalesce(a.target_group, '')
              FROM run_score r JOIN run_build rb USING (instance_id, membership_id)
              JOIN activity a ON a.activity_hash = r.activity_hash
              WHERE r.has_build AND {run_where}
@@ -284,6 +306,12 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
             obs_build.push(build_id);
             obs_date.push(r.get(5)?);
             observation_runs.push(instance);
+            let context: String = r.get(6)?;
+            let next = context_names.len() as u32;
+            observation_contexts.push(*context_index.entry(context.clone()).or_insert_with(|| {
+                context_names.push(context);
+                next
+            }));
         }
     }
     Ok(ModelData {
@@ -291,6 +319,8 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
         groups: group_keys.len(),
         observations,
         observation_runs,
+        observation_contexts,
+        context_names,
         players,
         obs_build,
         obs_date,
@@ -300,9 +330,45 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
     })
 }
 
+impl ModelData {
+    /// Each observation's cell — its build group in its activity group — as
+    /// [`fit_effects_in_context`] wants them, and the number of cells.
+    #[must_use]
+    pub fn cells(&self) -> (Vec<u32>, usize) {
+        let mut index: HashMap<(u32, u32), u32> = HashMap::new();
+        let cell_of = self
+            .observations
+            .iter()
+            .zip(&self.observation_contexts)
+            .map(|(o, &c)| {
+                let next = index.len() as u32;
+                *index.entry((o.group, c)).or_insert(next)
+            })
+            .collect();
+        (cell_of, index.len())
+    }
+}
+
 fn fit(db: &Database, opts: &RankOptions) -> Result<Fitted> {
     let data = load_model(db, opts)?;
-    let effects = fit_effects(&data.baselines, data.groups, &data.observations, &opts.fit);
+    let effects = match opts.context_prior {
+        None => fit_effects(&data.baselines, data.groups, &data.observations, &opts.fit),
+        Some(prior) => {
+            let (cell_of, cells) = data.cells();
+            let contexts = Contexts {
+                cell_of: &cell_of,
+                cells,
+                prior,
+            };
+            fit_effects_in_context(
+                &data.baselines,
+                data.groups,
+                &data.observations,
+                &contexts,
+                &opts.fit,
+            )
+        }
+    };
     let (sum, weight) = data.observations.iter().fold((0.0, 0.0), |(s, w), o| {
         (
             s + o.weight * effects.effect[o.group as usize],

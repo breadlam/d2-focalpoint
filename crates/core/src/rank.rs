@@ -158,8 +158,8 @@ pub struct FitParams {
 
 impl Default for FitParams {
     /// Priors chosen by five-fold cross-validation on the Searchlight data
-    /// with builds grouped by their core (ADR 0006,
-    /// `crates/db/examples/rank_tuning.rs`).
+    /// with builds grouped by their core (ADR 0006, `focalpoint analyze
+    /// priors`).
     fn default() -> Self {
         Self {
             player_prior: 3.0,
@@ -175,8 +175,22 @@ impl Default for FitParams {
 pub struct Effects {
     pub skill: Vec<f64>,
     pub effect: Vec<f64>,
+    /// Context-specific effects, one per cell (empty without contexts).
+    pub specific: Vec<f64>,
     pub iterations: usize,
     pub converged: bool,
+}
+
+/// Contexts for [`fit_effects_in_context`]: the cell — one build group in
+/// one context, such as an activity group — of every observation, and the
+/// cells' ridge prior.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Contexts<'a> {
+    /// The cell of each observation, parallel to the observations.
+    pub cell_of: &'a [u32],
+    pub cells: usize,
+    /// Pseudo-runs at no context-specific effect added to every cell.
+    pub prior: f64,
 }
 
 /// Fit `y = skill(player) + effect(group)` by alternating ridge updates.
@@ -195,6 +209,45 @@ pub fn fit_effects(
     observations: &[Observation],
     params: &FitParams,
 ) -> Effects {
+    fit(baselines, n_groups, observations, None, params)
+}
+
+/// Fit `y = skill(player) + effect(group) + specific(group, context)`.
+///
+/// The context-specific effects absorb what a build group does in one
+/// context (an activity group) beyond what it does everywhere, so `effect`
+/// keeps only what holds across contexts: a group that helps by the same
+/// amount in several contexts keeps more of it in `effect` than one with the
+/// same runs in a single context. With an infinite context prior this is
+/// [`fit_effects`].
+///
+/// # Panics
+///
+/// If an index is out of range, or `contexts.cell_of` is not parallel to
+/// `observations`.
+#[must_use]
+pub fn fit_effects_in_context(
+    baselines: &[Baseline],
+    n_groups: usize,
+    observations: &[Observation],
+    contexts: &Contexts<'_>,
+    params: &FitParams,
+) -> Effects {
+    assert_eq!(
+        contexts.cell_of.len(),
+        observations.len(),
+        "one cell per observation"
+    );
+    fit(baselines, n_groups, observations, Some(contexts), params)
+}
+
+fn fit(
+    baselines: &[Baseline],
+    n_groups: usize,
+    observations: &[Observation],
+    contexts: Option<&Contexts<'_>>,
+    params: &FitParams,
+) -> Effects {
     let n_players = baselines.len();
     let mut player_den: Vec<f64> = baselines
         .iter()
@@ -206,19 +259,33 @@ pub fn fit_effects(
         group_den[o.group as usize] += o.weight;
     }
 
+    let n_cells = contexts.map_or(0, |c| c.cells);
+    let mut cell_den = vec![contexts.map_or(0.0, |c| c.prior); n_cells];
+    if let Some(c) = contexts {
+        for (o, &cell) in observations.iter().zip(c.cell_of) {
+            cell_den[cell as usize] += o.weight;
+        }
+    }
+    // The context-specific effect of observation `i` (none without contexts).
+    let cell = |i: usize| contexts.map(|c| c.cell_of[i] as usize);
+
     let mut skill = vec![0.0; n_players];
     let mut effect = vec![0.0; n_groups];
+    let mut specific = vec![0.0; n_cells];
     let mut player_num = vec![0.0; n_players];
     let mut group_num = vec![0.0; n_groups];
+    let mut cell_num = vec![0.0; n_cells];
     let mut iterations = 0;
     let mut converged = false;
     while iterations < params.max_iterations {
         iterations += 1;
+        let spec = |i: usize, specific: &[f64]| cell(i).map_or(0.0, |c| specific[c]);
         for (n, b) in player_num.iter_mut().zip(baselines) {
             *n = b.sum;
         }
-        for o in observations {
-            player_num[o.player as usize] += o.weight * (o.y - effect[o.group as usize]);
+        for (i, o) in observations.iter().enumerate() {
+            player_num[o.player as usize] +=
+                o.weight * (o.y - effect[o.group as usize] - spec(i, &specific));
         }
         let mut moved: f64 = 0.0;
         for ((s, n), d) in skill.iter_mut().zip(&player_num).zip(&player_den) {
@@ -228,13 +295,29 @@ pub fn fit_effects(
         }
 
         group_num.fill(0.0);
-        for o in observations {
-            group_num[o.group as usize] += o.weight * (o.y - skill[o.player as usize]);
+        for (i, o) in observations.iter().enumerate() {
+            group_num[o.group as usize] +=
+                o.weight * (o.y - skill[o.player as usize] - spec(i, &specific));
         }
         for ((e, n), d) in effect.iter_mut().zip(&group_num).zip(&group_den) {
             let new = n / d;
             moved = moved.max((new - *e).abs());
             *e = new;
+        }
+
+        if n_cells > 0 {
+            cell_num.fill(0.0);
+            for (i, o) in observations.iter().enumerate() {
+                if let Some(c) = cell(i) {
+                    cell_num[c] +=
+                        o.weight * (o.y - skill[o.player as usize] - effect[o.group as usize]);
+                }
+            }
+            for ((s, n), d) in specific.iter_mut().zip(&cell_num).zip(&cell_den) {
+                let new = n / d;
+                moved = moved.max((new - *s).abs());
+                *s = new;
+            }
         }
         if moved < params.tolerance {
             converged = true;
@@ -244,6 +327,7 @@ pub fn fit_effects(
     Effects {
         skill,
         effect,
+        specific,
         iterations,
         converged,
     }
@@ -421,6 +505,90 @@ mod tests {
         }];
         let fit = fit_effects(&baselines, 1, &[obs(0, 0, 0.8)], &params);
         assert!((fit.effect[0] - 0.8 / 4.0).abs() < 1e-3, "{:?}", fit.effect);
+    }
+
+    /// Average players (well established) gain 0.3 with either build: build
+    /// 0 in three runs in each of four contexts, build 1 in twelve runs in
+    /// one context.
+    fn spread_and_concentrated() -> (Vec<Baseline>, Vec<Observation>, Vec<u32>) {
+        let baselines = vec![
+            Baseline {
+                weight: 1e6,
+                sum: 0.0
+            };
+            8
+        ];
+        let mut o = Vec::new();
+        let mut contexts = Vec::new();
+        for i in 0..12_u32 {
+            o.push(obs(i % 4, 0, 0.3));
+            contexts.push(i % 4);
+            o.push(obs(4 + i % 4, 1, 0.3));
+            contexts.push(0);
+        }
+        (baselines, o, contexts)
+    }
+
+    /// Cells as `fit_effects_in_context` wants them: one per (group, context).
+    fn cells(o: &[Observation], contexts: &[u32]) -> (Vec<u32>, usize) {
+        let mut index = std::collections::HashMap::new();
+        let cell_of = o
+            .iter()
+            .zip(contexts)
+            .map(|(o, &c)| {
+                let next = index.len() as u32;
+                *index.entry((o.group, c)).or_insert(next)
+            })
+            .collect();
+        (cell_of, index.len())
+    }
+
+    #[test]
+    fn an_infinite_context_prior_is_the_plain_fit() {
+        let (baselines, o, contexts) = spread_and_concentrated();
+        let (cell_of, n) = cells(&o, &contexts);
+        let params = FitParams::default();
+        let plain = fit_effects(&baselines, 2, &o, &params);
+        let ctx = Contexts {
+            cell_of: &cell_of,
+            cells: n,
+            prior: 1e15,
+        };
+        let fit = fit_effects_in_context(&baselines, 2, &o, &ctx, &params);
+        for (a, b) in plain.effect.iter().zip(&fit.effect) {
+            assert!((a - b).abs() < 1e-9, "{plain:?} {fit:?}");
+        }
+        assert!(fit.specific.iter().all(|s| s.abs() < 1e-9));
+    }
+
+    #[test]
+    fn help_in_many_contexts_counts_more_than_help_in_one() {
+        let (baselines, o, contexts) = spread_and_concentrated();
+        let (cell_of, n) = cells(&o, &contexts);
+        let params = FitParams {
+            player_prior: 1e-9,
+            group_prior: 3.0,
+            ..FitParams::default()
+        };
+        let plain = fit_effects(&baselines, 2, &o, &params);
+        // Without contexts the two builds are the same: 12 runs at +0.3.
+        assert!((plain.effect[0] - plain.effect[1]).abs() < 1e-9);
+        let ctx = Contexts {
+            cell_of: &cell_of,
+            cells: n,
+            prior: 3.0,
+        };
+        let fit = fit_effects_in_context(&baselines, 2, &o, &ctx, &params);
+        assert!(fit.converged);
+        assert!(
+            fit.effect[0] > fit.effect[1] + 0.05,
+            "spread {} vs concentrated {}",
+            fit.effect[0],
+            fit.effect[1]
+        );
+        // The concentrated build's lift is still explained, by its context.
+        let concentrated = fit.effect[1] + fit.specific[cell_of[1] as usize];
+        assert!((concentrated - plain.effect[1]).abs() < 0.05, "{fit:?}");
     }
 
     #[test]

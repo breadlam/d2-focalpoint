@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check the exported data is present
-        run: test -s site/data/book/index.json && test -s site/data/catalog/index.txt
+        run: test -s site/data/book/index.json && test -s site/data/book/highlights.neutral.json && test -s site/data/catalog/index.txt
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

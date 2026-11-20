@@ -24,6 +24,10 @@
 //! target group, each activity of a group with more than one), because the
 //! model cannot run in a browser. Recipes are stored once and referenced by
 //! index. The export holds no player names or ids.
+//!
+//! Each scope, and the neutral game, also gets per-class **highlights**
+//! ([`crate::highlight`]): a few listings as well ranked and as unlike each
+//! other as the data allows.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -32,13 +36,16 @@ use serde::Serialize;
 use focalpoint_core::vector::ElementVector;
 
 use crate::filter::RunFilter;
-use crate::rank::{BuildRank, BuildSort, RankOptions, rank_builds};
+use crate::highlight::{
+    ClassHighlights, HIGHLIGHT_COUNT, Highlight, HighlightSet, QUALITY_WEIGHT, highlight_sets,
+};
+use crate::rank::{BuildRank, BuildSort, NEUTRAL_CONTEXT_PRIOR, RankOptions, rank_builds};
 use crate::recipe::{Dict, DictEntry, Recipe, recipes};
 use crate::search::GroupBy;
 use crate::{Database, Result, meta_key};
 
 /// Version of the JSON layout; the site checks it.
-pub const SITE_FORMAT_VERSION: u32 = 5;
+pub const SITE_FORMAT_VERSION: u32 = 6;
 
 /// Each scope's listings are split in two files: build types with at least
 /// this many players (the page's default minimum) load with the page; the
@@ -65,6 +72,15 @@ pub struct SiteOptions {
     /// Build types need this many regular players in a scope to be listed.
     pub min_players: usize,
     pub rank: RankOptions,
+    /// Compute only these scopes (ids such as `all` or `master-raid`); all
+    /// of them when `None`. The neutral game needs `all`.
+    pub scopes: Option<Vec<String>>,
+    /// Highlights kept per class and set.
+    pub highlight_count: usize,
+    /// See [`crate::highlight::QUALITY_WEIGHT`].
+    pub quality_weight: f64,
+    /// See [`crate::rank::NEUTRAL_CONTEXT_PRIOR`].
+    pub context_prior: f64,
 }
 
 impl Default for SiteOptions {
@@ -72,6 +88,10 @@ impl Default for SiteOptions {
         Self {
             min_players: 1,
             rank: RankOptions::default(),
+            scopes: None,
+            highlight_count: HIGHLIGHT_COUNT,
+            quality_weight: QUALITY_WEIGHT,
+            context_prior: NEUTRAL_CONTEXT_PRIOR,
         }
     }
 }
@@ -100,6 +120,12 @@ pub struct SiteData {
     pub types: Vec<BuildType>,
     pub recipes: Vec<Recipe>,
     pub scopes: Vec<Scope>,
+    /// The neutral game first, then every scope.
+    pub highlights: Vec<HighlightSet>,
+    /// Per build type, its activity-independent effect over all activities
+    /// (the neutral-game ranking); empty when `all` was not computed.
+    #[serde(skip)]
+    pub neutral: HashMap<u32, f64>,
 }
 
 /// A build type: the build as players describe it.
@@ -155,14 +181,29 @@ pub struct Row(
 #[derive(Debug, Serialize, PartialEq)]
 pub struct Pick(pub u32, pub f64, pub f64, pub usize, pub String);
 
-/// The ranked builds view as files: an index loaded with the page, and two
-/// parts per scope loaded on demand.
+/// The ranked builds view as files: an index loaded with the page, two
+/// parts per scope and one highlights file per set, loaded on demand.
 #[derive(Debug)]
 pub struct Book {
     pub index: BookIndex,
     /// `(file name, contents)`.
     pub parts: Vec<(String, BookPart)>,
+    pub highlights: Vec<(String, HighlightFile)>,
 }
+
+/// One highlight set in its own file, with its picks' recipes.
+#[derive(Debug, Serialize)]
+pub struct HighlightFile {
+    pub format: u32,
+    pub id: String,
+    pub name: String,
+    pub classes: Vec<ClassHighlights>,
+    pub recipes: Vec<Recipe>,
+}
+
+/// A highlight set in the index: `[id, name, file]`.
+#[derive(Debug, Serialize, PartialEq)]
+pub struct HighlightMeta(pub String, pub String, pub String);
 
 /// `book/index.json`: names, types and every scope without its listings.
 #[derive(Debug, Serialize)]
@@ -178,6 +219,7 @@ pub struct BookIndex {
     pub icons: BTreeMap<String, String>,
     pub types: Vec<BuildType>,
     pub scopes: Vec<ScopeMeta>,
+    pub highlights: Vec<HighlightMeta>,
 }
 
 /// A scope in the index.
@@ -209,11 +251,52 @@ pub struct BookPart {
     pub recipes: Vec<Recipe>,
 }
 
-/// Split [`SiteData`] into the index and per-scope parts. A part's recipes
-/// are its own (a recipe listed in several scopes is repeated), so each
-/// file stands alone.
+/// Split [`SiteData`] into the index, per-scope parts and highlight files.
+/// A file's recipes are its own (a recipe listed in several scopes is
+/// repeated), so each file stands alone.
 #[must_use]
 pub fn split(data: SiteData) -> Book {
+    let mut highlights = Vec::new();
+    let mut highlight_metas = Vec::new();
+    for set in data.highlights {
+        let file = format!("highlights.{}.json", set.id.replace('/', "--"));
+        let mut local: HashMap<u32, u32> = HashMap::new();
+        let mut recipes = Vec::new();
+        let classes = set
+            .classes
+            .into_iter()
+            .map(|c| ClassHighlights {
+                class: c.class,
+                picks: c
+                    .picks
+                    .into_iter()
+                    .map(|mut h: Highlight| {
+                        let next = local.len() as u32;
+                        h.5 = *local.entry(h.5).or_insert_with(|| {
+                            recipes.push(data.recipes[h.5 as usize].clone());
+                            next
+                        });
+                        h
+                    })
+                    .collect(),
+            })
+            .collect();
+        highlight_metas.push(HighlightMeta(
+            set.id.clone(),
+            set.name.clone(),
+            file.clone(),
+        ));
+        highlights.push((
+            file,
+            HighlightFile {
+                format: SITE_FORMAT_VERSION,
+                id: set.id,
+                name: set.name,
+                classes,
+                recipes,
+            },
+        ));
+    }
     let mut parts = Vec::new();
     let mut scopes = Vec::with_capacity(data.scopes.len());
     for scope in data.scopes {
@@ -284,8 +367,10 @@ pub fn split(data: SiteData) -> Book {
             icons: data.icons,
             types: data.types,
             scopes,
+            highlights: highlight_metas,
         },
         parts,
+        highlights,
     }
 }
 
@@ -406,9 +491,8 @@ fn type_from_key(key: &[String]) -> BuildType {
     }
 }
 
-/// Type and family key of every build used in a scored run.
 /// The element vector of every build used in a scored run.
-fn vectors_of_builds(db: &Database) -> Result<HashMap<i64, ElementVector>> {
+pub fn build_vectors(db: &Database) -> Result<HashMap<i64, ElementVector>> {
     let mut stmt = db.conn().prepare(
         "SELECT b.build_id, list_concat(b.tier1_elements, b.tier2_elements, b.tier3_elements, b.tier4_elements)
          FROM build b
@@ -562,7 +646,7 @@ pub fn site_data(
     mut progress: impl FnMut(&str),
 ) -> Result<SiteData> {
     let loadout_of_build = loadout_of_builds(db)?;
-    let vectors = vectors_of_builds(db)?;
+    let vectors = build_vectors(db)?;
     let mut type_index: HashMap<String, u32> = HashMap::new();
     let mut types: Vec<BuildType> = Vec::new();
     let mut recipe_index: HashMap<i64, u32> = HashMap::new();
@@ -576,7 +660,12 @@ pub fn site_data(
     };
 
     let mut scopes = Vec::new();
-    for spec in scope_specs(db)? {
+    let wanted = |id: &str| {
+        opts.scopes
+            .as_ref()
+            .is_none_or(|ids| ids.iter().any(|w| w == id))
+    };
+    for spec in scope_specs(db)?.into_iter().filter(|s| wanted(&s.id)) {
         progress(&spec.name);
         let rank = |group_by: GroupBy, min_players: usize| {
             let o = RankOptions {
@@ -667,6 +756,22 @@ pub fn site_data(
         });
     }
 
+    // The neutral game: all activities, with build × activity group effects.
+    let mut neutral = HashMap::new();
+    if wanted("all") {
+        progress("neutral game");
+        let o = RankOptions {
+            context_prior: Some(opts.context_prior),
+            ..opts.rank.clone()
+        };
+        let (_, _, ranked) = rank_builds(db, &o, 1, BuildSort::Effect)?;
+        for t in ranked {
+            if let Some(&id) = type_index.get(&joined(&t.key)) {
+                neutral.insert(id, t.effect);
+            }
+        }
+    }
+
     progress("loading recipes");
     let mut dict = Dict::default();
     let recipes = recipes(db, &recipe_ids, &mut dict)?;
@@ -678,7 +783,8 @@ pub fn site_data(
         [],
         |r| Ok((r.get(0)?, r.get(1)?)),
     )?;
-    Ok(SiteData {
+    progress("highlights");
+    let mut data = SiteData {
         format: SITE_FORMAT_VERSION,
         imported_at: db.meta(meta_key::IMPORTED_AT)?.unwrap_or_default(),
         first_run: first_run.unwrap_or_default(),
@@ -691,7 +797,11 @@ pub fn site_data(
         types,
         recipes,
         scopes,
-    })
+        highlights: Vec::new(),
+        neutral,
+    };
+    data.highlights = highlight_sets(&data, &vectors, opts.highlight_count, opts.quality_weight);
+    Ok(data)
 }
 
 #[cfg(test)]
@@ -967,6 +1077,48 @@ pub(crate) mod tests {
         // Aggregates and recipes only: nothing identifies a player.
         let json = serde_json::to_string(&data).unwrap();
         assert!(!json.contains("membership"));
+    }
+
+    #[test]
+    fn highlights_cover_the_neutral_game_and_every_activity() {
+        let data = export();
+        let ids: Vec<&str> = data.highlights.iter().map(|s| s.id.as_str()).collect();
+        assert_eq!(ids[0], "neutral");
+        assert!(
+            !ids.contains(&"all"),
+            "the neutral game stands in for all activities"
+        );
+        assert_eq!(ids.len(), data.scopes.len());
+        assert_eq!(
+            data.neutral.len(),
+            2,
+            "both build types have a neutral effect"
+        );
+        let warlock = &data.highlights[0].classes[0];
+        assert_eq!(warlock.class, "Warlock");
+        // Alpha and Beta share a super and a fragment, not their exotics.
+        assert_eq!(warlock.picks.len(), 2);
+        assert!(
+            (warlock.picks[0].7 - 1.0).abs() < 1e-9,
+            "the first pick is all new"
+        );
+        assert!(warlock.picks[1].7 < 1.0 && warlock.picks[1].7 > 0.8);
+        let book = split(data);
+        assert_eq!(
+            book.index.highlights[0],
+            HighlightMeta(
+                "neutral".into(),
+                "Neutral game".into(),
+                "highlights.neutral.json".into()
+            )
+        );
+        let (_, file) = &book.highlights[0];
+        for pick in &file.classes[0].picks {
+            assert!(
+                (pick.5 as usize) < file.recipes.len(),
+                "picks index the file's own recipes"
+            );
+        }
     }
 
     #[test]

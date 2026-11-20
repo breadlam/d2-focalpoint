@@ -634,6 +634,11 @@ button.link:hover { text-decoration: underline; }
   .tile.item { width: 44px; max-width: 44px; }
 }
 
+/* Highlights */
+
+.highlight .novelty { margin: 4px 0 10px; font-size: 0.88rem; color: var(--muted); }
+.card-links { display: flex; flex-wrap: wrap; gap: 6px 24px; margin: 8px 0 0; }
+
 /* Usage, ranking details and sharing */
 
 .usage { margin: 6px 0 2px; font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }

@@ -8,7 +8,9 @@
 //!   gameplay-relevant [`build`] with a stable content fingerprint;
 //! * read armor [`stats`] as budget-aware investment levels, and describe a
 //!   build as a sparse element count [`vector`] with a tiered distance;
-//! * score runs and separate a build's value from its player's ([`rank`]).
+//! * score runs and separate a build's value from its player's ([`rank`]);
+//! * pick a few builds that are both well ranked and unlike each other
+//!   ([`highlight`]).
 //!
 //! Everything that touches files or databases lives in `focalpoint-import`
 //! and `focalpoint-db`.
@@ -18,6 +20,7 @@ pub mod catalog;
 pub mod class;
 pub mod classify;
 pub mod fingerprint;
+pub mod highlight;
 pub mod loadout;
 pub mod pgcr;
 pub mod rank;

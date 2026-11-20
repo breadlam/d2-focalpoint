@@ -14,8 +14,11 @@
   <script type="module">
     import {
       DEFAULTS, NONE, addPart, decodeRecipe, facetOptions, formatHash, missingParts, parseHash, pct, pickLine, prepare, recipeDiff,
-      recipeIncludes, results, rowRecipes, scopeLabel, topLine, findHash, bookHash, shortId, buildLink,
+      recipeIncludes, results, rowRecipes, scopeLabel, topLine, findHash, bookHash, shortId, buildLink, viewOf,
     } from '../../site/app.js';
+    import {
+      HIGHLIGHT_DEFAULTS, formatHighlightHash, noveltyLine, parseHighlightHash, picksOf, rankedHash, startHighlights,
+    } from '../../site/highlights.js';
     import {
       FIND_DEFAULTS, activityFacet, buildHash, formatFindHash, includeFacet, matchingBuilds, matchingTypes, parseFindHash,
       parseIndex, parseShard, shardsOf, typeFacet,
@@ -43,7 +46,7 @@
     const ucMore = [
       [0, -0.05, 0.1, 0.1, 2, 3, '2026-09-01', [0, 0.1, 1, 1, '2026-09-01'], [], 0, 1, 1]];
     const data = {
-      format: 5, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
+      format: 6, imported_at: '', first_run: '2026-06-09', last_run: '2026-09-16',
       icon_base: 'https://www.bungie.net', icons: {}, stats: [], elements: {},
       dict: names.map((n) => [n, null, null, null]),
       types: [
@@ -56,6 +59,16 @@
         { id: 'ultimate-conquest', name: 'Ultimate Conquest', kind: 'group', parent: null, clears: 50, build_runs: 5, players: 4,
           parts: [[3, null, 'ultimate-conquest.json', 1], [1, 2, 'ultimate-conquest.more.json', 1]],
           summary: [[1, 0.13, 832], [0, -0.05, 2]] },
+      ],
+      highlights: [['neutral', 'Neutral game', 'highlights.neutral.json'],
+        ['ultimate-conquest', 'Ultimate Conquest', 'highlights.ultimate-conquest.json']],
+    };
+    // A highlights file: picks are [type, effect, players, runs, last, recipe, activity groups, novelty].
+    const neutralFile = {
+      format: 6, id: 'neutral', name: 'Neutral game', recipes: [top, titan],
+      classes: [
+        { class: 'Titan', picks: [[1, 0.1, 800, 1000, '2026-09-16', 1, 1, 1], [1, 0.05, 2, 3, '2026-09-01', 1, 1, 0.42]] },
+        { class: 'Warlock', picks: [[0, 0.2, 9, 12, '2026-09-16', 0, 1, 1]] },
       ],
     };
     const log = document.getElementById('log');
@@ -74,10 +87,10 @@
     eq(missingParts(allScope, 3), ['all.json'], 'the default minimum needs only the 3+ players part');
     eq(missingParts(ucScope, 1), ['ultimate-conquest.json', 'ultimate-conquest.more.json'], 'a minimum of 1 needs both parts');
     eq(model.appearances[0].map((a) => [a.scope.id, a.effect]), [['all', 0.25], ['ultimate-conquest', -0.05]], 'appearances come from the index');
-    addPart(model, allScope, 'all.json', { format: 5, rows: allRows, recipes: [top, variant, titan] });
-    addPart(model, ucScope, 'ultimate-conquest.json', { format: 5, rows: ucRows, recipes: [titan] });
-    addPart(model, ucScope, 'ultimate-conquest.more.json', { format: 5, rows: ucMore, recipes: [top] });
-    addPart(model, allScope, 'all.json', { format: 5, rows: allRows, recipes: [] });
+    addPart(model, allScope, 'all.json', { format: 6, rows: allRows, recipes: [top, variant, titan] });
+    addPart(model, ucScope, 'ultimate-conquest.json', { format: 6, rows: ucRows, recipes: [titan] });
+    addPart(model, ucScope, 'ultimate-conquest.more.json', { format: 6, rows: ucMore, recipes: [top] });
+    addPart(model, allScope, 'all.json', { format: 6, rows: allRows, recipes: [] });
     eq(allScope.rows.length, 2, 'a part is added once');
     eq([ucScope.rows[0][7][0], ucScope.rows[1][7][0]], [3, 4], 'picks are renumbered into the model');
     eq(model.recipe(4).id, '10', 'renumbered picks find their recipes');
@@ -226,6 +239,37 @@
     eq(formatFindHash(fstate({})), '#view=find', 'finder defaults');
     eq(findHash(model.types[0]), '#view=find&class=Warlock&element=Solar&armor=Getaway+Artist&weapon=%28none%29&super=Well+of+Radiance&aspect=Heat+Rises&aspect2=Icarus+Dash', 'book to finder link');
     eq(bookHash(cat.types[1]), '#class=Titan&element=Stasis&armor=Synthoceps&weapon=%28none%29', 'finder to book link');
+
+    // Highlights.
+    eq([viewOf(''), viewOf('#view=find'), viewOf('#view=highlights&class=Titan'), viewOf('#view=nope')],
+      ['book', 'find', 'highlights', 'book'], 'the view a URL asks for');
+    const hs = { set: 'ultimate-conquest', cls: 'Titan', count: 10 };
+    eq(formatHighlightHash(hs), '#view=highlights&set=ultimate-conquest&class=Titan&count=10', 'highlights hash');
+    eq(parseHighlightHash(formatHighlightHash(hs)), hs, 'highlights hash round trip');
+    eq(parseHighlightHash('#view=highlights&count=7&class=Nobody'), { ...HIGHLIGHT_DEFAULTS }, 'unknown counts and classes fall back');
+    eq(picksOf(neutralFile, 'Titan', 1).map((p) => p[1]), [0.1], 'the first picks');
+    eq(picksOf(neutralFile, 'Hunter', 5), [], 'a class without highlights');
+    const ranked = parseHash(rankedHash(model.types[1], 'ultimate-conquest'));
+    eq([ranked.scope, ranked.cls, ranked.armor, ranked.weapon, ranked.aspect1, ranked.min],
+      ['ultimate-conquest', 'Titan', 'Synthoceps', 'Ice Breaker', 'Howl of the Storm', 1], 'a highlight links to its ranked listing');
+    eq(noveltyLine(0, 1), 'The best-ranked build here.', 'the first pick');
+    eq(noveltyLine(1, 0.873), '87% of what defines its playstyle is new compared with the picks above.', 'a later pick');
+
+    // The view itself, on a fixture page.
+    const page = document.createElement('div');
+    page.innerHTML = `<select id="hl-set"></select><p id="hl-note"></p><p id="hl-summary"></p><ol id="hl-results"></ol>
+      ${['Hunter', 'Titan', 'Warlock'].map((c) => `<input type="radio" name="hl-class" value="${c}">`).join('')}
+      ${[3, 5, 10].map((c) => `<input type="radio" name="hl-count" value="${c}">`).join('')}`;
+    const before = location.hash;
+    history.replaceState(null, '', '#view=highlights&class=Titan&count=3');
+    const loaded = [];
+    await startHighlights(page, data, async (url) => { loaded.push(url); return neutralFile; });
+    eq(loaded, ['data/book/highlights.neutral.json'], 'the neutral set loads on demand');
+    eq(page.querySelectorAll('#hl-results > li').length, 2, 'every Titan pick is shown');
+    eq(page.querySelector('#hl-summary').textContent, '2 Titan builds for the neutral game: all this activity’s data allows', 'fewer picks than asked');
+    eq([...page.querySelectorAll('#hl-set option')].map((o) => o.value), ['neutral', 'ultimate-conquest'], 'the set picker');
+    eq(page.querySelector('.highlight .metrics').textContent.includes('used in 1 of 1 activity groups'), true, 'neutral picks say where they were used');
+    history.replaceState(null, '', before || location.pathname);
 
     const verdict = document.getElementById('verdict');
     verdict.className = failures ? 'fail' : 'pass';

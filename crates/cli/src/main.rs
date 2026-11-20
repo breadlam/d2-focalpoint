@@ -25,6 +25,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Rerun the analyses behind Focalpoint's design (priors, breadth, diversity, highlights)
+    Analyze(Box<commands::analyze::Args>),
     /// Build the analysis database from Searchlight backups
     Import(commands::import::Args),
     /// Summarise the analysis database
@@ -49,6 +51,7 @@ fn main() -> ExitCode {
     init_logging(cli.verbose);
     let db = cli.db.unwrap_or_else(focalpoint_db::default_path);
     let result = match cli.command {
+        Command::Analyze(args) => commands::analyze::run(&args, &db),
         Command::Import(args) => commands::import::run(&args, &db),
         Command::Info(args) => commands::info::run(&args, &db),
         Command::Rank(args) => commands::rank::run(&args, &db),

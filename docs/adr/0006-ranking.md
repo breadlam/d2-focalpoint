@@ -88,8 +88,9 @@ skills are always net of every build their players used.
 
 ### 4. Priors from cross-validation
 
-`crates/db/examples/rank_tuning.rs` predicts held-out runs with a captured
-build (five folds by run) from a fit on the rest:
+`focalpoint analyze priors` (`focalpoint_db::analysis::priors`) predicts
+held-out runs with a captured build (five folds by run) from a fit on the
+rest:
 
 | Grouping | Player skill alone | Skill + build (best priors) | Builds add |
 |---|---:|---:|---:|
@@ -104,7 +105,8 @@ extreme runs made player skill look like 58 %.
 
 Defaults: player prior 3, group prior 10 (best for the default grouping).
 Exact builds do no better than core builds: nearly every exact build is one
-player's.
+player's. Letting a build's effect differ by activity group explains more
+again (ADR 0007).
 
 ## Consequences
 

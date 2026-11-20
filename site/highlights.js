@@ -1,0 +1,175 @@
+// Focalpoint highlights: per class, a few exact builds that are as well
+// ranked and as unlike each other as the data allows — for the neutral game
+// (workhorses that hold up across activities) and for each activity. Read
+// from data/book/highlights.<set>.json, which `focalpoint site` exports
+// (see docs/site.md and docs/adr/0007-highlights.md).
+
+import {
+  DEFAULTS, FORMAT, NONE, buildLink, decodeRecipe, findHash, formatHash, h, lazyDetails, loadoutPanel,
+  pct, plural, scopeLabel, shareButton, typeIdentity, usageLine,
+} from './app.js';
+
+/** How many highlights the reader can ask for. */
+export const COUNTS = [3, 5, 10];
+export const NEUTRAL = 'neutral';
+export const HIGHLIGHT_DEFAULTS = Object.freeze({ set: NEUTRAL, cls: 'Hunter', count: 5 });
+const CLASSES = ['Hunter', 'Titan', 'Warlock'];
+
+/** Highlights state from the URL: `#view=highlights&set=…&class=…&count=…`. */
+export function parseHighlightHash(hash) {
+  const p = new URLSearchParams(hash.replace(/^#/, ''));
+  const count = Number(p.get('count'));
+  const cls = p.get('class');
+  return {
+    set: p.get('set') || HIGHLIGHT_DEFAULTS.set,
+    cls: CLASSES.includes(cls) ? cls : HIGHLIGHT_DEFAULTS.cls,
+    count: COUNTS.includes(count) ? count : HIGHLIGHT_DEFAULTS.count,
+  };
+}
+
+export function formatHighlightHash(state) {
+  const p = new URLSearchParams({ view: 'highlights' });
+  if (state.set !== HIGHLIGHT_DEFAULTS.set) p.set('set', state.set);
+  p.set('class', state.cls);
+  if (state.count !== HIGHLIGHT_DEFAULTS.count) p.set('count', String(state.count));
+  return `#${p}`;
+}
+
+/** A set's first `count` picks of one class. */
+export function picksOf(file, cls, count) {
+  return (file.classes.find((c) => c.class === cls)?.picks ?? []).slice(0, count);
+}
+
+/** The ranked book's URL for a build type in a scope, showing every listing. */
+export function rankedHash(t, scope) {
+  return formatHash({
+    ...DEFAULTS, scope, min: 1, cls: t.class ?? '', element: t.element ?? '', armor: t.armor ?? NONE,
+    weapon: t.weapon ?? NONE, sup: t.super ?? '', aspect1: t.aspects[0] ?? '', aspect2: t.aspects[1] ?? '',
+  });
+}
+
+/** How a pick differs from the ones above it. */
+export function noveltyLine(k, novelty) {
+  if (k === 0) return 'The best-ranked build here.';
+  const share = Math.round(novelty * 100);
+  return share >= 99
+    ? 'Shares nothing that defines a playstyle with the picks above.'
+    : `${share}% of what defines its playstyle is new compared with the picks above.`;
+}
+
+function highlightCard(model, file, pick, k, groups) {
+  // [type, effect, players, runs, last used, recipe, activity groups, novelty]
+  const [type, effect, players, runs, last, recipeIndex, usedIn, novelty] = pick;
+  const t = model.data.types[type];
+  const r = decodeRecipe(file.recipes[recipeIndex]);
+  const neutral = file.id === NEUTRAL;
+  const scope = neutral ? 'all' : file.id;
+  return h('li', { class: 'card highlight' },
+    h('div', { class: 'card-main' },
+      h('span', { class: 'rank' }, `${k + 1}`),
+      typeIdentity(model, t),
+      h('div', { class: 'metrics' },
+        usageLine(players, runs),
+        neutral ? h('p', { class: 'secondary' }, `used in ${usedIn} of ${groups} activity groups`) : null,
+        h('p', { class: 'secondary' }, `last used ${last}`))),
+    h('p', { class: 'novelty' }, noveltyLine(k, novelty)),
+    h('section', { class: 'recipe', 'aria-label': 'Build' },
+      loadoutPanel(model, r),
+      shareButton(buildLink(t, r.id))),
+    lazyDetails('Ranking details', () => h('div', { class: 'ranking-details' },
+      h('p', {}, `${neutral ? 'Neutral-game effect' : 'Build effect'} ${pct(effect)}`),
+      h('p', { class: 'muted' }, neutral
+        ? 'The part of the build type’s effect that holds across activity groups: how much better its players do '
+          + 'with it than on their own other runs, counting only what it does everywhere rather than in one kind of '
+          + 'activity. Searchlight’s players were already among the best, so most builds sit near zero.'
+        : 'How much better players did with this build type here than on their own other runs. Searchlight’s '
+          + 'players were already among the best, so most builds sit near zero.'))),
+    h('p', { class: 'card-links' },
+      h('a', { class: 'browse-link', href: rankedHash(t, scope) }, 'This build type in the ranked builds →'),
+      h('a', { class: 'browse-link', href: findHash(t) }, 'Every collected build of this type →')));
+}
+
+/** Run the highlights view in `root`; returns `{ refresh }` for URL changes. */
+export async function startHighlights(root, data, load) {
+  if (data.format !== FORMAT) {
+    throw new Error(`data format ${data.format}, expected ${FORMAT}: re-export with this version of focalpoint`);
+  }
+  const $ = (id) => root.querySelector(`#${id}`);
+  const model = { data };
+  const files = new Map();
+  const sets = new Map(data.highlights.map(([id, name, file]) => [id, { id, name, file }]));
+  const scopes = new Map(data.scopes.map((s) => [s.id, s]));
+  const groups = data.scopes.filter((s) => s.kind === 'group').length;
+  let state = parseHighlightHash(location.hash);
+  let generation = 0;
+
+  // Set picker: the neutral game, then each activity group and its activities.
+  const setSelect = $('hl-set');
+  const option = (id, label) => (sets.has(id) ? h('option', { value: id }, label) : null);
+  const byParent = new Map();
+  for (const s of data.scopes) if (s.kind === 'activity') {
+    if (!byParent.has(s.parent)) byParent.set(s.parent, []);
+    byParent.get(s.parent).push(s);
+  }
+  setSelect.replaceChildren(option(NEUTRAL, 'Neutral game (any activity)'),
+    ...data.scopes.filter((s) => s.kind === 'group').map((s) => {
+      const children = byParent.get(s.name) ?? [];
+      return h('optgroup', { label: s.name },
+        option(s.id, children.length ? `All ${s.name}` : s.name),
+        children.map((c) => option(c.id, c.name)));
+    }));
+  setSelect.addEventListener('change', () => update({ set: setSelect.value }));
+  for (const input of root.querySelectorAll('input[name="hl-class"]')) {
+    input.addEventListener('change', () => update({ cls: input.value }));
+  }
+  for (const input of root.querySelectorAll('input[name="hl-count"]')) {
+    input.addEventListener('change', () => update({ count: Number(input.value) }));
+  }
+
+  function update(patch) {
+    state = { ...state, ...patch };
+    const hash = formatHighlightHash(state);
+    if (hash !== location.hash) history.replaceState(null, '', hash);
+    render();
+  }
+
+  async function render() {
+    const mine = ++generation;
+    if (!sets.has(state.set)) state = { ...state, set: NEUTRAL };
+    setSelect.value = state.set;
+    for (const input of root.querySelectorAll('input[name="hl-class"]')) input.checked = input.value === state.cls;
+    for (const input of root.querySelectorAll('input[name="hl-count"]')) input.checked = Number(input.value) === state.count;
+    const set = sets.get(state.set);
+    const note = $('hl-note');
+    const list = $('hl-results');
+    note.classList.remove('error');
+    if (!files.has(set.id)) {
+      note.textContent = 'Loading…';
+      const file = await load(`data/book/${set.file}`);
+      if (file.format !== FORMAT) throw new Error(`${set.file}: data format ${file.format}, expected ${FORMAT}`);
+      files.set(set.id, file);
+      if (mine !== generation) return;
+    }
+    const file = files.get(set.id);
+    const picks = picksOf(file, state.cls, state.count);
+    const where = set.id === NEUTRAL ? 'for the neutral game' : `for ${scopeLabel(scopes.get(set.id))}`;
+    note.textContent = set.id === NEUTRAL
+      ? 'Workhorses: builds that do well across activities, picked to be as different from each other as the '
+        + 'data allows while ranking as high as it allows. A build tailored to one activity will often beat them '
+        + 'there; these are the ones to keep for anything.'
+      : 'Builds picked to be as different from each other as the data allows while ranking as high as it allows '
+        + 'in this activity.';
+    $('hl-summary').textContent = picks.length < state.count
+      ? `${plural(picks.length, `${state.cls} build`)} ${where}: all this activity’s data allows`
+      : `${plural(picks.length, `${state.cls} build`)} ${where}`;
+    list.replaceChildren(...picks.map((p, k) => highlightCard(model, file, p, k, groups)));
+  }
+
+  await render();
+  return {
+    refresh: () => {
+      state = parseHighlightHash(location.hash);
+      return render();
+    },
+  };
+}

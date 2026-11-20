@@ -1,5 +1,6 @@
 //! Subcommand implementations.
 
+pub mod analyze;
 pub mod filters;
 pub mod import;
 pub mod info;

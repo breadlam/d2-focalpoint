@@ -21,6 +21,7 @@
 
     <nav class="tabs" aria-label="Views">
       <button id="tab-book" type="button" class="tab" aria-selected="true">Ranked builds</button>
+      <button id="tab-highlights" type="button" class="tab" aria-selected="false">Highlights</button>
       <button id="tab-find" type="button" class="tab" aria-selected="false">Find any build</button>
     </nav>
 
@@ -109,6 +110,41 @@
     </section>
     </div>
 
+    <div id="highlights-view" hidden>
+      <form id="hl-filters" class="panel" aria-label="Highlights">
+        <div class="field span-2">
+          <label for="hl-set">For</label>
+          <select id="hl-set"></select>
+        </div>
+        <fieldset class="field span-2">
+          <legend>Class</legend>
+          <div class="segmented">
+            <input type="radio" name="hl-class" id="hl-hunter" value="Hunter"><label for="hl-hunter">Hunter</label>
+            <input type="radio" name="hl-class" id="hl-titan" value="Titan"><label for="hl-titan">Titan</label>
+            <input type="radio" name="hl-class" id="hl-warlock" value="Warlock"><label for="hl-warlock">Warlock</label>
+          </div>
+        </fieldset>
+        <fieldset class="field">
+          <legend>How many</legend>
+          <div class="segmented">
+            <input type="radio" name="hl-count" id="hl-3" value="3"><label for="hl-3">3</label>
+            <input type="radio" name="hl-count" id="hl-5" value="5"><label for="hl-5">5</label>
+            <input type="radio" name="hl-count" id="hl-10" value="10"><label for="hl-10">10</label>
+          </div>
+        </fieldset>
+      </form>
+
+      <p id="hl-note" class="note"></p>
+
+      <section class="results-section" aria-labelledby="hl-heading">
+        <div class="results-head">
+          <h2 id="hl-heading">Highlights</h2>
+          <p id="hl-summary" aria-live="polite"></p>
+        </div>
+        <ol id="hl-results" class="results"></ol>
+      </section>
+    </div>
+
     <div id="find-view" hidden>
       <p class="view-intro">
         Every build Searchlight collected, exactly as equipped, whether or not it was used in a
@@ -195,6 +231,15 @@
           other solo clears of the same activity. Searchlight’s players were already among the best,
           so most builds sit near zero and a very good build can read slightly negative; the numbers
           are under “Ranking details” on each listing.</dd>
+        <dt>Highlights</dt>
+        <dd>A few builds per class, picked to be as different from each other as the data allows while
+          ranking as high as it allows: no cut-offs, so a build type seen once can be picked if it ranks
+          well and adds something new. A pick’s playstyle is its subclass, super, aspects, exotics,
+          abilities and fragments; each pick says how much of it is new compared with the picks above.
+          The first 3 are the best three, the first 5 the best five. <em>Neutral game</em> picks rank by
+          the part of a build’s effect that holds across activity groups, so a build that only shines in
+          one kind of activity counts for less there; those builds show up in their activity’s
+          highlights instead.</dd>
         <dt>Sharing a build</dt>
         <dd>“Copy link to this build” copies a link that opens exactly that build in Find any
           build.</dd>

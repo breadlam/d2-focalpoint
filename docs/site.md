@@ -1,6 +1,6 @@
 # The build-ranking site
 
-`site/` is a static page for GitHub Pages with two views. **Ranked builds**
+`site/` is a static page for GitHub Pages with three views. **Ranked builds**
 lists build types ranked by build effect, each with exact builds players
 actually used in qualified clears, published exactly as equipped —
 subclass, abilities, aspects, fragments, weapons with their frame, perks,
@@ -51,8 +51,17 @@ activity to get the listings ranked there, and narrow them by class,
 subclass, super, exotics, aspects or a component a listed build includes.
 Filters and activity are kept in the URL, so a view can be shared.
 
-A second view, **Find any build**, searches the **catalog**: every build
-Searchlight collected (594,233), exactly as equipped, whether or not it was
+**Highlights** picks a few builds per class — 3, 5 or 10 — as well ranked
+and as unlike each other as the data allows (ADR 0007): for the **neutral
+game** (workhorses, ranked by the part of their effect that holds across
+activity groups) and for every activity group and activity. There are no
+cut-offs: every ranked build type is a candidate, and each pick says how
+much of its playstyle (subclass, super, aspects, exotics, abilities,
+fragments) is new compared with the picks above. Neutral picks also say
+how many activity groups the build type was used in.
+
+**Find any build** searches the **catalog**: every build
+Searchlight collected (594,340), exactly as equipped, whether or not it was
 used in a qualified clear. Its filters work on build types first (class,
 subclass, super, exotics, aspects, activity); once they select at most
 45,000 builds, the page downloads just the shards holding them and matches
@@ -65,8 +74,9 @@ artifact perks). Ranked builds come first, the rest by use.
 |---|---|
 | `site/index.html`, `site/style.css`, `site/favicon.svg` | the page; no build step, no dependencies |
 | `site/app.js` | an ES module: pure functions (build decoding and differences, filtering, facet counts, ranking, URL state) plus the DOM layer |
+| `site/highlights.js` | "Highlights": URL state and rendering (loaded only when the view is opened) |
 | `site/finder.js` | "Find any build": catalog parsing, filters and rendering (loaded only when the view is opened) |
-| `site/data/book/` | the ranked builds: `index.json` and two files per scope, exported by `focalpoint site` and committed |
+| `site/data/book/` | the ranked builds and highlights: `index.json`, two files per scope and one `highlights.<set>.json` per highlight set, exported by `focalpoint site` and committed |
 | `site/data/catalog/` | the catalog of every build: `index.txt` and shards `sNNN.txt`, exported by `focalpoint site` and committed |
 | `site/.nojekyll` | serve files as they are |
 | `tests/site/test.html` | browser tests for `app.js` |
@@ -124,7 +134,7 @@ The workflow deploys `site/` whenever a push to `master` changes it. One-time
 setup in the GitHub repository: **Settings → Pages → Build and deployment →
 Source: GitHub Actions**.
 
-## Data format (`format: 4`)
+## Data format (`format: 6`)
 
 `book/index.json`:
 
@@ -138,7 +148,8 @@ Source: GitHub Actions**.
   types:    [{ class, element, armor, weapon, super, aspects }],
   scopes:   [{ id, name, kind: all|group|activity, parent, clears, build_runs, players,
                parts:   [[least players, most players or null, file, listings]],
-               summary: [[type, effect, players]] }] }
+               summary: [[type, effect, players]] }],
+  highlights: [[set id, name, file]] }   // "neutral" first, then each group and activity
 ```
 
 `book/<scope>.json` and `book/<scope>.more.json` (scope ids with `/` as `--`):
@@ -152,7 +163,8 @@ Source: GitHub Actions**.
 
 pick    = [index into this file's recipes, effect, runs, players, last used]
 build   = [build id (string), stats [6] or null, kit, [armor piece], [weapon],
-           [[set, pieces, [bonus]]], artifact item, [artifact perk]]
+           [[set, pieces, [bonus]]], artifact item, [artifact perk],
+           artifact perks are unlocked rather than applied (0/1; older captures)]
 kit     = [subclass, super, class ability, movement, melee, grenade,
            [aspect], [fragment], [transcendence]]
 armor   = [slot 0–4 (helmet … class item), item, exotic 0/1, archetype, tuning,
@@ -160,6 +172,20 @@ armor   = [slot 0–4 (helmet … class item), item, exotic 0/1, archetype, tuni
 weapon  = [slot 0–2 (kinetic, energy, power), item, exotic 0/1, frame, [perk],
            origin trait, mod]
 ```
+
+`book/highlights.<set>.json` (set ids with `/` as `--`):
+
+```text
+{ format, id, name,
+  classes: [{ class, picks: [[type, effect, players, runs, last used, build,
+                              activity groups the type was used in, novelty]] }],
+  recipes: [build] }            // this file's exact builds; `build` indexes them
+```
+
+Picks are in pick order (the first 3 are the best three). `effect` is the
+set's ranking: the neutral effect for `neutral`, else the scope's build
+effect. `novelty` is the share of the pick's playstyle not covered by the
+picks above (1 for the first).
 
 Numbers inside builds are indices into `dict`; an entry's type ("Pulse
 Rifle", "Stasis Fragment") feeds the tooltips and a weapon's damage type its
@@ -169,7 +195,7 @@ the percentage). Bump `SITE_FORMAT_VERSION` (`crates/db/src/site.rs`) and
 `FORMAT` (`site/app.js`) together when the layout changes; the page refuses
 data of another format.
 
-## Catalog format (`focalpoint-catalog 2`)
+## Catalog format (`focalpoint-catalog 3`)
 
 Plain text, numbers in base 36, `-` for none, lists comma-separated.
 Players reuse a weapon roll, an armor piece or a kit across many builds, so
@@ -180,7 +206,7 @@ spans several shards), and builds within a type by loadout.
 `index.txt` (≈ 3.4 MB, 0.7 MB compressed) — loaded when the view opens:
 
 ```text
-focalpoint-catalog 2
+focalpoint-catalog 3
 @meta        key<TAB>value                 imported_at, first_run, last_run, icon_base, builds, shards
 @dict        name<TAB>icon<TAB>type<TAB>damage type   referenced by index from types and shards
 @stats       name<TAB>icon                 the six armor stats in build order
@@ -193,11 +219,11 @@ focalpoint-catalog 2
 Each section's lines are numbered from 0 within the shard:
 
 ```text
-focalpoint-shard 2
+focalpoint-shard 3
 @kits      subclass super class-ability movement melee grenade aspects fragments transcendence
 @weapons   slot(0 kinetic,1 energy,2 power) item exotic(0/1) frame origin mod perks
 @armor     slot(0 helmet … 4 class item) item exotic archetype tuning stat-mods mods perks
-@artifact  item perks
+@artifact  item perks unlocked(0/1: perks are the unlocked, not applied, ones)
 @sets      set:pieces:bonus.bonus,…      (each set with the bonuses it activates)
 @builds    id type kit weapons armor artifact sets stats runs players clears qualified last-day effect activities
 ```

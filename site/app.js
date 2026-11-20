@@ -8,7 +8,7 @@
 // facet counts, ranking, recipe differences, URL state) are exported for
 // tests/site/test.html; start() wires them to the page.
 
-export const FORMAT = 5;
+export const FORMAT = 6;
 export const STATS = ['Weapons', 'Health', 'Class', 'Grenade', 'Super', 'Melee'];
 export const ARMOR_SLOTS = ['Helmet', 'Gauntlets', 'Chest', 'Legs', 'Class item'];
 export const WEAPON_SLOTS = ['Kinetic', 'Energy', 'Power'];
@@ -580,6 +580,23 @@ function elsewhere(model, typeId, current, go) {
         h('td', {}, n(a.players)))))));
 }
 
+/** A build type as players name it: exotics, element, class, super and aspects. */
+export function typeIdentity(model, t) {
+  return h('div', { class: 'identity' },
+    h('h3', { class: 'exotics' },
+      h('span', { class: 'exotic' }, typeIcon(model, t.armor), h('span', { class: t.armor ? '' : 'muted' }, t.armor ?? 'No exotic armor')),
+      h('span', { class: 'exotic' }, typeIcon(model, t.weapon), h('span', { class: t.weapon ? '' : 'muted' }, t.weapon ?? 'No exotic weapon'))),
+    h('p', { class: 'subtitle' }, elementBadge(t.element), ` ${t.class ?? ''}`, t.super ? ` · ${t.super}` : ''),
+    h('ul', { class: 'aspects' }, t.aspects.map((a) => h('li', {}, typeIcon(model, a, 'chip-icon'), a))));
+}
+
+/** "12 players · 15 runs", the counts in bold. */
+export function usageLine(players, runs) {
+  const r = Math.round(runs);
+  return h('p', { class: 'usage' }, h('strong', {}, n(players)), ` player${players === 1 ? '' : 's'} · `,
+    h('strong', {}, n(r)), ` run${r === 1 ? '' : 's'}`);
+}
+
 function card(model, row, rank, scope, go, mark) {
   const t = model.types[row[0]];
   // [10], [11]: clears and exact builds of the top recipe's loadout.
@@ -590,15 +607,9 @@ function card(model, row, rank, scope, go, mark) {
   return h('li', { class: 'card' },
     h('div', { class: 'card-main' },
       h('span', { class: 'rank' }, `${rank}`),
-      h('div', { class: 'identity' },
-        h('h3', { class: 'exotics' },
-          h('span', { class: 'exotic' }, typeIcon(model, t.armor), h('span', { class: t.armor ? '' : 'muted' }, t.armor ?? 'No exotic armor')),
-          h('span', { class: 'exotic' }, typeIcon(model, t.weapon), h('span', { class: t.weapon ? '' : 'muted' }, t.weapon ?? 'No exotic weapon'))),
-        h('p', { class: 'subtitle' }, elementBadge(t.element), ` ${t.class ?? ''}`, t.super ? ` · ${t.super}` : ''),
-        h('ul', { class: 'aspects' }, t.aspects.map((a) => h('li', {}, typeIcon(model, a, 'chip-icon'), a)))),
+      typeIdentity(model, t),
       h('div', { class: 'metrics' },
-        h('p', { class: 'usage' }, h('strong', {}, n(players)), ` player${players === 1 ? '' : 's'} · `,
-          h('strong', {}, n(Math.round(runs))), ` run${Math.round(runs) === 1 ? '' : 's'}`),
+        usageLine(players, runs),
         h('p', { class: 'secondary' }, `last used ${last}`))),
     h('section', { class: `recipe${topMatched ? ' matched' : ''}`, 'aria-label': 'Top build' },
       h('div', { class: 'recipe-head' },
@@ -782,7 +793,11 @@ export function startBook(root, data, load) {
   return { refresh: () => { state = parseHash(location.hash); shown = PAGE; render(); } };
 }
 
-const isFind = () => new URLSearchParams(location.hash.replace(/^#/, '')).get('view') === 'find';
+/** The view the URL asks for: `book`, `find` or `highlights`. */
+export function viewOf(hash) {
+  const v = new URLSearchParams(hash.replace(/^#/, '')).get('view');
+  return v === 'find' || v === 'highlights' ? v : 'book';
+}
 
 async function fetchJson(url) {
   const response = await fetch(url);
@@ -791,35 +806,43 @@ async function fetchJson(url) {
 }
 
 /**
- * Start the page: the ranked book or "Find any build", as the URL says.
- * Each view's data is fetched the first time the view is shown.
+ * Start the page: the ranked book, the highlights or "Find any build", as
+ * the URL says. Each view's data is fetched the first time it is shown; the
+ * book and the highlights share the book index.
  */
 export function boot(root) {
   const $ = (id) => root.querySelector(`#${id}`);
-  let book = null;
-  let finder = null;
+  const views = {
+    book: { tab: 'tab-book', panel: 'book-view', note: 'scope-note' },
+    highlights: { tab: 'tab-highlights', panel: 'highlights-view', note: 'hl-note' },
+    find: { tab: 'tab-find', panel: 'find-view', note: 'find-note' },
+  };
+  const started = {};
+  let index = null;
+  const bookIndex = () => (index ??= fetchJson('data/book/index.json'));
   // A finder result links to its type's ranked listing.
   const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'Look for this build type in the ranked builds →');
+  const start = {
+    book: () => bookIndex().then((data) => startBook(root, data, fetchJson)),
+    highlights: () => Promise.all([bookIndex(), import('./highlights.js')])
+      .then(([data, m]) => m.startHighlights(root, data, fetchJson)),
+    find: () => import('./finder.js').then((m) => m.startFinder(root, bookLink)),
+  };
 
   async function show() {
-    const find = isFind();
-    $('book-view').hidden = find;
-    $('find-view').hidden = !find;
-    $('tab-book').setAttribute('aria-selected', String(!find));
-    $('tab-find').setAttribute('aria-selected', String(find));
-    const note = $(find ? 'find-note' : 'scope-note');
+    const view = viewOf(location.hash);
+    for (const [name, v] of Object.entries(views)) {
+      $(v.panel).hidden = name !== view;
+      $(v.tab).setAttribute('aria-selected', String(name === view));
+    }
     try {
-      if (find) {
-        if (finder) (await finder).refresh();
-        else finder = import('./finder.js').then((m) => m.startFinder(root, bookLink));
-        await finder;
-      } else {
-        if (book) (await book).refresh();
-        else book = fetchJson('data/book/index.json').then((data) => startBook(root, data, fetchJson));
-        await book;
-      }
+      if (started[view]) await (await started[view]).refresh();
+      else started[view] = start[view]();
+      await started[view];
     } catch (error) {
-      if (find) finder = null; else book = null;
+      started[view] = null;
+      if (view !== 'find') index = null;
+      const note = $(views[view].note);
       note.classList.add('error');
       note.textContent = location.protocol === 'file:'
         ? 'Open this page through a web server (for example: python3 -m http.server -d site); browsers block loading data from file:// pages.'
@@ -829,16 +852,12 @@ export function boot(root) {
   }
 
   // The tabs keep the shared filters (class, exotics, aspects, …).
-  $('tab-find').addEventListener('click', () => {
+  const toView = (view) => () => {
     const p = new URLSearchParams(location.hash.replace(/^#/, ''));
-    p.set('view', 'find');
+    if (view === 'book') p.delete('view'); else p.set('view', view);
     location.hash = p.toString();
-  });
-  $('tab-book').addEventListener('click', () => {
-    const p = new URLSearchParams(location.hash.replace(/^#/, ''));
-    p.delete('view');
-    location.hash = p.toString();
-  });
+  };
+  for (const name of Object.keys(views)) $(views[name].tab).addEventListener('click', toView(name));
   window.addEventListener('hashchange', show);
   show();
 }

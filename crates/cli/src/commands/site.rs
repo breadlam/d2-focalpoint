@@ -1,6 +1,6 @@
 //! `focalpoint site` — export the data behind the static site in `site/`
-//! (see `docs/site.md`): the ranked builds (`book/`) and the catalog of
-//! every collected build (`catalog/`).
+//! (see `docs/site.md`): the ranked builds and highlights (`book/`) and the
+//! catalog of every collected build (`catalog/`).
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -41,6 +41,9 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
     for (name, part) in &book.parts {
         files.push((name.clone(), serde_json::to_vec(part)?));
     }
+    for (name, set) in &book.highlights {
+        files.push((name.clone(), serde_json::to_vec(set)?));
+    }
     let bytes = replace_dir(&args.out, "book", &files)?;
     // The single-file book of earlier versions.
     let legacy = args.out.join("focalpoint.json");
@@ -48,11 +51,12 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         fs::remove_file(&legacy).with_context(|| format!("removing {}", legacy.display()))?;
     }
     println!(
-        "Wrote {} ({} KB) in {:.1}s: {} scopes in {} files, {} build types, {} listings, {} exact builds",
+        "Wrote {} ({} KB) in {:.1}s: {} scopes and {} highlight sets in {} files, {} build types, {} listings, {} exact builds",
         args.out.join("book").display(),
         thousands((bytes / 1024) as i64),
         started.elapsed().as_secs_f64(),
         book.index.scopes.len(),
+        book.highlights.len(),
         files.len(),
         thousands(types as i64),
         thousands(rows as i64),
