@@ -17,10 +17,13 @@
 //! * [`partial`] — partial clears and partial participation: which content
 //!   allows them and how the run score treats them;
 //! * [`sets`] — armor set bonuses: what full bonuses are worth to the same
-//!   player, and how often top builds lack them (ADR 0010).
+//!   player, and how often top builds lack them (ADR 0010);
+//! * [`attempts`] — failed attempts in content that cannot be resumed, and
+//!   whether build types differ in how often they clear at all.
 //!
 //! Each returns plain data; the CLI renders it.
 
+pub mod attempts;
 pub mod breadth;
 pub mod completeness;
 pub mod diversity;
@@ -61,6 +64,17 @@ pub fn spearman(a: &[f64], b: &[f64]) -> f64 {
     let cov: f64 = ra.iter().zip(&rb).map(|(x, y)| (x - ma) * (y - mb)).sum();
     let va: f64 = ra.iter().map(|x| (x - ma).powi(2)).sum();
     let vb: f64 = rb.iter().map(|y| (y - mb).powi(2)).sum();
+    cov / (va * vb).sqrt()
+}
+
+/// Pearson's correlation; NaN when either side is constant or empty.
+#[must_use]
+pub fn pearson(a: &[f64], b: &[f64]) -> f64 {
+    let n = a.len() as f64;
+    let (ma, mb) = (a.iter().sum::<f64>() / n, b.iter().sum::<f64>() / n);
+    let cov: f64 = a.iter().zip(b).map(|(x, y)| (x - ma) * (y - mb)).sum();
+    let va: f64 = a.iter().map(|x| (x - ma).powi(2)).sum();
+    let vb: f64 = b.iter().map(|y| (y - mb).powi(2)).sum();
     cov / (va * vb).sqrt()
 }
 

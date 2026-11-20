@@ -74,7 +74,7 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 | Command | Purpose |
 |---|---|
-| `focalpoint analyze priors\|breadth\|diversity\|highlights\|sets\|…` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight, what armor set bonuses are worth ([docs/analysis.md](docs/analysis.md)) |
+| `focalpoint analyze priors\|breadth\|diversity\|highlights\|sets\|attempts\|…` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight, what armor set bonuses are worth, failed attempts in Conquests and Ops ([docs/analysis.md](docs/analysis.md)) |
 | `focalpoint import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `focalpoint info [--detailed]` | provenance, headline counts, coverage, import statistics |
 | `focalpoint rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |

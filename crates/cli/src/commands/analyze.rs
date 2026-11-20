@@ -8,7 +8,8 @@ use anyhow::{Result, bail};
 use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
 use focalpoint_db::analysis::{
-    breadth, completeness, diversity, highlights as hl, partial, priors, sets, solo, subclasses,
+    attempts, breadth, completeness, diversity, highlights as hl, partial, priors, sets, solo,
+    subclasses,
 };
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, SoloScoring, load_model};
@@ -86,6 +87,14 @@ by how often they skip full bonuses; and the all-activities listings whose top b
 (ADR 0010)."
     )]
     Sets,
+    /// Failed attempts in Conquests and Ops: do build types differ in how often they clear at all?
+    #[command(
+        after_help = "Uncleared runs per activity group (failures where runs cannot be resumed, \
+sessions where they can); players' sequences of tries in Conquests and Ops; first tries' clear rates \
+by build type against players of the same level, with their split-half reliability; and how those \
+compare with each group's build-type ranking, which scores clears only."
+    )]
+    Attempts,
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -213,6 +222,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Solo(a) => run_solo(&db, a, args.format),
         What::Partial => run_partial(&db, args.format),
         What::Sets => run_sets(&db, args.format),
+        What::Attempts => run_attempts(&db, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -1657,4 +1667,178 @@ with more recorded clears are stronger whatever their habit."
         .collect();
     println!("{}", render(format, &header, &rows));
     Ok(())
+}
+
+fn run_attempts(db: &Database, format: Format) -> Result<()> {
+    let share = |x: f64| format!("{:.1}%", 100.0 * x);
+    let opt_share = |x: Option<f64>| x.map_or("—".to_string(), share);
+    println!("## Recorded runs by activity group (players with a recorded build)");
+    let header = [
+        "activity group",
+        "checkpoints",
+        "runs",
+        "cleared",
+        "uncleared: median min",
+        "uncleared under 2 min",
+        "cleared: median min",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = attempts::by_group(db)?
+        .into_iter()
+        .map(|g| {
+            vec![
+                g.group,
+                if g.resumable { "yes" } else { "no" }.to_string(),
+                thousands(g.runs as i64),
+                share(g.cleared),
+                format!("{:.1}", g.uncleared_minutes),
+                share(g.uncleared_short),
+                g.cleared_minutes.map_or("—".into(), |m| format!("{m:.1}")),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Where runs resume from checkpoints, an uncleared run is mostly a session of a longer clear; where they cannot \
+(Conquests, Ops), it is a failed attempt. Runs under {} s are bail-outs, not tries.",
+        attempts::MIN_ATTEMPT_S
+    );
+
+    println!("\n## Tries per player and activity, where runs cannot be resumed");
+    let header = [
+        "activity group",
+        "player-activities",
+        "tries each",
+        "ever cleared",
+        "ended on the clear",
+        "1st try clears",
+        "2nd",
+        "3rd",
+        "4th+",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = attempts::sequences(db)?
+        .into_iter()
+        .map(|s| {
+            let [a, b, c, d] = s.by_try;
+            vec![
+                s.group,
+                thousands(s.sequences as i64),
+                format!("{:.1}", s.mean_tries),
+                share(s.ever_cleared),
+                share(s.end_on_clear),
+                opt_share(a),
+                opt_share(b),
+                opt_share(c),
+                opt_share(d),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Clear rates by try count tries up to the player's first clear. Players stop when they clear, so comparing a \
+player's tries credits whatever build they switched to last; first tries are free of that."
+    );
+
+    let (firsts, types) = attempts::first_attempts(db)?;
+    println!("\n## First tries: clear rate by build type against players of the same level");
+    let header = [
+        "activity group",
+        "first tries",
+        "cleared",
+        "with a level",
+        "top / bottom level decile",
+        "build types",
+        "split-half r",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = firsts
+        .into_iter()
+        .map(|f| {
+            vec![
+                f.group,
+                thousands(f.attempts as i64),
+                share(f.clear_rate),
+                share(f.with_level),
+                format!(
+                    "{} / {}",
+                    opt_share(f.top_decile),
+                    opt_share(f.bottom_decile)
+                ),
+                f.reliable_types.to_string(),
+                if f.split_half.is_nan() {
+                    "—".into()
+                } else {
+                    format!("{:+.2}", f.split_half)
+                },
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "A player's level: deciles of the mean score of their scored clears in other activity groups (at least {}; \
+those with fewer form a level of their own). A type's excess is its clear rate above that expected of its players' \
+levels in the same activities. Split-half r: the correlation of types' excess between two halves of the players, over \
+types with {}+ first tries in each — near 0 would mean no build signal.",
+        attempts::LEVEL_CLEARS,
+        attempts::HALF_ATTEMPTS
+    );
+
+    for a in attempts::agreement(db, &types)? {
+        println!(
+            "\n## {}: build-type ranking (clears only) beside first-try clear rates",
+            a.group
+        );
+        println!(
+            "Rank correlation of effect and first-try excess over {} build types ({}+ first tries, {}+ ranked \
+players): {}",
+            a.types.len(),
+            attempts::AGREEMENT_ATTEMPTS,
+            attempts::AGREEMENT_PLAYERS,
+            if a.spearman.is_nan() {
+                "—".into()
+            } else {
+                format!("{:+.2}", a.spearman)
+            }
+        );
+        let header = [
+            "#",
+            "build type",
+            "effect",
+            "players",
+            "first tries",
+            "cleared",
+            "expected",
+            "excess",
+        ]
+        .map(String::from);
+        let rows: Vec<Vec<String>> = a
+            .types
+            .iter()
+            .take(12)
+            .enumerate()
+            .map(|(i, (r, t))| {
+                vec![
+                    (i + 1).to_string(),
+                    type_label(&r.key),
+                    pct(r.effect),
+                    thousands(r.players as i64),
+                    thousands(t.attempts as i64),
+                    share(t.clear_rate),
+                    share(t.clear_rate - t.excess),
+                    format!("{:+.1} pts", 100.0 * t.excess),
+                ]
+            })
+            .collect();
+        println!("{}", render(format, &header, &rows));
+    }
+    Ok(())
+}
+
+/// A build type from the ranking's key: "Class Element: armor + weapon · super · aspects".
+fn type_label(key: &[String]) -> String {
+    let [class, element, armor, weapon, sup, aspects] = key else {
+        return key.join(" · ");
+    };
+    format!("{class} {element}: {armor} + {weapon} · {sup} · {aspects}")
 }

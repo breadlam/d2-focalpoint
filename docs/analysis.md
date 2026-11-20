@@ -13,6 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
+| `analyze attempts` | Where are uncleared runs failures rather than sessions, and do build types differ in how often they clear at all — beyond who plays them, and beyond what the clear-only ranking sees? | open: failures in Conquests and Ops are not yet scored |
 | `analyze sets` | What are full armor set bonuses worth to the same player, are players who skip them stronger, and how many top builds lack them? | polished top builds (ADR 0010) |
 | `analyze partial` | Which content allows partial clears or partial participation, and how does the run score treat them? | the solo premium's full-clear test (ADR 0008); scoring partial participants by kill rate over time played (ADR 0009) |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
@@ -347,4 +348,52 @@ Findings:
   lesser top build — no more than the 26.3% of ranked exact builds — and
   427 of those types had a polished build. Choosing polished builds first
   leaves 51 (2.4%; 3 in the top 10%): types with no polished build.
+
+## `analyze attempts`
+
+The ranking scores clears only (ADR 0006). Where runs resume from
+checkpoints (raids, dungeons, Pantheon), an uncleared run is mostly a
+session of a longer clear; Conquests and Ops cannot be resumed
+(`CHECKPOINT_SHARE`), so an uncleared run there is a failed attempt. The
+study, over recorded runs of players with a recorded build (runs under
+2 minutes are bail-outs, not tries): uncleared runs per group; each
+player's sequence of tries per activity; and **first tries** by build type
+against players of the same level, beside each group's ranking.
+
+Comparing a player's tries with each other is biased: players stop when
+they clear (92–99.6% of clearing sequences end on the clear), so whatever
+build they switched to last takes the credit — such comparisons tracked
+how late in players' sequences a build type was used (r = +0.54 to +0.79).
+A first try's build was chosen before any feedback in the activity. A
+player's level is the decile of the mean score of their scored clears in
+other activity groups (3 or more; the rest form a level of their own); a
+build type's **excess** is its first-try clear rate above that expected of
+its players' levels in the same activities.
+
+Findings:
+
+- Uncleared runs are short where runs resume — dungeons, raids and
+  Pantheon: medians of 1.5–3.4 minutes, 37–54% under 2 — and long where
+  they cannot: Conquests and Ops, medians of 7.8–16.4 minutes, 4.5–16%
+  under 2. Equilibrium resumes but its uncleared runs look like the
+  latter (8.0 minutes, 9% under 2).
+- Ultimate Conquest is "try until you clear": 3.4 tries per player and
+  activity, 24% ever clear, 8.5% of first tries clear. In Grandmaster
+  Conquests and Ops most players have one recorded try (1.3–1.4), and
+  44–66% of first tries clear. Clear rates fall with each try (weaker
+  players need more), not rise.
+- Build types differ in first-try clear rate beyond their players' level,
+  consistently between two halves of the players: split-half r = +0.37
+  (Ultimate Conquest, 79 types), +0.63 (Pinnacle Ops, 29), +0.78
+  (Grandmaster Conquest, 37), +0.49 (Heliostat, 10). Level explains less
+  than the build types' spread in Grandmaster Conquest (top and bottom
+  deciles clear 69.6% and 50.5%; types range −8 to +23 points), so some of
+  a type's excess may be who chooses it.
+- In Conquests the clear-only ranking mostly agrees with first-try clear
+  rates: rank correlation +0.54 (Ultimate, 51 types), +0.56 (Grandmaster,
+  23), +0.90 (Heliostat, 5). It does not in Pinnacle Ops (−0.42, 18).
+  Individual types diverge: Ultimate Conquest's #2, Synthoceps with
+  Fighting Lion (1,557 players), clears its first tries at the expected
+  rate (+0.3 points); the same kit with Ice Breaker clears 5.5 points above
+  it.
 
