@@ -748,11 +748,11 @@ export function startBook(root, data, load) {
   function renderScopeNote(scope) {
     const note = $('scope-note');
     note.replaceChildren(
-      `${n(scope.clears)} clears · ${n(scope.players)} players · ${n(scope.build_runs)} with builds · `
+      `${n(scope.clears)} clears · ${n(scope.players)} players · ${n(scope.build_runs)} with a recorded build · `
         + `${data.first_run} – ${data.last_run}`);
     if (scope.build_runs < THIN_SCOPE) {
       const parent = scope.parent && data.scopes.find((s) => s.kind === 'group' && s.name === scope.parent);
-      note.append(h('span', { class: 'warn' }, ' · few builds, tentative'),
+      note.append(h('span', { class: 'warn' }, ' · few recorded builds, tentative'),
         ...(parent ? [' · ', h('button', { type: 'button', class: 'link', onclick: () => go(parent.id) }, `all ${parent.name}`)] : []));
     }
   }
