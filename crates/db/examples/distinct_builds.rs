@@ -17,6 +17,8 @@
 //! MIN_PLAYERS=3 cargo run --release -p focalpoint-db --example distinct_builds [DB]
 //! ```
 
+use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::path::PathBuf;
 
 use focalpoint_core::vector::{ElementVector, TierWeights};
@@ -36,6 +38,7 @@ struct Candidate {
 }
 
 /// What the analysis needs of one build.
+#[derive(Clone)]
 struct Profile {
     /// Every tiered element, artifact perks included.
     full: ElementVector,
@@ -56,6 +59,14 @@ struct Pair {
     /// without artifact perks.
     kit: f64,
     shares_exotic: bool,
+}
+
+/// How a per-activity highlight relates to the all-activities collection.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Novelty {
+    NewPlaystyle,
+    OtherExotics,
+    Repeat,
 }
 
 type Criterion = (&'static str, fn(&Pair) -> bool);
@@ -86,7 +97,7 @@ fn profiles(db: &Database, cands: &[Candidate]) -> anyhow::Result<Vec<Profile>> 
          FROM build WHERE build_id IN ({})",
         list.join(", ")
     ))?;
-    let mut keys_of = std::collections::HashMap::new();
+    let mut keys_of = HashMap::new();
     let mut rows = stmt.query([])?;
     while let Some(r) = rows.next()? {
         let id: i64 = r.get(0)?;
@@ -121,20 +132,23 @@ fn profiles(db: &Database, cands: &[Candidate]) -> anyhow::Result<Vec<Profile>> 
         .collect())
 }
 
-fn pairs(profiles: &[Profile]) -> Vec<Vec<Pair>> {
+fn pair(a: &Profile, b: &Profile) -> Pair {
     let weights = TierWeights::default();
+    let lasting = a.lasting.tiered_distance(&b.lasting, &weights);
+    Pair {
+        total: a.full.tiered_distance(&b.full, &weights).total,
+        total_lasting: lasting.total,
+        kit: lasting.per_tier[1],
+        shares_exotic: a.exotics.iter().any(|k| b.exotics.contains(k)),
+    }
+}
+
+fn pairs(profiles: &[Profile]) -> Vec<Vec<Pair>> {
     let n = profiles.len();
     let mut out = vec![vec![Pair::default(); n]; n];
     for i in 0..n {
         for j in (i + 1)..n {
-            let (a, b) = (&profiles[i], &profiles[j]);
-            let lasting = a.lasting.tiered_distance(&b.lasting, &weights);
-            let p = Pair {
-                total: a.full.tiered_distance(&b.full, &weights).total,
-                total_lasting: lasting.total,
-                kit: lasting.per_tier[1],
-                shares_exotic: a.exotics.iter().any(|k| b.exotics.contains(k)),
-            };
+            let p = pair(&profiles[i], &profiles[j]);
             out[i][j] = p;
             out[j][i] = p;
         }
@@ -240,9 +254,12 @@ fn main() -> anyhow::Result<()> {
 
     println!("Candidates: the top build of each ranked build type with ≥ {min_players} players.\n");
     println!("# All activities\n");
+    // Each class's all-activities collection, by build type.
+    let mut global: HashMap<&str, Vec<Profile>> = HashMap::new();
     for class in classes {
         let cands = candidates(&data, 0, class, min_players);
-        let m = pairs(&profiles(&db, &cands)?);
+        let profs = profiles(&db, &cands)?;
+        let m = pairs(&profs);
         let n = cands.len();
         let all_pairs = || (0..n).flat_map(|i| ((i + 1)..n).map(move |j| (i, j)));
         let count = all_pairs().count().max(1) as f64;
@@ -290,6 +307,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         let set = rank_first(&m, &top(n, 0.5), chosen.1);
+        global.insert(class, set.iter().map(|&i| profs[i].clone()).collect());
         println!(
             "\nRank-first set, top half, {}: {} builds, mean effect {} (the top {} alone: {}).",
             chosen.0,
@@ -316,33 +334,107 @@ fn main() -> anyhow::Result<()> {
         println!();
     }
 
+    // ---- Per scope: the collection each activity would get ---------------
+    let show: Vec<String> = std::env::var("SHOW")
+        .unwrap_or_else(|_| "grandmaster-conquest,master-dungeon,master-raid".into())
+        .split(',')
+        .map(String::from)
+        .collect();
     println!(
-        "# Per activity group ({}): rank-first in the top half / most from all (build types)\n",
+        "# Per activity ({}, rank-first from the top half of each scope's build types)\n",
         chosen.0
     );
-    println!("| activity group | Hunter | Titan | Warlock |\n|---|---|---|---|");
+    println!(
+        "Cells: highlights (build types with ≥ {min_players} players) · new playstyles: highlights whose kit is ≥ 0.7 from every all-activities highlight of the class.\n"
+    );
+    println!("| scope | Hunter | Titan | Warlock |\n|---|---|---|---|");
+    let mut listings = Vec::new();
+    let mut tally = [0usize; 3];
+    let mut sizes: Vec<usize> = Vec::new();
     for (s, scope) in data
         .scopes
         .iter()
         .enumerate()
-        .filter(|(_, s)| s.kind == "group")
+        .filter(|(_, s)| s.kind != "all")
     {
         let mut cells = Vec::new();
         for class in classes {
             let cands = candidates(&data, s, class, min_players);
             if cands.is_empty() {
                 cells.push("—".to_string());
+                sizes.push(0);
                 continue;
             }
-            let m = pairs(&profiles(&db, &cands)?);
-            cells.push(format!(
-                "{} / {} ({})",
-                rank_first(&m, &top(cands.len(), 0.5), chosen.1).len(),
-                most_distinct(&m, &top(cands.len(), 1.0), chosen.1).len(),
-                cands.len()
-            ));
+            let profs = profiles(&db, &cands)?;
+            let m = pairs(&profs);
+            let set = rank_first(&m, &top(cands.len(), 0.5), chosen.1);
+            // How each highlight relates to the class's all-activities
+            // collection: a new playstyle (kit ≥ 0.7 from all of them), the
+            // same playstyle with other exotics, or a near repeat.
+            let relation = |i: usize| {
+                let close: Vec<Pair> = global[class]
+                    .iter()
+                    .map(|g| pair(&profs[i], g))
+                    .filter(|p| p.kit < 0.7)
+                    .collect();
+                if close.is_empty() {
+                    Novelty::NewPlaystyle
+                } else if close.iter().any(|p| p.shares_exotic) {
+                    Novelty::Repeat
+                } else {
+                    Novelty::OtherExotics
+                }
+            };
+            for &i in &set {
+                tally[relation(i) as usize] += 1;
+            }
+            let new = set
+                .iter()
+                .filter(|&&i| relation(i) == Novelty::NewPlaystyle)
+                .count();
+            cells.push(format!("{} ({}) · {new} new", set.len(), cands.len()));
+            sizes.push(set.len());
+            if show.contains(&scope.id) {
+                let mut text = format!("## {} · {class}: {} highlights\n", scope.name, set.len());
+                for &i in &set {
+                    let _ = writeln!(
+                        text,
+                        "  rank {:<4} {:>5}  {:>3} players  {}{}",
+                        i + 1,
+                        pct(cands[i].effect),
+                        cands[i].players,
+                        cands[i].label,
+                        match relation(i) {
+                            Novelty::NewPlaystyle => "  [new playstyle]",
+                            Novelty::OtherExotics => "",
+                            Novelty::Repeat => "  [near repeat of an all-activities highlight]",
+                        }
+                    );
+                }
+                listings.push(text);
+            }
         }
-        println!("| {} | {} |", scope.name, cells.join(" | "));
+        let name = if scope.kind == "group" {
+            format!("**{}** `{}`", scope.name, scope.id)
+        } else {
+            format!("↳ {}", scope.name)
+        };
+        println!("| {name} | {} |", cells.join(" | "));
+    }
+    let at_least = |k: usize| sizes.iter().filter(|&&n| n >= k).count();
+    println!(
+        "\nScope × class collections: {} in all; {} with ≥ 4 highlights, {} with ≥ 6, {} with ≥ 8.\n",
+        sizes.len(),
+        at_least(4),
+        at_least(6),
+        at_least(8)
+    );
+    println!(
+        "Per-activity highlights: {} new playstyles, {} the same playstyle as an all-activities highlight with other exotics, {} near repeats.\n",
+        tally[0], tally[1], tally[2]
+    );
+    for l in listings {
+        println!("{l}");
     }
     Ok(())
 }
