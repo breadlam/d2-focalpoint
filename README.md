@@ -74,7 +74,7 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 | Command | Purpose |
 |---|---|
-| `focalpoint analyze priors\|breadth\|diversity\|highlights` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight ([docs/analysis.md](docs/analysis.md)) |
+| `focalpoint analyze priors\|breadth\|diversity\|highlights\|sets\|…` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight, what armor set bonuses are worth ([docs/analysis.md](docs/analysis.md)) |
 | `focalpoint import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `focalpoint info [--detailed]` | provenance, headline counts, coverage, import statistics |
 | `focalpoint rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
@@ -107,7 +107,7 @@ for where new features go.
 - [docs/architecture.md](docs/architecture.md) — crates, data flow, testing
 - [docs/site.md](docs/site.md) — the static build-ranking site: data export, preview, tests, publishing
 - [docs/analysis.md](docs/analysis.md) — the analyses behind the design (`focalpoint analyze`) and their findings
-- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game; the solo premium; partial participants)
+- [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game; the solo premium; partial participants; polished top builds)
 
 ## Development
 

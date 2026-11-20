@@ -27,7 +27,10 @@ combined; the ranking tools only choose which builds to show:
    of near-identical builds.
 3. The listing's **top build** is the best-ranked exact build of the best
    loadout that was used in at least 3 clears and beat its players' usual
-   level (falling back to 2 clears, then to the best loadout).
+   level (falling back to 2 clears, then to the best loadout). Polished
+   builds — two active set bonuses: a 4-piece set or two 2-piece sets —
+   come first: a type gets a top build without them only when it has no
+   polished build (ADR 0010).
 4. Its **near-identical variants** are the loadout's other exact builds
    within 8 element changes (a perk roll, a mod, an artifact perk), each
    listed with exactly what differs and its own full build.

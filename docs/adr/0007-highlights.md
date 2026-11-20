@@ -72,7 +72,7 @@ The neutral top 10% is no longer dominated by specialists: builds with
 Per class and set (the neutral game, every activity group and activity),
 the candidates are **every** ranked build type — no player minimum, no rank
 cut-off — represented by its exemplar build (the "top build" of ADR 0006's
-book), **if that build is complete**: two aspects, at least four fragments,
+book; polished builds first, ADR 0010), **if that build is complete**: two aspects, at least four fragments,
 all four abilities and armor mods (`analysis::completeness`). An incomplete
 capture looks unlike everything only because of what it lacks — Warlock's
 neutral five held a Void Vortex build seen once, with no aspects or

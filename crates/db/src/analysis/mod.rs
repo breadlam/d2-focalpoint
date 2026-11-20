@@ -15,7 +15,9 @@
 //! * [`solo`] — soloing content made for a fireteam, and what crediting it
 //!   would do to the rankings;
 //! * [`partial`] — partial clears and partial participation: which content
-//!   allows them and how the run score treats them.
+//!   allows them and how the run score treats them;
+//! * [`sets`] — armor set bonuses: what full bonuses are worth to the same
+//!   player, and how often top builds lack them (ADR 0010).
 //!
 //! Each returns plain data; the CLI renders it.
 
@@ -25,6 +27,7 @@ pub mod diversity;
 pub mod highlights;
 pub mod partial;
 pub mod priors;
+pub mod sets;
 pub mod solo;
 pub mod subclasses;
 

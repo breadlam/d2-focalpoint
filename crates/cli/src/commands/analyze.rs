@@ -8,12 +8,14 @@ use anyhow::{Result, bail};
 use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
 use focalpoint_db::analysis::{
-    breadth, completeness, diversity, highlights as hl, partial, priors, solo, subclasses,
+    breadth, completeness, diversity, highlights as hl, partial, priors, sets, solo, subclasses,
 };
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, SoloScoring, load_model};
 use focalpoint_db::search::GroupBy;
-use focalpoint_db::site::{SiteData, SiteOptions, build_vectors, site_data};
+use focalpoint_db::site::{
+    POLISHED_SET_BONUSES, SiteData, SiteOptions, build_vectors, polished_builds, site_data,
+};
 
 use crate::output::{Format, render, thousands};
 
@@ -76,6 +78,14 @@ full-length solo and very fast solo clears, and the run score of players present
 fireteam clear — now, and as a kill rate over time played (Searchlight's later evaluator)."
     )]
     Partial,
+    /// Armor set bonuses: what full bonuses are worth, who skips them, and top builds without them
+    #[command(
+        after_help = "Recorded scored clears by their main build's set bonuses; the gain from full \
+bonuses (a 4-piece set or two 2-piece sets) for the same player in the same activity; players' level \
+by how often they skip full bonuses; and the all-activities listings whose top build lacks them \
+(ADR 0010)."
+    )]
+    Sets,
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -202,6 +212,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Subclasses(a) => run_subclasses(&db, a, args.format),
         What::Solo(a) => run_solo(&db, a, args.format),
         What::Partial => run_partial(&db, args.format),
+        What::Sets => run_sets(&db, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -1544,5 +1555,106 @@ without (Conquests, Ops) is always a full clear.",
 kill rate over time played against other partial participants (ADR 0009); the whole-run score measures their kills \
 and the run's pace against the fireteam reference."
     );
+    Ok(())
+}
+
+fn run_sets(db: &Database, format: Format) -> Result<()> {
+    let share = |x: f64| format!("{:.1}%", 100.0 * x);
+    println!("## Recorded scored clears by their main build's set bonuses");
+    let header = ["set bonuses", "clears", "share", "mean score"].map(String::from);
+    let rows: Vec<Vec<String>> = sets::prevalence(db)?
+        .into_iter()
+        .map(|p| {
+            vec![
+                if p.bonuses >= POLISHED_SET_BONUSES {
+                    format!("{} or more (polished)", p.bonuses)
+                } else {
+                    format!("{} (lesser)", p.bonuses)
+                },
+                thousands(p.clears as i64),
+                share(p.share),
+                pct(p.mean_perf),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!("Mean scores include the players' skill: compare players with themselves below.");
+
+    println!("\n## Full set bonuses for the same player in the same activity");
+    let g = sets::gain(db)?;
+    let header = [
+        "player-activities",
+        "gain",
+        "± s.e.",
+        "median",
+        "polished clears later by",
+        "gain vs lateness",
+    ]
+    .map(String::from);
+    let rows = vec![vec![
+        thousands(g.pairs as i64),
+        pct(g.mean),
+        format!("{:.3}", g.se),
+        pct(g.median),
+        format!("{:.1} days", g.later_days),
+        format!("r = {:+.2}", g.lateness_correlation),
+    ]];
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Per player and activity with both kinds of clears, polished minus lesser mean score. Learning over time \
+would make the gain grow with lateness."
+    );
+
+    println!("\n## Players' level by how often their recorded clears ran lesser builds");
+    let header = ["recorded clears", "lesser", "players", "level", "± s.e."].map(String::from);
+    let rows: Vec<Vec<String>> = sets::players(db)?
+        .into_iter()
+        .map(|p| {
+            vec![
+                match p.recorded_from {
+                    1 => "1".to_string(),
+                    2 => "2–4".to_string(),
+                    5 => "5–9".to_string(),
+                    n => format!("{n}+"),
+                },
+                p.habit.label().to_string(),
+                thousands(p.players as i64),
+                pct(p.mean_perf),
+                format!("{:.3}", p.se),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Level: mean score of all the player's scored clears, recorded or not. Compare within a band: players \
+with more recorded clears are stronger whatever their habit."
+    );
+
+    let data = site(db, Some(vec!["all".into()]), NEUTRAL_CONTEXT_PRIOR)?;
+    let polished = polished_builds(db)?;
+    println!(
+        "\n## All-activities listings whose top build is lesser (the type has no polished build)"
+    );
+    let header = ["listings", "count", "lesser top builds", "in the top 10%"].map(String::from);
+    let rows: Vec<Vec<String>> = sets::top_builds(&data, &polished)
+        .into_iter()
+        .map(|t| {
+            vec![
+                if t.core {
+                    format!("{}+ players", focalpoint_db::site::CORE_PLAYERS)
+                } else {
+                    format!("1–{} players", focalpoint_db::site::CORE_PLAYERS - 1)
+                },
+                thousands(t.listings as i64),
+                format!(
+                    "{} ({})",
+                    thousands(t.lesser as i64),
+                    share(t.lesser as f64 / t.listings.max(1) as f64)
+                ),
+                thousands(t.lesser_in_top_tenth as i64),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
     Ok(())
 }

@@ -67,6 +67,11 @@ pub const VARIANT_MAX_CHANGES: u32 = 8;
 /// when a build type has none, and finally to its best loadout.
 pub const EVIDENCE_FLOORS: [f64; 3] = [3.0, 2.0, 0.0];
 
+/// A build is polished when it has at least this many active set bonuses:
+/// a 4-piece set (its 2- and 4-piece bonuses) or two 2-piece sets. A top
+/// recipe is a polished build whenever its build type has one in the scope.
+pub const POLISHED_SET_BONUSES: usize = 2;
+
 #[derive(Debug, Clone)]
 pub struct SiteOptions {
     /// Build types need this many regular players in a scope to be listed.
@@ -545,6 +550,16 @@ fn loadout_of_builds(db: &Database) -> Result<HashMap<i64, String>> {
     Ok(rows.collect::<duckdb::Result<_>>()?)
 }
 
+/// Builds with at least [`POLISHED_SET_BONUSES`] active set bonuses.
+pub fn polished_builds(db: &Database) -> Result<HashSet<i64>> {
+    let mut stmt = db.conn().prepare(
+        "SELECT build_id FROM build_component WHERE kind = 'set_bonus'
+         GROUP BY build_id HAVING count(*) >= ?",
+    )?;
+    let rows = stmt.query_map([POLISHED_SET_BONUSES], |r| r.get(0))?;
+    Ok(rows.collect::<duckdb::Result<_>>()?)
+}
+
 fn by_effect(a: &BuildRank, b: &BuildRank) -> std::cmp::Ordering {
     b.effect
         .total_cmp(&a.effect)
@@ -553,17 +568,21 @@ fn by_effect(a: &BuildRank, b: &BuildRank) -> std::cmp::Ordering {
 }
 
 /// The chosen loadout of one build type in one scope and its exact builds
-/// by effect (the first is the exemplar): at the highest evidence floor any
-/// loadout with a positive effect meets, the best family's best such
-/// loadout; failing all floors, the best family's best loadout.
+/// by effect, the exemplar first: at the highest evidence floor any loadout
+/// with a positive effect meets, the best family's best such loadout;
+/// failing all floors, the best family's best loadout. The exemplar is the
+/// loadout's best polished build, and only a type with no polished build
+/// at any floor gets an unpolished one.
 fn choose<'a>(
     families: &[&'a BuildRank],
     loadouts_of: &HashMap<String, Vec<&'a BuildRank>>,
     members: &HashMap<String, Vec<(i64, &'a BuildRank)>>,
+    polished: &HashSet<i64>,
 ) -> Option<(&'a BuildRank, Vec<(i64, &'a BuildRank)>)> {
     let mut families = families.to_vec();
     families.sort_by(|a, b| by_effect(a, b));
-    for floor in EVIDENCE_FLOORS {
+    let floors = EVIDENCE_FLOORS.iter().map(|&f| (true, f));
+    for (polished_only, floor) in floors.clone().chain(floors.map(|(_, f)| (false, f))) {
         for family in &families {
             let Some(loadouts) = loadouts_of.get(&joined(&family.key)) else {
                 continue;
@@ -578,6 +597,14 @@ fn choose<'a>(
                 if let Some(builds) = members.get(&joined(&loadout.key)) {
                     let mut builds = builds.clone();
                     builds.sort_by(|(ia, a), (ib, b)| by_effect(a, b).then(ia.cmp(ib)));
+                    if polished_only {
+                        let Some(best) = builds.iter().position(|(id, _)| polished.contains(id))
+                        else {
+                            continue;
+                        };
+                        let exemplar = builds.remove(best);
+                        builds.insert(0, exemplar);
+                    }
                     return Some((loadout, builds));
                 }
             }
@@ -655,6 +682,7 @@ pub fn site_data(
     mut progress: impl FnMut(&str),
 ) -> Result<SiteData> {
     let loadout_of_build = loadout_of_builds(db)?;
+    let polished = polished_builds(db)?;
     let vectors = build_vectors(db)?;
     let mut type_index: HashMap<String, u32> = HashMap::new();
     let mut types: Vec<BuildType> = Vec::new();
@@ -713,7 +741,8 @@ pub fn site_data(
             let Some(families) = families_of.get(&joined(&t.key)) else {
                 continue;
             };
-            let Some((loadout, builds)) = choose(families, &loadouts_of, &members) else {
+            let Some((loadout, builds)) = choose(families, &loadouts_of, &members, &polished)
+            else {
                 continue;
             };
             let next = types.len() as u32;
@@ -945,6 +974,33 @@ pub(crate) mod tests {
             .iter()
             .find(|r| data.types[r.0 as usize].armor.as_deref() == Some(armor))
             .unwrap()
+    }
+
+    #[test]
+    fn top_builds_are_polished_when_the_type_has_a_polished_build() {
+        let (_d, db) = db();
+        // Build 13 (another loadout of Alpha's best family, one clear) gets
+        // a second set bonus; every other build has one at most.
+        db.conn()
+            .execute_batch(
+                "INSERT INTO build_component (build_id, kind, slot, component_hash, parent_hash, quantity, position)
+                 VALUES (13, 'set_bonus', NULL, 902, 900, 1, 1)",
+            )
+            .unwrap();
+        let opts = SiteOptions {
+            min_players: 1,
+            ..SiteOptions::default()
+        };
+        let data = site_data(&db, &opts, |_| {}).unwrap();
+        let id = |p: &Pick| data.recipes[p.0 as usize].id.as_str();
+        let alpha = row(&data, "all", "Alpha Boots");
+        assert_eq!(
+            id(&alpha.7),
+            "13",
+            "the polished build beats the better-evidenced 10"
+        );
+        // Beta has no polished build: its best build stays.
+        assert_eq!(id(&row(&data, "all", "Beta Boots").7), "20");
     }
 
     #[test]

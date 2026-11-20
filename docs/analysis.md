@@ -13,6 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
+| `analyze sets` | What are full armor set bonuses worth to the same player, are players who skip them stronger, and how many top builds lack them? | polished top builds (ADR 0010) |
 | `analyze partial` | Which content allows partial clears or partial participation, and how does the run score treat them? | the solo premium's full-clear test (ADR 0008); scoring partial participants by kill rate over time played (ADR 0009) |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
@@ -316,4 +317,34 @@ Findings:
   provided deaths are measured against the deaths expected in the time
   played (against the bucket's median deaths, 0.86–1.41). ADR 0009 scores
   them that way.
+
+## `analyze sets`
+
+A build is **polished** with at least two active armor set bonuses — a
+4-piece set or two 2-piece sets — and **lesser** with none or one. Armor is
+always captured whole, so a lesser build ran without them. The study, over
+recorded scored clears by their main build: how many ran lesser builds;
+per player and activity with both kinds of clears, the difference of their
+mean scores; players' level (the mean score of all their scored clears) by
+how often they ran lesser builds, within bands of recorded clears; and the
+all-activities listings whose top build is lesser.
+
+Findings:
+
+- 22.5% of recorded scored clears ran a lesser build: 6.5% with no set
+  bonus (mean score −15%, skill included), 16.0% with one (+1%); polished
+  clears score +15%.
+- Full set bonuses are worth **+5% (± 1.6%; median +7%)** to the same
+  player in the same activity (729 player-activities). One bonus is worth
+  no more than none (no bonus → two: +11% ± 4%; one → two: +4% ± 2%;
+  none → one: 0% ± 3.5%). The polished clears came 3.1 days later on
+  average; the gain does not grow with that (r = +0.08).
+- Players who run lesser builds are not stronger. Within a band of
+  recorded clears their level matches or trails those who never do
+  (1 clear: −2% against +5%; 5–9 clears: +29% and +29%). Players with
+  more recorded clears are stronger whatever their habit.
+- Before ADR 0010, 469 (21.8%) of the 2,148 listings with 3+ players had a
+  lesser top build — no more than the 26.3% of ranked exact builds — and
+  427 of those types had a polished build. Choosing polished builds first
+  leaves 51 (2.4%; 3 in the top 10%): types with no polished build.
 
