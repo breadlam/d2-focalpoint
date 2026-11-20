@@ -3,9 +3,11 @@
 //! activity) would pick, and how distinct, well ranked and well evidenced
 //! those picks are.
 //!
-//! Within a subclass the picks are chosen as everywhere else
-//! ([`crate::highlight::select`]): complete exemplars only, as well ranked
-//! and as unlike each other as the subclass's candidates allow.
+//! Within a subclass the picks are chosen as the site chooses them
+//! ([`crate::highlight::select_capped`]): complete exemplars only, as well
+//! ranked and as unlike each other as the subclass's candidates allow, up to
+//! the quota — fewer when the next would rank below average or only swap an
+//! earlier pick's exotics.
 
 use std::collections::{HashMap, HashSet};
 use std::hash::BuildHasher;
@@ -13,11 +15,10 @@ use std::hash::BuildHasher;
 use focalpoint_core::vector::ElementVector;
 
 use super::diversity::{Pair, Profile};
-use crate::highlight::{NEUTRAL, candidates, playstyles, select};
+use crate::highlight::{NEUTRAL, candidates, playstyles, select_capped};
 use crate::site::SiteData;
 
-/// The subclasses, the classic five first.
-pub const SUBCLASSES: [&str; 6] = ["Arc", "Solar", "Void", "Stasis", "Strand", "Prismatic"];
+pub use crate::highlight::SUBCLASSES;
 
 /// One pick within a subclass.
 #[derive(Debug, Clone, PartialEq)]
@@ -88,10 +89,11 @@ pub fn by_subclass<S: BuildHasher, G: BuildHasher>(
                 .collect();
             let cands: Vec<_> = ranks.iter().map(|&i| all[i].clone()).collect();
             let styles = playstyles(&cands, vectors);
-            let chosen: Vec<usize> = select(&cands, &styles, quota(subclass), quality_weight)
-                .iter()
-                .map(|p| p.index)
-                .collect();
+            let chosen: Vec<usize> =
+                select_capped(data, &cands, &styles, quota(subclass), quality_weight)
+                    .iter()
+                    .map(|p| p.index)
+                    .collect();
             let profiles: Vec<Profile> = chosen
                 .iter()
                 .map(|&i| {

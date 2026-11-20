@@ -21,8 +21,24 @@ use serde::Serialize;
 
 use crate::site::SiteData;
 
-/// Highlights kept per class and scope; the site shows the first 3, 5 or 10.
+/// Picks per class in the analyses that compare selections without
+/// subclass caps (`focalpoint analyze highlights`).
 pub const HIGHLIGHT_COUNT: usize = 10;
+
+/// The subclasses, in the order the site lists them.
+pub const SUBCLASSES: [&str; 6] = ["Arc", "Solar", "Void", "Stasis", "Strand", "Prismatic"];
+
+/// The most highlights of one subclass: for the neutral game three per
+/// classic subclass and six Prismatic, for an activity one per subclass
+/// (ADR 0007). Caps, not targets: see [`select_capped`].
+#[must_use]
+pub fn cap(set: &str, subclass: &str) -> usize {
+    match (set == NEUTRAL, subclass == "Prismatic") {
+        (true, true) => 6,
+        (true, false) => 3,
+        (false, _) => 1,
+    }
+}
 
 /// The quality weight of [`select_diverse`]. At 2, a candidate half like an
 /// earlier pick (similarity 0.45, novelty 0.8) must be about 6 points of
@@ -142,6 +158,48 @@ pub fn all_candidates(data: &SiteData, set: &str, class: &str) -> Vec<Candidate>
     out
 }
 
+/// A set's candidates of one class and subclass, best first.
+#[must_use]
+pub fn subclass_candidates(
+    data: &SiteData,
+    set: &str,
+    class: &str,
+    subclass: &str,
+) -> Vec<Candidate> {
+    let mut out = candidates(data, set, class);
+    out.retain(|c| data.types[c.type_id as usize].element.as_deref() == Some(subclass));
+    out
+}
+
+/// Up to `cap` picks of one subclass's candidates ([`select`]), stopping at
+/// the first that ranks below average or only swaps the exotics of an
+/// earlier pick (the same super and aspects): a subclass shows as many
+/// highlights as it has to offer, up to its cap.
+#[must_use]
+pub fn select_capped(
+    data: &SiteData,
+    cands: &[Candidate],
+    styles: &[Playstyle],
+    cap: usize,
+    quality_weight: f64,
+) -> Vec<Pick> {
+    let kit = |c: &Candidate| {
+        let t = &data.types[c.type_id as usize];
+        let mut aspects = t.aspects.clone();
+        aspects.sort();
+        (t.super_name.clone(), aspects)
+    };
+    let mut out: Vec<Pick> = Vec::new();
+    for p in select(cands, styles, cap, quality_weight) {
+        let c = &cands[p.index];
+        if c.quality <= 0.0 || out.iter().any(|q| kit(&cands[q.index]) == kit(c)) {
+            break;
+        }
+        out.push(p);
+    }
+    out
+}
+
 /// The playstyle of every candidate's exemplar build.
 #[must_use]
 pub fn playstyles<S: BuildHasher>(
@@ -188,7 +246,7 @@ pub fn select(
 pub fn highlight_sets<S: BuildHasher>(
     data: &SiteData,
     vectors: &HashMap<i64, ElementVector, S>,
-    count: usize,
+    caps: &dyn Fn(&str, &str) -> usize,
     quality_weight: f64,
 ) -> Vec<HighlightSet> {
     // Activity groups each build type was used in.
@@ -215,25 +273,31 @@ pub fn highlight_sets<S: BuildHasher>(
             let classes = classes(data, &id)
                 .into_iter()
                 .map(|class| {
-                    let cands = candidates(data, &id, &class);
-                    let styles = playstyles(&cands, vectors);
-                    let picks = select(&cands, &styles, count, quality_weight)
-                        .into_iter()
-                        .map(|p| {
-                            let c = &cands[p.index];
-                            let r = &data.scopes[scope].rows[c.row];
-                            Highlight(
-                                c.type_id,
-                                round(c.quality, 3),
-                                r.4,
-                                r.5,
-                                r.6.clone(),
-                                c.recipe,
-                                groups_of.get(&c.type_id).copied().unwrap_or(0),
-                                round(p.novelty, 2),
-                            )
-                        })
-                        .collect();
+                    // Subclass by subclass, each up to its cap.
+                    let mut picks = Vec::new();
+                    for subclass in SUBCLASSES {
+                        let cands = subclass_candidates(data, &id, &class, subclass);
+                        let styles = playstyles(&cands, vectors);
+                        let cap = caps(&id, subclass);
+                        picks.extend(
+                            select_capped(data, &cands, &styles, cap, quality_weight)
+                                .into_iter()
+                                .map(|p| {
+                                    let c = &cands[p.index];
+                                    let r = &data.scopes[scope].rows[c.row];
+                                    Highlight(
+                                        c.type_id,
+                                        round(c.quality, 3),
+                                        r.4,
+                                        r.5,
+                                        r.6.clone(),
+                                        c.recipe,
+                                        groups_of.get(&c.type_id).copied().unwrap_or(0),
+                                        round(p.novelty, 2),
+                                    )
+                                }),
+                        );
+                    }
                     ClassHighlights { class, picks }
                 })
                 .collect();

@@ -124,14 +124,6 @@
             <input type="radio" name="hl-class" id="hl-warlock" value="Warlock"><label for="hl-warlock">Warlock</label>
           </div>
         </fieldset>
-        <fieldset class="field">
-          <legend>How many</legend>
-          <div class="segmented">
-            <input type="radio" name="hl-count" id="hl-3" value="3"><label for="hl-3">3</label>
-            <input type="radio" name="hl-count" id="hl-5" value="5"><label for="hl-5">5</label>
-            <input type="radio" name="hl-count" id="hl-10" value="10"><label for="hl-10">10</label>
-          </div>
-        </fieldset>
       </form>
 
       <p id="hl-note" class="note"></p>
@@ -141,7 +133,7 @@
           <h2 id="hl-heading">Highlights</h2>
           <p id="hl-summary" aria-live="polite"></p>
         </div>
-        <ol id="hl-results" class="results"></ol>
+        <div id="hl-results"></div>
       </section>
     </div>
 
@@ -232,12 +224,14 @@
           so most builds sit near zero and a very good build can read slightly negative; the numbers
           are under “Ranking details” on each listing.</dd>
         <dt>Highlights</dt>
-        <dd>A few builds per class, picked to be as different from each other as the data allows while
-          ranking as high as it allows: no player or rank cut-offs, so a build type seen once can be
-          picked if it ranks well and adds something new. Builds missing part of their kit (aspects,
+        <dd>Builds per class and subclass, picked to be as different from each other as the data allows
+          while ranking as high as it allows: up to three per subclass and six Prismatic for the neutral
+          game, the best of each subclass for an activity. A subclass shows fewer when the next build
+          would rank below average or only swap an earlier one’s exotics. There are no player cut-offs,
+          so a build type seen once can be picked if it ranks well and adds something new. Builds missing part of their kit (aspects,
           fragments, abilities) or their armor mods are left out: those parts were not captured. A pick’s playstyle is its subclass, super, aspects, exotics,
-          abilities and fragments; each pick says how much of it is new compared with the picks above.
-          The first 3 are the best three, the first 5 the best five. <em>Neutral game</em> picks rank by
+          abilities and fragments; each pick says how much of it is new compared with its subclass’s picks above.
+          <em>Neutral game</em> picks rank by
           the part of a build’s effect that holds across activity groups, so a build that only shines in
           one kind of activity counts for less there; those builds show up in their activity’s
           highlights instead.</dd>

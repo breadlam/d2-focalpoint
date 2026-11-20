@@ -94,8 +94,21 @@ already spanned by the picks so far (the greedy MAP of a DPP with kernel
 `q_i q_j S_ij`, `q = exp(w · quality)`, via an incremental Cholesky).
 The first pick is the best-ranked; a near-copy of a pick needs a better rank
 to beat something new; when every candidate is alike, the best of them are
-still picked. Picks keep their greedy order, so the top 3 is a prefix of the
-top 10 and the site can offer 3, 5 or 10.
+still picked. Picks keep their greedy order.
+
+**Per subclass, with caps.** Highlights are chosen subclass by subclass: up
+to three per classic subclass (Arc, Solar, Void, Stasis, Strand) and six
+Prismatic for the neutral game (at most 21 per class), and up to one per
+subclass for an activity. The caps are not targets: a subclass stops at the
+first pick that ranks below average or only swaps the exotics of an earlier
+pick (the same super and aspects), so it shows as many highlights as it has
+to offer. Weak subclasses are not labelled. `focalpoint analyze subclasses`
+measured the plan with filled quotas: all 63 neutral picks ranked above
+zero, but within a subclass picks differ in aspects and exotics more than in
+super (several subclasses have one super per class); Warlock Stasis's best
+were one-player builds ranked 307th–448th of the class; one per subclass
+leaves 12% of activity picks below zero (4% without the quota) — which the
+caps now drop.
 
 **Playstyle similarity** `S` is a weighted Jaccard (Ružička, a positive
 semi-definite kernel) over the elements that define how a build plays:
@@ -125,8 +138,9 @@ Titan's Pantheon and Desert Perpetual sets now fill ten picks from 32 and
 ### 3. Export
 
 `focalpoint site` writes one `book/highlights.<set>.json` per set (the
-neutral game replaces the all-activities set), ten picks per class with
-their exact builds; the site's **Highlights** view shows 3, 5 or 10.
+neutral game replaces the all-activities set) with each class's picks, in
+subclass order, and their exact builds; the site's **Highlights** view shows
+them under subclass headings.
 
 ## Consequences
 

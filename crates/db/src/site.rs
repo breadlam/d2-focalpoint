@@ -37,7 +37,7 @@ use focalpoint_core::vector::ElementVector;
 
 use crate::filter::RunFilter;
 use crate::highlight::{
-    ClassHighlights, HIGHLIGHT_COUNT, Highlight, HighlightSet, QUALITY_WEIGHT, highlight_sets,
+    ClassHighlights, Highlight, HighlightSet, QUALITY_WEIGHT, cap, highlight_sets,
 };
 use crate::rank::{BuildRank, BuildSort, NEUTRAL_CONTEXT_PRIOR, RankOptions, rank_builds};
 use crate::recipe::{Dict, DictEntry, Recipe, recipes};
@@ -75,8 +75,6 @@ pub struct SiteOptions {
     /// Compute only these scopes (ids such as `all` or `master-raid`); all
     /// of them when `None`. The neutral game needs `all`.
     pub scopes: Option<Vec<String>>,
-    /// Highlights kept per class and set.
-    pub highlight_count: usize,
     /// See [`crate::highlight::QUALITY_WEIGHT`].
     pub quality_weight: f64,
     /// See [`crate::rank::NEUTRAL_CONTEXT_PRIOR`].
@@ -89,7 +87,6 @@ impl Default for SiteOptions {
             min_players: 1,
             rank: RankOptions::default(),
             scopes: None,
-            highlight_count: HIGHLIGHT_COUNT,
             quality_weight: QUALITY_WEIGHT,
             context_prior: NEUTRAL_CONTEXT_PRIOR,
         }
@@ -817,7 +814,7 @@ pub fn site_data(
         neutral,
         incomplete,
     };
-    data.highlights = highlight_sets(&data, &vectors, opts.highlight_count, opts.quality_weight);
+    data.highlights = highlight_sets(&data, &vectors, &cap, opts.quality_weight);
     Ok(data)
 }
 
@@ -1117,7 +1114,7 @@ pub(crate) mod tests {
         // Treat the fixture's partial kits as complete to see the picks.
         data.incomplete.clear();
         let vectors = build_vectors(&db).unwrap();
-        data.highlights = highlight_sets(&data, &vectors, HIGHLIGHT_COUNT, QUALITY_WEIGHT);
+        data.highlights = highlight_sets(&data, &vectors, &cap, QUALITY_WEIGHT);
         let ids: Vec<&str> = data.highlights.iter().map(|s| s.id.as_str()).collect();
         assert_eq!(ids[0], "neutral");
         assert!(
@@ -1132,13 +1129,17 @@ pub(crate) mod tests {
         );
         let warlock = &data.highlights[0].classes[0];
         assert_eq!(warlock.class, "Warlock");
-        // Alpha and Beta share a super and a fragment, not their exotics.
-        assert_eq!(warlock.picks.len(), 2);
+        // Alpha and Beta are both Solar Well of Radiance with Heat Rises:
+        // the second would only swap the first's exotic armor.
+        assert_eq!(warlock.picks.len(), 1, "{:?}", warlock.picks);
+        assert!(warlock.picks[0].1 > 0.0, "picks rank above average");
         assert!(
             (warlock.picks[0].7 - 1.0).abs() < 1e-9,
             "the first pick is all new"
         );
-        assert!(warlock.picks[1].7 < 1.0 && warlock.picks[1].7 > 0.8);
+        // Without that rule the cap would allow both.
+        let cands = crate::highlight::subclass_candidates(&data, "neutral", "Warlock", "Solar");
+        assert_eq!(cands.len(), 2);
         let book = split(data);
         assert_eq!(
             book.index.highlights[0],

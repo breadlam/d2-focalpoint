@@ -51,15 +51,18 @@ activity to get the listings ranked there, and narrow them by class,
 subclass, super, exotics, aspects or a component a listed build includes.
 Filters and activity are kept in the URL, so a view can be shared.
 
-**Highlights** picks a few builds per class — 3, 5 or 10 — as well ranked
-and as unlike each other as the data allows (ADR 0007): for the **neutral
-game** (workhorses, ranked by the part of their effect that holds across
-activity groups) and for every activity group and activity. There are no
+**Highlights** picks builds per class and subclass, as well ranked and as
+unlike each other as the data allows (ADR 0007): for the **neutral game**
+(workhorses, ranked by the part of their effect that holds across activity
+groups; up to three per classic subclass and six Prismatic) and for every
+activity group and activity (up to one per subclass). A subclass shows
+fewer when its next build would rank below average or only swap an earlier
+one's exotics. There are no
 player or rank cut-offs: every ranked build type whose exemplar build is
 complete (two aspects, four or more fragments, four abilities, armor mods)
 is a candidate, and each pick says how
 much of its playstyle (subclass, super, aspects, exotics, abilities,
-fragments) is new compared with the picks above. Neutral picks also say
+fragments) is new compared with its subclass's picks above. Neutral picks also say
 how many activity groups the build type was used in.
 
 **Find any build** searches the **catalog**: every build
@@ -184,10 +187,11 @@ weapon  = [slot 0–2 (kinetic, energy, power), item, exotic 0/1, frame, [perk],
   recipes: [build] }            // this file's exact builds; `build` indexes them
 ```
 
-Picks are in pick order (the first 3 are the best three). `effect` is the
+Picks are grouped by subclass (Arc, Solar, Void, Stasis, Strand,
+Prismatic) and in pick order within each. `effect` is the
 set's ranking: the neutral effect for `neutral`, else the scope's build
-effect. `novelty` is the share of the pick's playstyle not covered by the
-picks above (1 for the first).
+effect. `novelty` is the share of the pick's playstyle not covered by its
+subclass's picks above (1 for the first).
 
 Numbers inside builds are indices into `dict`; an entry's type ("Pulse
 Rifle", "Stasis Fragment") feeds the tooltips and a weapon's damage type its
