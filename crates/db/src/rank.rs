@@ -90,10 +90,18 @@ pub(crate) fn against_fireteam(s: &str, t: &str) -> (String, String) {
     (log_score, kill_index)
 }
 
+/// An activity has checkpoints — a clear may be a partial run — when at
+/// least this share of its recorded runs did not start from the beginning:
+/// dungeons and raids (22–80%), not Conquests or Ops (≈ 0.01%), which
+/// cannot be resumed and so are always full clears.
+pub const CHECKPOINT_SHARE: f64 = 0.01;
+
 /// Per activity, the fireteam clears a solo clear is compared with:
 /// `(activity_hash, kills, duration_s, deaths, centre, from_qualified,
-/// min_duration)` — `min_duration` being the 1st percentile of their
-/// durations: no full clear is faster than the fastest fireteams.
+/// min_duration)`. For an activity with checkpoints ([`CHECKPOINT_SHARE`])
+/// `min_duration` is the 1st percentile of the fireteam clears' durations —
+/// no full clear is faster than the fastest fireteams — and 0 otherwise:
+/// every clear of checkpoint-free content is a full clear, however fast.
 ///
 /// The activity's own fireteam reference (`activity_reference`) when it has
 /// enough qualified fireteam clears; otherwise one built the same way from
@@ -107,9 +115,17 @@ pub fn team_reference_sql() -> String {
     let p = focalpoint_core::rank::ScoreParams::default();
     let (log_score, _) = against_fireteam("pool", "med");
     format!(
-        "WITH fast AS (
-             SELECT activity_hash, quantile_cont(duration_s, 0.01) AS min_duration
-             FROM run_score WHERE NOT is_solo GROUP BY 1),
+        "WITH checkpoints AS (
+             SELECT activity_hash,
+                    avg((NOT coalesce(started_from_beginning, true))::INTEGER) >= {CHECKPOINT_SHARE}
+                        AS resumable
+             FROM run GROUP BY 1),
+         fast AS (
+             SELECT s.activity_hash,
+                    CASE WHEN any_value(c.resumable) THEN quantile_cont(s.duration_s, 0.01) ELSE 0 END
+                        AS min_duration
+             FROM run_score s LEFT JOIN checkpoints c USING (activity_hash)
+             WHERE NOT s.is_solo GROUP BY 1),
          own AS (
              SELECT activity_hash, kills, duration_s, deaths, log_score_mean AS centre, min_duration
              FROM activity_reference JOIN fast USING (activity_hash)
@@ -127,9 +143,12 @@ pub fn team_reference_sql() -> String {
              GROUP BY p.instance_id, p.membership_id, p.activity_hash
              HAVING bool_or(p.is_clear) AND sum(p.kills) > 0),
          med AS (
-             SELECT activity_hash, median(kills) AS kills, median(duration_s) AS duration_s,
-                    median(deaths) AS deaths, quantile_cont(duration_s, 0.01) AS min_duration
-             FROM pool GROUP BY 1 HAVING count(*) >= {min_clears})
+             SELECT pool.activity_hash, median(kills) AS kills, median(duration_s) AS duration_s,
+                    median(deaths) AS deaths,
+                    CASE WHEN any_value(c.resumable) THEN quantile_cont(duration_s, 0.01) ELSE 0 END
+                        AS min_duration
+             FROM pool LEFT JOIN checkpoints c USING (activity_hash)
+             GROUP BY 1 HAVING count(*) >= {min_clears})
          SELECT activity_hash, kills, duration_s, deaths, centre, true AS from_qualified, min_duration
          FROM own
          UNION ALL
@@ -153,9 +172,10 @@ pub const RAID_MODE: i32 = 4;
 /// of how much better each scores against the fireteam clears
 /// ([`team_reference_sql`]) than against other solo clears; never negative.
 /// A solo clear looks like a full clear when it started from the beginning
-/// and took at least `min_duration` (the fastest 1% of fireteam clears):
-/// a fifth to two fifths of Master dungeon solo "clears" are faster than
-/// that, some in a minute or two. Raids ([`RAID_MODE`]) get none. Where
+/// and, in an activity with checkpoints, took at least `min_duration` (the
+/// fastest 1% of fireteam clears): a fifth to two fifths of Master dungeon
+/// solo "clears" are faster than that, some in a minute or two. Conquests
+/// and Ops cannot be resumed, so their fast solo clears are real. Raids ([`RAID_MODE`]) get none. Where
 /// kills cannot measure a soloist's work the measured premium falls below
 /// one and no credit is given.
 #[must_use]

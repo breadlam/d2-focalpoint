@@ -8,7 +8,7 @@ use anyhow::{Result, bail};
 use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
 use focalpoint_db::analysis::{
-    breadth, completeness, diversity, highlights as hl, priors, solo, subclasses,
+    breadth, completeness, diversity, highlights as hl, partial, priors, solo, subclasses,
 };
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, SoloScoring, load_model};
@@ -69,6 +69,13 @@ the all-activities build ranking with solo clears measured against solo clears (
 fireteam clears (credited)."
     )]
     Solo(SoloArgs),
+    /// Partial clears and partial participation: which content allows them, and how runs are scored
+    #[command(
+        after_help = "Checkpoints and late joins per activity group, kill rates of fireteam, \
+full-length solo and very fast solo clears, and the run score of players present for all or part of a \
+fireteam clear — now, and as a kill rate over time played (Searchlight's later evaluator)."
+    )]
+    Partial,
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -194,6 +201,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Completeness(a) => run_completeness(&db, a, args.format),
         What::Subclasses(a) => run_subclasses(&db, a, args.format),
         What::Solo(a) => run_solo(&db, a, args.format),
+        What::Partial => run_partial(&db, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -1442,5 +1450,95 @@ with a solo clear: {:.0}% of the credited top 10%, {:.0}% of the rest.",
             .collect();
         println!("{}", render(format, &header, &rows));
     }
+    Ok(())
+}
+
+fn run_partial(db: &Database, format: Format) -> Result<()> {
+    let share = |x: f64| format!("{:.2}%", 100.0 * x);
+    println!("## Checkpoints and late joins (every recorded run)");
+    let header = [
+        "activity group",
+        "activities",
+        "runs",
+        "not from the beginning",
+        "joined late",
+        "with checkpoints",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = partial::resumption(db)?
+        .into_iter()
+        .map(|r| {
+            vec![
+                r.group,
+                r.activities.to_string(),
+                thousands(r.runs as i64),
+                share(r.not_fresh),
+                share(r.late_join),
+                format!("{} of {}", r.with_checkpoints, r.activities),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "An activity has checkpoints when at least {}% of its runs did not start from the beginning; a clear of one \
+without (Conquests, Ops) is always a full clear.",
+        100.0 * focalpoint_db::rank::CHECKPOINT_SHARE
+    );
+
+    println!("\n## Kill rates of scored clears (medians)");
+    let header = [
+        "activity group",
+        "clears",
+        "kind",
+        "kills per minute played",
+        "per life",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = partial::pace(db)?
+        .into_iter()
+        .map(|p| {
+            vec![
+                p.group,
+                thousands(p.clears as i64),
+                p.kind.to_string(),
+                format!("{:.1}", p.kills_per_minute),
+                format!("{:.1}", p.per_life),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+
+    println!(
+        "\n## Fireteam clears by presence: the run score now, and as a kill rate over time played (medians)"
+    );
+    let header = [
+        "activity group",
+        "present for",
+        "clears",
+        "share of the run",
+        "score now",
+        "rate score",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = partial::presence(db)?
+        .into_iter()
+        .map(|p| {
+            vec![
+                p.group,
+                if p.partial {
+                    "under 90%"
+                } else {
+                    "90% or more"
+                }
+                .to_string(),
+                thousands(p.clears as i64),
+                format!("{:.0}%", 100.0 * p.played_share),
+                format!("{:.2}", p.score),
+                format!("{:.2}", p.rate_score),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!("Scores: 1 is a typical clear of the activity.");
     Ok(())
 }

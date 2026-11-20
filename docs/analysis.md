@@ -13,6 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
+| `analyze partial` | Which content allows partial clears or partial participation, and how does the run score treat them? | the solo premium's full-clear test (ADR 0008); scoring of partial participation (open) |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
 | `analyze highlights [--set S] [--class C] [--sweep]` | Why was each highlight picked, and how do picks change with the quality weight? | `QUALITY_WEIGHT` (ADR 0007) |
@@ -269,3 +270,36 @@ Findings:
   Wolfsbane Shadowshot (soloed by 139 players) from 29th to 1st of Hunter
   build types; Hallowfire Heart + Tractor Cannon Hammer of Sol from 13th
   to 1st of Titan's.
+
+## `analyze partial`
+
+Searchlight's later evaluator scored a player's kill rate over their own
+time played, divided by lives used (`(kills / time played) / (1 + deaths)
+× 2 if solo`), so a late joiner or a short run was judged on the pace it
+sustained; its target slate required fresh starts for checkpointed content
+(raids, dungeons, Equilibrium, Pantheon) and needed no gate for Conquests
+and Ops. `run_score` (ADR 0006) measures kills against the activity's
+reference kills and pace against the whole run. The study: checkpoints and
+late joins per activity group (every recorded run); kill rates of fireteam,
+full-length solo and very fast solo clears; and the run score of fireteam
+players present for all or part of a run, now and as a kill rate over time
+played.
+
+Findings:
+
+- Conquests and Ops cannot be resumed: 0.01% of their recorded runs did
+  not start from the beginning (Ops take matchmade late joiners: 2–4% of
+  runs, almost none qualified). Dungeons, raids, Equilibrium, Pantheon and
+  The Desert Perpetual are resumed in 22–80% of runs and joined late in
+  16–48%.
+- Solo clears faster than the fastest fireteams kill at 14–31 per minute in
+  dungeons and raids (full-length solo clears 11–16; fireteam players 4–5):
+  add-dense stretches, not full clears. In Pantheon and The Desert
+  Perpetual such clears are boss-only (1 kill a minute).
+- Fireteam players present for the whole run score the same either way
+  (1.00–1.04). The 208k fireteam clears in checkpointed content where the
+  player was present for about half the run (7% of scored clears) score
+  0.50–0.70 now — penalised for absence — and 1.08–1.42 as a kill rate over
+  time played: joining for a later stretch is not a typical stretch, so
+  neither measure is neutral for them.
+

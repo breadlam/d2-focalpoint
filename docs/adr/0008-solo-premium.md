@@ -55,8 +55,12 @@ perf(solo clear) = perf against solo clears + ln(premium of its activity)
   unqualified fireteam clears — cleared, started from the beginning, in the
   same period (`rank::team_reference_sql`).
 - **A solo clear looks like a full clear** when it started from the
-  beginning and took at least as long as the fastest 1% of the activity's
-  fireteam clears. Only such clears set the premium and receive it.
+  beginning and, in content with checkpoints, took at least as long as the
+  fastest 1% of the activity's fireteam clears. Conquests and Ops cannot be
+  resumed or joined in progress (0.01% of their 4.9M recorded runs did not
+  start from the beginning, `focalpoint analyze partial`), so every clear of
+  theirs is a full clear however fast; dungeons and raids can (22–80%).
+  Only full-looking clears set the premium and receive it.
 - **Raids get no premium** (activity mode 4: Master raids, Pantheon, The
   Desert Perpetual): the data cannot tell full solo clears of six-player
   content from partial ones.

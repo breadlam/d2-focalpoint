@@ -13,7 +13,9 @@
 //! * [`highlights`] — how the highlight selection trades rank for variety;
 //! * [`subclasses`] — what a quota of highlights per subclass would pick;
 //! * [`solo`] — soloing content made for a fireteam, and what crediting it
-//!   would do to the rankings.
+//!   would do to the rankings;
+//! * [`partial`] — partial clears and partial participation: which content
+//!   allows them and how the run score treats them.
 //!
 //! Each returns plain data; the CLI renders it.
 
@@ -21,6 +23,7 @@ pub mod breadth;
 pub mod completeness;
 pub mod diversity;
 pub mod highlights;
+pub mod partial;
 pub mod priors;
 pub mod solo;
 pub mod subclasses;
