@@ -106,7 +106,8 @@ pub const CHECKPOINT_SHARE: f64 = 0.01;
 /// The activity's own fireteam reference (`activity_reference`) when it has
 /// enough qualified fireteam clears; otherwise one built the same way from
 /// its unqualified fireteam clears — cleared, started from the beginning,
-/// in the same period as the scored runs. Searchlight's qualification gates
+/// in the same period as the scored runs. Partial participants (ADR 0009)
+/// are left out of both: a soloist does the whole run's work. Searchlight's qualification gates
 /// can exclude fireteams entirely: five Grandmaster Conquests qualified solo
 /// runs only (`solo_only`), though all are fireteam content with hundreds of
 /// thousands of fireteam runs recorded.
@@ -129,7 +130,7 @@ pub fn team_reference_sql() -> String {
          own AS (
              SELECT activity_hash, kills, duration_s, deaths, log_score_mean AS centre, min_duration
              FROM activity_reference JOIN fast USING (activity_hash)
-             WHERE NOT is_solo AND is_scored AND NOT is_borrowed AND kills > 0
+             WHERE NOT is_solo AND NOT is_partial AND is_scored AND NOT is_borrowed AND kills > 0
                    AND log_score_mean IS NOT NULL),
          pool AS (
              SELECT p.activity_hash, sum(p.kills) AS kills, sum(p.deaths) AS deaths,
@@ -139,9 +140,11 @@ pub fn team_reference_sql() -> String {
                    AND r.started_at >= (SELECT min(started_at) FROM run_score)
                    AND p.activity_hash IN (
                        SELECT activity_hash FROM activity_reference
-                       WHERE NOT is_solo AND is_scored AND is_borrowed)
+                       WHERE NOT is_solo AND NOT is_partial AND is_scored AND is_borrowed)
              GROUP BY p.instance_id, p.membership_id, p.activity_hash
-             HAVING bool_or(p.is_clear) AND sum(p.kills) > 0),
+             HAVING bool_or(p.is_clear) AND sum(p.kills) > 0
+                    AND coalesce(sum(p.time_played_s), any_value(r.duration_s))
+                        >= {partial} * any_value(r.duration_s)),
          med AS (
              SELECT pool.activity_hash, median(kills) AS kills, median(duration_s) AS duration_s,
                     median(deaths) AS deaths,
@@ -156,6 +159,7 @@ pub fn team_reference_sql() -> String {
                 any_value(med.deaths), avg({log_score}), false, any_value(med.min_duration)
          FROM pool JOIN med USING (activity_hash) GROUP BY med.activity_hash",
         min_clears = p.min_reference_clears,
+        partial = p.partial_presence,
     )
 }
 
@@ -798,8 +802,8 @@ mod tests {
                  VALUES (10, 'Warlock', 1, [], [], [], [], [], 0, 0, [], [], [], []),
                         (20, 'Warlock', 2, [], [], [], [], [], 0, 0, [], [], [], []);
                  INSERT INTO run_score
-                 SELECT 1000 * m + i, m, 100, TIMESTAMP '2026-07-01' + INTERVAL (i) DAY, i = 11, i >= 10,
-                        100, 0, 600, 1, 1, 1, 1, CASE WHEN m <= 2 THEN 0.5 ELSE -0.5 END
+                 SELECT 1000 * m + i, m, 100, TIMESTAMP '2026-07-01' + INTERVAL (i) DAY, i = 11, false,
+                        i >= 10, 100, 0, 600, 600, 1, 1, 1, 1, CASE WHEN m <= 2 THEN 0.5 ELSE -0.5 END
                  FROM range(1, 5) p(m), range(0, 12) r(i);
                  INSERT INTO run_build
                  SELECT 1000 * m + i, m, CASE WHEN m <= 2 THEN 10 ELSE 20 END, 1, 0, 600, 1.0, true

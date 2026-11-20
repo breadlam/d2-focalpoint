@@ -5,31 +5,32 @@
 -- player's skill and a build's effect are comparable across activities. A
 -- bucket that borrows the activity-wide reference is centred on the
 -- activity-wide mean, keeping its runs' advantage (e.g. a rare solo raid).
+-- Buckets are per activity, solo status and partial participation (ADR 0009).
 
 INSERT INTO activity_reference
 WITH logs AS (
-    SELECT i.activity_hash, i.is_solo, ln(p.kill_index * p.speed * p.survival) AS l
+    SELECT i.activity_hash, i.is_solo, i.is_partial, ln(p.kill_index * p.speed * p.survival) AS l
     FROM stg.run_perf p JOIN stg.score_input i USING (instance_id, membership_id)
 ), bucket AS (
-    SELECT activity_hash, is_solo, avg(l) AS m FROM logs GROUP BY ALL
+    SELECT activity_hash, is_solo, is_partial, avg(l) AS m FROM logs GROUP BY ALL
 ), activity AS (
     SELECT activity_hash, avg(l) AS m FROM logs GROUP BY ALL
 )
-SELECT r.activity_hash, r.is_solo, r.clears, r.kills, r.duration_s, r.deaths,
+SELECT r.activity_hash, r.is_solo, r.is_partial, r.clears, r.kills, r.duration_s, r.deaths,
        r.is_borrowed, r.is_scored,
        CASE WHEN r.is_borrowed THEN a.m ELSE b.m END AS log_score_mean
 FROM stg.reference r
-LEFT JOIN bucket b USING (activity_hash, is_solo)
+LEFT JOIN bucket b USING (activity_hash, is_solo, is_partial)
 LEFT JOIN activity a USING (activity_hash)
-ORDER BY r.activity_hash, r.is_solo;
+ORDER BY r.activity_hash, r.is_solo, r.is_partial;
 
 INSERT INTO run_score
-SELECT i.instance_id, i.membership_id, i.activity_hash, i.started_at, i.is_solo, i.has_build,
-       i.kills, i.deaths, i.duration_s,
+SELECT i.instance_id, i.membership_id, i.activity_hash, i.started_at, i.is_solo, i.is_partial,
+       i.has_build, i.kills, i.deaths, i.duration_s, i.played_s,
        p.kill_index, p.speed, p.survival,
        p.kill_index * p.speed * p.survival                          AS score,
        ln(p.kill_index * p.speed * p.survival) - r.log_score_mean   AS perf
 FROM stg.run_perf p
 JOIN stg.score_input i USING (instance_id, membership_id)
-JOIN activity_reference r USING (activity_hash, is_solo)
+JOIN activity_reference r USING (activity_hash, is_solo, is_partial)
 ORDER BY i.instance_id, i.membership_id;

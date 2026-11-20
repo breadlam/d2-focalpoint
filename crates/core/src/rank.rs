@@ -4,11 +4,14 @@
 //! evaluator (`kills × speed × deaths`, ranked within one activity) so that
 //! runs of different activities are comparable. Each factor is measured
 //! against a [`Reference`] — a typical qualified clear of the same activity
-//! with the same solo status — so a score of 1.0 is a typical clear anywhere.
-//! Within one activity and solo status, runs keep the original evaluator's
-//! order (the factors differ from it only by constants), except where a
-//! factor hits its bounds — kills are bounded here too, because the wider
-//! slate of activities can be farmed.
+//! by the same kind of player (solo, fireteam member, or partial
+//! participant) — so a score of 1.0 is a typical clear anywhere. Within one
+//! activity and kind, runs keep the original evaluator's order (the factors
+//! differ from it only by constants), except where a factor hits its bounds
+//! — kills are bounded here too, because the wider slate of activities can
+//! be farmed. A partial participant, present for only part of a fireteam's
+//! run, is measured by the evaluator's kill rate over time played instead
+//! ([`ScoreParams::partial_performance`], ADR 0009).
 //!
 //! **Player skill and build effect.** A good build in a great player's hands
 //! looks good for two reasons. To separate them, a run's log performance
@@ -28,8 +31,9 @@
 //!
 //! See `docs/adr/0006-ranking.md` for the data behind the defaults.
 
-/// A typical qualified clear: medians over the clears of one activity with
-/// one solo status.
+/// A typical qualified clear: medians over the clears of one activity by
+/// one kind of player. For partial participants `duration_s` is the median
+/// time played.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Reference {
     pub kills: f64,
@@ -41,9 +45,12 @@ pub struct Reference {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Performance {
     /// Kills relative to the reference (the evaluator's linear base),
-    /// within [`ScoreParams::kill_bounds`].
+    /// within [`ScoreParams::kill_bounds`]; for a partial participant, the
+    /// kill rate over time played relative to the reference's, within
+    /// [`ScoreParams::rate_bounds`].
     pub kill_index: f64,
-    /// Reference duration over the run's, within [`ScoreParams::speed_bounds`].
+    /// Reference duration over the run's, within [`ScoreParams::speed_bounds`];
+    /// 1 for a partial participant, whose pace is in the kill rate.
     pub speed: f64,
     /// The evaluator's death haircut relative to the reference's deaths,
     /// within [`ScoreParams::survival_bounds`].
@@ -78,9 +85,20 @@ pub struct ScoreParams {
     /// Activities whose median clear has fewer kills are not scored: kills
     /// cannot measure a build there (Pantheon boss encounters: 1–3).
     pub min_reference_kills: f64,
-    /// A solo (or fireteam) reference needs this many clears; rarer cases
-    /// borrow the whole activity's reference.
+    /// A solo (or fireteam, or partial) reference needs this many clears;
+    /// rarer cases borrow the whole activity's reference.
     pub min_reference_clears: u64,
+    /// A fireteam member whose time played is under this share of the run
+    /// joined late or left early: a **partial participant**, scored by
+    /// [`Self::partial_performance`]. Nearly all fireteam members play
+    /// 98–100% of the run; 7% of fireteam clears fall under 90%.
+    pub partial_presence: f64,
+    /// Floor on a partial participant's time played (Searchlight's
+    /// evaluator's 120 s): a rate over a short stint is noise.
+    pub min_played_s: u32,
+    /// Bounds on a partial participant's kill-rate index, at about its 1st
+    /// and 99th percentiles (0.26 and 2.49).
+    pub rate_bounds: (f64, f64),
 }
 
 impl Default for ScoreParams {
@@ -92,6 +110,9 @@ impl Default for ScoreParams {
             survival_bounds: (0.5, 1.5),
             min_reference_kills: 20.0,
             min_reference_clears: 50,
+            partial_presence: 0.9,
+            min_played_s: 120,
+            rate_bounds: (0.25, 2.5),
         }
     }
 }
@@ -120,6 +141,38 @@ impl ScoreParams {
         Some(Performance {
             kill_index,
             speed,
+            survival,
+        })
+    }
+
+    /// Performance of a partial participant: Searchlight's kill rate over
+    /// time played, relative to the reference's (`reference.duration_s` is
+    /// the time played of a typical partial participant), with deaths
+    /// measured against the reference's deaths over the same time played.
+    /// The run's kills and length are the fireteam's, not theirs; measuring
+    /// both per minute played makes the score indifferent to how much of
+    /// the run they saw.
+    #[must_use]
+    pub fn partial_performance(
+        &self,
+        kills: u32,
+        deaths: u32,
+        played_s: u32,
+        reference: &Reference,
+    ) -> Option<Performance> {
+        if kills == 0 || reference.kills <= 0.0 || reference.duration_s <= 0.0 {
+            return None;
+        }
+        let played = f64::from(played_s.max(self.min_played_s));
+        let reference_played = reference.duration_s.max(f64::from(self.min_played_s));
+        let rate = f64::from(kills) / played / (reference.kills / reference_played);
+        let haircut = |d: f64| 1.0 / (1.0 + self.death_rate * d);
+        let expected_deaths = reference.deaths * played / reference_played;
+        let survival = (haircut(f64::from(deaths)) / haircut(expected_deaths))
+            .clamp(self.survival_bounds.0, self.survival_bounds.1);
+        Some(Performance {
+            kill_index: rate.clamp(self.rate_bounds.0, self.rate_bounds.1),
+            speed: 1.0,
             survival,
         })
     }
@@ -373,6 +426,37 @@ mod tests {
         assert!((perf(600, 4, 1800).kill_index - 3.0).abs() < 1e-12);
         assert!((perf(13_814, 4, 1800).kill_index - 4.0).abs() < 1e-12);
         assert!((perf(1, 4, 1800).kill_index - 0.1).abs() < 1e-12);
+    }
+
+    fn partial(kills: u32, deaths: u32, played: u32) -> Performance {
+        ScoreParams::default()
+            .partial_performance(kills, deaths, played, &REF)
+            .unwrap()
+    }
+
+    #[test]
+    fn partial_participants_are_measured_per_minute_played() {
+        // The typical rate and deaths per minute score one at any presence.
+        assert!((partial(200, 4, 1800).score() - 1.0).abs() < 1e-12);
+        assert!((partial(100, 2, 900).score() - 1.0).abs() < 1e-12);
+        assert!((partial(50, 1, 450).score() - 1.0).abs() < 1e-12);
+        // Twice the rate is twice the score, whatever the run's length.
+        let p = partial(200, 2, 900);
+        assert!((p.kill_index - 2.0).abs() < 1e-12);
+        assert!((p.speed - 1.0).abs() < 1e-12);
+        // Deaths count against the deaths expected in the time played.
+        assert!(partial(100, 4, 900).survival < 1.0);
+        assert!(partial(200, 2, 1800).survival > 1.0);
+    }
+
+    #[test]
+    fn partial_rates_are_bounded_and_floored() {
+        assert!((partial(2_000, 4, 1800).kill_index - 2.5).abs() < 1e-12);
+        assert!((partial(1, 4, 1800).kill_index - 0.25).abs() < 1e-12);
+        // 30 seconds counts as two minutes.
+        assert!((partial(20, 0, 30).kill_index - partial(20, 0, 120).kill_index).abs() < 1e-12);
+        let params = ScoreParams::default();
+        assert!(params.partial_performance(0, 0, 600, &REF).is_none());
     }
 
     /// The original evaluator (`crates/core/src/evaluator.rs` in Searchlight),

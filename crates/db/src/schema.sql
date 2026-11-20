@@ -1,4 +1,4 @@
--- Focalpoint analysis database, schema version 4.
+-- Focalpoint analysis database, schema version 7.
 --
 -- Conventions
 --   * Bungie 64-bit ids (membership, character, instance, item instance) are
@@ -347,20 +347,22 @@ CREATE TABLE run_build (
 -- Ranking (ADR 0006): qualified clears measured against a typical clear
 -- ---------------------------------------------------------------------------
 
--- A typical qualified clear per activity and solo status (medians over the
--- scored population). Buckets with too few clears borrow the activity-wide
--- reference; activities whose median clear has too few kills are not scored.
+-- A typical qualified clear per activity and kind of player — solo, fireteam
+-- member, or partial participant (ADR 0009) — as medians over the scored
+-- population. Buckets with too few clears borrow the activity-wide reference;
+-- activities whose median clear has too few kills are not scored.
 CREATE TABLE activity_reference (
     activity_hash  UINTEGER NOT NULL,
     is_solo        BOOLEAN  NOT NULL,
+    is_partial     BOOLEAN  NOT NULL,   -- partial participants of fireteam clears
     clears         BIGINT   NOT NULL,   -- qualified clears with kills in this bucket
     kills          DOUBLE   NOT NULL,   -- reference (median) kills
-    duration_s     DOUBLE   NOT NULL,   -- reference (median) duration
+    duration_s     DOUBLE   NOT NULL,   -- reference (median) duration; time played if is_partial
     deaths         DOUBLE   NOT NULL,   -- reference (median) deaths
     is_borrowed    BOOLEAN  NOT NULL,   -- the activity-wide reference is used
     is_scored      BOOLEAN  NOT NULL,
     log_score_mean DOUBLE,              -- centre of `run_score.perf`
-    PRIMARY KEY (activity_hash, is_solo)
+    PRIMARY KEY (activity_hash, is_solo, is_partial)
 );
 
 -- One row per player and qualified clear with kills, in scored activities.
@@ -371,12 +373,14 @@ CREATE TABLE run_score (
     activity_hash UINTEGER  NOT NULL,
     started_at    TIMESTAMP NOT NULL,
     is_solo       BOOLEAN   NOT NULL,
+    is_partial    BOOLEAN   NOT NULL,   -- a fireteam member present for under 90% of the run
     has_build     BOOLEAN   NOT NULL,   -- a build was captured (see run_build)
     kills         INTEGER   NOT NULL,
     deaths        INTEGER   NOT NULL,
-    duration_s    INTEGER   NOT NULL,
-    kill_index    DOUBLE    NOT NULL,   -- kills / reference kills
-    speed         DOUBLE    NOT NULL,   -- reference duration / duration, bounded
+    duration_s    INTEGER   NOT NULL,   -- the run's
+    played_s      INTEGER   NOT NULL,   -- the player's time played
+    kill_index    DOUBLE    NOT NULL,   -- kills / reference kills; if is_partial, kill rate / reference rate
+    speed         DOUBLE    NOT NULL,   -- reference duration / duration, bounded; 1 if is_partial
     survival      DOUBLE    NOT NULL,   -- death haircut vs the reference's, bounded
     score         DOUBLE    NOT NULL,   -- kill_index × speed × survival; 1 = typical
     perf          DOUBLE    NOT NULL,   -- ln(score) centred: the ranking model's response

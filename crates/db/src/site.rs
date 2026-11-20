@@ -891,24 +891,24 @@ pub(crate) mod tests {
                     (12, 'fragment', 'subclass', 9, NULL, 1, 5),
                     (20, 'armor', 'legs', 2, NULL, 1, 0);
                  INSERT INTO run_score
-                 SELECT 1000 * m + i, m, 100, TIMESTAMP '2026-07-01' + INTERVAL (i) DAY, false, false,
-                        100, 0, 600, 1, 1, 1, 1, CASE WHEN m <= 2 THEN 0.5 ELSE -0.5 END
+                 SELECT 1000 * m + i, m, 100, TIMESTAMP '2026-07-01' + INTERVAL (i) DAY, false, false, false,
+                        100, 0, 600, 600, 1, 1, 1, 1, CASE WHEN m <= 2 THEN 0.5 ELSE -0.5 END
                  FROM range(1, 5) p(m), range(0, 10) r(i);
-                 INSERT INTO run_score (instance_id, membership_id, activity_hash, started_at, is_solo, has_build,
-                     kills, deaths, duration_s, kill_index, speed, survival, score, perf) VALUES
-                    (1010, 1, 100, '2026-07-11', false, true, 100, 0, 600, 1, 1, 1, 1, 1.0),
-                    (1011, 1, 100, '2026-07-12', false, true, 100, 0, 600, 1, 1, 1, 1, 1.0),
-                    (1012, 1, 101, '2026-07-13', false, true, 100, 0, 600, 1, 1, 1, 1, 0.6),
-                    (1013, 1, 100, '2026-07-14', false, true, 100, 0, 600, 1, 1, 1, 1, 0.7),
-                    (2013, 2, 100, '2026-07-14', false, true, 100, 0, 600, 1, 1, 1, 1, 0.5),
-                    (2010, 2, 100, '2026-07-11', false, true, 100, 0, 600, 1, 1, 1, 1, 1.0),
-                    (2011, 2, 100, '2026-07-12', false, true, 100, 0, 600, 1, 1, 1, 1, 1.0),
-                    (2012, 2, 100, '2026-07-13', false, true, 100, 0, 600, 1, 1, 1, 1, 0.0),
-                    (3010, 3, 101, '2026-07-11', false, true, 100, 0, 600, 1, 1, 1, 1, -0.5),
-                    (3011, 3, 101, '2026-07-12', false, true, 100, 0, 600, 1, 1, 1, 1, -0.5),
-                    (4010, 4, 101, '2026-07-11', false, true, 100, 0, 600, 1, 1, 1, 1, -0.5),
-                    (4011, 4, 101, '2026-07-12', false, true, 100, 0, 600, 1, 1, 1, 1, -0.5),
-                    (9999, 1, 200, '2026-07-01', false, false, 100, 0, 600, 1, 1, 1, 1, 0.0);
+                 INSERT INTO run_score (instance_id, membership_id, activity_hash, started_at, is_solo, is_partial,
+                     has_build, kills, deaths, duration_s, played_s, kill_index, speed, survival, score, perf) VALUES
+                    (1010, 1, 100, '2026-07-11', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 1.0),
+                    (1011, 1, 100, '2026-07-12', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 1.0),
+                    (1012, 1, 101, '2026-07-13', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 0.6),
+                    (1013, 1, 100, '2026-07-14', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 0.7),
+                    (2013, 2, 100, '2026-07-14', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 0.5),
+                    (2010, 2, 100, '2026-07-11', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 1.0),
+                    (2011, 2, 100, '2026-07-12', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 1.0),
+                    (2012, 2, 100, '2026-07-13', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, 0.0),
+                    (3010, 3, 101, '2026-07-11', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, -0.5),
+                    (3011, 3, 101, '2026-07-12', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, -0.5),
+                    (4010, 4, 101, '2026-07-11', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, -0.5),
+                    (4011, 4, 101, '2026-07-12', false, false, true, 100, 0, 600, 600, 1, 1, 1, 1, -0.5),
+                    (9999, 1, 200, '2026-07-01', false, false, false, 100, 0, 600, 600, 1, 1, 1, 1, 0.0);
                  INSERT INTO run_build VALUES
                     (1010, 1, 10, 1, 0, 600, 1.0, true), (1011, 1, 10, 1, 0, 600, 1.0, true),
                     (1012, 1, 11, 1, 0, 600, 1.0, true), (1013, 1, 13, 1, 0, 600, 1.0, true),

@@ -1508,37 +1508,41 @@ without (Conquests, Ops) is always a full clear.",
         .collect();
     println!("{}", render(format, &header, &rows));
 
-    println!(
-        "\n## Fireteam clears by presence: the run score now, and as a kill rate over time played (medians)"
-    );
+    println!("\n## Fireteam clears by the share of the run the player was present for");
     let header = [
-        "activity group",
         "present for",
+        "scored as",
         "clears",
-        "share of the run",
-        "score now",
-        "rate score",
+        "score",
+        "whole-run score",
     ]
     .map(String::from);
     let rows: Vec<Vec<String>> = partial::presence(db)?
         .into_iter()
         .map(|p| {
             vec![
-                p.group,
                 if p.partial {
-                    "under 90%"
+                    format!("{:.0}–{:.0}%", 100.0 * p.share, 100.0 * p.share + 10.0)
                 } else {
-                    "90% or more"
+                    format!("{:.0}% or more", 100.0 * p.share)
+                },
+                if p.partial {
+                    "partial participant"
+                } else {
+                    "fireteam member"
                 }
                 .to_string(),
                 thousands(p.clears as i64),
-                format!("{:.0}%", 100.0 * p.played_share),
                 format!("{:.2}", p.score),
-                format!("{:.2}", p.rate_score),
+                format!("{:.2}", p.whole_run),
             ]
         })
         .collect();
     println!("{}", render(format, &header, &rows));
-    println!("Scores: 1 is a typical clear of the activity.");
+    println!(
+        "Scores are geometric means against the player's bucket: 1 is typical. Partial participants are scored by \
+kill rate over time played against other partial participants (ADR 0009); the whole-run score measures their kills \
+and the run's pace against the fireteam reference."
+    );
     Ok(())
 }

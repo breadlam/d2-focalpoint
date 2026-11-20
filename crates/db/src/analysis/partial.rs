@@ -6,11 +6,14 @@
 //! judged on the pace it sustained; its target slate required fresh starts
 //! for checkpointed content (raids, dungeons) and needed no gate for
 //! Conquests and Ops, which cannot be resumed. `run_score` (ADR 0006)
-//! instead measures kills against the activity's reference kills and pace
-//! against the whole run's length, so a player present for part of a run is
-//! scored as if present for all of it.
+//! measures kills against the activity's reference kills and pace against
+//! the whole run's length; a player present for part of a fireteam's run —
+//! a partial participant — is instead measured by kill rate over time
+//! played against other partial participants of the activity (ADR 0009).
+//! [`presence`] shows how both treat players by the share of the run they
+//! saw.
 
-use crate::rank::CHECKPOINT_SHARE;
+use crate::rank::{CHECKPOINT_SHARE, against_fireteam};
 use crate::{Database, Result};
 
 /// How often an activity group's recorded runs were resumed from a
@@ -80,10 +83,9 @@ pub struct Pace {
 pub fn pace(db: &Database) -> Result<Vec<Pace>> {
     let mut stmt = db.conn().prepare(
         "WITH p AS (
-             SELECT s.activity_hash, s.is_solo, s.duration_s, sum(rp.kills) AS kills,
-                    sum(rp.deaths) AS deaths, greatest(sum(rp.time_played_s), 120) AS played
-             FROM run_score s JOIN run_player rp USING (instance_id, membership_id)
-             GROUP BY s.instance_id, s.membership_id, s.activity_hash, s.is_solo, s.duration_s),
+             SELECT activity_hash, is_solo, duration_s, kills, deaths,
+                    greatest(played_s, 120) AS played
+             FROM run_score),
          fast AS (SELECT activity_hash, quantile_cont(duration_s, 0.01) AS p1 FROM p
                   WHERE NOT is_solo GROUP BY 1)
          SELECT a.target_group,
@@ -110,53 +112,43 @@ pub fn pace(db: &Database) -> Result<Vec<Pace>> {
     Ok(rows.collect::<duckdb::Result<_>>()?)
 }
 
-/// Fireteam clears of one group, by presence: the run score now, and the
-/// score a kill rate over time played would give.
+/// Fireteam clears of one presence bin.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Presence {
-    pub group: String,
-    /// Present for at least 90% of the run, or less.
+    /// Lower edge of the bin of the share of the run the player was present
+    /// for: 0, 0.1, …, 0.8 for partial participants, 0.9 for the rest.
+    pub share: f64,
     pub partial: bool,
     pub clears: usize,
-    /// Median share of the run the player was present for.
-    pub played_share: f64,
-    /// Median `run_score.score` (1 = a typical clear).
+    /// `exp(mean perf)`: the score relative to its bucket's centre, so 1 is
+    /// typical.
     pub score: f64,
-    /// Median of the same score with kills and pace measured over the
-    /// player's time played: `(kills / played) / (reference kills /
-    /// reference duration)`, bounded like kills × speed, times survival.
-    pub rate_score: f64,
+    /// The same under whole-run scoring (ADR 0006 alone): kills and pace
+    /// over the whole run against the activity's fireteam reference.
+    pub whole_run: f64,
 }
 
-/// Fireteam clears by presence, per group with checkpoints or late joins.
+/// Fireteam clears by the share of the run the player was present for: the
+/// score now, and under whole-run scoring. A neutral score stays near 1 in
+/// every bin.
 pub fn presence(db: &Database) -> Result<Vec<Presence>> {
-    let p = focalpoint_core::rank::ScoreParams::default();
-    let lo = p.kill_bounds.0 * p.speed_bounds.0;
-    let hi = p.kill_bounds.1 * p.speed_bounds.1;
+    let (whole_run, _) = against_fireteam("s", "t");
     let mut stmt = db.conn().prepare(&format!(
-        "WITH p AS (
-             SELECT s.activity_hash, s.instance_id, s.membership_id, any_value(s.duration_s) AS duration_s,
-                    any_value(s.score) AS score, any_value(s.survival) AS survival,
-                    sum(rp.kills) AS kills, greatest(sum(rp.time_played_s), 120) AS played
-             FROM run_score s JOIN run_player rp USING (instance_id, membership_id)
-             WHERE NOT s.is_solo GROUP BY 1, 2, 3)
-         SELECT a.target_group, p.played < 0.9 * p.duration_s AS partial, count(*),
-                median(least(p.played * 1.0 / p.duration_s, 1)), median(p.score),
-                median(least(greatest((p.kills / p.played) / (t.kills / t.duration_s), {lo}), {hi})
-                       * p.survival)
-         FROM p JOIN activity a USING (activity_hash)
-         JOIN activity_reference t ON t.activity_hash = p.activity_hash AND NOT t.is_solo
-         WHERE a.target_group IS NOT NULL AND t.kills > 0
+        "SELECT least(floor(10 * s.played_s / s.duration_s) / 10, 0.9) AS share, s.is_partial,
+                count(*), exp(avg(s.perf)), exp(avg({whole_run} - t.log_score_mean))
+         FROM run_score s
+         JOIN activity_reference t
+           ON t.activity_hash = s.activity_hash AND NOT t.is_solo AND NOT t.is_partial
+         WHERE NOT s.is_solo AND t.kills > 0
          GROUP BY ALL ORDER BY 1, 2"
     ))?;
     let rows = stmt.query_map([], |r| {
         Ok(Presence {
-            group: r.get(0)?,
+            share: r.get(0)?,
             partial: r.get(1)?,
             clears: usize::try_from(r.get::<_, i64>(2)?).unwrap_or(0),
-            played_share: r.get(3)?,
-            score: r.get(4)?,
-            rate_score: r.get(5)?,
+            score: r.get(3)?,
+            whole_run: r.get(4)?,
         })
     })?;
     Ok(rows.collect::<duckdb::Result<_>>()?)
