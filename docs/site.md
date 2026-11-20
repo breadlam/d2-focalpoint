@@ -5,8 +5,9 @@ Searchlight's own dashboard was: the Rahool mask (Festival of the Lost)
 beside the name in Jost Light, caps with wide tracking (Jost is an open
 Futura clone; Futura is the Destiny logo face), and Searchlight's class
 symbols beside class names. Only the page carries the brand; the tool and
-its data remain Focalpoint. It has three views. **Ranked builds**
-lists build types ranked by build effect, each with exact builds players
+its data remain Focalpoint. Its text is terse: labels and counts on the
+page, the explanations in a short "How it works" at the bottom. It has
+three views. **Rankings** lists build types ranked by build effect, each with exact builds players
 actually used in qualified clears, published exactly as equipped —
 subclass, abilities, aspects, fragments, weapons with their frame, perks,
 origin trait and mod, armor pieces with archetype, tuning, stat mods and
@@ -73,7 +74,7 @@ much of its playstyle (subclass, super, aspects, exotics, abilities,
 fragments) is new compared with its subclass's picks above. Neutral picks also say
 how many activity groups the build type was used in.
 
-**Find any build** searches the **catalog**: every build
+**Search** searches the **catalog**: every build
 Searchlight collected (594,340), exactly as equipped, whether or not it was
 used in a qualified clear. Its filters work on build types first (class,
 subclass, super, exotics, aspects, activity); once they select at most
@@ -89,7 +90,7 @@ artifact perks). Ranked builds come first, the rest by use.
 | `site/brand/` | Searchlight's brand assets: the Rahool mask (`rahool-mask.png`, rendered at 192 px from Searchlight's SVG; also the favicon), `Jost-Light.ttf` with its licence (`OFL.txt`), and the class symbols (`class-icons/`, CC0) |
 | `site/app.js` | an ES module: pure functions (build decoding and differences, filtering, facet counts, ranking, URL state) plus the DOM layer |
 | `site/highlights.js` | "Highlights": URL state and rendering (loaded only when the view is opened) |
-| `site/finder.js` | "Find any build": catalog parsing, filters and rendering (loaded only when the view is opened) |
+| `site/finder.js` | "Search": catalog parsing, filters and rendering (loaded only when the view is opened) |
 | `site/data/book/` | the ranked builds and highlights: `index.json`, two files per scope and one `highlights.<set>.json` per highlight set, exported by `focalpoint site` and committed |
 | `site/data/catalog/` | the catalog of every build: `index.txt` and shards `sNNN.txt`, exported by `focalpoint site` and committed |
 | `site/.nojekyll` | serve files as they are |

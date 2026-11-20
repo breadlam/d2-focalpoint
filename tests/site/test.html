@@ -140,9 +140,9 @@
     eq(recipeDiff(model, decodeRecipe(top), decodeRecipe(top)), [], 'a recipe does not differ from itself');
 
     // Records.
-    eq(pickLine([0, 0.1, 1, 1, '2026-09-01']), 'Used in 1 clear by 1 player · last 2026-09-01', 'a pick, without its effect');
+    eq(pickLine([0, 0.1, 1, 1, '2026-09-01']), '1 clear · 1 player · 2026-09-01', 'a pick, without its effect');
     eq(topLine(allScope.rows[0]),
-      'Used in 4 clears by 1 player · last 2026-09-15. Its loadout (same kit and weapons) was used in 5 clears across 2 exact builds.',
+      '4 clears · 1 player · 2026-09-15 · loadout: 5 clears, 2 builds',
       'the top build and its loadout');
 
     // Share links: short ids match the catalog's (crates/db/src/catalog.rs).
@@ -151,8 +151,8 @@
     eq(buildLink(model.types[0], '2821109907461'),
       '#view=find&class=Warlock&element=Solar&armor=Getaway+Artist&weapon=%28none%29&super=Well+of+Radiance&aspect=Heat+Rises&aspect2=Icarus+Dash&build=00000005',
       'a book build links to the finder');
-    eq(topLine(ucScope.rows[1]).endsWith('was used in 1 clear.'), true, 'a loadout of one build');
-    eq(topLine(ucScope.rows[0]).endsWith('was used in 3 clears across 4 exact builds.'), true,
+    eq(topLine(ucScope.rows[1]).endsWith('loadout: 1 clear'), true, 'a loadout of one build');
+    eq(topLine(ucScope.rows[0]).endsWith('loadout: 3 clears, 4 builds'), true,
       'the loadout can hold builds that are not listed as variants');
 
     // URL state round-trips and drops defaults.
@@ -254,8 +254,9 @@
     const ranked = parseHash(rankedHash(model.types[1], 'ultimate-conquest'));
     eq([ranked.scope, ranked.cls, ranked.armor, ranked.weapon, ranked.aspect1, ranked.min],
       ['ultimate-conquest', 'Titan', 'Synthoceps', 'Ice Breaker', 'Howl of the Storm', 1], 'a highlight links to its ranked listing');
-    eq(noveltyLine(0, 1, 'Solar'), 'The best-ranked Solar build here.', 'the first pick');
-    eq(noveltyLine(1, 0.873, 'Solar'), '87% of what defines its playstyle is new compared with the Solar picks above.', 'a later pick');
+    eq(noveltyLine(0, 1), '', 'the first pick');
+    eq(noveltyLine(1, 0.873), '87% distinct', 'a later pick');
+    eq(noveltyLine(2, 1), 'distinct', 'a pick sharing nothing');
 
     // The view itself, on a fixture page.
     const page = document.createElement('div');
@@ -268,9 +269,9 @@
     eq(loaded, ['data/book/highlights.neutral.json'], 'the neutral set loads on demand');
     eq(page.querySelectorAll('#hl-results li.card').length, 2, 'every Titan pick is shown');
     eq([...page.querySelectorAll('.subclass-heading')].map((x) => x.textContent), ['Stasis'], 'under its subclass heading');
-    eq(page.querySelector('#hl-summary').textContent, '2 Titan builds for the neutral game', 'the summary');
+    eq(page.querySelector('#hl-summary').textContent, '2 builds', 'the summary');
     eq([...page.querySelectorAll('#hl-set option')].map((o) => o.value), ['neutral', 'ultimate-conquest'], 'the set picker');
-    eq(page.querySelector('.highlight .metrics').textContent.includes('used in 1 of 1 activity groups'), true, 'neutral picks say where they were used');
+    eq(page.querySelector('.highlight .metrics').textContent.includes('1 of 1 activity groups'), true, 'neutral picks say where they were used');
     history.replaceState(null, '', before || location.pathname);
 
     const verdict = document.getElementById('verdict');

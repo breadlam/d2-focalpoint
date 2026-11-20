@@ -1,4 +1,4 @@
-// Find any build: the catalog of every collected build (data/catalog/),
+// Search: the catalog of every collected build (data/catalog/),
 // exported by `focalpoint site` (layout in docs/site.md).
 //
 // The index (names, activities, one line per build type) is loaded once.
@@ -23,7 +23,7 @@ const FIND_KEYS = {
   aspect1: 'aspect', aspect2: 'aspect2', act: 'act', sort: 'sort', build: 'build',
 };
 export const FIND_SORTS = {
-  rank: 'Best ranked, then clears',
+  rank: 'Best ranked',
   clears: 'Clears',
   runs: 'Runs',
   recent: 'Most recent',
@@ -284,8 +284,8 @@ function icon(cat, i, cls = 'icon') {
 }
 
 function buildRecord(b) {
-  return `Used in ${plural(b.runs, 'run')} (${plural(b.clears, 'clear')}, ${n(b.qualified)} qualified) `
-    + `by ${plural(b.players, 'player')} · last ${day(b.lastDay)}`;
+  return `${plural(b.runs, 'run')} · ${plural(b.clears, 'clear')} (${n(b.qualified)} qualified) · `
+    + `${plural(b.players, 'player')} · ${day(b.lastDay)}`;
 }
 
 /** The finder URL of one build: its type's names and its id. */
@@ -335,7 +335,7 @@ function typeRow(cat, t, choose) {
 export async function startFinder(root, goBook) {
   const $ = (id) => root.querySelector(`#${id}`);
   const note = $('find-note');
-  note.textContent = 'Loading the catalog index…';
+  note.textContent = 'Loading…';
   const cat = parseIndex(await fetchText('data/catalog/index.txt'));
   const shards = new Map(); // shard id → Promise of builds
   const loadShard = (i) => {
@@ -402,42 +402,38 @@ export async function startFinder(root, goBook) {
     $('find-more').hidden = true;
     if (total === 0) {
       note.textContent = '';
-      $('find-summary').textContent = 'No builds match.';
+      $('find-summary').textContent = '0 builds';
       list.replaceChildren();
       typesBox.replaceChildren();
       fillSelect($('f-has'), [], '', 'Add a component…');
       return;
     }
     if (total > SEARCH_LIMIT) {
-      note.textContent = `${n(total)} builds in ${n(types.length)} build types match. Add a class, subclass, exotic, super or aspect `
-        + `(or pick one of the build types below) to search their exact builds.`;
-      $('find-summary').textContent = `${n(types.length)} build types`;
+      note.textContent = 'Narrow by class, subclass, exotic, super or aspect, or pick a build type.';
+      $('find-summary').textContent = `${plural(total, 'build')} · ${plural(types.length, 'type')}`;
       list.replaceChildren();
-      fillSelect($('f-has'), [], '', 'Narrow the build types first');
+      fillSelect($('f-has'), [], '', 'Narrow first');
       $('f-has').disabled = true;
       const top = [...types].sort((a, b) => b.builds - a.builds).slice(0, 40);
-      typesBox.replaceChildren(h('h3', { class: 'types-title' }, 'Most collected build types'),
+      typesBox.replaceChildren(h('h3', { class: 'types-title' }, 'Most collected'),
         h('ul', { class: 'type-list' }, top.map((t) => typeRow(cat, t, chooseType))));
       return;
     }
     typesBox.replaceChildren();
     $('f-has').disabled = false;
     const ids = shardsOf(types);
-    note.textContent = `Searching ${plural(total, 'build')} in ${plural(ids.length, 'shard')}…`;
+    note.textContent = 'Searching…';
     const builds = (await Promise.all(ids.map(loadShard))).flat();
     if (mine !== generation) return; // a newer render took over
     const typeIds = new Set(types.map((t) => t.id));
     const base = builds.filter((b) => typeIds.has(b.type));
     const found = matchingBuilds(cat, base, types, state);
     if (state.build) {
-      note.replaceChildren(found.length
-        ? 'A shared build. '
-        : 'The shared build is not in this data (the link may come from an earlier export). ',
-      h('button', { type: 'button', class: 'link', onclick: () => update({ build: '' }) },
-        `Show all ${plural(total, 'build')} of this build type`));
+      note.replaceChildren(found.length ? 'Shared build · ' : 'Shared build not found · ',
+        h('button', { type: 'button', class: 'link', onclick: () => update({ build: '' }) },
+          `all ${plural(total, 'build')} of this type`));
     } else {
-      note.textContent = `Every collected build of ${plural(types.length, 'build type')}: ${plural(total, 'build')}. `
-        + 'Ranked builds come first; builds without qualified clears are listed by use.';
+      note.textContent = '';
     }
     // "Includes" options narrow the current matches.
     const opts = includeFacet(cat, found);
@@ -452,9 +448,7 @@ export async function startFinder(root, goBook) {
       .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
       .map(([kind, counts]) => h('optgroup', { label: INCLUDE_KINDS[kind] ?? kind }, optionList(counts))),
     '', 'Add a component…');
-    $('find-summary').textContent = found.length === 0
-      ? 'No builds match.'
-      : `${n(found.length)} build${found.length === 1 ? '' : 's'} match · showing ${n(Math.min(shown, found.length))}`;
+    $('find-summary').textContent = plural(found.length, 'build');
     list.replaceChildren(...found.slice(0, shown).map((b, i) => buildCard(cat, b, i + 1, state.has, goBook)));
     $('find-more').hidden = found.length <= shown;
   }

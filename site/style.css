@@ -123,7 +123,6 @@ h1, h2, h3, h4 { line-height: 1.2; }
 .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
 .tab:hover { color: var(--text); }
 
-.view-intro { margin: 0 0 14px; max-width: 72ch; color: var(--muted); }
 
 .chip-filters {
   display: flex;
@@ -215,12 +214,6 @@ select:disabled { opacity: 0.6; }
   letter-spacing: 0.04em;
 }
 
-.hint {
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-}
-
 select {
   width: 100%;
   min-width: 0;
@@ -297,7 +290,8 @@ button.link:hover { text-decoration: underline; }
 
 /* Notes */
 
-.note { margin: 14px 2px; color: var(--muted); }
+.note { margin: 14px 2px; color: var(--muted); font-size: 0.88rem; }
+.note:empty { display: none; }
 .note strong { color: var(--text); }
 .warn { color: var(--warn); }
 .error { color: var(--neg); }
@@ -672,7 +666,7 @@ button.link:hover { text-decoration: underline; }
 
 /* Highlights */
 
-.highlight .novelty { margin: 4px 0 10px; font-size: 0.88rem; color: var(--muted); }
+.highlight .novelty { color: var(--accent); }
 .subclass-group + .subclass-group { margin-top: 24px; }
 .subclass-heading { margin: 0 0 10px; font-size: 1rem; }
 .subclass-heading .badge { font-size: 0.9rem; padding: 3px 10px; }

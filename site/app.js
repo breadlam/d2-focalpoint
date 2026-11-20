@@ -375,18 +375,18 @@ export function className(cls) {
 
 export const plural = (x, word) => `${n(x)} ${word}${x === 1 ? '' : 's'}`;
 
-/** An exact build's record: "Used in 2 clears by 1 player · last … · +9% for its players". */
+/** An exact build's record: "2 clears · 1 player · 2026-09-01". */
 export function pickLine(p) {
   const [, , runs, players, last] = p;
-  return `Used in ${plural(Math.max(1, Math.round(runs)), 'clear')} by ${plural(players, 'player')} · last ${last}`;
+  return `${plural(Math.max(1, Math.round(runs)), 'clear')} · ${plural(players, 'player')} · ${last}`;
 }
 
-/** The top recipe's record, with how often its loadout was used. */
+/** The top recipe's record, with how often its loadout (kit and weapons) was used. */
 export function topLine(row) {
   const loadout = Math.max(1, Math.round(row[10]));
   const builds = row[11];
-  return `${pickLine(row[7])}. Its loadout (same kit and weapons) was used in ${plural(loadout, 'clear')}`
-    + (builds > 1 ? ` across ${plural(builds, 'exact build')}.` : '.');
+  return `${pickLine(row[7])} · loadout: ${plural(loadout, 'clear')}`
+    + (builds > 1 ? `, ${plural(builds, 'build')}` : '');
 }
 
 const pad = (list, count) => Array.from({ length: count }, (_, k) => list[k] ?? null);
@@ -482,8 +482,8 @@ function artifactBlock(model, r, mark) {
       h('div', { class: 'gear-body' },
         h('div', { class: 'gear-name' }, h('span', { class: 'gear-title' }, name(model, r.artifactItem))),
         h('p', { class: 'muted small' }, r.artifactUnlocked
-          ? `Unlocked artifact perks (${r.artifact.length}); which were applied wasn’t captured`
-          : `Applied artifact perks (${r.artifact.length})`))) : null,
+          ? `${r.artifact.length} perks unlocked (applied ones not captured)`
+          : `${r.artifact.length} perks applied`))) : null,
     h('div', { class: 'kit-tiles' }, r.artifact.map((i) => tile(model, i, { mark }))));
 }
 
@@ -528,14 +528,14 @@ export function shareButton(hash) {
     onclick: async () => {
       try {
         await navigator.clipboard.writeText(url());
-        status.textContent = 'Link copied';
+        status.textContent = 'Copied';
       } catch {
         // No clipboard (insecure page, permissions): show the link to copy by hand.
         status.replaceChildren(h('input', { class: 'share-url', value: url(), readonly: true, 'aria-label': 'Link to this build' }));
         status.querySelector('input').select();
       }
     },
-  }, 'Copy link to this build');
+  }, 'Copy link');
   return h('div', { class: 'share-row' }, button, status);
 }
 
@@ -546,12 +546,7 @@ export function shareButton(hash) {
  */
 function rankingDetails(effect, raw, skill) {
   return lazyDetails('Ranking details', () => h('div', { class: 'ranking-details' },
-    h('p', {}, `Build effect ${pct(effect)} · raw result ${pct(raw)} · players’ skill ${pct(skill)}`),
-    h('p', { class: 'muted' },
-      'Build effect is how players did with this build type compared with their own other runs. Searchlight’s '
-      + 'players were already among the best, so most builds sit near zero and a small negative number can still '
-      + 'be a very good build; the list is ordered by it. Raw result is how its runs went against a typical clear; '
-      + 'players’ skill is how good its players are.')));
+    h('p', {}, `Effect ${pct(effect)} · raw ${pct(raw)} · skill ${pct(skill)}`)));
 }
 
 /** A details element whose body is built on first open. */
@@ -569,7 +564,7 @@ function variantItem(model, top, v, mark, t) {
     h('p', { class: 'recipe-meta' }, pickLine(v), matched ? h('span', { class: 'match-badge' }, ` includes ${mark}`) : null),
     diff.length
       ? h('ul', { class: 'diff' }, diff.map((d) => h('li', {}, h('span', { class: 'diff-label' }, `${d.label}: `), d.text)))
-      : h('p', { class: 'muted' }, 'Same as the top build in every listed part.'),
+      : h('p', { class: 'muted' }, 'No listed differences.'),
     lazyDetails('Full build', () => h('div', {}, loadoutPanel(model, r, mark), shareButton(buildLink(t, r.id)))));
 }
 
@@ -577,7 +572,7 @@ function elsewhere(model, typeId, current, go) {
   const others = model.appearances[typeId].filter((a) => a.scope.id !== current.id && a.scope.kind !== 'all');
   if (others.length === 0) return null;
   others.sort((a, b) => b.effect - a.effect);
-  return lazyDetails(`Ranked in ${others.length} other activit${others.length === 1 ? 'y' : 'ies'}`, () =>
+  return lazyDetails(`Other activities (${others.length})`, () =>
     h('table', { class: 'elsewhere' },
       h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Activity'), h('th', { scope: 'col' }, 'Effect'), h('th', { scope: 'col' }, 'Players'))),
       h('tbody', {}, others.map((a) => h('tr', {},
@@ -624,12 +619,12 @@ function card(model, row, rank, scope, go, mark) {
       loadoutPanel(model, recipe, mark),
       shareButton(buildLink(t, recipe.id))),
     total ? lazyDetails(
-      `${total} near-identical variant${total === 1 ? '' : 's'}${more ? ` (showing the best ${variants.length})` : ''}`,
+      `Variants (${more ? `best ${variants.length} of ${total}` : total})`,
       () => h('ol', { class: 'variants' }, variants.map((v) => variantItem(model, recipe, v, mark, t))),
       'more variants-details') : null,
     rankingDetails(effect, raw, skill),
     elsewhere(model, row[0], scope, go),
-    h('a', { class: 'browse-link', href: findHash(t) }, 'Every collected build of this type →'));
+    h('a', { class: 'browse-link', href: findHash(t) }, 'All builds of this type →'));
 }
 
 export function fillSelect(select, options, value, anyLabel) {
@@ -753,13 +748,12 @@ export function startBook(root, data, load) {
   function renderScopeNote(scope) {
     const note = $('scope-note');
     note.replaceChildren(
-      `Ranked from ${n(scope.clears)} qualified clears by ${n(scope.players)} players, `
-        + `${data.first_run} to ${data.last_run}; `,
-      h('strong', {}, n(scope.build_runs)), ' of them had a captured build.');
+      `${n(scope.clears)} clears · ${n(scope.players)} players · ${n(scope.build_runs)} with builds · `
+        + `${data.first_run} – ${data.last_run}`);
     if (scope.build_runs < THIN_SCOPE) {
       const parent = scope.parent && data.scopes.find((s) => s.kind === 'group' && s.name === scope.parent);
-      note.append(h('span', { class: 'warn' }, ' Few captured builds here, so these rankings are tentative',
-        parent ? [' — ', h('button', { type: 'button', class: 'link', onclick: () => go(parent.id) }, `see all ${parent.name}`)] : '', '.'));
+      note.append(h('span', { class: 'warn' }, ' · few builds, tentative'),
+        ...(parent ? [' · ', h('button', { type: 'button', class: 'link', onclick: () => go(parent.id) }, `all ${parent.name}`)] : []));
     }
   }
 
@@ -776,9 +770,7 @@ export function startBook(root, data, load) {
     renderFilters();
     const { scope, rows } = results(model, state);
     renderScopeNote(scope);
-    $('summary').textContent = rows.length === 0
-      ? 'No builds match.'
-      : `${n(rows.length)} build${rows.length === 1 ? '' : 's'} match · showing ${n(Math.min(shown, rows.length))}`;
+    $('summary').textContent = plural(rows.length, 'build');
     $('results').replaceChildren(...rows.slice(0, shown).map((r, i) => card(model, r, i + 1, scope, go, state.has)));
     $('empty').hidden = rows.length !== 0;
     $('more').hidden = rows.length <= shown;
@@ -812,7 +804,7 @@ async function fetchJson(url) {
 }
 
 /**
- * Start the page: the ranked book, the highlights or "Find any build", as
+ * Start the page: the rankings, the highlights or the search, as
  * the URL says. Each view's data is fetched the first time it is shown; the
  * book and the highlights share the book index.
  */
@@ -827,7 +819,7 @@ export function boot(root) {
   let index = null;
   const bookIndex = () => (index ??= fetchJson('data/book/index.json'));
   // A finder result links to its type's ranked listing.
-  const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'Look for this build type in the ranked builds →');
+  const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'In rankings →');
   const start = {
     book: () => bookIndex().then((data) => startBook(root, data, fetchJson)),
     highlights: () => Promise.all([bookIndex(), import('./highlights.js')])

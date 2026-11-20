@@ -7,7 +7,7 @@
 
 import {
   DEFAULTS, FORMAT, NONE, buildLink, decodeRecipe, elementBadge, findHash, formatHash, h, lazyDetails,
-  loadoutPanel, pct, plural, scopeLabel, shareButton, typeIdentity, usageLine,
+  loadoutPanel, pct, plural, shareButton, typeIdentity, usageLine,
 } from './app.js';
 
 export const NEUTRAL = 'neutral';
@@ -58,13 +58,11 @@ export function rankedHash(t, scope) {
   });
 }
 
-/** How a pick differs from the subclass's picks above it. */
-export function noveltyLine(k, novelty, subclass) {
-  if (k === 0) return `The best-ranked ${subclass} build here.`;
+/** How much of a pick's playstyle its subclass's picks above don't share ("" for the first). */
+export function noveltyLine(k, novelty) {
+  if (k === 0) return '';
   const share = Math.round(novelty * 100);
-  return share >= 99
-    ? `Shares nothing that defines a playstyle with the ${subclass} picks above.`
-    : `${share}% of what defines its playstyle is new compared with the ${subclass} picks above.`;
+  return share >= 99 ? 'distinct' : `${share}% distinct`;
 }
 
 function highlightCard(model, file, pick, k, groups) {
@@ -80,23 +78,17 @@ function highlightCard(model, file, pick, k, groups) {
       typeIdentity(model, t),
       h('div', { class: 'metrics' },
         usageLine(players, runs),
-        neutral ? h('p', { class: 'secondary' }, `used in ${usedIn} of ${groups} activity groups`) : null,
-        h('p', { class: 'secondary' }, `last used ${last}`))),
-    h('p', { class: 'novelty' }, noveltyLine(k, novelty, t.element ?? '')),
+        neutral ? h('p', { class: 'secondary' }, `${usedIn} of ${groups} activity groups`) : null,
+        h('p', { class: 'secondary' }, `last used ${last}`),
+        k > 0 ? h('p', { class: 'secondary novelty' }, noveltyLine(k, novelty)) : null)),
     h('section', { class: 'recipe', 'aria-label': 'Build' },
       loadoutPanel(model, r),
       shareButton(buildLink(t, r.id))),
     lazyDetails('Ranking details', () => h('div', { class: 'ranking-details' },
-      h('p', {}, `${neutral ? 'Neutral-game effect' : 'Build effect'} ${pct(effect)}`),
-      h('p', { class: 'muted' }, neutral
-        ? 'The part of the build type’s effect that holds across activity groups: how much better its players do '
-          + 'with it than on their own other runs, counting only what it does everywhere rather than in one kind of '
-          + 'activity. Searchlight’s players were already among the best, so most builds sit near zero.'
-        : 'How much better players did with this build type here than on their own other runs. Searchlight’s '
-          + 'players were already among the best, so most builds sit near zero.'))),
+      h('p', {}, `${neutral ? 'Neutral-game effect' : 'Effect'} ${pct(effect)}`))),
     h('p', { class: 'card-links' },
-      h('a', { class: 'browse-link', href: rankedHash(t, scope) }, 'This build type in the ranked builds →'),
-      h('a', { class: 'browse-link', href: findHash(t) }, 'Every collected build of this type →')));
+      h('a', { class: 'browse-link', href: rankedHash(t, scope) }, 'In rankings →'),
+      h('a', { class: 'browse-link', href: findHash(t) }, 'All builds of this type →')));
 }
 
 /** Run the highlights view in `root`; returns `{ refresh }` for URL changes. */
@@ -108,7 +100,6 @@ export async function startHighlights(root, data, load) {
   const model = { data };
   const files = new Map();
   const sets = new Map(data.highlights.map(([id, name, file]) => [id, { id, name, file }]));
-  const scopes = new Map(data.scopes.map((s) => [s.id, s]));
   const groups = data.scopes.filter((s) => s.kind === 'group').length;
   let state = parseHighlightHash(location.hash);
   let generation = 0;
@@ -121,7 +112,7 @@ export async function startHighlights(root, data, load) {
     if (!byParent.has(s.parent)) byParent.set(s.parent, []);
     byParent.get(s.parent).push(s);
   }
-  setSelect.replaceChildren(option(NEUTRAL, 'Neutral game (any activity)'),
+  setSelect.replaceChildren(option(NEUTRAL, 'Neutral game'),
     ...data.scopes.filter((s) => s.kind === 'group').map((s) => {
       const children = byParent.get(s.name) ?? [];
       return h('optgroup', { label: s.name },
@@ -158,13 +149,8 @@ export async function startHighlights(root, data, load) {
     }
     const file = files.get(set.id);
     const picks = picksOf(file, state.cls);
-    const where = set.id === NEUTRAL ? 'for the neutral game' : `for ${scopeLabel(scopes.get(set.id))}`;
-    note.textContent = set.id === NEUTRAL
-      ? 'Workhorses: builds that do well across activities. Up to three per subclass and six Prismatic, picked to '
-        + 'be as different from each other as the data allows while ranking as high as it allows. A build tailored '
-        + 'to one activity will often beat them there; these are the ones to keep for anything.'
-      : 'The best build of each subclass in this activity.';
-    $('hl-summary').textContent = `${plural(picks.length, `${state.cls} build`)} ${where}`;
+    note.textContent = set.id === NEUTRAL ? 'Builds that hold up in any activity.' : '';
+    $('hl-summary').textContent = plural(picks.length, 'build');
     list.replaceChildren(...bySubclass(model.data.types, picks).map(([subclass, group]) =>
       h('section', { class: 'subclass-group', 'aria-label': subclass },
         h('h3', { class: 'subclass-heading' }, elementBadge(subclass)),

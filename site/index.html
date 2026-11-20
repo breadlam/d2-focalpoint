@@ -13,17 +13,13 @@
   <main id="app" class="loading">
     <header class="masthead">
       <h1 class="brand"><img class="brand-mark" src="brand/rahool-mask.png" alt="" width="40" height="40"><span class="wordmark">Skinwalker</span></h1>
-      <p class="lede">
-        Exact Destiny 2 endgame builds captured by Searchlight, as players equipped them, ranked by
-        how much the build helps the players who use it rather than by how good those players
-        already are.
-      </p>
+      <p class="lede">Destiny 2 endgame builds, ranked by how much they lift the players who run them.</p>
     </header>
 
     <nav class="tabs" aria-label="Views">
-      <button id="tab-book" type="button" class="tab" aria-selected="true">Ranked builds</button>
+      <button id="tab-book" type="button" class="tab" aria-selected="true">Rankings</button>
       <button id="tab-highlights" type="button" class="tab" aria-selected="false">Highlights</button>
-      <button id="tab-find" type="button" class="tab" aria-selected="false">Find any build</button>
+      <button id="tab-find" type="button" class="tab" aria-selected="false">Search</button>
     </nav>
 
     <div id="book-view">
@@ -62,15 +58,15 @@
         <select id="aspect1"></select>
       </div>
       <div class="field">
-        <label for="aspect2">Second aspect</label>
+        <label for="aspect2">Aspect</label>
         <select id="aspect2"></select>
       </div>
       <div class="field span-2">
-        <label for="has">Build includes <span class="hint">(a fragment, weapon, perk or mod in a listed build)</span></label>
+        <label for="has">Includes</label>
         <select id="has"></select>
       </div>
       <div class="field">
-        <label for="min">Minimum players <span class="hint">(who ran the build type)</span></label>
+        <label for="min">Min. players</label>
         <select id="min">
           <option value="1">1</option>
           <option value="2">2</option>
@@ -105,7 +101,7 @@
       </div>
       <ol id="results" class="results"></ol>
       <p id="empty" class="empty" hidden>
-        No builds match these filters. Remove a filter, lower the minimum players, or choose a broader activity.
+        No matches. Loosen a filter or lower Min. players.
       </p>
       <button id="more" type="button" class="button" hidden>Show more</button>
     </section>
@@ -114,7 +110,7 @@
     <div id="highlights-view" hidden>
       <form id="hl-filters" class="panel" aria-label="Highlights">
         <div class="field span-2">
-          <label for="hl-set">For</label>
+          <label for="hl-set">Activity</label>
           <select id="hl-set"></select>
         </div>
         <fieldset class="field span-2">
@@ -139,13 +135,9 @@
     </div>
 
     <div id="find-view" hidden>
-      <p class="view-intro">
-        Every build Searchlight collected, exactly as equipped, whether or not it was used in a
-        qualified clear. Narrow by build type, then by anything a build includes.
-      </p>
       <form id="find-filters" class="panel" aria-label="Find filters">
         <div class="field span-2">
-          <label for="f-act">Used in</label>
+          <label for="f-act">Activity</label>
           <select id="f-act"></select>
         </div>
         <fieldset class="field span-2">
@@ -178,11 +170,11 @@
           <select id="f-aspect1"></select>
         </div>
         <div class="field">
-          <label for="f-aspect2">Second aspect</label>
+          <label for="f-aspect2">Aspect</label>
           <select id="f-aspect2"></select>
         </div>
         <div class="field span-2">
-          <label for="f-has">Includes <span class="hint">(fragments, weapons, perks, mods, set bonuses, artifact perks; all must match)</span></label>
+          <label for="f-has">Includes</label>
           <select id="f-has"></select>
           <ul id="f-chips" class="chip-filters" aria-label="Required components"></ul>
         </div>
@@ -209,86 +201,47 @@
     </div>
 
     <section class="explainer" aria-labelledby="how-heading">
-      <h2 id="how-heading">How builds are ranked</h2>
+      <h2 id="how-heading">How it works</h2>
       <dl>
-        <dt>Every build is real</dt>
-        <dd>Each listing shows exact builds players used in qualified clears: subclass, abilities,
-          aspects, fragments, weapons and their perks, armor pieces with their mods, stats, set bonuses
-          and artifact perks, exactly as equipped. Nothing is averaged or combined.</dd>
-        <dt>Build types are ranked by build effect</dt>
-        <dd>A build type is a class, subclass, exotic armor, exotic weapon, super and aspects. Its
-          effect is how much better players do with it than on their own other runs, relative to the
-          average build. A build ranks high only if it lifts the players who use it, so strong players
-          can’t carry a build up the list. Raw result is how its runs went without separating the
-          player; players’ skill is how good its players are. A solo clear of content made for a
-          fireteam earns what soloing it typically takes: it is measured against other solo clears of
-          the same activity, then credited with how much better solo clears score against fireteam
-          clears there (about ×1.2–3.4; none for raids, whose solo clears can’t be told apart from
-          partial runs). Searchlight’s players were already among the best,
-          so most builds sit near zero and a very good build can read slightly negative; the numbers
-          are under “Ranking details” on each listing.</dd>
+        <dt>Builds</dt>
+        <dd>Exact builds from qualified clears, as equipped. Nothing is averaged.</dd>
+        <dt>Ranking</dt>
+        <dd>A build type (class, subclass, exotics, super, aspects) ranks by <em>effect</em>: how much
+          better players do with it than on their own other runs, so strong players can’t carry it.
+          <em>Raw</em> is how its runs went; <em>skill</em> is how good its players are. Everyone here
+          was already elite, so most effects sit near zero.</dd>
+        <dt>Clears</dt>
+        <dd>Scored on kills, speed and deaths against typical clears of the same activity
+          (Searchlight’s evaluator). Solo clears of fireteam content earn the activity’s solo premium
+          (×1.2–3.4; none for raids). Late joiners are scored per minute played. Only clears that met
+          Searchlight’s gates count.</dd>
+        <dt>Top build and variants</dt>
+        <dd>The top build is the best exact build of the best loadout (same kit and weapons) players
+          came back to. Variants differ by a perk, mod or artifact perk.</dd>
         <dt>Highlights</dt>
-        <dd>Builds per class and subclass, picked to be as different from each other as the data allows
-          while ranking as high as it allows: up to three per subclass and six Prismatic for the neutral
-          game, the best of each subclass for an activity. A subclass shows fewer when the next build
-          would rank below average or only swap an earlier one’s exotics. There are no player cut-offs,
-          so a build type seen once can be picked if it ranks well and adds something new. Builds missing part of their kit (aspects,
-          fragments, abilities) or their armor mods are left out: those parts were not captured. A pick’s playstyle is its subclass, super, aspects, exotics,
-          abilities and fragments; each pick says how much of it is new compared with its subclass’s picks above.
-          <em>Neutral game</em> picks rank by
-          the part of a build’s effect that holds across activity groups, so a build that only shines in
-          one kind of activity counts for less there; those builds show up in their activity’s
-          highlights instead.</dd>
-        <dt>Sharing a build</dt>
-        <dd>“Copy link to this build” copies a link that opens exactly that build in Find any
-          build.</dd>
-        <dt>Minimum players</dt>
-        <dd>How many different players ran the build type in the chosen activity (each for at least
-          half a run); their exact builds may differ. The default of 3 hides build types only one or
-          two players used; set it to 1 to include them.</dd>
-        <dt>The top build</dt>
-        <dd>Builds of a type with the same exotic perks, abilities, aspects and fragments form a
-          family, and those that also carry the same weapons form a loadout; their evidence is pooled,
-          because most exact builds were used in only a few clears. The top build is the best-ranked
-          exact build of the best loadout that players came back to (at least 3 clears, falling back
-          to fewer) and that beat their usual level.</dd>
-        <dt>Variants</dt>
-        <dd>Other exact builds of the same loadout that differ in at most a few parts — a perk roll,
-          a mod, an artifact perk. Each lists exactly what differs from the top build, and opens to
-          the full build.</dd>
-        <dt>Reading a build</dt>
-        <dd>Builds are laid out like Searchlight’s build page and the in-game loadout screen:
-          weapons and subclass, stats and set bonuses, armor and artifact. Hover over, focus or tap
-          an icon for its name.</dd>
-        <dt>Find any build</dt>
-        <dd>The second view searches every build Searchlight collected — about 594,000, ranked or
-          not — exactly as equipped. Its filters work on build types first; once they narrow the
-          search enough, the page downloads just those builds and matches everything they include.
-          Ranked builds come first, the rest by how often they were used.</dd>
-        <dt>Run results</dt>
-        <dd>Each clear is scored on kills, speed and deaths against a typical clear of the same activity
-          with the same solo status, following Searchlight’s original run evaluator. A player who joined
-          late or left early is scored on kills and deaths per minute played, against others who did the
-          same. Only clears that met Searchlight’s difficulty gates count (fresh start, difficulty tier,
-          feats).</dd>
+        <dd>Up to three builds per subclass and six Prismatic for the neutral game, one per subclass
+          per activity: as strong and as different as the data allows. <em>Distinct</em> is how much of
+          a pick’s playstyle the picks above don’t share. The neutral game counts only what a build
+          does across activities. Incomplete captures are left out.</dd>
+        <dt>Min. players</dt>
+        <dd>Different players who ran the build type in that activity.</dd>
+        <dt>Search</dt>
+        <dd>Every collected build (about 594,000), ranked or not. Narrow by build type, then by any
+          part.</dd>
       </dl>
-      <p class="muted">
-        Keep in mind: the player matters far more than the build. Player skill explains about two fifths
-        of how a clear goes, and the build adds about five points on top. Support builds are undervalued,
-        because their value shows up in teammates’ kills. Builds with few players are estimated
-        roughly and pulled toward average.
-      </p>
+      <p class="muted">Player skill explains about 40% of a clear; the build about 5 points more.
+        Support builds are undervalued (their value shows in teammates’ kills). Thin evidence is
+        pulled toward average.</p>
     </section>
 
     <footer class="footer">
-      <p>Data captured by the Searchlight project (builds.rodeo) from Bungie’s public API.
-        Not affiliated with or endorsed by Bungie. Destiny 2 names and icons © Bungie, Inc.</p>
-      <p>Skinwalker is set in <a href="brand/OFL.txt">Jost</a> (SIL Open Font License); class symbols are
-        public domain (<a href="brand/class-icons/LICENSE">CC0</a>).</p>
+      <p>Data from Searchlight (builds.rodeo) via Bungie’s API. Not affiliated with Bungie.
+        Destiny 2 names and icons © Bungie, Inc. Set in <a href="brand/OFL.txt">Jost</a> (OFL); class
+        symbols <a href="brand/class-icons/LICENSE">CC0</a>.</p>
     </footer>
   </main>
 
-  <noscript><p class="note">This page needs JavaScript to load and filter the rankings.</p></noscript>
+  <noscript><p class="note">This page needs JavaScript.</p></noscript>
 
   <script type="module">
     import { boot } from './app.js';
