@@ -8,10 +8,10 @@ use anyhow::{Result, bail};
 use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
 use focalpoint_db::analysis::{
-    breadth, completeness, diversity, highlights as hl, priors, subclasses,
+    breadth, completeness, diversity, highlights as hl, priors, solo, subclasses,
 };
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
-use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, load_model};
+use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, SoloScoring, load_model};
 use focalpoint_db::search::GroupBy;
 use focalpoint_db::site::{SiteData, SiteOptions, build_vectors, site_data};
 
@@ -62,6 +62,13 @@ Prismatic picks per class; activities: --activity-per picks per subclass. Report
 ranks, evidence and distinctness, and compares them with picking without a quota."
     )]
     Subclasses(SubclassArgs),
+    /// Soloing content made for a fireteam: volume, what it takes, and crediting it in the rankings
+    #[command(
+        after_help = "Compares solo clears with the fireteam clears of the same activities, and \
+the all-activities build ranking with solo clears measured against solo clears (now) and against \
+fireteam clears (credited)."
+    )]
+    Solo(SoloArgs),
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -110,6 +117,16 @@ pub struct DiversityArgs {
     /// Build types need this many players
     #[arg(long, default_value_t = 3)]
     pub min_players: usize,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SoloArgs {
+    /// Build types need this many players in the ranking comparison
+    #[arg(long, default_value_t = 3)]
+    pub min_players: usize,
+    /// Credited build types listed per class
+    #[arg(long, default_value_t = 15)]
+    pub top: usize,
 }
 
 #[derive(Debug, clap::Args)]
@@ -176,6 +193,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Diversity(a) => run_diversity(&db, a, args.format),
         What::Completeness(a) => run_completeness(&db, a, args.format),
         What::Subclasses(a) => run_subclasses(&db, a, args.format),
+        What::Solo(a) => run_solo(&db, a, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -1159,5 +1177,182 @@ One-player picks: {:.0}% — without the quota {:.0}%.",
         quantile(costs.clone(), 0.5),
         quantile(costs, 0.9)
     );
+    Ok(())
+}
+
+/// "Exotic armor + exotic weapon · Element Super · aspects" from a core key.
+fn key_label(key: &[String]) -> String {
+    let none = |s: &str, what: &str| {
+        if s == "—" {
+            format!("no exotic {what}")
+        } else {
+            s.to_string()
+        }
+    };
+    format!(
+        "{} + {} · {} {} · {}",
+        none(&key[2], "armor"),
+        none(&key[3], "weapon"),
+        key[1],
+        key[4],
+        key[5]
+    )
+}
+
+fn run_solo(db: &Database, a: &SoloArgs, format: Format) -> Result<()> {
+    println!("## Scored clears by activity group");
+    let header = [
+        "activity group",
+        "clears",
+        "solo clears",
+        "solo share",
+        "solo players",
+        "solo with a build",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = solo::volume(db)?
+        .into_iter()
+        .map(|v| {
+            vec![
+                v.group,
+                thousands(v.clears as i64),
+                thousands(v.solo_clears as i64),
+                format!(
+                    "{:.1}%",
+                    100.0 * v.solo_clears as f64 / v.clears.max(1) as f64
+                ),
+                thousands(v.solo_players as i64),
+                thousands(v.solo_build_runs as i64),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+
+    println!("\n## Solo clears against the fireteam clears of the same activity (medians)");
+    let header = [
+        "activity group",
+        "solo clears",
+        "kill index",
+        "speed",
+        "survival",
+        "credit (quartiles)",
+        "at kill cap",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = solo::premium(db)?
+        .into_iter()
+        .map(|p| {
+            vec![
+                p.group,
+                thousands(p.solo_clears as i64),
+                format!("{:.2}", p.kill_index),
+                format!("{:.2}", p.speed),
+                format!("{:.2}", p.survival),
+                format!("×{:.2} (×{:.2}–×{:.2})", p.credit, p.credit_q1, p.credit_q3),
+                format!("{:.0}%", 100.0 * p.at_kill_cap),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Credit: how much better a solo clear scores against the fireteam reference than against other solo clears \
+(Searchlight used a flat ×2)."
+    );
+
+    println!(
+        "\n## Per-activity solo premium (credited when the fireteam reference is the activity's own and soloists' median kill index ≥ {})",
+        focalpoint_db::rank::MIN_SOLO_KILL_INDEX
+    );
+    let header = [
+        "activity group",
+        "activity",
+        "solo clears",
+        "fireteam clears",
+        "kill index",
+        "measured",
+        "credited",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = solo::credits(db)?
+        .into_iter()
+        .filter(|c| c.solo_clears >= 20)
+        .map(|c| {
+            vec![
+                c.group,
+                c.activity,
+                thousands(c.solo_clears as i64),
+                if c.borrowed {
+                    format!("{} (borrowed)", c.fireteam_clears)
+                } else {
+                    thousands(c.fireteam_clears as i64)
+                },
+                format!("{:.2}", c.kill_index),
+                format!("×{:.2}", c.measured),
+                format!("×{:.2}", c.credited),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!("(Activities with at least 20 solo clears.)\n");
+
+    eprintln!("ranking build types three ways…");
+    let per_run = solo::shifts(db, SoloScoring::AgainstFireteam)?;
+    for c in solo::by_class(&per_run, a.min_players) {
+        println!(
+            "Every solo clear against the fireteam reference — {}: rank correlation {:+.2}, top 10% in common {} of {}.",
+            c.class, c.correlation, c.top_overlap.0, c.top_overlap.1
+        );
+    }
+    let shifts = solo::shifts(db, SoloScoring::ActivityCredit)?;
+    let with_solo = shifts.iter().filter(|s| s.solo_runs > 0.0).count();
+    println!(
+        "\n## The all-activities ranking with the per-activity solo premium\n{} build types; {with_solo} have a solo clear.",
+        thousands(shifts.len() as i64)
+    );
+    for c in solo::by_class(&shifts, a.min_players) {
+        println!(
+            "\n### {}: {} build types with ≥ {} players\nRank correlation with today's ranking {:+.2}; top 10% in common {} of {}; \
+with a solo clear: {:.0}% of the credited top 10%, {:.0}% of the rest.",
+            c.class,
+            c.types.len(),
+            a.min_players,
+            c.correlation,
+            c.top_overlap.0,
+            c.top_overlap.1,
+            100.0 * c.top_with_solo,
+            100.0 * c.rest_with_solo
+        );
+        let header = [
+            "rank",
+            "before",
+            "credited",
+            "today",
+            "players",
+            "solo runs",
+            "solo players",
+            "build type",
+        ]
+        .map(String::from);
+        let rows: Vec<Vec<String>> = c
+            .types
+            .iter()
+            .zip(&c.rank_before)
+            .take(a.top)
+            .enumerate()
+            .map(|(i, (t, before))| {
+                vec![
+                    (i + 1).to_string(),
+                    before.to_string(),
+                    pct(t.credited),
+                    pct(t.effect),
+                    t.players.to_string(),
+                    format!("{:.0}", t.solo_runs),
+                    t.solo_players.to_string(),
+                    key_label(&t.key),
+                ]
+            })
+            .collect();
+        println!("{}", render(format, &header, &rows));
+    }
     Ok(())
 }

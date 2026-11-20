@@ -12,6 +12,7 @@ for further processing). The numbers below are from the import of
 | `analyze priors [--contexts] [--grouping …]` | Which ridge priors predict held-out runs best? | `FitParams::default`, `NEUTRAL_CONTEXT_PRIOR` (ADR 0006, 0007) |
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
+| `analyze solo [--min-players N] [--top N]` | How much fireteam content was soloed, what a solo clear takes against the fireteam clears, and what crediting it would do to the rankings? | solo credit in the ranking (proposed) |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
 | `analyze highlights [--set S] [--class C] [--sweep]` | Why was each highlight picked, and how do picks change with the quality weight? | `QUALITY_WEIGHT` (ADR 0007) |
@@ -210,4 +211,44 @@ Findings, activities (one per subclass):
 - The quota costs a median 1.2 points of mean effect (p90 3.4) against six
   picks without it; 12% of its picks rank below zero for the activity
   (without the quota, 4%) — e.g. Titan Strand in Vault of Glass: −7%.
+
+## `analyze solo`
+
+Searchlight doubled a solo clear's score; ADR 0006 measures solo clears
+against other solo clears of the same activity instead, so a build that
+carries one player through a fireteam's work earns nothing for it. The
+study: scored clears and solo clears per activity group; solo clears
+against the fireteam reference of their activity (kill index, speed,
+survival and the **premium** — how much better a solo clear scores against
+the fireteam clears than against other solo clears); the per-activity
+premium of `SoloScoring::ActivityCredit` with which activities qualify; and
+the all-activities build ranking with solo clears credited, per class.
+`focalpoint rank builds --solo-scoring credit|fireteam` ranks that way
+(`alone`, the default, is today's scoring).
+
+Findings:
+
+- "Solo" is a one-player post-game report. Grandmaster Conquest is solo
+  content (69,882 of 69,885 clears), so it has no fireteam baseline. Raids,
+  Pantheon and The Desert Perpetual are six-player content whose few solo
+  "clears" (130, 498, 476) mostly look partial: a kill index of 0.1–0.3
+  against the fireteam at maximum speed.
+- Where solo clears are full clears of fireteam content, a soloist makes
+  2.5–3× a fireteam member's kills at 0.75–0.95× the pace: the premium is
+  ×1.5–2.2 in Ultimate Ops, ×2.8 in Equilibrium, ×3.0–3.1 in Ultimate
+  Conquest, ×2.4–3.3 in Master dungeons and ×6.1 in Root of Nightmares
+  (Master) — Searchlight's ×2, measured, and in proportion to the fireteam
+  the content was made for.
+- Credited per activity (premium only where the fireteam reference is the
+  activity's own and soloists' median kill index is ≥ 1; never below ×1),
+  the all-activities ranking keeps a rank correlation of +0.90–0.93 with
+  today's, but a third of each class's top 10% changes, and 86–91% of the
+  credited top 10% have a solo clear (67–70% of the rest). The builds
+  elite players take into fireteam content alone rise: Fortune's Favor +
+  Wolfsbane Shadowshot (soloed by 139 players) from 29th to 1st of Hunter
+  build types; Getaway Artist + Praxic Blade Song of Flame (103) from 53rd
+  to 10th of Warlock's.
+- Scoring every solo clear against the fireteam reference run by run gives
+  nearly the same ranking, but penalises soloists where kills do not
+  measure the work (boss encounters) and credits partial runs.
 

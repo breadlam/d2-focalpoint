@@ -11,7 +11,9 @@
 //! * [`diversity`] — how many well-ranked build types are mutually distinct
 //!   under hard thresholds (the study that led to [`crate::highlight`]);
 //! * [`highlights`] — how the highlight selection trades rank for variety;
-//! * [`subclasses`] — what a quota of highlights per subclass would pick.
+//! * [`subclasses`] — what a quota of highlights per subclass would pick;
+//! * [`solo`] — soloing content made for a fireteam, and what crediting it
+//!   would do to the rankings.
 //!
 //! Each returns plain data; the CLI renders it.
 
@@ -20,6 +22,7 @@ pub mod completeness;
 pub mod diversity;
 pub mod highlights;
 pub mod priors;
+pub mod solo;
 pub mod subclasses;
 
 /// Average ranks, ties sharing their mean rank.

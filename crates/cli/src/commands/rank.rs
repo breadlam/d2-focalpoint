@@ -7,7 +7,7 @@ use anyhow::Result;
 use clap::ValueEnum;
 use focalpoint_db::Database;
 use focalpoint_db::rank::{
-    BuildSort, Model, PlayerSort, RankOptions, name_players, rank_builds, rank_players,
+    BuildSort, Model, PlayerSort, RankOptions, SoloScoring, name_players, rank_builds, rank_players,
 };
 use focalpoint_db::search::GroupBy;
 
@@ -100,10 +100,34 @@ pub struct BuildArgs {
     pub min_players: usize,
     #[arg(long, value_enum, default_value_t = BuildOrder::Effect)]
     pub sort: BuildOrder,
+    /// What solo clears are measured against
+    #[arg(long, value_enum, default_value_t = Solo::Alone)]
+    pub solo_scoring: Solo,
     #[arg(long, default_value_t = 20)]
     pub limit: usize,
     #[arg(long, value_enum, default_value_t)]
     pub format: Format,
+}
+
+/// What solo clears are measured against (see `focalpoint analyze solo`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum Solo {
+    /// Other solo clears of the activity (default)
+    Alone,
+    /// Other solo clears, plus the activity's measured solo premium
+    Credit,
+    /// The activity's fireteam clears, run by run
+    Fireteam,
+}
+
+impl From<Solo> for SoloScoring {
+    fn from(s: Solo) -> Self {
+        match s {
+            Solo::Alone => Self::AgainstSolo,
+            Solo::Credit => Self::ActivityCredit,
+            Solo::Fireteam => Self::AgainstFireteam,
+        }
+    }
 }
 
 #[derive(Debug, clap::Args)]
@@ -159,6 +183,7 @@ fn builds(db: &Database, args: &BuildArgs) -> Result<()> {
         facets: args.facets.to_facets(),
         runs: args.runs.to_filter(),
         group_by: args.group_by.into(),
+        solo: args.solo_scoring.into(),
         ..RankOptions::default()
     };
     let sort = match args.sort {

@@ -43,6 +43,112 @@ pub struct RankOptions {
     /// prior (pseudo-runs), and report only the part of a build's effect
     /// that holds across activity groups: the neutral-game ranking.
     pub context_prior: Option<f64>,
+    /// What solo clears are measured against.
+    pub solo: SoloScoring,
+}
+
+/// What a solo clear's performance is measured against.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SoloScoring {
+    /// Other solo clears of the activity (ADR 0006): soloing earns nothing
+    /// by itself.
+    #[default]
+    AgainstSolo,
+    /// The activity's fireteam clears: a solo clear of content made for a
+    /// fireteam earns what it takes — every kill is the soloist's, and there
+    /// is no one to revive them — as Searchlight's 2× solo multiplier did,
+    /// measured instead of fixed. Same factors and bounds as `run_score`
+    /// (`ScoreParams::default`), centred like the fireteam clears.
+    AgainstFireteam,
+    /// Other solo clears, plus the activity's solo premium: the median, over
+    /// its solo clears, of how much better each scores against the fireteam
+    /// reference than against other solo clears ([`solo_credit_sql`]).
+    /// Soloists stay ranked among themselves; soloing content made for a
+    /// fireteam earns what it typically takes, never less than nothing.
+    ActivityCredit,
+}
+
+/// The fireteam-referenced log score of a solo clear `s` against reference
+/// `t` (the factors and bounds of `run_score`), and its kill index.
+pub(crate) fn against_fireteam(s: &str, t: &str) -> (String, String) {
+    let p = focalpoint_core::rank::ScoreParams::default();
+    let kill_index = format!(
+        "least(greatest({s}.kills / {t}.kills, {k0}), {k1})",
+        k0 = p.kill_bounds.0,
+        k1 = p.kill_bounds.1
+    );
+    let log_score = format!(
+        "ln({kill_index}
+            * least(greatest({t}.duration_s / greatest({s}.duration_s, 1), {s0}), {s1})
+            * least(greatest((1 + {d} * {t}.deaths) / (1 + {d} * {s}.deaths), {v0}), {v1}))",
+        s0 = p.speed_bounds.0,
+        s1 = p.speed_bounds.1,
+        d = p.death_rate,
+        v0 = p.survival_bounds.0,
+        v1 = p.survival_bounds.1,
+    );
+    (log_score, kill_index)
+}
+
+/// Per activity, the log solo premium of [`SoloScoring::ActivityCredit`]:
+/// `(activity_hash, log_credit, solo_clears, kill_index)`. Activities
+/// qualify when their fireteam reference is their own (not borrowed: enough
+/// fireteam clears to compare with) and their soloists typically do at least
+/// a fireteam member's share of the killing (median kill index ≥ 1 — full
+/// clears, not partial ones); the premium is never negative.
+#[must_use]
+pub fn solo_credit_sql() -> String {
+    let (log_score, kill_index) = against_fireteam("s", "t");
+    format!(
+        "SELECT s.activity_hash,
+                greatest(0, median({log_score} - t.log_score_mean - s.perf)) AS log_credit,
+                count(*) AS solo_clears, median({kill_index}) AS kill_index
+         FROM run_score s
+         JOIN activity_reference t
+              ON t.activity_hash = s.activity_hash AND NOT t.is_solo AND t.is_scored AND NOT t.is_borrowed
+         WHERE s.is_solo AND t.kills > 0 AND t.log_score_mean IS NOT NULL
+         GROUP BY 1
+         HAVING median({kill_index}) >= {MIN_SOLO_KILL_INDEX}"
+    )
+}
+
+/// A solo premium needs the activity's soloists to do, typically, at least
+/// this share of a fireteam member's killing: full clears, not partial ones.
+pub const MIN_SOLO_KILL_INDEX: f64 = 1.0;
+
+impl SoloScoring {
+    /// The joins the performance expression needs, after `run_score r`.
+    fn join(self) -> String {
+        match self {
+            Self::AgainstSolo => String::new(),
+            Self::AgainstFireteam => "LEFT JOIN activity_reference team
+                     ON team.activity_hash = r.activity_hash AND NOT team.is_solo AND team.is_scored"
+                .into(),
+            Self::ActivityCredit => format!(
+                "LEFT JOIN ({}) credit ON credit.activity_hash = r.activity_hash",
+                solo_credit_sql()
+            ),
+        }
+    }
+
+    /// A run's performance: `run_score.perf`, or its credited counterpart
+    /// for solo clears.
+    fn perf(self) -> String {
+        match self {
+            Self::AgainstSolo => "r.perf".into(),
+            Self::AgainstFireteam => {
+                let (log_score, _) = against_fireteam("r", "team");
+                format!(
+                    "CASE WHEN r.is_solo AND team.kills > 0 AND team.log_score_mean IS NOT NULL
+                          THEN {log_score} - team.log_score_mean
+                          ELSE r.perf END"
+                )
+            }
+            Self::ActivityCredit => {
+                "r.perf + CASE WHEN r.is_solo THEN coalesce(credit.log_credit, 0) ELSE 0 END".into()
+            }
+        }
+    }
 }
 
 impl Default for RankOptions {
@@ -53,6 +159,7 @@ impl Default for RankOptions {
             group_by: GroupBy::Core,
             fit: FitParams::default(),
             context_prior: None,
+            solo: SoloScoring::default(),
         }
     }
 }
@@ -179,7 +286,11 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
     };
     let mut run_params = Vec::new();
     let run_where = runs.sql(&mut run_params);
-    let from = "FROM run_score r JOIN activity a ON a.activity_hash = r.activity_hash";
+    let solo_join = opts.solo.join();
+    let perf = opts.solo.perf();
+    let from = format!(
+        "FROM run_score r JOIN activity a ON a.activity_hash = r.activity_hash {solo_join}"
+    );
 
     // Players: their stats over the selection, and the baseline from runs
     // without a captured build.
@@ -191,7 +302,7 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
             "SELECT r.membership_id, count(*), count(*) FILTER (WHERE r.is_solo),
                     max(r.score), strftime(max(r.started_at), '%Y-%m-%d'),
                     count(*) FILTER (WHERE NOT r.has_build),
-                    coalesce(sum(r.perf) FILTER (WHERE NOT r.has_build), 0)
+                    coalesce(sum({perf}) FILTER (WHERE NOT r.has_build), 0)
              {from} WHERE {run_where}
              GROUP BY 1 ORDER BY 1"
         );
@@ -276,11 +387,11 @@ pub fn load_model(db: &Database, opts: &RankOptions) -> Result<ModelData> {
     let mut build_run_keys: HashSet<(i64, i64)> = HashSet::new();
     {
         let sql = format!(
-            "SELECT r.instance_id, r.membership_id, rb.build_id, r.perf,
+            "SELECT r.instance_id, r.membership_id, rb.build_id, {perf},
                     coalesce(rb.share / nullif(sum(rb.share) OVER w, 0), 1.0 / count(*) OVER w),
                     strftime(r.started_at, '%Y-%m-%d'), coalesce(a.target_group, '')
              FROM run_score r JOIN run_build rb USING (instance_id, membership_id)
-             JOIN activity a ON a.activity_hash = r.activity_hash
+             JOIN activity a ON a.activity_hash = r.activity_hash {solo_join}
              WHERE r.has_build AND {run_where}
              WINDOW w AS (PARTITION BY rb.instance_id, rb.membership_id)
              ORDER BY r.instance_id, r.membership_id, rb.build_id"
