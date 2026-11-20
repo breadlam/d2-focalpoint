@@ -25,6 +25,7 @@ flate2 = "1"
 indicatif = "0.18"
 rayon = "1.12"
 rusqlite = { version = "0.43", features = ["bundled"] }
+quick-xml = "0.42"
 scraper = "0.29"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -33,6 +34,7 @@ thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

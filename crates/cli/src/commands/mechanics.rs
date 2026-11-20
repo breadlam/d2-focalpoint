@@ -70,6 +70,8 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
         "with a subject",
         "subjects",
         "keywords",
+        "rotations",
+        "loadouts",
     ]
     .map(String::from);
     let rows: Vec<Vec<String>> = summaries
@@ -82,6 +84,16 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
                 thousands(s.with_subject as i64),
                 thousands(s.subjects as i64),
                 thousands(s.keywords as i64),
+                thousands(s.rotations as i64),
+                if s.missing_loadouts > 0 {
+                    format!(
+                        "{} ({} missing)",
+                        thousands(s.loadouts as i64),
+                        s.missing_loadouts
+                    )
+                } else {
+                    thousands(s.loadouts as i64)
+                },
             ]
         })
         .collect();

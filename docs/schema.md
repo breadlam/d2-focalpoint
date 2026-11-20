@@ -182,7 +182,9 @@ weapons or builds.
 
 `mechanic_source`, `mechanic_entry`, `mechanic_subject` and
 `mechanic_keyword` hold the community's documentation of game mechanics,
-keyed to manifest hashes. They are not written by the import: `focalpoint
+keyed to manifest hashes; `mechanic_rotation`, `mechanic_rotation_loadout`,
+`mechanic_loadout` and `mechanic_loadout_item` measured boss-damage
+rotations and the DIM loadouts behind them. They are not written by the import: `focalpoint
 mechanics import` adds and replaces them in an existing database
 (`meta.mechanics_version`). See [mechanics.md](mechanics.md).
 

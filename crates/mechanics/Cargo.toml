@@ -11,9 +11,11 @@ repository.workspace = true
 anyhow.workspace = true
 duckdb.workspace = true
 focalpoint-db.workspace = true
+quick-xml.workspace = true
 scraper.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+zip.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

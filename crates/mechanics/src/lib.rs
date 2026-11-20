@@ -11,7 +11,9 @@
 //!
 //! * [`clarity`] — the Clarity database, keyed by hash;
 //! * [`compendium`] — the Destiny Data Compendium's tabs, keyed by name,
-//!   matched to the manifest by [`names`].
+//!   matched to the manifest by [`names`];
+//! * [`aegis`] — `TheAegisRelic`'s boss damage workbook: measured damage
+//!   rotations and the DIM loadouts they were run with.
 
 use std::path::Path;
 
@@ -19,10 +21,12 @@ use anyhow::{Context, Result};
 use duckdb::params;
 use focalpoint_db::{Database, MECHANICS_SQL, MECHANICS_VERSION, meta_key};
 
+pub mod aegis;
 pub mod clarity;
 pub mod compendium;
 pub mod names;
 pub mod sheet;
+pub mod xlsx;
 
 /// One documented game element or game state.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,6 +68,36 @@ pub struct Summary {
     pub with_subject: usize,
     pub subjects: usize,
     pub keywords: usize,
+    pub rotations: usize,
+    pub loadouts: usize,
+    /// Loadouts linked but not saved.
+    pub missing_loadouts: usize,
+}
+
+/// One source as read.
+#[derive(Debug, Default)]
+struct Source {
+    name: &'static str,
+    provenance: Provenance,
+    entries: Vec<Entry>,
+    measured: aegis::Aegis,
+}
+
+impl Source {
+    fn summary(self) -> Summary {
+        let e = &self.entries;
+        Summary {
+            source: self.name,
+            entries: e.len(),
+            with_subject: e.iter().filter(|e| !e.subjects.is_empty()).count(),
+            subjects: e.iter().map(|e| e.subjects.len()).sum(),
+            keywords: e.iter().map(|e| e.keywords.len()).sum(),
+            rotations: self.measured.rotations.len(),
+            loadouts: self.measured.loadouts.len(),
+            missing_loadouts: self.measured.missing.len(),
+            provenance: self.provenance,
+        }
+    }
 }
 
 /// Read a source folder's `manifest.json`.
@@ -88,23 +122,34 @@ pub fn provenance(dir: &Path) -> Result<Provenance> {
 /// Read every source under `dir` and replace the `mechanic_*` tables.
 pub fn import(db: &Database, dir: &Path, mut progress: impl FnMut(&str)) -> Result<Vec<Summary>> {
     let names = names::Names::load(db)?;
-    let mut read: Vec<(&'static str, Provenance, Vec<Entry>)> = Vec::new();
+    let mut read = Vec::new();
 
     progress("clarity");
     let clarity_dir = dir.join("clarity");
-    read.push((
-        "clarity",
-        provenance(&clarity_dir)?,
-        clarity::read(&clarity_dir.join("clarity.json"))?,
-    ));
+    read.push(Source {
+        name: "clarity",
+        provenance: provenance(&clarity_dir)?,
+        entries: clarity::read(&clarity_dir.join("clarity.json"))?,
+        ..Source::default()
+    });
 
     progress("compendium");
     let compendium_dir = dir.join("compendium");
-    read.push((
-        "compendium",
-        provenance(&compendium_dir)?,
-        compendium::read(&compendium_dir, &names)?,
-    ));
+    read.push(Source {
+        name: "compendium",
+        provenance: provenance(&compendium_dir)?,
+        entries: compendium::read(&compendium_dir, &names)?,
+        ..Source::default()
+    });
+
+    progress("aegis");
+    let aegis_dir = dir.join("aegis");
+    read.push(Source {
+        name: "aegis",
+        provenance: provenance(&aegis_dir)?,
+        measured: aegis::read(&aegis_dir)?,
+        ..Source::default()
+    });
 
     progress("writing");
     write(db, &read)?;
@@ -116,21 +161,14 @@ pub fn import(db: &Database, dir: &Path, mut progress: impl FnMut(&str)) -> Resu
                 r.get(0)
             })?;
     db.set_meta(meta_key::MECHANICS_IMPORTED_AT, &now)?;
-
-    Ok(read
-        .into_iter()
-        .map(|(source, provenance, entries)| Summary {
-            source,
-            provenance,
-            entries: entries.len(),
-            with_subject: entries.iter().filter(|e| !e.subjects.is_empty()).count(),
-            subjects: entries.iter().map(|e| e.subjects.len()).sum(),
-            keywords: entries.iter().map(|e| e.keywords.len()).sum(),
-        })
-        .collect())
+    Ok(read.into_iter().map(Source::summary).collect())
 }
 
-fn write(db: &Database, read: &[(&'static str, Provenance, Vec<Entry>)]) -> Result<()> {
+fn count(n: usize) -> i32 {
+    i32::try_from(n).unwrap_or(i32::MAX)
+}
+
+fn write(db: &Database, read: &[Source]) -> Result<()> {
     let conn = db.conn();
     conn.execute_batch("BEGIN TRANSACTION")?;
     conn.execute_batch(MECHANICS_SQL)?;
@@ -139,16 +177,25 @@ fn write(db: &Database, read: &[(&'static str, Provenance, Vec<Entry>)]) -> Resu
         let mut entries = conn.appender("mechanic_entry")?;
         let mut subjects = conn.appender("mechanic_subject")?;
         let mut keywords = conn.appender("mechanic_keyword")?;
-        for (source, prov, list) in read {
+        let mut rotations = conn.appender("mechanic_rotation")?;
+        let mut rotation_loadouts = conn.appender("mechanic_rotation_loadout")?;
+        let mut loadouts = conn.appender("mechanic_loadout")?;
+        let mut loadout_items = conn.appender("mechanic_loadout_item")?;
+        for src in read {
+            let source = src.name;
+            let prov = &src.provenance;
+            let m = &src.measured;
             sources.append_row(params![
                 source,
                 prov.title,
                 prov.url,
                 prov.fetched,
-                i32::try_from(list.len()).unwrap_or(i32::MAX)
+                count(src.entries.len()),
+                count(m.rotations.len()),
+                count(m.loadouts.len())
             ])?;
-            for (i, e) in list.iter().enumerate() {
-                let id = i32::try_from(i).unwrap_or(i32::MAX);
+            for (i, e) in src.entries.iter().enumerate() {
+                let id = count(i);
                 entries.append_row(params![source, id, e.section, e.name, e.text])?;
                 let mut seen = Vec::new();
                 for s in &e.subjects {
@@ -158,8 +205,47 @@ fn write(db: &Database, read: &[(&'static str, Provenance, Vec<Entry>)]) -> Resu
                     seen.push((s.hash, s.hash_kind));
                     subjects.append_row(params![source, id, s.hash, s.hash_kind, s.rule])?;
                 }
-                for (k, m) in &e.keywords {
-                    keywords.append_row(params![source, id, k, m])?;
+                for (k, mark) in &e.keywords {
+                    keywords.append_row(params![source, id, k, mark])?;
+                }
+            }
+            for (i, r) in m.rotations.iter().enumerate() {
+                let id = count(i);
+                let [d10, d20, d30, d40, d50, d60] = r.dps_by_10s;
+                rotations.append_row(params![
+                    source,
+                    id,
+                    r.section,
+                    r.category,
+                    r.class,
+                    r.name,
+                    r.boss,
+                    r.core_dps,
+                    d10,
+                    d20,
+                    d30,
+                    d40,
+                    d50,
+                    d60,
+                    r.end_dps,
+                    r.end_s,
+                    r.end_damage,
+                    r.continues,
+                    r.segment_start_s,
+                    r.segment_end_s,
+                    r.artifact_mods,
+                    r.other_factors,
+                    r.notes
+                ])?;
+                for (loadout, role, label) in &r.loadouts {
+                    rotation_loadouts.append_row(params![source, id, loadout, role, label])?;
+                }
+            }
+            for l in &m.loadouts {
+                loadouts.append_row(params![source, l.id, l.name, l.class])?;
+                for i in &l.items {
+                    loadout_items
+                        .append_row(params![source, l.id, i.hash, i.role, i.parent, i.socket])?;
                 }
             }
         }

@@ -24,7 +24,7 @@ each source's provenance, currency and terms.
 | `clarity/` | Clarity Live Database (`descriptions/clarity.json`) | yes | hash |
 | `compendium/` | Destiny Data Compendium, 22 tabs | yes (15 current tabs) | name |
 | `court/` | Court's damage buffs/debuffs stacking guide | not yet | name |
-| `aegis/` | TheAegisRelic's boss damage spreadsheet (xlsx) | not yet | name |
+| `aegis/` | TheAegisRelic's boss damage workbook (xlsx), and the 205 DIM loadouts it links (`dim/<share id>.json`) | the ranked rotations and their loadouts | hash (loadouts) |
 | `cooldowns/` | Ability cooldowns and energy factors | not yet | name |
 | `endgame/` | Endgame Analysis expert ratings | not yet | name |
 | `scaling/` | MossyMax's damage scaling (pre-MoT) | not yet | name |
@@ -59,10 +59,32 @@ of the recorded builds' component uses each documents.
 | `mechanic_entry` | `(source, entry_id)` | one documented game element or game state: `section` (the source's tab or type, with the tab's heading, e.g. `Solar / Glossary`), `name`, `text` (PvE only) |
 | `mechanic_subject` | `(source, entry_id, hash, hash_kind)` | the manifest hashes an entry documents: `hash_kind` `item`, `sandbox_perk` (set bonuses) or `item_set`; `rule` how it was found — `hash` (Clarity's own), `item` (the weapon or armor a Clarity perk is on), `name`, `alias` (a fragment's short name), `family` (an armor mod family) |
 | `mechanic_keyword` | — | runs of text a source marks: Clarity's element and ammo classes (`solar`, `special`, `enhancedArrow`, …), the Compendium's text colours (`#rrggbb`) |
+| `mechanic_rotation` | `(source, rotation_id)` | a measured boss-damage rotation: category (Universal, Specialized, Support, …), class, boss, `core_dps` (its repeating core), average DPS after 10–60 s and at its end, artifact mods, other factors, notes |
+| `mechanic_rotation_loadout` | — | the DIM loadouts a rotation was run with: `role` `loadout 1`, `loadout 2`, or `note` (a variant a cell note links, `label` its line) |
+| `mechanic_loadout` | `(source, loadout_id)` | a shared DIM loadout (`loadout_id` its dim.gg share id): name, class |
+| `mechanic_loadout_item` | — | what it uses: `equipped` items, `socket` choices on them (`parent_hash`, `socket_index`: the subclass's super, abilities, aspects and fragments, exotic class item perks), armor `mod`s, `artifact` unlocks |
 
 Game states — Radiant, Scorch, Volatile, Woven Mail, Jolt, Frost Armor and
 the rest, defined in each subclass tab's glossary — are entries without a
 subject.
+
+## Measured rotations
+
+TheAegisRelic's boss damage workbook measures, for Monument of Triumph,
+what each damage rotation actually deals: base damage of every weapon and
+ability, the multipliers of buffs, debuffs and surges, and on its ranking
+sheet (`Ranking (S29)`) 109 tested rotations with their DPS over time —
+each linked to the DIM loadouts it was run with (dim.gg shares; DIM's
+share API answers without a key). The import reads the ranking sheet's
+cached figures, its notes, and the saved loadouts: every rotation has its
+loadout, all 534 hashes resolve in the manifest, and 104 of the 109 run
+two set bonuses. These are expert-built, measured builds: a check on the
+synergy evaluator (it should rate them well) and templates for build
+synthesis. The workbook is read directly (`xlsx`), since its hyperlinks
+and notes carry much of its meaning; its notes are context-sensitive and
+kept with each rotation. Not yet read: the base values (Weapons,
+Abilities), single-source and swap DPS (Sustained, Swap), the damage
+curves behind the ranking (Graphing) and team compositions (Fireteam).
 
 ## How entries are found
 
@@ -118,5 +140,5 @@ documented by these sources.
 - **Damage-modifier categories** from Court's stacking guide: global
   debuffs, empowering buffs and weapon surges do not stack within their
   category.
-- The boss-damage measurements, ability cooldowns and expert ratings, the
-  last as a yardstick for the evaluator.
+- The boss-damage workbook's base values and per-source DPS, ability
+  cooldowns, and expert ratings (a yardstick for the evaluator).
