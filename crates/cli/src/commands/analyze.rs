@@ -7,7 +7,9 @@ use std::path::Path;
 use anyhow::{Result, bail};
 use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
-use focalpoint_db::analysis::{breadth, completeness, diversity, highlights as hl, priors};
+use focalpoint_db::analysis::{
+    breadth, completeness, diversity, highlights as hl, priors, subclasses,
+};
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, load_model};
 use focalpoint_db::search::GroupBy;
@@ -53,6 +55,13 @@ each aspect pair's usual count, compares the evidence behind complete and incomp
 surveys the highlights with incomplete builds left out."
     )]
     Completeness(CompletenessArgs),
+    /// What a quota of highlights per subclass would pick
+    #[command(
+        after_help = "Neutral game: --neutral-per picks per classic subclass and --prismatic \
+Prismatic picks per class; activities: --activity-per picks per subclass. Reports the picks' \
+ranks, evidence and distinctness, and compares them with picking without a quota."
+    )]
+    Subclasses(SubclassArgs),
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -104,6 +113,21 @@ pub struct DiversityArgs {
 }
 
 #[derive(Debug, clap::Args)]
+pub struct SubclassArgs {
+    /// Neutral-game picks per classic subclass
+    #[arg(long, default_value_t = 3)]
+    pub neutral_per: usize,
+    /// Neutral-game Prismatic picks
+    #[arg(long, default_value_t = 6)]
+    pub prismatic: usize,
+    /// Picks per subclass for each activity
+    #[arg(long, default_value_t = 1)]
+    pub activity_per: usize,
+    #[arg(long, default_value_t = QUALITY_WEIGHT)]
+    pub quality_weight: f64,
+}
+
+#[derive(Debug, clap::Args)]
 pub struct CompletenessArgs {
     /// Highlights per set and class in the survey
     #[arg(long, default_value_t = 5)]
@@ -151,6 +175,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Breadth(a) => run_breadth(&db, a, args.format),
         What::Diversity(a) => run_diversity(&db, a, args.format),
         What::Completeness(a) => run_completeness(&db, a, args.format),
+        What::Subclasses(a) => run_subclasses(&db, a, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -912,5 +937,227 @@ their build types had {} player(s) at most. Build types with no aspects at all: 
     survey_summary(&after, a.count);
     println!("\nFor comparison, with every build:");
     survey_summary(&before, a.count);
+    Ok(())
+}
+
+fn run_subclasses(db: &Database, a: &SubclassArgs, format: Format) -> Result<()> {
+    let data = site(db, None, NEUTRAL_CONTEXT_PRIOR)?;
+    let vectors = build_vectors(db)?;
+    let groups = subclasses::groups_used(&data);
+    let n_groups = data.scopes.iter().filter(|s| s.kind == "group").count();
+    let neutral_quota = |s: &str| {
+        if s == "Prismatic" {
+            a.prismatic
+        } else {
+            a.neutral_per
+        }
+    };
+    let element = |t: u32| data.types[t as usize].element.clone().unwrap_or_default();
+
+    println!(
+        "# Neutral game: {} per classic subclass, {} Prismatic (complete builds; quality weight {})\n",
+        a.neutral_per, a.prismatic, a.quality_weight
+    );
+    let (mut total, mut positive, mut two_players, mut two_groups) =
+        (0_usize, 0_usize, 0_usize, 0_usize);
+    for class in highlight::classes(&data, NEUTRAL) {
+        let picks = subclasses::by_subclass(
+            &data,
+            &vectors,
+            &groups,
+            NEUTRAL,
+            &class,
+            &neutral_quota,
+            a.quality_weight,
+        );
+        let quota_total: usize = picks.iter().map(|p| p.picks.len()).sum();
+        println!("## {class}: {quota_total} picks");
+        let header = [
+            "subclass",
+            "#",
+            "rank in subclass",
+            "class rank",
+            "neutral effect",
+            "players",
+            "runs",
+            "activity groups",
+            "build type",
+        ]
+        .map(String::from);
+        let mut rows = Vec::new();
+        for sp in &picks {
+            for (k, p) in sp.picks.iter().enumerate() {
+                total += 1;
+                positive += usize::from(p.quality > 0.0);
+                two_players += usize::from(p.players >= 2);
+                two_groups += usize::from(p.groups >= 2);
+                rows.push(vec![
+                    sp.subclass.to_string(),
+                    (k + 1).to_string(),
+                    format!("{} of {}", p.rank, sp.candidates),
+                    p.class_rank.to_string(),
+                    pct(p.quality),
+                    p.players.to_string(),
+                    format!("{:.0}", p.runs),
+                    format!("{} of {n_groups}", p.groups),
+                    label(&data, p.type_id),
+                ]);
+            }
+        }
+        println!("{}", render(format, &header, &rows));
+        let header = [
+            "subclass",
+            "candidates",
+            "picks",
+            "min kit",
+            "min distance",
+            "supers",
+            "aspect pairs",
+            "shared exotics",
+        ]
+        .map(String::from);
+        let rows: Vec<Vec<String>> = picks
+            .iter()
+            .map(|sp| {
+                vec![
+                    sp.subclass.to_string(),
+                    sp.candidates.to_string(),
+                    sp.picks.len().to_string(),
+                    format!("{:.2}", sp.min_kit),
+                    format!("{:.2}", sp.min_distance),
+                    sp.supers.to_string(),
+                    sp.aspect_pairs.to_string(),
+                    sp.shared_exotic_pairs.to_string(),
+                ]
+            })
+            .collect();
+        println!("{}", render(format, &header, &rows));
+        // How the plain ranking and the unquoted selection spread over subclasses.
+        let cands = candidates(&data, NEUTRAL, &class);
+        let spread = |idx: &mut dyn Iterator<Item = usize>| {
+            let mut counts: HashMap<String, usize> = HashMap::new();
+            for i in idx {
+                *counts.entry(element(cands[i].type_id)).or_default() += 1;
+            }
+            subclasses::SUBCLASSES
+                .iter()
+                .map(|s| format!("{s} {}", counts.get(*s).copied().unwrap_or(0)))
+                .collect::<Vec<_>>()
+                .join(" · ")
+        };
+        let styles = playstyles(&cands, &vectors);
+        let soft: Vec<usize> = select(&cands, &styles, quota_total, a.quality_weight)
+            .iter()
+            .map(|p| p.index)
+            .collect();
+        println!(
+            "Without a quota, by subclass — plain top {quota_total}: {}; soft {quota_total}: {}.\n",
+            spread(&mut (0..quota_total.min(cands.len()))),
+            spread(&mut soft.iter().copied())
+        );
+    }
+    println!(
+        "Neutral picks: {total}; neutral effect above zero {positive}; ≥ 2 players {two_players}; used in ≥ 2 activity groups {two_groups}.\n"
+    );
+
+    println!("# Activities: {} per subclass\n", a.activity_per);
+    let header = [
+        "set",
+        "class",
+        "subclasses",
+        "picks (effect)",
+        "mean (soft top)",
+        "below zero",
+        "1 player",
+    ]
+    .map(String::from);
+    let mut rows = Vec::new();
+    let (mut sets, mut full, mut picks_total, mut below, mut one_player) =
+        (0_usize, 0_usize, 0_usize, 0_usize, 0_usize);
+    let (mut soft_below, mut soft_one, mut soft_total) = (0_usize, 0_usize, 0_usize);
+    let mut available: HashMap<usize, usize> = HashMap::new();
+    let mut costs = Vec::new();
+    for scope in data.scopes.iter().filter(|s| s.kind != "all") {
+        for class in highlight::classes(&data, &scope.id) {
+            let picks = subclasses::by_subclass(
+                &data,
+                &vectors,
+                &groups,
+                &scope.id,
+                &class,
+                &|_| a.activity_per,
+                a.quality_weight,
+            );
+            let with: Vec<&subclasses::SubclassPicks> =
+                picks.iter().filter(|p| !p.picks.is_empty()).collect();
+            let chosen: Vec<&subclasses::SubclassPick> =
+                with.iter().flat_map(|p| &p.picks).collect();
+            if chosen.is_empty() {
+                continue;
+            }
+            sets += 1;
+            *available.entry(with.len()).or_default() += 1;
+            full += usize::from(with.len() == subclasses::SUBCLASSES.len());
+            picks_total += chosen.len();
+            let b = chosen.iter().filter(|p| p.quality < 0.0).count();
+            let o = chosen.iter().filter(|p| p.players <= 1).count();
+            below += b;
+            one_player += o;
+            let mean = chosen.iter().map(|p| p.quality).sum::<f64>() / chosen.len() as f64;
+            // The same number of picks without the quota.
+            let cands = candidates(&data, &scope.id, &class);
+            let styles = playstyles(&cands, &vectors);
+            let soft: Vec<usize> = select(&cands, &styles, chosen.len(), a.quality_weight)
+                .iter()
+                .map(|p| p.index)
+                .collect();
+            let soft_mean =
+                soft.iter().map(|&i| cands[i].quality).sum::<f64>() / soft.len().max(1) as f64;
+            soft_total += soft.len();
+            soft_below += soft.iter().filter(|&&i| cands[i].quality < 0.0).count();
+            let scope_rows = &scope.rows;
+            soft_one += soft
+                .iter()
+                .filter(|&&i| scope_rows[cands[i].row].4 <= 1)
+                .count();
+            costs.push(100.0 * (soft_mean.exp() - mean.exp()));
+            rows.push(vec![
+                scope.name.clone(),
+                class,
+                format!("{}/6", with.len()),
+                with.iter()
+                    .map(|p| format!("{} {}", p.subclass, pct(p.picks[0].quality)))
+                    .collect::<Vec<_>>()
+                    .join(" · "),
+                format!("{} ({})", pct(mean), pct(soft_mean)),
+                b.to_string(),
+                format!("{o}/{}", chosen.len()),
+            ]);
+        }
+    }
+    println!("{}", render(format, &header, &rows));
+    let mut avail: Vec<_> = available.into_iter().collect();
+    avail.sort_unstable();
+    println!(
+        "Sets × classes: {sets}; with every subclass: {full}; subclasses available: {}.",
+        avail
+            .iter()
+            .map(|(k, n)| format!("{k}: {n}"))
+            .collect::<Vec<_>>()
+            .join(" · ")
+    );
+    println!(
+        "Picks below zero: {below} of {picks_total} ({:.0}%) — without the quota {soft_below} of {soft_total} ({:.0}%). \
+One-player picks: {:.0}% — without the quota {:.0}%.",
+        100.0 * below as f64 / picks_total.max(1) as f64,
+        100.0 * soft_below as f64 / soft_total.max(1) as f64,
+        100.0 * one_player as f64 / picks_total.max(1) as f64,
+        100.0 * soft_one as f64 / soft_total.max(1) as f64
+    );
+    println!(
+        "Mean effect given up against the same number of picks without the quota: median {:.1} points, p90 {:.1}.",
+        quantile(costs.clone(), 0.5),
+        quantile(costs, 0.9)
+    );
     Ok(())
 }

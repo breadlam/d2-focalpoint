@@ -11,6 +11,7 @@ for further processing). The numbers below are from the import of
 |---|---|---|
 | `analyze priors [--contexts] [--grouping …]` | Which ridge priors predict held-out runs best? | `FitParams::default`, `NEUTRAL_CONTEXT_PRIOR` (ADR 0006, 0007) |
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
+| `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze breadth [--min-players N] [--top N]` | Does a build type's rank depend on how many activity groups it was used in? | the neutral-game ranking (ADR 0007) |
 | `analyze diversity [--min-players N]` | How many well-ranked build types are distinct under hard thresholds? | why highlights have no thresholds (ADR 0007) |
 | `analyze highlights [--set S] [--class C] [--sweep]` | Why was each highlight picked, and how do picks change with the quality weight? | `QUALITY_WEIGHT` (ADR 0007) |
@@ -176,4 +177,37 @@ Findings (138 sets × classes):
 - Diversity costs about a point of mean effect throughout.
 - Most collected build types were one player's: even the plain top five are
   46% one-player; loosening adds roughly another 10 points of that.
+
+## `analyze subclasses`
+
+Picks highlights per subclass (complete builds, chosen within each
+subclass as everywhere else): by default three per classic subclass and six
+Prismatic for the neutral game (21 per class), and one per subclass for each
+activity. For each pick: its rank within the subclass and the class, its
+effect, players, runs and the activity groups it was used in; per subclass:
+the smallest kit and playstyle distances, distinct supers and aspect pairs,
+and shared exotics; and a comparison with picking as many without a quota.
+
+Findings, neutral game (21 per class):
+
+- All 63 picks rank above zero; 39 had two or more players and 42 were used
+  in two or more activity groups.
+- Within a classic subclass the picks differ in aspects and exotics, often
+  not in super (Hunter Arc's three are all Gathering Storm; Stasis and
+  Strand picks share their super for every class): smallest kit distance
+  0.33–0.70, against ≈ 1 across subclasses.
+- Warlock Stasis has no strong all-rounders: its three picks are one player
+  each, used in one activity group, ranked 307th–448th of the class (+1–2%).
+  Without a quota the selection picks no Warlock Stasis build at all.
+- Six Prismatic picks repeat for Hunter (four of six are Golden Gun:
+  Marksman with Ascension; smallest kit distance 0.38, three pairs share an
+  exotic); Titan's six span five supers.
+
+Findings, activities (one per subclass):
+
+- 97 of 135 activity × class sets have candidates in all six subclasses,
+  28 in five, 10 in four or fewer (single activities with few builds).
+- The quota costs a median 1.2 points of mean effect (p90 3.4) against six
+  picks without it; 12% of its picks rank below zero for the activity
+  (without the quota, 4%) — e.g. Titan Strand in Vault of Glass: −7%.
 
