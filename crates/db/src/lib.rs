@@ -26,6 +26,13 @@ pub const SCHEMA_VERSION: u32 = 7;
 /// DDL for a fresh database.
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
 
+/// Version of [`MECHANICS_SQL`], the community-mechanics layer.
+pub const MECHANICS_VERSION: u32 = 1;
+
+/// DDL of the community-mechanics layer (`focalpoint mechanics import`):
+/// replaces its tables.
+pub const MECHANICS_SQL: &str = include_str!("mechanics.sql");
+
 /// Environment variable that overrides the default database location.
 pub const DB_ENV_VAR: &str = "FOCALPOINT_DB";
 
@@ -43,6 +50,9 @@ pub mod meta_key {
     pub const SOURCE_SNAPSHOT: &str = "source_snapshot";
     pub const MANIFEST_VERSION: &str = "manifest_version";
     pub const IMPORT_SECONDS: &str = "import_seconds";
+    pub const MECHANICS_VERSION: &str = "mechanics_version";
+    pub const MECHANICS_IMPORTED_AT: &str = "mechanics_imported_at";
+    pub const MECHANICS_SOURCES: &str = "mechanics_sources";
 }
 
 #[derive(Debug, Error)]
@@ -125,6 +135,22 @@ impl Database {
         }
         let config = Config::default().access_mode(AccessMode::ReadOnly)?;
         let conn = Connection::open_with_flags(path, config)?;
+        let db = Self {
+            conn,
+            path: path.to_path_buf(),
+            solo_credits: std::sync::OnceLock::new(),
+        };
+        db.check_schema()?;
+        Ok(db)
+    }
+
+    /// Open an existing database for writing a layer on top of the import
+    /// (`focalpoint mechanics import`), verifying its schema version.
+    pub fn open_for_update(path: &Path) -> Result<Self> {
+        if !path.exists() {
+            return Err(DbError::NotFound(path.to_path_buf()));
+        }
+        let conn = Connection::open(path)?;
         let db = Self {
             conn,
             path: path.to_path_buf(),

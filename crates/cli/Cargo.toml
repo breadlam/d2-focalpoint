@@ -21,6 +21,7 @@ duckdb.workspace = true
 focalpoint-core.workspace = true
 focalpoint-db.workspace = true
 focalpoint-import.workspace = true
+focalpoint-mechanics.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

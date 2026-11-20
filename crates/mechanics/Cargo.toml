@@ -1,0 +1,22 @@
+[package]
+name = "focalpoint-mechanics"
+description = "Reads the community's documentation of Destiny 2 mechanics into the Focalpoint database"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+duckdb.workspace = true
+focalpoint-db.workspace = true
+scraper.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

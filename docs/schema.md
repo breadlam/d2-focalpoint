@@ -178,13 +178,22 @@ weapons or builds.
 | `activity_mode` | `mode` | `DestinyActivityModeType` names |
 | `skull` | `skull_hash` | modifiers with `kind` = `boon | feat | challenge | equipment_lock | other` |
 
+### Community mechanics (a layer)
+
+`mechanic_source`, `mechanic_entry`, `mechanic_subject` and
+`mechanic_keyword` hold the community's documentation of game mechanics,
+keyed to manifest hashes. They are not written by the import: `focalpoint
+mechanics import` adds and replaces them in an existing database
+(`meta.mechanics_version`). See [mechanics.md](mechanics.md).
+
 ### Metadata
 
 - **`meta`** — `schema_version`, `build_fingerprint_version`,
   `loadout_fingerprint_version`, `tool_version`, `imported_at`,
   `element_vector_version`, `investment_params`, `score_params`,
   `source_root`, `source_snapshot`, `manifest_version`, `import_seconds`,
-  `skipped_stages`.
+  `skipped_stages`; with the mechanics layer, `mechanics_version`,
+  `mechanics_imported_at`, `mechanics_sources`.
 - **`import_stat`** — per-stage counters and every validation check's value.
 
 ## Macros
