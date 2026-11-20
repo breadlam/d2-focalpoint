@@ -87,10 +87,10 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 ## Build-ranking site
 
 [`site/`](site), branded **Skinwalker** as Searchlight's dashboard was, is a
-static page for GitHub Pages with three views: **Rankings** (build types ranked by build effect, each with its best-ranked
+static page for GitHub Pages with three views: **Ranked Builds** (build types ranked by build effect, each with its best-ranked
 exact build and near-identical variants, per activity), **Highlights** (a
 few builds per class as well ranked and as unlike each other as the data
-allows, for the neutral game and each activity), and **Search**, over
+allows, for the neutral game and each activity), and **Raw Search**, over
 every collected build exactly as equipped.
 Refresh its data with `focalpoint site`; see [docs/site.md](docs/site.md)
 for the formats, previewing, tests and publishing.

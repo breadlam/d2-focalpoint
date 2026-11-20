@@ -45,7 +45,7 @@ use crate::search::GroupBy;
 use crate::{Database, Result, meta_key};
 
 /// Version of the JSON layout; the site checks it.
-pub const SITE_FORMAT_VERSION: u32 = 6;
+pub const SITE_FORMAT_VERSION: u32 = 7;
 
 /// Each scope's listings are split in two files: build types with at least
 /// this many players (the page's default minimum) load with the page; the
@@ -153,7 +153,10 @@ pub struct Scope {
     /// The target group an activity belongs to.
     pub parent: Option<String>,
     pub clears: usize,
+    /// Clears with a recorded build.
     pub build_runs: usize,
+    /// Distinct exact builds recorded in those clears.
+    pub builds: usize,
     pub players: usize,
     pub rows: Vec<Row>,
 }
@@ -232,7 +235,10 @@ pub struct ScopeMeta {
     pub kind: &'static str,
     pub parent: Option<String>,
     pub clears: usize,
+    /// Clears with a recorded build.
     pub build_runs: usize,
+    /// Distinct exact builds recorded in those clears.
+    pub builds: usize,
     pub players: usize,
     /// The scope's files: `[least players, most players or null, file, listings]`.
     pub parts: Vec<PartMeta>,
@@ -351,6 +357,7 @@ pub fn split(data: SiteData) -> Book {
             parent: scope.parent,
             clears: scope.clears,
             build_runs: scope.build_runs,
+            builds: scope.builds,
             players: scope.players,
             parts: metas,
             summary,
@@ -753,6 +760,7 @@ pub fn site_data(
             parent: spec.parent,
             clears: model.runs,
             build_runs: model.build_runs,
+            builds: model.builds,
             players: model.players,
             rows,
         });

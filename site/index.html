@@ -17,9 +17,9 @@
     </header>
 
     <nav class="tabs" aria-label="Views">
-      <button id="tab-book" type="button" class="tab" aria-selected="true">Rankings</button>
+      <button id="tab-book" type="button" class="tab" aria-selected="true">Ranked Builds</button>
       <button id="tab-highlights" type="button" class="tab" aria-selected="false">Highlights</button>
-      <button id="tab-find" type="button" class="tab" aria-selected="false">Search</button>
+      <button id="tab-find" type="button" class="tab" aria-selected="false">Raw Search</button>
     </nav>
 
     <div id="book-view">
@@ -207,8 +207,9 @@
         <dd>Exact builds from qualified clears, as equipped. Nothing is averaged. Searchlight recorded
           builds only for the players it monitored, about 2% of clears; every clear still sets its
           player’s usual level.</dd>
-        <dt>Ranking</dt>
-        <dd>A build type (class, subclass, exotics, super, aspects) ranks by <em>effect</em>: how much
+        <dt>Ranked Builds</dt>
+        <dd>Build types: builds that share class, subclass, exotics, super and aspects. A type ranks by
+          <em>effect</em>: how much
           better players do with it than on their own other runs, so strong players can’t carry it.
           <em>Raw</em> is how its runs went; <em>skill</em> is how good its players are. Everyone here
           was already elite, so most effects sit near zero.</dd>
@@ -227,9 +228,10 @@
           does across activities. Incomplete captures are left out.</dd>
         <dt>Min. players</dt>
         <dd>Different players who ran the build type in that activity.</dd>
-        <dt>Search</dt>
-        <dd>Every collected build (about 594,000), ranked or not. Narrow by build type, then by any
-          part.</dd>
+        <dt>Raw Search</dt>
+        <dd>All <span id="builds-recorded">594,340</span> recorded builds.
+          <span id="builds-ranked">144,709</span> were used in scored clears and are ranked; the rest
+          only in unfinished runs or runs that missed Searchlight’s gates.</dd>
       </dl>
       <p class="muted">Player skill explains about 40% of a clear; the build about 5 points more.
         Support builds are undervalued (their value shows in teammates’ kills). Thin evidence is

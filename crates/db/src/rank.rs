@@ -278,6 +278,8 @@ pub struct Model {
     pub runs: usize,
     /// Of those, runs with a captured build.
     pub build_runs: usize,
+    /// Distinct exact builds captured in those runs.
+    pub builds: usize,
     pub players: usize,
     pub groups: usize,
     pub iterations: usize,
@@ -593,6 +595,7 @@ fn fit(db: &Database, opts: &RankOptions) -> Result<Fitted> {
     let model = Model {
         runs: data.total_runs,
         build_runs: data.build_runs,
+        builds: data.obs_build.iter().collect::<HashSet<_>>().len(),
         players: data.players.len(),
         groups: data.groups,
         iterations: effects.iterations,
@@ -830,7 +833,10 @@ mod tests {
         let (_d, db) = db();
         let (model, columns, rows) = rank_builds(&db, &exact(), 1, BuildSort::Effect).unwrap();
         assert_eq!(columns, ["class", "exotic armor"]);
-        assert_eq!((model.runs, model.build_runs, model.players), (48, 8, 4));
+        assert_eq!(
+            (model.runs, model.build_runs, model.builds, model.players),
+            (48, 8, 2, 4)
+        );
         assert!(model.converged);
         assert_eq!(rows.len(), 2);
         for r in &rows {

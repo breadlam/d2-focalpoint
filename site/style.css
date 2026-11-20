@@ -118,6 +118,7 @@ h1, h2, h3, h4 { line-height: 1.2; }
   border: 0;
   border-bottom: 3px solid transparent;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
@@ -765,4 +766,6 @@ button.link:hover { text-decoration: underline; }
   .segmented label { padding: 8px 2px; font-size: 0.88rem; }
   .segmented .class-icon { display: none; }
   .exotics { font-size: 1rem; }
+  .tabs { gap: 0; }
+  .tab { padding: 8px 5px; font-size: 0.9rem; }
 }

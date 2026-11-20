@@ -8,7 +8,7 @@
 // facet counts, ranking, recipe differences, URL state) are exported for
 // tests/site/test.html; start() wires them to the page.
 
-export const FORMAT = 6;
+export const FORMAT = 7;
 export const STATS = ['Weapons', 'Health', 'Class', 'Grenade', 'Super', 'Melee'];
 export const ARMOR_SLOTS = ['Helmet', 'Gauntlets', 'Chest', 'Legs', 'Class item'];
 export const WEAPON_SLOTS = ['Kinetic', 'Energy', 'Power'];
@@ -748,7 +748,7 @@ export function startBook(root, data, load) {
   function renderScopeNote(scope) {
     const note = $('scope-note');
     note.replaceChildren(
-      `${n(scope.clears)} clears · ${n(scope.players)} players · ${n(scope.build_runs)} with a recorded build · `
+      `${n(scope.clears)} clears · ${n(scope.players)} players · ${n(scope.builds)} builds from ${n(scope.build_runs)} recorded clears · `
         + `${data.first_run} – ${data.last_run}`);
     if (scope.build_runs < THIN_SCOPE) {
       const parent = scope.parent && data.scopes.find((s) => s.kind === 'group' && s.name === scope.parent);
@@ -819,7 +819,7 @@ export function boot(root) {
   let index = null;
   const bookIndex = () => (index ??= fetchJson('data/book/index.json'));
   // A finder result links to its type's ranked listing.
-  const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'In rankings →');
+  const bookLink = (t) => h('a', { class: 'browse-link', href: bookHash(t) }, 'In Ranked Builds →');
   const start = {
     book: () => bookIndex().then((data) => startBook(root, data, fetchJson)),
     highlights: () => Promise.all([bookIndex(), import('./highlights.js')])

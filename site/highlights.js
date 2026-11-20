@@ -87,7 +87,7 @@ function highlightCard(model, file, pick, k, groups) {
     lazyDetails('Ranking details', () => h('div', { class: 'ranking-details' },
       h('p', {}, `${neutral ? 'Neutral-game effect' : 'Effect'} ${pct(effect)}`))),
     h('p', { class: 'card-links' },
-      h('a', { class: 'browse-link', href: rankedHash(t, scope) }, 'In rankings →'),
+      h('a', { class: 'browse-link', href: rankedHash(t, scope) }, 'In Ranked Builds →'),
       h('a', { class: 'browse-link', href: findHash(t) }, 'All builds of this type →')));
 }
 

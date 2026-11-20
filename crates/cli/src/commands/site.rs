@@ -1,7 +1,7 @@
 //! `focalpoint site` — export the data behind the static site in `site/`
 //! (see `docs/site.md`): the ranked builds and highlights (`book/`) and the
-//! catalog of every collected build (`catalog/`), and write the count of
-//! builds into the page's intro.
+//! catalog of every collected build (`catalog/`), and write the counts of
+//! builds into the page.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -24,7 +24,7 @@ pub struct Args {
     #[arg(long, default_value_t = 1)]
     pub min_players: usize,
 
-    /// The page whose intro states the count of builds [default: index.html
+    /// The page that states the counts of builds [default: index.html
     /// beside `--out`, if there is one]
     #[arg(long)]
     pub page: Option<PathBuf>,
@@ -42,6 +42,11 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
     let data = site_data(&db, &opts, |scope| eprintln!("  {scope}"))?;
     let rows: usize = data.scopes.iter().map(|s| s.rows.len()).sum();
     let (types, recipes) = (data.types.len(), data.recipes.len());
+    let ranked = data
+        .scopes
+        .iter()
+        .find(|s| s.kind == "all")
+        .map_or(0, |s| s.builds);
     let book = split(data);
     let mut files = vec![("index.json".to_string(), serde_json::to_vec(&book.index)?)];
     for (name, part) in &book.parts {
@@ -94,15 +99,16 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
     if let Some(page) = page {
         let html =
             fs::read_to_string(&page).with_context(|| format!("reading {}", page.display()))?;
-        let stamped = with_intro(&html, &intro(cat.builds))
+        let stamped = with_counts(&html, cat.builds, ranked)
             .with_context(|| format!("stamping {}", page.display()))?;
         if stamped != html {
             fs::write(&page, stamped).with_context(|| format!("writing {}", page.display()))?;
         }
         println!(
-            "Wrote the intro of {}: {}",
+            "Wrote the counts into {}: {} builds, {} ranked",
             page.display(),
-            intro(cat.builds)
+            thousands(cat.builds as i64),
+            thousands(ranked as i64),
         );
     }
     Ok(())
@@ -116,16 +122,23 @@ fn intro(builds: usize) -> String {
     )
 }
 
-/// `html` with `intro` as its meta description and its lede. Link previews
-/// don't run scripts, so the count is written into the page itself.
-fn with_intro(html: &str, intro: &str) -> Result<String> {
-    let html = replace_between(
-        html,
-        r#"<meta name="description" content=""#,
-        r#"">"#,
-        intro,
-    )?;
-    replace_between(&html, r#"<p class="lede">"#, "</p>", intro)
+/// `html` stating `recorded` builds, `ranked` of them ranked: in the intro
+/// (meta description and lede) and in `<span id="builds-recorded">` and
+/// `<span id="builds-ranked">`. Link previews don't run scripts, so the
+/// counts are written into the page itself.
+fn with_counts(html: &str, recorded: usize, ranked: usize) -> Result<String> {
+    let intro = intro(recorded);
+    let (recorded, ranked) = (thousands(recorded as i64), thousands(ranked as i64));
+    [
+        (r#"<meta name="description" content=""#, r#"">"#, &intro),
+        (r#"<p class="lede">"#, "</p>", &intro),
+        (r#"<span id="builds-recorded">"#, "</span>", &recorded),
+        (r#"<span id="builds-ranked">"#, "</span>", &ranked),
+    ]
+    .into_iter()
+    .try_fold(html.to_string(), |html, (open, close, with)| {
+        replace_between(&html, open, close, with)
+    })
 }
 
 /// `text` with what lies between the first `open` and the `close` after it
@@ -166,16 +179,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_intro_is_the_description_and_the_lede() {
+    fn the_counts_are_written_into_the_page() {
         let page = r#"<head><meta name="description" content="Old words."></head>
-<p class="lede">Old words, at length.</p><p class="lede">Kept.</p>"#;
-        let stamped = with_intro(page, &intro(594_340)).unwrap();
+<p class="lede">Old words, at length.</p><p class="lede">Kept.</p>
+<dd>All <span id="builds-recorded">1</span> builds; <span id="builds-ranked">0</span> ranked.</dd>"#;
+        let stamped = with_counts(page, 594_340, 144_709).unwrap();
         assert_eq!(
             stamped,
             r#"<head><meta name="description" content="Search 594,340 Destiny 2 endgame builds"></head>
-<p class="lede">Search 594,340 Destiny 2 endgame builds</p><p class="lede">Kept.</p>"#
+<p class="lede">Search 594,340 Destiny 2 endgame builds</p><p class="lede">Kept.</p>
+<dd>All <span id="builds-recorded">594,340</span> builds; <span id="builds-ranked">144,709</span> ranked.</dd>"#
         );
-        assert_eq!(with_intro(&stamped, &intro(594_340)).unwrap(), stamped);
-        assert!(with_intro("<p>no intro</p>", "x").is_err());
+        assert_eq!(with_counts(&stamped, 594_340, 144_709).unwrap(), stamped);
+        assert!(with_counts("<p>no intro</p>", 1, 1).is_err());
     }
 }

@@ -7,7 +7,7 @@ Futura clone; Futura is the Destiny logo face), and Searchlight's class
 symbols beside class names. Only the page carries the brand; the tool and
 its data remain Focalpoint. Its text is terse: labels and counts on the
 page, the explanations in a short "How it works" at the bottom. It has
-three views. **Rankings** lists build types ranked by build effect, each with exact builds players
+three views. **Ranked Builds** lists build types ranked by build effect, each with exact builds players
 actually used in qualified clears, published exactly as equipped —
 subclass, abilities, aspects, fragments, weapons with their frame, perks,
 origin trait and mod, armor pieces with archetype, tuning, stat mods and
@@ -74,7 +74,7 @@ much of its playstyle (subclass, super, aspects, exotics, abilities,
 fragments) is new compared with its subclass's picks above. Neutral picks also say
 how many activity groups the build type was used in.
 
-**Search** searches the **catalog**: every build
+**Raw Search** searches the **catalog**: every build
 Searchlight collected (594,340), exactly as equipped, whether or not it was
 used in a qualified clear. Its filters work on build types first (class,
 subclass, super, exotics, aspects, activity); once they select at most
@@ -86,11 +86,11 @@ artifact perks). Ranked builds come first, the rest by use.
 
 | Path | What it is |
 |---|---|
-| `site/index.html`, `site/style.css` | the page; no build step, no dependencies. `focalpoint site` writes the count of searchable builds into its intro (meta description and lede), since link previews don't run scripts |
+| `site/index.html`, `site/style.css` | the page; no build step, no dependencies. `focalpoint site` writes the counts of builds into it (the intro, as meta description and lede, and "How it works"), since link previews don't run scripts |
 | `site/brand/` | Searchlight's brand assets: the Rahool mask (`rahool-mask.png`, rendered at 192 px from Searchlight's SVG; also the favicon), `Jost-Light.ttf` with its licence (`OFL.txt`), and the class symbols (`class-icons/`, CC0) |
 | `site/app.js` | an ES module: pure functions (build decoding and differences, filtering, facet counts, ranking, URL state) plus the DOM layer |
 | `site/highlights.js` | "Highlights": URL state and rendering (loaded only when the view is opened) |
-| `site/finder.js` | "Search": catalog parsing, filters and rendering (loaded only when the view is opened) |
+| `site/finder.js` | "Raw Search": catalog parsing, filters and rendering (loaded only when the view is opened) |
 | `site/data/book/` | the ranked builds and highlights: `index.json`, two files per scope and one `highlights.<set>.json` per highlight set, exported by `focalpoint site` and committed |
 | `site/data/catalog/` | the catalog of every build: `index.txt` and shards `sNNN.txt`, exported by `focalpoint site` and committed |
 | `site/.nojekyll` | serve files as they are |
@@ -107,7 +107,7 @@ more than one), then describes each build group from its captured runs:
 
 ```sh
 focalpoint import --backups ../searchlight-backups   # if the database changed
-focalpoint site                                      # writes site/data/book/, site/data/catalog/ and the intro
+focalpoint site                                      # writes site/data/book/, site/data/catalog/ and the counts
 git add -A site/data site/index.html
 ```
 
@@ -153,7 +153,7 @@ It uploads in one job and deploys in another. If the deploy fails, use
 **Re-run failed jobs** or start a new run (**Run workflow**): re-running the
 whole run uploads a second artifact, and the deploy refuses two.
 
-## Data format (`format: 6`)
+## Data format (`format: 7`)
 
 `book/index.json`:
 
@@ -165,7 +165,9 @@ whole run uploads a second artifact, and the deploy refuses two.
   elements: { name: icon },     // damage-type glyphs ("Arc", "Solar", …)
   icons:    { name: path },     // icons for names in build types
   types:    [{ class, element, armor, weapon, super, aspects }],
-  scopes:   [{ id, name, kind: all|group|activity, parent, clears, build_runs, players,
+  scopes:   [{ id, name, kind: all|group|activity, parent, clears, players,
+               build_runs,      // clears with a recorded build
+               builds,          // distinct exact builds recorded in those clears
                parts:   [[least players, most players or null, file, listings]],
                summary: [[type, effect, players]] }],
   highlights: [[set id, name, file]] }   // "neutral" first, then each group and activity
