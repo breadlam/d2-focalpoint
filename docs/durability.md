@@ -160,11 +160,12 @@ game's damage numbers:
 | Tarnished Wraith (orange bar, miniboss pedestal) | ~2,255 | elite, tier 2: 1,538 | 1.47 |
 | Resolute Captain (yellow bar?, miniboss pedestal) | ~1,825 | elite, tier 2: 911 | 2.00 |
 | Deranged Abomination (orange bar) | ~1,965 | elite, tier 2: 1,951 | 1.01 |
+| Unyielding Servitor | ~1,970 | elite, tier 2: 1,951 | 1.01 |
 | Corsair (orange bar) | ~575 | none; elite Vandal, tier 2: 518 | 1.11 |
 | Unstoppable Ogre (Champion) | ~3,400 | Compendium, Raid (Expert/Master): 3,300 | 1.03 |
 
-Psions, Acolytes, Legionaries, Phalanxes, Knights and the orange-bar
-Abomination match MossyMax's **health tier 2** (matchmade strikes) within
+Psions, Acolytes, Legionaries, Phalanxes, Knights, Servitors and the
+orange-bar Abomination match MossyMax's **health tier 2** (matchmade strikes) within
 6%, and the Unstoppable Ogre the Compendium's raid Champion. The Corsair,
 which the tables lack, is 1.11× their tier-2 elite Vandal. The range's
 miniboss pedestal (Wizard, Wraith, Captain) has 1.5–2.5× the tier-2 elite

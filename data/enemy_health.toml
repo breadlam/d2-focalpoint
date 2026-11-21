@@ -157,6 +157,19 @@ source = "In-game, Shooting Range (recorded 2026-11-21)"
 note = "From the range's miniboss pedestal; the bar looked yellow (uncertain). 2.0x MossyMax's tier-2 elite Captain (911)."
 
 [[measurement]]
+enemy = "Unyielding Servitor"
+faction = "Fallen"
+archetype = "Servitor"
+rank = "elite"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 1970
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+note = "1.01x MossyMax's tier-2 elite Servitor (1,951)."
+
+[[measurement]]
 enemy = "Unstoppable Ogre"
 faction = "Hive"
 archetype = "Ogre"
