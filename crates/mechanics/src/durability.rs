@@ -286,6 +286,9 @@ pub struct Observation {
     pub archetype: String,
     /// `minor`, `elite` or `champion`.
     pub rank: String,
+    /// The health bar's colour as seen in-game (`red`, `orange`, `yellow`);
+    /// without it, `rank` is the closest match.
+    pub bar: Option<String>,
     pub place: String,
     pub step: Option<String>,
     pub power_delta: Option<i32>,
@@ -313,6 +316,14 @@ pub fn observations(text: &str) -> anyhow::Result<Vec<Observation>> {
             "{}: rank {:?} is not minor, elite or champion",
             o.enemy,
             o.rank
+        );
+        anyhow::ensure!(
+            o.bar
+                .as_deref()
+                .is_none_or(|b| ["red", "orange", "yellow"].contains(&b)),
+            "{}: bar {:?} is not red, orange or yellow",
+            o.enemy,
+            o.bar
         );
     }
     Ok(file.measurement)

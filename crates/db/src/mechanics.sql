@@ -192,6 +192,7 @@ CREATE OR REPLACE TABLE enemy_observed (
     faction      VARCHAR NOT NULL,
     archetype    VARCHAR NOT NULL,   -- enemy_health.enemy it is compared with
     rank         VARCHAR NOT NULL,   -- minor | elite | champion
+    bar          VARCHAR,            -- red | orange | yellow, as seen; NULL: rank is the closest match
     place        VARCHAR NOT NULL,   -- Shooting Range, an activity, ...
     step         VARCHAR,
     power_delta  INTEGER,
@@ -296,13 +297,13 @@ LEFT JOIN power_delta p ON p.delta = greatest(-100, least(100, r.power_delta));
 -- rank, and Champions against the Compendium's Champion health (the same
 -- for every Champion type).
 CREATE OR REPLACE VIEW enemy_observed_tier AS
-SELECT o.enemy, o.place, o.step, o.power_delta, o.health, o.rank,
+SELECT o.enemy, o.place, o.step, o.power_delta, o.health, o.rank, o.bar,
        'tier ' || e.health_tier AS reference, e.health AS reference_health,
        o.health / e.health AS ratio
 FROM enemy_observed o
 JOIN enemy_health e ON e.faction = o.faction AND e.enemy = o.archetype AND e.rank = o.rank
 UNION ALL
-SELECT o.enemy, o.place, o.step, o.power_delta, o.health, o.rank,
+SELECT o.enemy, o.place, o.step, o.power_delta, o.health, o.rank, o.bar,
        c.difficulty, c.value, o.health / c.value
 FROM enemy_observed o
 JOIN champion_stat c ON c.property = 'Champion Health' AND o.rank = 'champion'

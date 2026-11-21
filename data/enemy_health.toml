@@ -3,8 +3,10 @@
 # health: the damage it took to kill the enemy, as the game's damage numbers
 #   show it (approximate when `approximate`).
 # archetype, rank: the enemy in MossyMax's tables (enemy_health) it is
-#   compared with — rank minor or elite as the closest match, or champion
+#   compared with — rank minor (red bar) or elite (orange bar), or champion
 #   (compared with the Data Compendium's Champion health).
+# bar: the health bar's colour as seen in-game (red, orange, yellow); where
+#   it is missing, rank is the closest match.
 # place, step, power_delta: where it was measured.
 # `focalpoint mechanics import` writes these to the table enemy_observed;
 # the view enemy_observed_tier compares each with MossyMax's health tiers.
@@ -87,13 +89,14 @@ enemy = "Blistered Wizard"
 faction = "Hive"
 archetype = "Wizard"
 rank = "elite"
+bar = "orange"
 place = "Shooting Range"
 step = "Ultimate"
 power_delta = -30
 health = 2250
 approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21)"
-note = "2.5x MossyMax's tier-2 elite Wizard (911); the lighter enemies match tier 2 within 6%."
+note = "Orange bar: 2.5x MossyMax's tier-2 elite Wizard (911); the lighter enemies match tier 2 within 6%."
 
 [[measurement]]
 enemy = "Unstoppable Ogre"

@@ -489,6 +489,7 @@ fn write_durability(
                 o.faction,
                 o.archetype,
                 o.rank,
+                o.bar,
                 o.place,
                 o.step,
                 o.power_delta,
