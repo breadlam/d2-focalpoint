@@ -182,7 +182,9 @@ weapons or builds.
 
 `mechanic_source`, `mechanic_entry`, `mechanic_subject` and
 `mechanic_keyword` hold the community's documentation of game mechanics,
-keyed to manifest hashes; `mechanic_rotation`, `mechanic_rotation_loadout`,
+keyed to manifest hashes, and `mechanic_tag` (with the view
+`mechanic_hash_tag`) what it says each part needs and does
+([effects.md](effects.md)); `mechanic_rotation`, `mechanic_rotation_loadout`,
 `mechanic_loadout` and `mechanic_loadout_item` measured boss-damage
 rotations and the DIM loadouts behind them; `context`, `context_activity`,
 `context_feature` and `context_event` the profiles of the contexts builds

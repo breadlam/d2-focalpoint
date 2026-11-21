@@ -19,7 +19,10 @@
 //! * [`sets`] — armor set bonuses: what full bonuses are worth to the same
 //!   player, and how often top builds lack them (ADR 0010);
 //! * [`attempts`] — failed attempts in content that cannot be resumed, and
-//!   whether build types differ in how often they clear at all.
+//!   whether build types differ in how often they clear at all;
+//! * [`triggers`] — what sets off the parts of the builds played in each
+//!   activity group (the mechanics layer's trigger tags), against the boss
+//!   damage workbook's rotations.
 //!
 //! Each returns plain data; the CLI renders it.
 
@@ -33,6 +36,7 @@ pub mod priors;
 pub mod sets;
 pub mod solo;
 pub mod subclasses;
+pub mod triggers;
 
 /// Average ranks, ties sharing their mean rank.
 #[must_use]

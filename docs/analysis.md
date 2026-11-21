@@ -13,6 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
+| `analyze triggers` | Do the trigger tags read from the mechanics texts say anything about where builds are played — do players lean less on kill-triggered parts where kills are scarce or hard? | the synergy evaluator's trigger availability per context ([effects.md](effects.md)) |
 | `analyze attempts` | Where are uncleared runs failures rather than sessions, and do build types differ in how often they clear at all — beyond who plays them, and beyond what the clear-only ranking sees? | open: failures in Conquests and Ops are not yet scored |
 | `analyze sets` | What are full armor set bonuses worth to the same player, are players who skip them stronger, and how many top builds lack them? | polished top builds (ADR 0010) |
 | `analyze partial` | Which content allows partial clears or partial participation, and how does the run score treat them? | the solo premium's full-clear test (ADR 0008); scoring partial participants by kill rate over time played (ADR 0009) |
@@ -396,4 +397,17 @@ Findings:
   Fighting Lion (1,557 players), clears its first tries at the expected
   rate (+0.3 points); the same kit with Ice Breaker clears 5.5 points above
   it.
+
+## `analyze triggers`
+
+Needs the mechanics layer (`focalpoint mechanics import`). For each activity
+group's recorded builds (weighted by clears) and for the boss damage
+workbook's measured rotations, the share of documented parts — subclass
+choices, armor mods and exotic armor, the parts both record — set off by
+kills, hits, ability use, pickups, nearby enemies, or nothing. Findings
+(see [effects.md](effects.md)): kill-triggered parts run from 24% of parts
+in Equilibrium, Fireteam Ops and dungeons through 21–22% in Grandmaster
+Conquests to 18.8% in Ultimate Conquest and 17.0% in the boss rotations,
+which also lean least on pickups (6.9% against 10–15%) and nearby enemies
+(0.8% against 3–5%) and most on hits (20.3% against 14–17%).
 

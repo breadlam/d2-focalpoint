@@ -58,6 +58,7 @@ of the recorded builds' component uses each documents.
 | `mechanic_source` | `source` | each source read: title, URL, fetch date, entries |
 | `mechanic_entry` | `(source, entry_id)` | one documented game element or game state: `section` (the source's tab or type, with the tab's heading, e.g. `Solar / Glossary`), `name`, `text` (PvE only) |
 | `mechanic_subject` | `(source, entry_id, hash, hash_kind)` | the manifest hashes an entry documents: `hash_kind` `item`, `sandbox_perk` (set bonuses) or `item_set`; `rule` how it was found — `hash` (Clarity's own), `item` (the weapon or armor a Clarity perk is on), `name`, `alias` (a fragment's short name), `family` (an armor mod family) |
+| `mechanic_tag`, `mechanic_hash_tag` (view) | — | what each entry's text says its subject needs and does: triggers, payoffs, states produced and depended on, each with its evidence sentence ([effects.md](effects.md)) |
 | `mechanic_keyword` | — | runs of text a source marks: Clarity's element and ammo classes (`solar`, `special`, `enhancedArrow`, …), the Compendium's text colours (`#rrggbb`) |
 | `mechanic_rotation` | `(source, rotation_id)` | a measured boss-damage rotation: category (Universal, Specialized, Support, …), class, boss, `core_dps` (its repeating core), average DPS after 10–60 s and at its end, artifact mods, other factors, notes |
 | `mechanic_rotation_loadout` | — | the DIM loadouts a rotation was run with: `role` `loadout 1`, `loadout 2`, or `note` (a variant a cell note links, `label` its line) |
@@ -141,10 +142,6 @@ hand-maintained detail from `data/contexts.toml`. See
 
 ## Next
 
-- **States a part produces and depends on** (`mechanic_link`): "grants
-  Radiant", "inflicts Weaken", "creates Orbs" against "while Radiant",
-  "against Weakened targets", "on Orb pickup" — the links a synergy
-  evaluator credits, flags or penalises.
 - **Damage-modifier categories** from Court's stacking guide: global
   debuffs, empowering buffs and weapon surges do not stack within their
   category.

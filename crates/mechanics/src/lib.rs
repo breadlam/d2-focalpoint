@@ -28,6 +28,7 @@ pub mod aegis;
 pub mod clarity;
 pub mod compendium;
 pub mod context;
+pub mod effects;
 pub mod names;
 pub mod sheet;
 pub mod xlsx;
@@ -230,6 +231,7 @@ fn write(db: &Database, read: &[Source], contexts: &[context::Context]) -> Resul
         let mut entries = conn.appender("mechanic_entry")?;
         let mut subjects = conn.appender("mechanic_subject")?;
         let mut keywords = conn.appender("mechanic_keyword")?;
+        let mut tags = conn.appender("mechanic_tag")?;
         let mut rotations = conn.appender("mechanic_rotation")?;
         let mut rotation_loadouts = conn.appender("mechanic_rotation_loadout")?;
         let mut loadouts = conn.appender("mechanic_loadout")?;
@@ -260,6 +262,9 @@ fn write(db: &Database, read: &[Source], contexts: &[context::Context]) -> Resul
                 }
                 for (k, mark) in &e.keywords {
                     keywords.append_row(params![source, id, k, mark])?;
+                }
+                for t in effects::read(&e.text) {
+                    tags.append_row(params![source, id, t.role.as_str(), t.tag, t.evidence])?;
                 }
             }
             for (i, r) in m.rotations.iter().enumerate() {

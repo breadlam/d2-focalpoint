@@ -433,14 +433,25 @@ mod tests {
         let (_dir, db) = db();
         let c = from_runs(&db, 0.01).unwrap();
         let ids: Vec<&str> = c.iter().map(|c| c.id.as_str()).collect();
-        assert_eq!(ids, ["group:master-raid", "activity:king-s-fall-master", "activity:vault-of-glass-master"]);
+        assert_eq!(
+            ids,
+            [
+                "group:master-raid",
+                "activity:king-s-fall-master",
+                "activity:vault-of-glass-master"
+            ]
+        );
         let value = |c: &Context, f: &str| c.feature(f).and_then(|f| f.value);
         let vog = &c[2];
         assert_eq!(vog.parent.as_deref(), Some("group:master-raid"));
         assert_eq!(vog.activities, [1]);
         assert_eq!(value(vog, "clears"), Some(3.0));
         assert!((value(vog, "solo_share").unwrap() - 1.0 / 3.0).abs() < 1e-9);
-        assert_eq!(value(vog, "kills_per_min"), Some(9.0), "median of 6 and 12, fireteam clears only");
+        assert_eq!(
+            value(vog, "kills_per_min"),
+            Some(9.0),
+            "median of 6 and 12, fireteam clears only"
+        );
         assert_eq!(value(vog, "precision_kill_share"), Some(0.1));
         assert_eq!(value(vog, "resumable"), Some(0.0));
         assert_eq!(value(&c[1], "resumable"), Some(1.0));

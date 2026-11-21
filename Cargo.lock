@@ -828,6 +828,7 @@ dependencies = [
  "duckdb",
  "focalpoint-db",
  "quick-xml",
+ "regex",
  "scraper",
  "serde",
  "serde_json",

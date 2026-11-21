@@ -9,7 +9,7 @@ use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
 use focalpoint_db::analysis::{
     attempts, breadth, completeness, diversity, highlights as hl, partial, priors, sets, solo,
-    subclasses,
+    subclasses, triggers,
 };
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, SoloScoring, load_model};
@@ -95,6 +95,14 @@ by build type against players of the same level, with their split-half reliabili
 compare with each group's build-type ranking, which scores clears only."
     )]
     Attempts,
+    /// What sets off the parts of the builds played in each activity group (needs `mechanics import`)
+    #[command(
+        after_help = "Shares of the builds' documented parts (subclass choices, armor mods, exotic armor) \
+triggered by kills, hits, ability use, pickups, nearby enemies, or nothing (passive), by activity group and \
+for the boss damage workbook's measured rotations. Where kills are scarce or hard, builds should lean less on \
+kill-triggered parts."
+    )]
+    Triggers,
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -223,6 +231,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Partial => run_partial(&db, args.format),
         What::Sets => run_sets(&db, args.format),
         What::Attempts => run_attempts(&db, args.format),
+        What::Triggers => run_triggers(&db, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -1841,4 +1850,34 @@ fn type_label(key: &[String]) -> String {
         return key.join(" · ");
     };
     format!("{class} {element}: {armor} + {weapon} · {sup} · {aspects}")
+}
+
+fn run_triggers(db: &Database, format: Format) -> Result<()> {
+    println!(
+        "## What sets off the builds' documented parts (subclass choices, armor mods, exotic armor)"
+    );
+    let mut header = vec![
+        "builds of".to_string(),
+        "clears".to_string(),
+        "parts".to_string(),
+    ];
+    header.extend(triggers::TRIGGERS.iter().map(|t| (*t).to_string()));
+    let rows: Vec<Vec<String>> = triggers::by_group(db)?
+        .into_iter()
+        .map(|m| {
+            let mut row = vec![
+                m.group,
+                thousands(m.weight.round() as i64),
+                format!("{:.1}", m.parts),
+            ];
+            row.extend(m.shares.iter().map(|s| format!("{:.1}%", 100.0 * s)));
+            row
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "A part counts for every trigger it has; parts are the build's components the mechanics sources document. \
+The workbook's rotations count once each (their first loadout)."
+    );
+    Ok(())
 }

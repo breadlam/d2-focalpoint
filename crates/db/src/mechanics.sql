@@ -44,6 +44,17 @@ CREATE OR REPLACE TABLE mechanic_keyword (
     mark      VARCHAR NOT NULL
 );
 
+-- What each entry's text says its subject needs and does
+-- (focalpoint_mechanics::effects; docs/effects.md): triggers, payoffs, and
+-- game states it produces or depends on, with the sentence each was read from.
+CREATE OR REPLACE TABLE mechanic_tag (
+    source    VARCHAR NOT NULL,
+    entry_id  INTEGER NOT NULL,
+    role      VARCHAR NOT NULL,  -- trigger | payoff | produces | depends
+    tag       VARCHAR NOT NULL,  -- dotted and open-ended: kill.precision, energy.grenade, Radiant, ...
+    evidence  VARCHAR NOT NULL
+);
+
 -- Measured damage rotations: TheAegisRelic's boss damage workbook, one per
 -- tested rotation of its ranking sheet.
 CREATE OR REPLACE TABLE mechanic_rotation (
@@ -138,3 +149,13 @@ CREATE OR REPLACE TABLE context_event (
     detail      VARCHAR,
     source      VARCHAR NOT NULL
 );
+
+-- Each manifest hash's tags over every source documenting it (not those of a
+-- perk documented with its weapon: a weapon's perks are in the build too).
+CREATE OR REPLACE VIEW mechanic_hash_tag AS
+SELECT s.hash, s.hash_kind, t.role, t.tag,
+       list(DISTINCT t.source ORDER BY t.source) AS sources,
+       min(t.evidence) AS evidence
+FROM mechanic_subject s JOIN mechanic_tag t USING (source, entry_id)
+WHERE s.rule <> 'item'
+GROUP BY ALL;
