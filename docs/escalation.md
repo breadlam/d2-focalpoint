@@ -181,7 +181,9 @@ Their mechanics are yet to be read in the same detail.
   regeneration). These are visible in the data as the step between "almost
   the loop" and "the loop".
 - **Thresholds in the context**: enemy **durability**
-  ([durability.md](durability.md)) cuts both ways — it
+  ([durability.md](durability.md): enemies need ×3.5 the damage in
+  Grandmaster Conquests and ×7 in Ultimate Conquest, against ×2.2 in Ops at
+  Ultimate) cuts both ways — it
   sustains loops that need survivors (ignition chains, damage-counted ammo)
   and starves kill-volume engines; enemy **density and spacing** (neighbours
   within 8–15 m) decide whether a chain propagates.

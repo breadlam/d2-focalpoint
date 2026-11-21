@@ -157,6 +157,9 @@ pub struct DurabilitySummary {
     pub champion_stats: usize,
     /// Contexts given a Power delta and health tier.
     pub contexts: usize,
+    /// `data/difficulty.toml` entries naming no context (activities
+    /// Searchlight did not target).
+    pub unmatched: Vec<String>,
 }
 
 /// Read every source under `dir`, build the context profiles (with
@@ -228,7 +231,7 @@ pub fn import(
         .with_context(|| format!("parsing {}", path.display()))?,
         None => durability::difficulties(durability::DIFFICULTY)?,
     };
-    let durable = durability::apply(&mut contexts, &difficulties, &tables.curve);
+    let (durable, unmatched) = durability::apply(&mut contexts, &difficulties, &tables.curve);
 
     progress("writing");
     write(db, &read, &contexts)?;
@@ -268,6 +271,7 @@ pub fn import(
             curve_points: tables.curve.len(),
             champion_stats: tables.champions.len(),
             contexts: durable,
+            unmatched,
         },
     })
 }

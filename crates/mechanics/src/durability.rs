@@ -275,11 +275,16 @@ pub fn champions(g: &Grid) -> Vec<ChampionStat> {
 /// The repository's `data/difficulty.toml`, built in.
 pub const DIFFICULTY: &str = include_str!("../../../data/difficulty.toml");
 
-/// An activity group's Power delta and health tier, with its evidence.
+/// A context's Power delta and health tier, with its evidence.
 #[derive(Debug, Clone, PartialEq, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Difficulty {
-    pub group: String,
+    /// The name of an activity group or an activity.
+    pub context: String,
+    /// The Power players are capped at, and the combatants' Power: the
+    /// delta is their difference.
+    pub power_cap: Option<i32>,
+    pub combatant_power: Option<i32>,
     pub power_delta: Option<i32>,
     pub health_tier: Option<u8>,
     pub champion_difficulty: Option<String>,
@@ -297,6 +302,16 @@ struct DifficultyFile {
     difficulty: Vec<Difficulty>,
 }
 
+impl Difficulty {
+    /// The Power delta: as given, or the Power cap minus the combatants'
+    /// Power.
+    #[must_use]
+    pub fn delta(&self) -> Option<i32> {
+        self.power_delta
+            .or_else(|| Some(self.power_cap? - self.combatant_power?))
+    }
+}
+
 /// Parse a difficulty file in the format of `data/difficulty.toml`.
 pub fn difficulties(text: &str) -> anyhow::Result<Vec<Difficulty>> {
     let file: DifficultyFile = toml::from_str(text)?;
@@ -304,9 +319,18 @@ pub fn difficulties(text: &str) -> anyhow::Result<Vec<Difficulty>> {
         anyhow::ensure!(
             ["documented", "dated", "assumed"].contains(&d.confidence.as_str()),
             "{}: confidence {:?} is not documented, dated or assumed",
-            d.group,
+            d.context,
             d.confidence
         );
+        if let (Some(delta), Some(cap), Some(power)) =
+            (d.power_delta, d.power_cap, d.combatant_power)
+        {
+            anyhow::ensure!(
+                delta == cap - power,
+                "{}: power_delta {delta} is not power_cap {cap} minus combatant_power {power}",
+                d.context
+            );
+        }
     }
     Ok(file.difficulty)
 }
@@ -351,25 +375,53 @@ pub fn read(scaling: &std::path::Path, compendium: &std::path::Path) -> anyhow::
     Ok(t)
 }
 
-/// Add each difficulty's features to its group's context, the group's
-/// activities and their encounters: `power_delta`, `damage_multiplier`,
-/// `durability` (its inverse), `health_tier`, `champion_difficulty`,
-/// `difficulty_confidence` and `difficulty_evidence`. Returns the contexts given features.
+/// Add each difficulty's features to its context and the context's
+/// descendants (a group's activities and encounters, an activity's
+/// encounters): `power_delta`, `damage_multiplier`, `durability` (its
+/// inverse), `power_cap`, `combatant_power`, `health_tier`,
+/// `champion_difficulty`, `difficulty_confidence` and
+/// `difficulty_evidence`. Groups' entries go first; an activity's own entry
+/// replaces the features it gives, keeps the rest of its group's, and adds
+/// its evidence to the group's. Returns the contexts given features and
+/// the entries naming no context.
 pub fn apply(
     contexts: &mut [crate::context::Context],
     difficulties: &[Difficulty],
     curve: &[(i32, f64)],
-) -> usize {
-    let mut touched = 0;
+) -> (usize, Vec<String>) {
+    const SOURCE: &str = "curated";
+    fn set(c: &mut crate::context::Context, name: &str, value: Option<f64>, text: Option<&str>) {
+        if value.is_none() && text.is_none() {
+            return;
+        }
+        c.features
+            .retain(|f| !(f.source == SOURCE && f.name == name));
+        match value {
+            Some(_) => c.number(name, value, SOURCE),
+            None => c.text(name, text, SOURCE),
+        }
+    }
+    let depth = |kind: &str| match kind {
+        "group" => 0,
+        "activity" => 1,
+        _ => 2,
+    };
+    let mut matched: Vec<(usize, &Difficulty, String)> = Vec::new();
+    let mut unmatched = Vec::new();
     for d in difficulties {
-        let Some(group) = contexts
+        match contexts
             .iter()
-            .find(|c| c.kind == "group" && c.name == d.group)
-            .map(|c| c.id.clone())
-        else {
-            continue;
-        };
-        let mut ids = vec![group];
+            .filter(|c| c.name == d.context)
+            .min_by_key(|c| depth(&c.kind))
+        {
+            Some(c) => matched.push((depth(&c.kind), d, c.id.clone())),
+            None => unmatched.push(d.context.clone()),
+        }
+    }
+    matched.sort_by_key(|(depth, _, _)| *depth);
+    let mut touched = std::collections::HashSet::new();
+    for (_, d, root) in matched {
+        let mut ids = vec![root];
         for _ in 0..2 {
             let more: Vec<String> = contexts
                 .iter()
@@ -380,24 +432,40 @@ pub fn apply(
                 .collect();
             ids.extend(more);
         }
-        let m = d.power_delta.and_then(|delta| multiplier(curve, delta));
+        let delta = d.delta();
+        let m = delta.and_then(|delta| multiplier(curve, delta));
         let evidence = match &d.note {
             Some(n) => format!("{}: {} ({n})", d.confidence, d.sources.join("; ")),
             None => format!("{}: {}", d.confidence, d.sources.join("; ")),
         };
         for c in contexts.iter_mut().filter(|c| ids.contains(&c.id)) {
-            let s = "curated";
-            c.number("power_delta", d.power_delta.map(f64::from), s);
-            c.number("damage_multiplier", m, s);
-            c.number("durability", m.map(|m| 1.0 / m), s);
-            c.number("health_tier", d.health_tier.map(f64::from), s);
-            c.text("champion_difficulty", d.champion_difficulty.as_deref(), s);
-            c.text("difficulty_confidence", Some(&d.confidence), s);
-            c.text("difficulty_evidence", Some(&evidence), s);
-            touched += 1;
+            let evidence = match c
+                .features
+                .iter()
+                .find(|f| f.source == SOURCE && f.name == "difficulty_evidence")
+                .and_then(|f| f.text.as_deref())
+            {
+                Some(earlier) => format!("{evidence} | {earlier}"),
+                None => evidence.clone(),
+            };
+            set(c, "power_delta", delta.map(f64::from), None);
+            set(c, "damage_multiplier", m, None);
+            set(c, "durability", m.map(|m| 1.0 / m), None);
+            set(c, "power_cap", d.power_cap.map(f64::from), None);
+            set(c, "combatant_power", d.combatant_power.map(f64::from), None);
+            set(c, "health_tier", d.health_tier.map(f64::from), None);
+            set(
+                c,
+                "champion_difficulty",
+                None,
+                d.champion_difficulty.as_deref(),
+            );
+            set(c, "difficulty_confidence", None, Some(&d.confidence));
+            set(c, "difficulty_evidence", None, Some(&evidence));
+            touched.insert(c.id.clone());
         }
     }
-    touched
+    (touched.len(), unmatched)
 }
 
 /// Health by enemy, rank and tier, for lookups.
@@ -442,12 +510,99 @@ mod tests {
     #[test]
     fn the_built_in_difficulty_file_parses() {
         let d = difficulties(DIFFICULTY).unwrap();
-        let uc = d.iter().find(|d| d.group == "Ultimate Conquest").unwrap();
+        let uc = d.iter().find(|d| d.context == "Ultimate Conquest").unwrap();
         assert_eq!(
-            (uc.power_delta, uc.health_tier, uc.confidence.as_str()),
-            (Some(-30), Some(4), "assumed")
+            (uc.delta(), uc.health_tier, uc.confidence.as_str()),
+            (Some(-50), Some(4), "documented")
         );
-        assert!(difficulties("[[difficulty]]\ngroup = \"x\"\nconfidence = \"guessed\"").is_err());
+        let seraph = d
+            .iter()
+            .find(|d| d.context.contains("Seraph's Shield"))
+            .unwrap();
+        assert_eq!(seraph.delta(), Some(-50));
+        assert!(difficulties("[[difficulty]]\ncontext = \"x\"\nconfidence = \"guessed\"").is_err());
+        assert!(
+            difficulties(
+                "[[difficulty]]\ncontext = \"x\"\nconfidence = \"assumed\"\npower_cap = 400\ncombatant_power = 440\npower_delta = -30"
+            )
+            .is_err(),
+            "a delta that contradicts the Powers"
+        );
+    }
+
+    #[test]
+    fn activities_override_their_group() {
+        use crate::context::Context;
+        let ctx = |id: &str, kind: &str, parent: Option<&str>, name: &str| Context {
+            id: id.into(),
+            kind: kind.into(),
+            parent: parent.map(Into::into),
+            name: name.into(),
+            ..Context::default()
+        };
+        let mut contexts = vec![
+            ctx("group:gm", "group", None, "GM"),
+            ctx("activity:a", "activity", Some("group:gm"), "GM: A"),
+            ctx("activity:b", "activity", Some("group:gm"), "GM: B"),
+            ctx("encounter:a/boss", "encounter", Some("activity:a"), "Boss"),
+        ];
+        let file = r#"
+            [[difficulty]]
+            context = "GM: A"
+            power_cap = 420
+            combatant_power = 470
+            confidence = "documented"
+            [[difficulty]]
+            context = "GM"
+            power_delta = -40
+            health_tier = 4
+            confidence = "assumed"
+            [[difficulty]]
+            context = "Expert: C"
+            power_cap = 200
+            combatant_power = 220
+            confidence = "documented"
+        "#;
+        let curve = [(-50, 0.144), (-40, 0.25), (0, 1.0)];
+        let (touched, unmatched) = apply(&mut contexts, &difficulties(file).unwrap(), &curve);
+        assert_eq!((touched, unmatched), (4, vec!["Expert: C".to_string()]));
+        let delta = |i: usize| {
+            let f: Vec<_> = contexts[i]
+                .features
+                .iter()
+                .filter(|f| f.name == "power_delta")
+                .collect();
+            assert_eq!(f.len(), 1, "{}: one curated delta", contexts[i].id);
+            f[0].value
+        };
+        assert_eq!(
+            (delta(0), delta(1), delta(2), delta(3)),
+            (Some(-40.0), Some(-50.0), Some(-40.0), Some(-50.0))
+        );
+        let get = |i: usize, name: &str| {
+            contexts[i]
+                .features
+                .iter()
+                .find(|f| f.name == name)
+                .cloned()
+        };
+        assert_eq!(get(3, "power_cap").and_then(|f| f.value), Some(420.0));
+        assert_eq!(
+            get(1, "health_tier").and_then(|f| f.value),
+            Some(4.0),
+            "kept from the group"
+        );
+        assert_eq!(
+            get(1, "difficulty_confidence")
+                .and_then(|f| f.text)
+                .as_deref(),
+            Some("documented")
+        );
+        let evidence = get(1, "difficulty_evidence").and_then(|f| f.text).unwrap();
+        assert!(
+            evidence.starts_with("documented") && evidence.contains(" | assumed"),
+            "{evidence}"
+        );
     }
 
     #[test]

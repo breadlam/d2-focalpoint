@@ -1,41 +1,47 @@
-# Power delta and enemy health tier of the activity groups (docs/durability.md).
+# Power delta and enemy health tier of the activity groups and activities
+# (docs/durability.md).
 #
 # An enemy's damage to kill is its health at the activity's health tier
 # (MossyMax's enemy health tables, 1–4) divided by the outgoing damage
 # multiplier of the Power delta the activity is fought at (Edge of Fate's
 # curve: ×0.446 at −30, ×0.144 at −50). `focalpoint mechanics import`
-# turns each entry into features of the group's contexts and its
-# activities': power_delta, damage_multiplier, durability (its inverse),
-# health_tier, champion_difficulty, difficulty_confidence and
-# difficulty_evidence.
+# turns each entry into features of its context and the context's
+# descendants: power_delta, damage_multiplier, durability (its inverse),
+# power_cap, combatant_power, health_tier, champion_difficulty,
+# difficulty_confidence and difficulty_evidence.
 #
+# context: the name of an activity group or an activity. Groups' entries
+#   apply first; an activity's entry replaces the features it gives.
+# power_cap, combatant_power: the Power players are capped at and the
+#   combatants' Power; the delta is their difference (power_delta may be
+#   given instead, or as well, when it agrees).
 # confidence:
 #   documented — a current (Monument of Triumph) source states it
 #   dated      — a source from before Edge of Fate, or superseded, states it
 #   assumed    — inferred; replace when a source is found
-# A group with no entry has no durability features yet.
+# Entries naming no context (activities Searchlight did not target) are kept
+# for reference. A context with no entry has no durability features yet.
 #
 # Champion difficulty names a column of the Data Compendium's Champion
 # tables: Standard | Raid (Expert/Master) | Advanced | Expert |
 # Master Grandmaster.
 #
-# What is known about the deltas:
+# What is known:
+# * Conquests (in-game, 2026-11-21): Expert −20, Master −30, Grandmaster
+#   −40, Ultimate −50; their ladder's activity level is the combatants'
+#   Power / 10 for all twelve.
 # * Edge of Fate (9.0.0.1 patch notes, July 2025) set the Portal's steps
 #   at Normal 0, Advanced −10, Expert −20, Master −30, Grandmaster −40,
 #   Ultimate −50, and made red-bar enemies gain health more slowly with
 #   delta than majors and bosses.
 # * The Data Compendium (current) gives Ultimate −30 and the Grandmaster
-#   Alert −50: Ultimate was eased after launch.
+#   Alert −50: the Portal's Ultimate was eased after launch.
 # * `focalpoint analyze difficulty`: the same players in the same Ops kill
 #   ×0.89 as fast at Ultimate as at Master and ×0.64 as fast as at Normal —
 #   consistent with enemies needing ×2.2 the damage (−30), not ×7 (−50).
-# * The manifest's difficulty ladders give each step an activity level:
-#   Portal Normal 31, Master 40, Grandmaster 45, Ultimate 50; Conquests'
-#   Grandmaster steps 44–55 and Ultimate 58–60 (the `activity_level`
-#   context feature).
 
 [[difficulty]]
-group = "Ultimate Fireteam Op"
+context = "Ultimate Fireteam Op"
 power_delta = -30
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
@@ -47,7 +53,7 @@ sources = [
 note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier 4 and the Champion column are assumed."
 
 [[difficulty]]
-group = "Ultimate Pinnacle Op"
+context = "Ultimate Pinnacle Op"
 power_delta = -30
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
@@ -59,34 +65,127 @@ sources = [
 note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier 4 and the Champion column are assumed."
 
 [[difficulty]]
-group = "Ultimate Conquest"
-power_delta = -30
+context = "Grandmaster Conquest"
+power_delta = -40
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
-confidence = "assumed"
-sources = ["Data Compendium, landing: Ultimate at -30"]
-note = "Assumes Ultimate Conquest takes the Portal's Ultimate delta; its steps' activity levels (58-60) are above the Portal's Ultimate (50), so it is likely harder. Health tier 4 is assumed."
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21): every Grandmaster Conquest is fought 40 under"]
+note = "Health tier 4 and the Champion column are assumed."
 
 [[difficulty]]
-group = "Grandmaster Conquest"
-power_delta = -30
+context = "Grandmaster Conquest: Heliostat"
+power_delta = -40
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
-confidence = "assumed"
-sources = ["Data Compendium, landing: Ultimate at -30"]
-note = "Assumes the Portal's Ultimate delta: Grandmaster Conquests' activity levels (44-53) straddle the Portal's Ultimate (50). The Grandmaster Alert, a different activity, runs at -50."
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+note = "Health tier 4 and the Champion column are assumed."
 
 [[difficulty]]
-group = "Grandmaster Conquest: Heliostat"
-power_delta = -30
+context = "Ultimate Conquest"
+power_delta = -50
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
-confidence = "assumed"
-sources = ["Data Compendium, landing: Ultimate at -30"]
-note = "Assumes the Portal's Ultimate delta; its activity level (55) is above the Portal's Ultimate (50)."
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21): both Ultimate Conquests are fought 50 under"]
+note = "Health tier 4 and the Champion column are assumed."
+
+# Each Conquest, in the order of its ladder (difficulty steps 0–11).
+[[difficulty]]
+context = "Expert Conquest: Sunless Cell: Customize"
+power_cap = 200
+combatant_power = 220
+champion_difficulty = "Expert"
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+note = "Not a Searchlight target; the Champion column is assumed."
 
 [[difficulty]]
-group = "Master Raid"
+context = "Expert Conquest: Moon: Customize"
+power_cap = 250
+combatant_power = 270
+champion_difficulty = "Expert"
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+note = "Not a Searchlight target; the Champion column is assumed."
+
+[[difficulty]]
+context = "Master Conquest: Conductor's Keep: Customize"
+power_cap = 300
+combatant_power = 330
+champion_difficulty = "Master Grandmaster"
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+note = "Not a Searchlight target; the Champion column is assumed."
+
+[[difficulty]]
+context = "Master Conquest: Derealize: Customize"
+power_cap = 350
+combatant_power = 380
+champion_difficulty = "Master Grandmaster"
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+note = "Not a Searchlight target; the Champion column is assumed."
+
+[[difficulty]]
+context = "Grandmaster Conquest: Defiant EDZ: Customize"
+power_cap = 400
+combatant_power = 440
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Grandmaster Conquest: Arms Dealer: Customize"
+power_cap = 420
+combatant_power = 460
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Grandmaster Conquest: Disgraced: Customize"
+power_cap = 460
+combatant_power = 500
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Grandmaster Conquest: Heist Mars: Customize"
+power_cap = 470
+combatant_power = 510
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Grandmaster Conquest: Scarlet Keep: Customize"
+power_cap = 490
+combatant_power = 530
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Grandmaster Conquest: Heliostat: Customize"
+power_cap = 510
+combatant_power = 550
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Ultimate Conquest: Lightblade: Customize"
+power_cap = 530
+combatant_power = 580
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Ultimate Conquest: Operation: Seraph's Shield: Customize"
+power_cap = 550
+combatant_power = 600
+confidence = "documented"
+sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
+
+[[difficulty]]
+context = "Master Raid"
 power_delta = -20
 health_tier = 4
 champion_difficulty = "Raid (Expert/Master)"
@@ -98,7 +197,7 @@ sources = [
 note = "Edge of Fate converted legacy raids and dungeons to fixed Power difficulty, value not published."
 
 [[difficulty]]
-group = "Master Dungeon"
+context = "Master Dungeon"
 power_delta = -20
 health_tier = 4
 champion_difficulty = "Raid (Expert/Master)"

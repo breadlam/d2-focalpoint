@@ -169,6 +169,12 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
         "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values; {} contexts given a Power delta and health tier",
         d.enemies, d.health_rows, d.measured, d.curve_points, d.champion_stats, d.contexts
     );
+    if !d.unmatched.is_empty() {
+        println!(
+            "Difficulty entries naming no context (kept for reference): {}",
+            d.unmatched.join(", ")
+        );
+    }
     if !imported.unplaced.is_empty() {
         println!(
             "Encounters of activities without scored clears (no parent): {}",

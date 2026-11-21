@@ -18,6 +18,7 @@ it is fought at:
 | −10 | ×0.802 | ×1.25 |
 | −20 | ×0.618 | ×1.62 |
 | −30 | ×0.446 | ×2.24 |
+| −40 | ×0.288 | ×3.47 |
 | −50 | ×0.144 | ×6.97 |
 
 `focalpoint mechanics import` reads these numbers
@@ -33,25 +34,41 @@ it is fought at:
 
 ## Each context's difficulty
 
-[`data/difficulty.toml`](../data/difficulty.toml) gives each activity group a
-Power delta, health tier and Champion column, with a **confidence** and its
-sources:
+[`data/difficulty.toml`](../data/difficulty.toml) gives activity groups and
+activities a Power delta (or the Power cap and combatant Power it is the
+difference of), health tier and Champion column, with a **confidence** and
+its sources:
 
 - **documented**: a current source states it;
 - **dated**: from before Edge of Fate, or superseded;
 - **assumed**: inferred.
 
-The import adds them as features of the group, its activities and their
-encounters ([contexts.md](contexts.md)): `power_delta`,
-`damage_multiplier`, `durability`, `health_tier`, `champion_difficulty`,
-`difficulty_confidence` and `difficulty_evidence`.
+The import adds them as features of the context and its descendants
+([contexts.md](contexts.md)): `power_delta`, `damage_multiplier`,
+`durability`, `power_cap`, `combatant_power`, `health_tier`,
+`champion_difficulty`, `difficulty_confidence` and `difficulty_evidence`.
+An activity's entry overrides its group's.
 
-| Group | Delta | Confidence |
-|---|---|---|
-| Ultimate Fireteam Op, Ultimate Pinnacle Op | −30 | documented |
-| Ultimate Conquest, Grandmaster Conquest, Heliostat | −30 | assumed |
-| Master Raid, Master Dungeon | −20 | dated |
-| Equilibrium, Pantheon, The Desert Perpetual | — | unknown |
+| Group | Delta | Durability | Confidence |
+|---|---|---|---|
+| Ultimate Conquest | −50 | ×6.97 | documented |
+| Grandmaster Conquest, Heliostat | −40 | ×3.47 | documented |
+| Ultimate Fireteam Op, Ultimate Pinnacle Op | −30 | ×2.24 | documented |
+| Master Raid, Master Dungeon | −20 | ×1.62 | dated |
+| Equilibrium, Pantheon, The Desert Perpetual | — | — | unknown |
+
+Each Conquest is played at its own step of one ladder. In-game Power cap
+and combatant Power:
+
+| Step | Conquest | Cap / combatants | Delta |
+|---|---|---|---|
+| 0–1 | Expert: Sunless Cell, Moon | 200/220, 250/270 | −20 |
+| 2–3 | Master: Conductor's Keep, Derealize | 300/330, 350/380 | −30 |
+| 4–9 | Grandmaster: Defiant EDZ, Arms Dealer, Disgraced, Heist Mars, Scarlet Keep, Heliostat | 400/440, 420/460, 460/500, 470/510, 490/530, 510/550 | −40 |
+| 10–11 | Ultimate: Lightblade, Operation Seraph's Shield | 530/580, 550/600 | −50 |
+
+The ladder's activity level is the combatants' Power / 10 at every step.
+Searchlight targeted only the Grandmaster and Ultimate ones.
 
 What is known:
 
@@ -67,9 +84,8 @@ What is known:
 - **The recorded clears** agree with −30, not −50 (below).
 - **The manifest's difficulty ladders** give each step an activity level:
   Portal Normal 31, Advanced 33, Expert 35, Master 40, Grandmaster 45,
-  Ultimate 50; Conquests' Grandmaster steps 44–55 and Ultimate 58–60. This
-  is the `activity_level` context feature. Conquests sit at or above the
-  Portal's Ultimate, so −30 is a floor for them.
+  Ultimate 50. For Conquests it is the combatants' Power / 10. This is the
+  `activity_level` context feature.
 - **Skulls** name what each context fields: its Champion types,
   Difficult or Deadly combatants, banes, and **Galvanized** I–III, which
   make enemies harder to stagger, not tougher. The Compendium says that with
@@ -103,9 +119,9 @@ does to a build's throughput in that context.
 ## Gaps
 
 - **Health after Edge of Fate.** The archetype tables predate it. Health
-  tiers per Portal step and per Conquest are assumed (tier 4).
-- **Conquests' deltas.** No source gives them. Each Conquest is played at a
-  single step, so the same-player comparison cannot place them.
+  tiers per Portal step and per Conquest are assumed (tier 4). Whether
+  combatant Power itself (440 against 600) changes health, beyond the
+  delta, is unknown.
 - **Feats.** Cutthroat Combat ("all combatants are tougher") has no
   published magnitude.
 - **Rank-dependent scaling.** Minors' curve differs from majors' and
