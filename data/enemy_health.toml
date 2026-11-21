@@ -96,7 +96,7 @@ power_delta = -30
 health = 2250
 approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21)"
-note = "Orange bar: 2.5x MossyMax's tier-2 elite Wizard (911); the lighter enemies match tier 2 within 6%."
+note = "Orange bar, but seemingly a miniboss type in the range, like the Tarnished Wraith (the same ~2,250). 2.5x MossyMax's tier-2 elite Wizard (911)."
 
 [[measurement]]
 enemy = "Tarnished Wraith"
@@ -110,7 +110,21 @@ power_delta = -30
 health = 2255
 approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21): ~2,250-2,260"
-note = "Orange bar: the same as the Blistered Wizard, though Wraiths and Knights were a heavier class than Wizards before Edge of Fate. 1.47x MossyMax's tier-2 elite Wraith (1,538)."
+note = "Orange bar, but seemingly a miniboss type in the range, like the Blistered Wizard (the same ~2,250). 1.47x MossyMax's tier-2 elite Wraith (1,538)."
+
+[[measurement]]
+enemy = "Deranged Abomination"
+faction = "Scorn"
+archetype = "Abomination"
+rank = "elite"
+bar = "orange"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 1965
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+note = "Orange bar: 1.01x MossyMax's tier-2 elite Abomination (1,951)."
 
 [[measurement]]
 enemy = "Unstoppable Ogre"
