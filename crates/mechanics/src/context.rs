@@ -65,7 +65,7 @@ pub struct Event {
 }
 
 impl Context {
-    fn number(&mut self, name: &str, value: Option<f64>, source: &str) {
+    pub(crate) fn number(&mut self, name: &str, value: Option<f64>, source: &str) {
         if let Some(v) = value.filter(|v| v.is_finite()) {
             self.features.push(Feature {
                 name: name.into(),
@@ -76,7 +76,7 @@ impl Context {
         }
     }
 
-    fn text(&mut self, name: &str, text: Option<&str>, source: &str) {
+    pub(crate) fn text(&mut self, name: &str, text: Option<&str>, source: &str) {
         if let Some(t) = text.map(str::trim).filter(|t| !t.is_empty()) {
             self.features.push(Feature {
                 name: name.into(),
@@ -124,13 +124,36 @@ pub fn base_name(name: &str) -> String {
 }
 
 /// Profiles of every activity group and activity with scored clears,
-/// measured from those clears.
+/// measured from those clears: their pace and kill mix, and what their
+/// difficulty and modifiers ("skulls") put in front of the players — the
+/// difficulty step most clears are at and its activity level, and the
+/// share of clears with each kind of Champion, Difficult or Deadly
+/// combatants, Galvanized (enemies harder to stagger), Feats and banes.
 pub fn from_runs(db: &Database, checkpoint_share: f64) -> Result<Vec<Context>> {
     let sql = format!(
         "WITH checkpoints AS (
              SELECT activity_hash,
                     avg((NOT coalesce(started_from_beginning, true))::INTEGER) >= {checkpoint_share} AS resumable
              FROM run GROUP BY 1),
+         targets AS (
+             SELECT DISTINCT instance_id FROM run_score JOIN activity a USING (activity_hash)
+             WHERE a.target_group IS NOT NULL),
+         skulls AS (
+             SELECT r.instance_id,
+                    bool_or(s.name LIKE '%[Shield-Piercing]%') AS barrier,
+                    bool_or(s.name LIKE '%[Disruption]%') AS overload,
+                    bool_or(s.name LIKE '%[Stagger]%') AS unstoppable,
+                    bool_or(s.name LIKE 'Difficult Combatants%') AS difficult,
+                    bool_or(s.name LIKE 'Deadly Combatants%') AS deadly,
+                    max(CASE s.name WHEN 'Galvanized I' THEN 1 WHEN 'Galvanized II' THEN 2
+                                    WHEN 'Galvanized III' THEN 3 END) AS galvanized,
+                    bool_or(s.name = 'Feat: Cutthroat Combat') AS cutthroat,
+                    bool_or(s.name = 'Feat: Battalions') AS battalions,
+                    bool_or(s.description LIKE '%Banes,%') AS banes
+             FROM (SELECT instance_id, unnest(skull_hashes) AS skull_hash
+                   FROM run SEMI JOIN targets USING (instance_id)) r
+             JOIN skull s USING (skull_hash)
+             GROUP BY 1),
          kills AS (
              SELECT instance_id, membership_id, sum(precision_kills) AS precision, sum(super_kills) AS supers,
                     sum(ability_kills + grenade_kills + melee_kills + super_kills) AS abilities
@@ -143,18 +166,34 @@ pub fn from_runs(db: &Database, checkpoint_share: f64) -> Result<Vec<Context>> {
                     k.precision / nullif(r.kills, 0) AS precision_share,
                     k.abilities / nullif(r.kills, 0) AS ability_share,
                     k.supers / nullif(r.kills, 0) AS super_share,
-                    r.duration_s, ru.player_count, c.resumable::INTEGER AS resumable
+                    r.duration_s, ru.player_count, c.resumable::INTEGER AS resumable,
+                    t.name AS tier, t.activity_level, ru.equipment_locked,
+                    coalesce(s.barrier, false)::INTEGER AS barrier,
+                    coalesce(s.overload, false)::INTEGER AS overload,
+                    coalesce(s.unstoppable, false)::INTEGER AS unstoppable,
+                    coalesce(s.difficult, false)::INTEGER AS difficult,
+                    coalesce(s.deadly, false)::INTEGER AS deadly,
+                    coalesce(s.galvanized, 0) AS galvanized,
+                    coalesce(s.cutthroat, false)::INTEGER AS cutthroat,
+                    coalesce(s.battalions, false)::INTEGER AS battalions,
+                    coalesce(s.banes, false)::INTEGER AS banes
              FROM run_score r JOIN activity a USING (activity_hash)
              JOIN run ru USING (instance_id)
              JOIN kills k USING (instance_id, membership_id)
              LEFT JOIN checkpoints c USING (activity_hash)
+             LEFT JOIN difficulty_tier t
+                    ON t.collection_hash = a.difficulty_collection_hash AND t.tier = ru.difficulty_tier
+             LEFT JOIN skulls s USING (instance_id)
              WHERE a.target_group IS NOT NULL)
          SELECT grp, activity, list(DISTINCT activity_hash), count(*),
                 avg(is_solo::INTEGER),
                 median(kpm) FILTER (WHERE is_full), median(precision_share) FILTER (WHERE is_full),
                 median(ability_share) FILTER (WHERE is_full), median(super_share) FILTER (WHERE is_full),
                 median(dpm) FILTER (WHERE is_full), median(duration_s) FILTER (WHERE is_full) / 60.0,
-                median(player_count) FILTER (WHERE is_full), avg(resumable)
+                median(player_count) FILTER (WHERE is_full), avg(resumable),
+                mode(tier), median(activity_level), avg(equipment_locked::INTEGER),
+                avg(barrier), avg(overload), avg(unstoppable), avg(difficult), avg(deadly),
+                avg(galvanized), avg(cutthroat), avg(battalions), avg(banes)
          FROM clears
          GROUP BY GROUPING SETS ((grp), (grp, activity))
          ORDER BY grp, activity NULLS FIRST"
@@ -203,6 +242,31 @@ pub fn from_runs(db: &Database, checkpoint_share: f64) -> Result<Vec<Context>> {
         c.number("duration_min", n(10)?, "runs");
         c.number("fireteam_size", n(11)?, "runs");
         c.number("resumable", n(12)?, "runs");
+        c.text(
+            "difficulty",
+            r.get::<_, Option<String>>(13)?
+                .as_deref()
+                .filter(|t| !t.is_empty()),
+            "runs",
+        );
+        c.number("activity_level", n(14)?, "runs");
+        c.number("equipment_locked", n(15)?, "runs");
+        for (i, name) in [
+            "champions.barrier",
+            "champions.overload",
+            "champions.unstoppable",
+            "combatants.difficult",
+            "combatants.deadly",
+            "galvanized",
+            "feat.cutthroat_combat",
+            "feat.battalions",
+            "banes",
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            c.number(name, n(16 + i)?, "runs");
+        }
         out.push(c);
     }
     Ok(out)
@@ -407,11 +471,19 @@ mod tests {
         let db = Database::create(&dir.path().join("c.duckdb")).unwrap();
         db.conn()
             .execute_batch(
-                "INSERT INTO activity (activity_hash, name, target_group) VALUES
-                    (1, 'Vault of Glass: Master', 'Master Raid'), (2, 'King''s Fall: Master', 'Master Raid');
-                 INSERT INTO run (instance_id, started_at, activity_hash, started_from_beginning, player_count, source, is_tracked)
-                 VALUES (10, '2026-07-01', 1, true, 6, 'archive', false), (11, '2026-07-02', 1, true, 6, 'archive', false),
-                        (12, '2026-07-03', 1, true, 1, 'archive', false), (20, '2026-07-04', 2, false, 6, 'archive', false);
+                "INSERT INTO activity (activity_hash, name, target_group, difficulty_collection_hash) VALUES
+                    (1, 'Vault of Glass: Master', 'Master Raid', 7), (2, 'King''s Fall: Master', 'Master Raid', NULL);
+                 INSERT INTO difficulty_tier VALUES (7, 0, 'Normal', 31, 10, NULL, 0), (7, 1, 'Master', 40, 40, 300, 0);
+                 INSERT INTO skull (skull_hash, name, kind, description) VALUES
+                    (100, 'Galvanized II', 'other', 'Combatants are harder to stun.'),
+                    (101, 'Deadly Combatants [Shield-Piercing] [Stagger]', 'other', 'Extreme numbers of advanced and challenging combatants will appear.'),
+                    (102, 'Rage and Meteors', 'other', 'Deadly Banes, Rage and Meteors, will appear on enemy combatants.');
+                 INSERT INTO run (instance_id, started_at, activity_hash, started_from_beginning, player_count, source, is_tracked,
+                                  difficulty_tier, skull_hashes)
+                 VALUES (10, '2026-07-01', 1, true, 6, 'archive', false, 1, [100, 101]),
+                        (11, '2026-07-02', 1, true, 6, 'archive', false, 1, [100, 101, 102]),
+                        (12, '2026-07-03', 1, true, 1, 'archive', false, 0, []),
+                        (20, '2026-07-04', 2, false, 6, 'archive', false, 3, NULL);
                  INSERT INTO run_player (instance_id, membership_id, character_id, started_at, activity_hash,
                      kills, deaths, assists, precision_kills, super_kills, melee_kills, grenade_kills, ability_kills,
                      completed, is_clear, time_played_s, has_build)
@@ -456,6 +528,14 @@ mod tests {
         assert_eq!(value(vog, "resumable"), Some(0.0));
         assert_eq!(value(&c[1], "resumable"), Some(1.0));
         assert_eq!(value(&c[0], "clears"), Some(4.0));
+        let text = |c: &Context, f: &str| c.feature(f).and_then(|f| f.text.clone());
+        assert_eq!(text(vog, "difficulty").as_deref(), Some("Master"));
+        assert_eq!(value(vog, "activity_level"), Some(40.0));
+        assert!((value(vog, "champions.barrier").unwrap() - 2.0 / 3.0).abs() < 1e-9);
+        assert_eq!(value(vog, "champions.overload"), Some(0.0));
+        assert!((value(vog, "galvanized").unwrap() - 4.0 / 3.0).abs() < 1e-9);
+        assert!((value(vog, "banes").unwrap() - 1.0 / 3.0).abs() < 1e-9);
+        assert_eq!(text(&c[1], "difficulty"), None, "King's Fall has no ladder");
     }
 
     #[test]

@@ -8,8 +8,8 @@ use anyhow::{Result, bail};
 use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
 use focalpoint_db::analysis::{
-    attempts, breadth, completeness, diversity, escalation, highlights as hl, partial, priors,
-    sets, solo, subclasses, triggers,
+    attempts, breadth, completeness, difficulty, diversity, escalation, highlights as hl, partial,
+    priors, sets, solo, subclasses, triggers,
 };
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, SoloScoring, load_model};
@@ -103,6 +103,14 @@ for the boss damage workbook's measured rotations. Where kills are scarce or har
 kill-triggered parts."
     )]
     Triggers,
+    /// How much each difficulty step slows the same players' kills in the same activities
+    #[command(
+        after_help = "Each player's kill rate and deaths at every step of an activity's difficulty \
+ladder, against their own clears of the same activity at the base step; kill rates are the geometric \
+mean of the ratios. Comparing players with themselves removes the selection of stronger players into \
+harder steps. See docs/durability.md."
+    )]
+    Difficulty(DifficultyArgs),
     /// Parts whose lift depends on the content: pieces of synergistic escalation loops
     #[command(after_help = "Examples:\n  \
 focalpoint analyze escalation                     # parts by hard-minus-easy lift\n  \
@@ -118,6 +126,16 @@ focalpoint analyze highlights --set pantheon-2-0 --class Titan\n  \
 focalpoint analyze highlights --sweep --count 5\n  \
 focalpoint analyze highlights --sets                   # list the set ids")]
     Highlights(HighlightArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct DifficultyArgs {
+    /// The step players are compared with
+    #[arg(long, default_value = "Master")]
+    pub base: String,
+    /// Player-activity pairs a step needs to be listed
+    #[arg(long, default_value_t = 100)]
+    pub min_pairs: i64,
 }
 
 #[derive(Debug, clap::Args)]
@@ -258,6 +276,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Sets => run_sets(&db, args.format),
         What::Attempts => run_attempts(&db, args.format),
         What::Triggers => run_triggers(&db, args.format),
+        What::Difficulty(a) => run_difficulty(&db, a, args.format),
         What::Escalation(a) => run_escalation(&db, a, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
@@ -1905,6 +1924,44 @@ fn run_triggers(db: &Database, format: Format) -> Result<()> {
     println!(
         "A part counts for every trigger it has; parts are the build's components the mechanics sources document. \
 The workbook's rotations count once each (their first loadout)."
+    );
+    Ok(())
+}
+
+fn run_difficulty(db: &Database, a: &DifficultyArgs, format: Format) -> Result<()> {
+    println!(
+        "## Kill rate and deaths at each difficulty step, against the same players' {} clears of the same activity",
+        a.base
+    );
+    let header = [
+        "group",
+        "step",
+        "activity level",
+        "pairs",
+        "players",
+        "kill rate",
+        "deaths / 10 min",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = difficulty::steps(db, &a.base, a.min_pairs)?
+        .into_iter()
+        .map(|s| {
+            vec![
+                s.group,
+                s.step,
+                format!("{:.0}", s.activity_level),
+                thousands(s.pairs),
+                thousands(s.players),
+                format!("×{:.3}", s.kill_rate),
+                format!("{:+.2}", s.deaths_10m),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Pairs: a player and an activity with clears at both the step and the base. Kill rate falls by \
+less than enemy health rises: fights are not all shooting, and red-bar enemies gain health more slowly with \
+Power delta than majors and bosses."
     );
     Ok(())
 }

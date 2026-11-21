@@ -24,13 +24,16 @@
 //!   synergistic escalation loops;
 //! * [`triggers`] — what sets off the parts of the builds played in each
 //!   activity group (the mechanics layer's trigger tags), against the boss
-//!   damage workbook's rotations.
+//!   damage workbook's rotations;
+//! * [`difficulty`] — how much each difficulty step slows the same players'
+//!   kills in the same activities: enemy durability, measured.
 //!
 //! Each returns plain data; the CLI renders it.
 
 pub mod attempts;
 pub mod breadth;
 pub mod completeness;
+pub mod difficulty;
 pub mod diversity;
 pub mod escalation;
 pub mod highlights;

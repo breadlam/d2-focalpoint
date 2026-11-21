@@ -46,6 +46,13 @@ pub fn load(conn: &Connection, dir: &Path) -> Result<ManifestOutput> {
         .context("parsing DestinyActivityDefinition")?;
     let modes = catalog::parse_activity_modes(&read(dir, "DestinyActivityModeDefinition.json")?)
         .context("parsing DestinyActivityModeDefinition")?;
+    // Older manifest caches lack difficulty ladders.
+    let tiers =
+        match std::fs::read(dir.join("DestinyActivityDifficultyTierCollectionDefinition.json")) {
+            Ok(json) => catalog::parse_difficulty_tiers(&json)
+                .context("parsing DestinyActivityDifficultyTierCollectionDefinition")?,
+            Err(_) => Vec::new(),
+        };
     let version = std::fs::read_to_string(dir.join("item_version.txt"))
         .or_else(|_| std::fs::read_to_string(dir.join("version.txt")))
         .ok()
@@ -58,6 +65,7 @@ pub fn load(conn: &Connection, dir: &Path) -> Result<ManifestOutput> {
     write_named(conn, "damage_type", &damage_types, true)?;
     write_modes(conn, &modes)?;
     write_activity_defs(conn, &activities)?;
+    write_difficulty_tiers(conn, &tiers)?;
 
     let n_items = items.len();
     let n_acts = activities.len();
@@ -171,6 +179,24 @@ fn write_activity_defs(conn: &Connection, defs: &[ActivityDef]) -> Result<()> {
             d.activity_type_hash,
             d.is_playlist,
             d.light_level,
+            d.difficulty_collection_hash,
+        ])?;
+    }
+    a.flush()?;
+    Ok(())
+}
+
+fn write_difficulty_tiers(conn: &Connection, tiers: &[catalog::DifficultyTier]) -> Result<()> {
+    let mut a = conn.appender("difficulty_tier")?;
+    for t in tiers {
+        a.append_row(params![
+            t.collection_hash,
+            t.tier,
+            t.name,
+            t.activity_level,
+            t.tier_rank,
+            t.min_power,
+            t.level_offset,
         ])?;
     }
     a.flush()?;

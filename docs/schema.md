@@ -1,4 +1,4 @@
-# Analysis database schema (version 7)
+# Analysis database schema (version 8)
 
 The database is a single DuckDB file built by `focalpoint import`. The DDL is
 [`crates/db/src/schema.sql`](../crates/db/src/schema.sql); this document
@@ -54,7 +54,7 @@ see [data-sources.md](data-sources.md).
 | Column | Notes |
 |---|---|
 | `activity_hash` | `directorActivityHash`; join `activity` |
-| `difficulty_tier` | PGCR `activityDifficultyTier` (GM ≈ 9–11; legacy raids report −1) |
+| `difficulty_tier` | PGCR `activityDifficultyTier`: the step of the activity's difficulty ladder (`difficulty_tier` table; legacy raids report −1) |
 | `player_count` / `roster_size` | reported `playerCount` vs. entries in the report (they differ for ~460k runs) |
 | `is_solo` | `roster_size = 1` (production's definition) |
 | `skull_hashes` | selected modifiers; `has_boon`, `equipment_locked`, `challenge_count`, `feat_count` are derived via `skull`. `NULL` when the report lists no skulls |
@@ -174,7 +174,8 @@ weapons or builds.
 | `sandbox_perk` | `perk_hash` | perk names/descriptions (set bonuses) |
 | `stat` | `stat_hash` | stat names and icons |
 | `damage_type` | `damage_type_hash` | element names and glyphs (`item.damage_type` holds the name) |
-| `activity` | `activity_hash` | name, mode, `target_group` (Searchlight's curated slate: "Ultimate Conquest", "Master Raid", …), `run_count` |
+| `activity` | `activity_hash` | name, mode, `difficulty_collection_hash` (its difficulty ladder), `target_group` (Searchlight's curated slate: "Ultimate Conquest", "Master Raid", …), `run_count` |
+| `difficulty_tier` | `(collection_hash, tier)` | the steps of each difficulty ladder: `name` (Normal … Grandmaster, Ultimate), `activity_level` (rises with difficulty: Portal Normal 31 … Ultimate 50; Conquests' Grandmaster 44–55, Ultimate 58–60), `tier_rank`, `min_power`, `level_offset`. A run's step: `JOIN difficulty_tier t ON (t.collection_hash, t.tier) = (activity.difficulty_collection_hash, run.difficulty_tier)` |
 | `activity_mode` | `mode` | `DestinyActivityModeType` names |
 | `skull` | `skull_hash` | modifiers with `kind` = `boon | feat | challenge | equipment_lock | other` |
 
@@ -188,7 +189,10 @@ keyed to manifest hashes, and `mechanic_tag` (with the view
 `mechanic_loadout` and `mechanic_loadout_item` measured boss-damage
 rotations and the DIM loadouts behind them; `context`, `context_activity`,
 `context_feature` and `context_event` the profiles of the contexts builds
-are evaluated in ([contexts.md](contexts.md)). They are not written by the import: `focalpoint
+are evaluated in ([contexts.md](contexts.md)); `enemy_health`,
+`enemy_measured`, `power_delta` and `champion_stat` how much damage enemies
+take to kill, with the view `context_enemy_health` per context
+([durability.md](durability.md)). They are not written by the import: `focalpoint
 mechanics import` adds and replaces them in an existing database
 (`meta.mechanics_version`). See [mechanics.md](mechanics.md).
 

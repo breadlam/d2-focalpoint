@@ -27,7 +27,7 @@ each source's provenance, currency and terms.
 | `aegis/` | TheAegisRelic's boss damage workbook (xlsx), and the 205 DIM loadouts it links (`dim/<share id>.json`) | the ranked rotations and their loadouts | hash (loadouts) |
 | `cooldowns/` | Ability cooldowns and energy factors | not yet | name |
 | `endgame/` | Endgame Analysis expert ratings | not yet | name |
-| `scaling/` | MossyMax's damage scaling (pre-MoT) | not yet | name |
+| `scaling/` | MossyMax's damage scaling (pre-MoT) | enemy health, measured bosses, the Power delta curve ([durability.md](durability.md)) | name |
 
 Google Sheets tabs are saved as their static HTML (`htmlview/sheet`), which
 holds exactly what the sheet shows; the CSV export infers a type per column
@@ -44,6 +44,7 @@ Clarity.
 ```sh
 focalpoint mechanics import                 # reads ~/.local/share/focalpoint/sources
 focalpoint mechanics import --sources DIR
+focalpoint mechanics import --contexts FILE --difficulty FILE   # while editing data/contexts.toml, data/difficulty.toml
 ```
 
 The import writes into an existing database (it does not need a re-import
@@ -139,6 +140,13 @@ in — activity groups and activities from the recorded clears, boss
 encounters from the boss damage workbook's `Bosses` sheet, and
 hand-maintained detail from `data/contexts.toml`. See
 [contexts.md](contexts.md).
+
+## Enemy durability
+
+And how much damage enemies take to kill: archetype health, measured
+bosses, the Power delta curve and Champion stats, with each activity
+group's Power delta and health tier from `data/difficulty.toml`. See
+[durability.md](durability.md).
 
 ## Next
 

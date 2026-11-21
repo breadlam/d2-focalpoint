@@ -201,7 +201,7 @@ WITH counts AS (
     SELECT activity_hash, min(target_group) AS target_group FROM stg.target_group GROUP BY 1
 )
 SELECT h.activity_hash, d.name, d.description, d.mode, d.modes, d.activity_type_hash,
-       d.is_playlist, d.light_level, g.target_group, coalesce(c.run_count, 0)
+       d.is_playlist, d.light_level, d.difficulty_collection_hash, g.target_group, coalesce(c.run_count, 0)
 FROM hashes h
 LEFT JOIN stg.activity_def d USING (activity_hash)
 LEFT JOIN groups g USING (activity_hash)

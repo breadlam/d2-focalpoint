@@ -45,6 +45,10 @@ pub struct ImportArgs {
     /// Hand-maintained context detail [default: the built-in data/contexts.toml]
     #[arg(long)]
     pub contexts: Option<PathBuf>,
+
+    /// Power delta and health tier by activity group [default: the built-in data/difficulty.toml]
+    #[arg(long)]
+    pub difficulty: Option<PathBuf>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -72,9 +76,16 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
     let dir = a.sources.clone().unwrap_or_else(default_sources);
     let db = Database::open_for_update(db)?;
     let started = Instant::now();
-    let imported =
-        focalpoint_mechanics::import(&db, &dir, a.contexts.as_deref(), |s| eprintln!("  {s}"))
-            .with_context(|| format!("importing the sources in {}", dir.display()))?;
+    let imported = focalpoint_mechanics::import(
+        &db,
+        &dir,
+        &focalpoint_mechanics::Options {
+            contexts: a.contexts.clone(),
+            difficulty: a.difficulty.clone(),
+        },
+        |s| eprintln!("  {s}"),
+    )
+    .with_context(|| format!("importing the sources in {}", dir.display()))?;
     let summaries = &imported.sources;
     println!(
         "Read {} sources from {} in {:.1}s",
@@ -152,6 +163,11 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
         imported.encounters,
         thousands(imported.features as i64),
         imported.events
+    );
+    let d = &imported.durability;
+    println!(
+        "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values; {} contexts given a Power delta and health tier",
+        d.enemies, d.health_rows, d.measured, d.curve_points, d.champion_stats, d.contexts
     );
     if !imported.unplaced.is_empty() {
         println!(

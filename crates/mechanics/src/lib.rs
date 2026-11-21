@@ -28,6 +28,7 @@ pub mod aegis;
 pub mod clarity;
 pub mod compendium;
 pub mod context;
+pub mod durability;
 pub mod effects;
 pub mod names;
 pub mod sheet;
@@ -134,15 +135,38 @@ pub struct Imported {
     pub events: usize,
     /// Encounters whose activity has no scored clears: no parent.
     pub unplaced: Vec<String>,
+    pub durability: DurabilitySummary,
+}
+
+/// Hand-maintained files to read instead of the built-in ones.
+#[derive(Debug, Clone, Default)]
+pub struct Options {
+    /// Instead of `data/contexts.toml`.
+    pub contexts: Option<std::path::PathBuf>,
+    /// Instead of `data/difficulty.toml`.
+    pub difficulty: Option<std::path::PathBuf>,
+}
+
+/// What the import read about enemy durability.
+#[derive(Debug, Clone, Default)]
+pub struct DurabilitySummary {
+    pub enemies: usize,
+    pub health_rows: usize,
+    pub measured: usize,
+    pub curve_points: usize,
+    pub champion_stats: usize,
+    /// Contexts given a Power delta and health tier.
+    pub contexts: usize,
 }
 
 /// Read every source under `dir`, build the context profiles (with
-/// hand-maintained detail from `curated`, or the built-in
-/// `data/contexts.toml`), and replace the layer's tables.
+/// hand-maintained detail from `data/contexts.toml` and
+/// `data/difficulty.toml`, or the files in `options`), and replace the
+/// layer's tables.
 pub fn import(
     db: &Database,
     dir: &Path,
-    curated: Option<&Path>,
+    options: &Options,
     mut progress: impl FnMut(&str),
 ) -> Result<Imported> {
     let names = names::Names::load(db)?;
@@ -188,14 +212,27 @@ pub fn import(
         .flat_map(|s| s.measured.bosses.iter().cloned())
         .collect();
     let encounters = context::from_bosses(&bosses, &activities, &runs);
-    let curated = match curated {
+    let curated = match &options.contexts {
         Some(path) => context::curated(path)?,
         None => context::parse_curated(context::CURATED)?,
     };
-    let contexts = context::merge(vec![runs, encounters, curated]);
+    let mut contexts = context::merge(vec![runs, encounters, curated]);
+
+    progress("durability");
+    let tables = durability::read(&dir.join("scaling"), &compendium_dir)?;
+    let difficulties = match &options.difficulty {
+        Some(path) => durability::difficulties(
+            &std::fs::read_to_string(path)
+                .with_context(|| format!("reading {}", path.display()))?,
+        )
+        .with_context(|| format!("parsing {}", path.display()))?,
+        None => durability::difficulties(durability::DIFFICULTY)?,
+    };
+    let durable = durability::apply(&mut contexts, &difficulties, &tables.curve);
 
     progress("writing");
     write(db, &read, &contexts)?;
+    write_durability(db, &tables)?;
     db.set_meta(meta_key::MECHANICS_VERSION, &MECHANICS_VERSION.to_string())?;
     db.set_meta(meta_key::MECHANICS_SOURCES, &dir.display().to_string())?;
     let now: String =
@@ -215,6 +252,23 @@ pub fn import(
             .filter(|c| c.kind == "encounter" && c.parent.is_none())
             .map(|c| c.name.clone())
             .collect(),
+        durability: DurabilitySummary {
+            enemies: {
+                let mut e: Vec<(&str, &str)> = tables
+                    .health
+                    .iter()
+                    .map(|h| (h.faction.as_str(), h.enemy.as_str()))
+                    .collect();
+                e.sort_unstable();
+                e.dedup();
+                e.len()
+            },
+            health_rows: tables.health.len(),
+            measured: tables.measured.len(),
+            curve_points: tables.curve.len(),
+            champion_stats: tables.champions.len(),
+            contexts: durable,
+        },
     })
 }
 
@@ -336,6 +390,48 @@ fn write(db: &Database, read: &[Source], contexts: &[context::Context]) -> Resul
                     e.source
                 ])?;
             }
+        }
+    }
+    conn.execute_batch("COMMIT")?;
+    Ok(())
+}
+
+fn write_durability(db: &Database, t: &durability::Tables) -> Result<()> {
+    let conn = db.conn();
+    conn.execute_batch("BEGIN TRANSACTION")?;
+    {
+        let mut health = conn.appender("enemy_health")?;
+        for h in &t.health {
+            health.append_row(params![
+                "mossymax", h.faction, h.enemy, h.rank, h.base, h.tier, h.health
+            ])?;
+        }
+        let mut measured = conn.appender("enemy_measured")?;
+        for m in &t.measured {
+            measured.append_row(params![
+                "mossymax",
+                m.kind,
+                m.enemy,
+                m.activity,
+                m.tier,
+                m.estimated,
+                m.baseline
+            ])?;
+        }
+        let mut curve = conn.appender("power_delta")?;
+        for (d, m) in &t.curve {
+            curve.append_row(params![d, m, "mossymax (EoF Standard)"])?;
+        }
+        let mut champions = conn.appender("champion_stat")?;
+        for c in &t.champions {
+            champions.append_row(params![
+                "compendium",
+                c.champion,
+                c.property,
+                c.difficulty,
+                c.value,
+                c.text
+            ])?;
         }
     }
     conn.execute_batch("COMMIT")?;

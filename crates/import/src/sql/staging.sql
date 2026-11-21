@@ -112,7 +112,8 @@ CREATE TABLE stg.activity_def (
     modes              INTEGER[],
     activity_type_hash UINTEGER,
     is_playlist        BOOLEAN,
-    light_level        INTEGER
+    light_level        INTEGER,
+    difficulty_collection_hash UINTEGER
 );
 
 -- Builds as extracted, before stats, investment and usage are joined in by

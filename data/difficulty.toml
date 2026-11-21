@@ -1,0 +1,111 @@
+# Power delta and enemy health tier of the activity groups (docs/durability.md).
+#
+# An enemy's damage to kill is its health at the activity's health tier
+# (MossyMax's enemy health tables, 1–4) divided by the outgoing damage
+# multiplier of the Power delta the activity is fought at (Edge of Fate's
+# curve: ×0.446 at −30, ×0.144 at −50). `focalpoint mechanics import`
+# turns each entry into features of the group's contexts and its
+# activities': power_delta, damage_multiplier, durability (its inverse),
+# health_tier, champion_difficulty, difficulty_confidence and
+# difficulty_evidence.
+#
+# confidence:
+#   documented — a current (Monument of Triumph) source states it
+#   dated      — a source from before Edge of Fate, or superseded, states it
+#   assumed    — inferred; replace when a source is found
+# A group with no entry has no durability features yet.
+#
+# Champion difficulty names a column of the Data Compendium's Champion
+# tables: Standard | Raid (Expert/Master) | Advanced | Expert |
+# Master Grandmaster.
+#
+# What is known about the deltas:
+# * Edge of Fate (9.0.0.1 patch notes, July 2025) set the Portal's steps
+#   at Normal 0, Advanced −10, Expert −20, Master −30, Grandmaster −40,
+#   Ultimate −50, and made red-bar enemies gain health more slowly with
+#   delta than majors and bosses.
+# * The Data Compendium (current) gives Ultimate −30 and the Grandmaster
+#   Alert −50: Ultimate was eased after launch.
+# * `focalpoint analyze difficulty`: the same players in the same Ops kill
+#   ×0.89 as fast at Ultimate as at Master and ×0.64 as fast as at Normal —
+#   consistent with enemies needing ×2.2 the damage (−30), not ×7 (−50).
+# * The manifest's difficulty ladders give each step an activity level:
+#   Portal Normal 31, Master 40, Grandmaster 45, Ultimate 50; Conquests'
+#   Grandmaster steps 44–55 and Ultimate 58–60 (the `activity_level`
+#   context feature).
+
+[[difficulty]]
+group = "Ultimate Fireteam Op"
+power_delta = -30
+health_tier = 4
+champion_difficulty = "Master Grandmaster"
+confidence = "documented"
+sources = [
+  "Data Compendium, landing: \"-50 (Grandmaster Alert) vs -30 (Ultimate)\"; \"-30 Delta: +85% Incoming and 0.446x Outgoing\"",
+  "focalpoint analyze difficulty: kill rate x0.894 of the same players' Master clears",
+]
+note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier 4 and the Champion column are assumed."
+
+[[difficulty]]
+group = "Ultimate Pinnacle Op"
+power_delta = -30
+health_tier = 4
+champion_difficulty = "Master Grandmaster"
+confidence = "documented"
+sources = [
+  "Data Compendium, landing: \"-50 (Grandmaster Alert) vs -30 (Ultimate)\"",
+  "focalpoint analyze difficulty: kill rate x0.893 of the same players' Master clears",
+]
+note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier 4 and the Champion column are assumed."
+
+[[difficulty]]
+group = "Ultimate Conquest"
+power_delta = -30
+health_tier = 4
+champion_difficulty = "Master Grandmaster"
+confidence = "assumed"
+sources = ["Data Compendium, landing: Ultimate at -30"]
+note = "Assumes Ultimate Conquest takes the Portal's Ultimate delta; its steps' activity levels (58-60) are above the Portal's Ultimate (50), so it is likely harder. Health tier 4 is assumed."
+
+[[difficulty]]
+group = "Grandmaster Conquest"
+power_delta = -30
+health_tier = 4
+champion_difficulty = "Master Grandmaster"
+confidence = "assumed"
+sources = ["Data Compendium, landing: Ultimate at -30"]
+note = "Assumes the Portal's Ultimate delta: Grandmaster Conquests' activity levels (44-53) straddle the Portal's Ultimate (50). The Grandmaster Alert, a different activity, runs at -50."
+
+[[difficulty]]
+group = "Grandmaster Conquest: Heliostat"
+power_delta = -30
+health_tier = 4
+champion_difficulty = "Master Grandmaster"
+confidence = "assumed"
+sources = ["Data Compendium, landing: Ultimate at -30"]
+note = "Assumes the Portal's Ultimate delta; its activity level (55) is above the Portal's Ultimate (50)."
+
+[[difficulty]]
+group = "Master Raid"
+power_delta = -20
+health_tier = 4
+champion_difficulty = "Raid (Expert/Master)"
+confidence = "dated"
+sources = [
+  "MossyMax, Damage Scaling v1.9.2 (Feb 2025), Activity Types and Levels: Master Raid/Dungeon, delta cap -20",
+  "MossyMax, foetracer enemy health summary: health tier 4 = Master Raid",
+]
+note = "Edge of Fate converted legacy raids and dungeons to fixed Power difficulty, value not published."
+
+[[difficulty]]
+group = "Master Dungeon"
+power_delta = -20
+health_tier = 4
+champion_difficulty = "Raid (Expert/Master)"
+confidence = "dated"
+sources = ["MossyMax, Damage Scaling v1.9.2 (Feb 2025), Activity Types and Levels: Master Raid/Dungeon, delta cap -20"]
+note = "MossyMax places normal dungeons at health tier 3; Master is assumed to be tier 4 like Master raids."
+
+# Not yet known — Equilibrium, Pantheon and The Desert Perpetual: played at
+# their "Custom" step (activity level 35, the Portal's Expert); their Feats
+# ("Cutthroat Combat": all combatants tougher) have no published magnitude.

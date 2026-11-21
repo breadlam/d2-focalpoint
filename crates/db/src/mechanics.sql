@@ -159,3 +159,56 @@ SELECT s.hash, s.hash_kind, t.role, t.tag,
 FROM mechanic_subject s JOIN mechanic_tag t USING (source, entry_id)
 WHERE s.rule <> 'item'
 GROUP BY ALL;
+
+-- Enemy durability (focalpoint_mechanics::durability; docs/durability.md).
+-- Health is in the game's health units at an activity health tier, before
+-- Power delta: damage to kill = health / the delta's damage multiplier.
+
+-- MossyMax's Foetracer-measured health of each enemy archetype.
+CREATE OR REPLACE TABLE enemy_health (
+    source       VARCHAR NOT NULL,
+    faction      VARCHAR NOT NULL,   -- Cabal | Fallen | Hive | Vex | Taken | Scorn
+    enemy        VARCHAR NOT NULL,
+    rank         VARCHAR NOT NULL,   -- minor | elite
+    base         DOUBLE NOT NULL,    -- the source's base health class (50 ... 4400)
+    health_tier  UTINYINT NOT NULL,  -- 1: patrol, story; 2: matchmade strikes; 3: Legend Nightfall, dungeons; 4: Master raids, Master/GM Nightfalls (before Edge of Fate)
+    health       DOUBLE NOT NULL
+);
+
+-- Measured bosses and minibosses.
+CREATE OR REPLACE TABLE enemy_measured (
+    source            VARCHAR NOT NULL,
+    kind              VARCHAR NOT NULL,  -- boss | miniboss
+    enemy             VARCHAR NOT NULL,
+    activity          VARCHAR,
+    health_tier       UTINYINT,
+    estimated_health  DOUBLE,            -- damage dealt to kill, as measured
+    baseline_health   DOUBLE             -- in health units
+);
+
+-- Outgoing damage by Power delta, relative to a delta of 0 (Edge of Fate).
+CREATE OR REPLACE TABLE power_delta (
+    delta              INTEGER PRIMARY KEY,
+    damage_multiplier  DOUBLE NOT NULL,
+    source             VARCHAR NOT NULL
+);
+
+-- Champion health, shields and regeneration by activity difficulty.
+CREATE OR REPLACE TABLE champion_stat (
+    source      VARCHAR NOT NULL,
+    champion    VARCHAR NOT NULL,   -- Barrier Champion | Overload Champion | Unstoppable Champion
+    property    VARCHAR NOT NULL,   -- Champion Health, Shield Health, ...
+    difficulty  VARCHAR NOT NULL,   -- Standard | Raid (Expert/Master) | Advanced | Expert | Master Grandmaster
+    value       DOUBLE,
+    text        VARCHAR NOT NULL
+);
+
+-- Each enemy archetype's damage to kill in each context with a health tier
+-- and a durability (data/difficulty.toml).
+CREATE OR REPLACE VIEW context_enemy_health AS
+SELECT c.context_id, c.kind, c.name, e.faction, e.enemy, e.rank, e.health,
+       e.health * d.value AS effective_health
+FROM context c
+JOIN context_feature t ON t.context_id = c.context_id AND t.feature = 'health_tier'
+JOIN context_feature d ON d.context_id = c.context_id AND d.feature = 'durability'
+JOIN enemy_health e ON e.health_tier = t.value;

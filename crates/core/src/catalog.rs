@@ -146,6 +146,28 @@ pub struct ActivityDef {
     pub modes: Vec<i32>,
     pub is_playlist: bool,
     pub light_level: i32,
+    /// `difficultyTierCollectionHash`: the ladder of difficulties the
+    /// activity is played at; a run's `activityDifficultyTier` indexes it.
+    pub difficulty_collection_hash: Option<u32>,
+}
+
+/// One step of a difficulty ladder
+/// (`DestinyActivityDifficultyTierCollectionDefinition`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DifficultyTier {
+    pub collection_hash: u32,
+    /// The step's index: what a run's `activityDifficultyTier` holds.
+    pub tier: u16,
+    /// Normal, Advanced, Expert, Master, Grandmaster, Ultimate, ...
+    pub name: String,
+    /// `activityLevel`: rises with the difficulty (Portal: Normal 31,
+    /// Master 40, Ultimate 50; Conquests: Grandmaster 44–55, Ultimate
+    /// 58–60).
+    pub activity_level: i32,
+    pub tier_rank: i32,
+    /// `minimumFireteamLeaderPower`; `None` when the step has none.
+    pub min_power: Option<i32>,
+    pub level_offset: i32,
 }
 
 /// Activity mode definition subset, keyed by `modeType`.
@@ -402,6 +424,59 @@ struct RawActivity {
     is_playlist: bool,
     #[serde(default)]
     activity_light_level: i32,
+    #[serde(default)]
+    difficulty_tier_collection_hash: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawDifficultyCollection {
+    #[serde(default)]
+    difficulty_tiers: Vec<RawDifficultyTier>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawDifficultyTier {
+    #[serde(default)]
+    display_properties: RawDisplay,
+    #[serde(default)]
+    activity_level: i32,
+    #[serde(default)]
+    tier_rank: i32,
+    #[serde(default = "no_power")]
+    minimum_fireteam_leader_power: i32,
+    #[serde(default)]
+    recommended_activity_level_offset: i32,
+}
+
+fn no_power() -> i32 {
+    -1
+}
+
+/// Parse `DestinyActivityDifficultyTierCollectionDefinition.json` into its
+/// steps, in ladder order.
+pub fn parse_difficulty_tiers(json: &[u8]) -> Result<Vec<DifficultyTier>, serde_json::Error> {
+    let mut out: Vec<DifficultyTier> = parse_table::<RawDifficultyCollection>(json)?
+        .into_iter()
+        .flat_map(|(hash, c)| {
+            c.difficulty_tiers
+                .into_iter()
+                .enumerate()
+                .map(move |(i, t)| DifficultyTier {
+                    collection_hash: hash,
+                    tier: u16::try_from(i).unwrap_or(u16::MAX),
+                    name: t.display_properties.name,
+                    activity_level: t.activity_level,
+                    tier_rank: t.tier_rank,
+                    min_power: (t.minimum_fireteam_leader_power > 0)
+                        .then_some(t.minimum_fireteam_leader_power),
+                    level_offset: t.recommended_activity_level_offset,
+                })
+        })
+        .collect();
+    out.sort_by_key(|t| (t.collection_hash, t.tier));
+    Ok(out)
 }
 
 /// Parse `DestinyActivityDefinition.json`.
@@ -417,6 +492,8 @@ pub fn parse_activities(json: &[u8]) -> Result<Vec<ActivityDef>, serde_json::Err
             modes: r.activity_mode_types,
             is_playlist: r.is_playlist,
             light_level: r.activity_light_level,
+            difficulty_collection_hash: (r.difficulty_tier_collection_hash != 0)
+                .then_some(r.difficulty_tier_collection_hash),
         })
         .collect())
 }
@@ -513,5 +590,24 @@ mod tests {
         )
         .unwrap();
         assert_eq!(modes[0].mode_type, 82);
+    }
+
+    #[test]
+    fn difficulty_ladders_keep_their_order() {
+        let json = br#"{"1983475410": {"difficultyTiers": [
+            {"displayProperties": {"name": "Grandmaster"}, "activityLevel": 40, "tierRank": 50, "minimumFireteamLeaderPower": 300, "recommendedActivityLevelOffset": 0},
+            {"displayProperties": {"name": "Ultimate"}, "activityLevel": 50, "tierRank": 60, "minimumFireteamLeaderPower": -1}]}}"#;
+        let t = parse_difficulty_tiers(json).unwrap();
+        assert_eq!(t.len(), 2);
+        assert_eq!(
+            (
+                t[1].tier,
+                t[1].name.as_str(),
+                t[1].activity_level,
+                t[1].min_power
+            ),
+            (1, "Ultimate", 50, None)
+        );
+        assert_eq!(t[0].min_power, Some(300));
     }
 }

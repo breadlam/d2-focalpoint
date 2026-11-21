@@ -134,7 +134,24 @@ fn build_backups(root: &Path) {
     .unwrap();
     fs::write(
         m.join("DestinyActivityDefinition.json"),
-        br#"{"2727361621":{"displayProperties":{"name":"Equilibrium: Standard"},"directActivityModeType":82,"activityModeTypes":[82,7]}}"#,
+        br#"{"2727361621":{"displayProperties":{"name":"Equilibrium: Standard"},"directActivityModeType":82,"activityModeTypes":[82,7],"difficultyTierCollectionHash":3830611770}}"#,
+    )
+    .unwrap();
+    // A twelve-step ladder: the reports are at step 11.
+    let steps: Vec<String> = (0..12)
+        .map(|i| {
+            format!(
+                r#"{{"displayProperties":{{"name":"Step {i}"}},"activityLevel":{},"tierRank":{i},"minimumFireteamLeaderPower":-1}}"#,
+                30 + i
+            )
+        })
+        .collect();
+    fs::write(
+        m.join("DestinyActivityDifficultyTierCollectionDefinition.json"),
+        format!(
+            r#"{{"3830611770":{{"difficultyTiers":[{}]}}}}"#,
+            steps.join(",")
+        ),
     )
     .unwrap();
     fs::write(
@@ -347,6 +364,18 @@ fn imports_a_synthetic_backup_tree() {
         3
     );
     assert_eq!(count(&db, "SELECT count(*) FROM run WHERE is_tracked"), 2);
+    // Each run's step of its activity's difficulty ladder.
+    assert_eq!(count(&db, "SELECT count(*) FROM difficulty_tier"), 12);
+    assert_eq!(
+        count(
+            &db,
+            "SELECT count(*) FROM run r JOIN activity a USING (activity_hash)
+             JOIN difficulty_tier t ON t.collection_hash = a.difficulty_collection_hash
+              AND t.tier = r.difficulty_tier
+             WHERE t.name = 'Step 11' AND t.activity_level = 41"
+        ),
+        4
+    );
     assert_eq!(
         count(
             &db,

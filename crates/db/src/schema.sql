@@ -110,8 +110,24 @@ CREATE TABLE activity (
     activity_type_hash UINTEGER,
     is_playlist        BOOLEAN,
     light_level        INTEGER,
+    difficulty_collection_hash UINTEGER,  -- its ladder in difficulty_tier; run.difficulty_tier indexes it
     target_group       VARCHAR,   -- e.g. "Ultimate Conquest"; NULL if never targeted
     run_count          BIGINT NOT NULL DEFAULT 0
+);
+
+-- The steps of each difficulty ladder (manifest
+-- DestinyActivityDifficultyTierCollectionDefinition). A run's step:
+-- run JOIN activity USING (activity_hash) JOIN difficulty_tier
+-- ON (collection_hash, tier) = (difficulty_collection_hash, run.difficulty_tier).
+CREATE TABLE difficulty_tier (
+    collection_hash  UINTEGER NOT NULL,
+    tier             USMALLINT NOT NULL,  -- index in the ladder
+    name             VARCHAR NOT NULL,    -- Normal ... Grandmaster, Ultimate
+    activity_level   INTEGER NOT NULL,    -- rises with difficulty (Portal Normal 31 ... Ultimate 50; Conquest Grandmaster 44-55, Ultimate 58-60)
+    tier_rank        INTEGER NOT NULL,
+    min_power        INTEGER,             -- minimum fireteam leader Power
+    level_offset     INTEGER NOT NULL,    -- recommendedActivityLevelOffset
+    PRIMARY KEY (collection_hash, tier)
 );
 
 -- Difficulty modifiers ("skulls") with Searchlight's classification.

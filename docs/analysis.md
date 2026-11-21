@@ -14,6 +14,7 @@ for further processing). The numbers below are from the import of
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
 | `analyze escalation [--anchor PART --parts A,B,…]` | Which parts' lift depends on the content — the pieces of synergistic escalation loops? With `--anchor`: how builds with a part do by which of a few others they also run | the escalation model ([escalation.md](escalation.md)) |
+| `analyze difficulty [--base STEP] [--min-pairs N]` | How much does each difficulty step slow the same players' kills in the same activities? | the Power deltas in `data/difficulty.toml` ([durability.md](durability.md)) |
 | `analyze triggers` | Do the trigger tags read from the mechanics texts say anything about where builds are played — do players lean less on kill-triggered parts where kills are scarce or hard? | the synergy evaluator's trigger availability per context ([effects.md](effects.md)) |
 | `analyze attempts` | Where are uncleared runs failures rather than sessions, and do build types differ in how often they clear at all — beyond who plays them, and beyond what the clear-only ranking sees? | open: failures in Conquests and Ops are not yet scored |
 | `analyze sets` | What are full armor set bonuses worth to the same player, are players who skip them stronger, and how many top builds lack them? | polished top builds (ADR 0010) |
@@ -411,6 +412,21 @@ in Equilibrium, Fireteam Ops and dungeons through 21–22% in Grandmaster
 Conquests to 18.8% in Ultimate Conquest and 17.0% in the boss rotations,
 which also lean least on pickups (6.9% against 10–15%) and nearby enemies
 (0.8% against 3–5%) and most on hits (20.3% against 14–17%).
+
+## `analyze difficulty`
+
+Each player's kill rate (and deaths per 10 minutes) at every step of an
+activity's difficulty ladder, against their own clears of the same activity
+at the base step (Master); a step's kill rate is the geometric mean of the
+ratios. Comparing players with themselves removes the selection of stronger
+players into harder steps, which across players hides the effect (Ultimate
+clears kill faster than Grandmaster ones). Findings
+([durability.md](durability.md)): in Fireteam Ops, Normal ×1.40, Advanced
+×1.26, Expert ×1.17, Master ×1.00, Grandmaster ×0.97, Ultimate ×0.89; in
+Pinnacle Ops, Normal ×1.25 to Ultimate ×0.89. Normal to Ultimate is ×0.64
+and ×0.71: consistent with Ultimate at −30 (enemies need ×2.24 the damage),
+not −50 (×6.97). Conquests are played at one step each, so they have no
+pairs.
 
 ## `analyze escalation`
 

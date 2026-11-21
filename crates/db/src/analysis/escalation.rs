@@ -228,7 +228,10 @@ mod tests {
             )
             .unwrap();
         let c = combinations(&db, "Anchor Boots", &["Loop Part".to_string()]).unwrap();
-        let got: Vec<(bool, &str, i64)> = c.iter().map(|c| (c.runs[0], c.context.as_str(), c.clears.round() as i64)).collect();
+        let got: Vec<(bool, &str, i64)> = c
+            .iter()
+            .map(|c| (c.runs[0], c.context.as_str(), c.clears.round() as i64))
+            .collect();
         assert_eq!(got, [(false, "hard", 3), (true, "hard", 2)]);
         // Each clear against the mean of the player's other four: +0.4 against
         // −0.05, −0.2 against +0.1.

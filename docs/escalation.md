@@ -180,7 +180,8 @@ Their mechanics are yet to be read in the same detail.
   with Crystalline Converter (energy per melee 80% → 140%, plus crystal
   regeneration). These are visible in the data as the step between "almost
   the loop" and "the loop".
-- **Thresholds in the context**: enemy **durability** cuts both ways — it
+- **Thresholds in the context**: enemy **durability**
+  ([durability.md](durability.md)) cuts both ways — it
   sustains loops that need survivors (ignition chains, damage-counted ammo)
   and starves kill-volume engines; enemy **density and spacing** (neighbours
   within 8–15 m) decide whether a chain propagates.
