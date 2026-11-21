@@ -46,6 +46,19 @@ approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21)"
 
 [[measurement]]
+enemy = "Esteemed Centurion"
+faction = "Cabal"
+archetype = "Centurion"
+rank = "elite"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 1650
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+note = "1.8x MossyMax's tier-2 elite Centurion (911). Centurions and Wizards were one health class before Edge of Fate; both measure well above it."
+
+[[measurement]]
 enemy = "Acolyte"
 faction = "Hive"
 archetype = "Acolyte"
@@ -80,7 +93,7 @@ power_delta = -30
 health = 2250
 approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21)"
-note = "2.5x MossyMax's tier-2 elite Wizard (911); the others match tier 2 within 6%."
+note = "2.5x MossyMax's tier-2 elite Wizard (911); the lighter enemies match tier 2 within 6%."
 
 [[measurement]]
 enemy = "Unstoppable Ogre"

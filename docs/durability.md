@@ -155,11 +155,14 @@ game's damage numbers:
 | Honored Legionary | ~525 | elite, tier 2: 550 | 0.95 |
 | Honored Phalanx | ~550 | elite, tier 2: 550 | 1.00 |
 | Revenant Knight | ~1,470 | elite, tier 2: 1,538 | 0.96 |
+| Esteemed Centurion | ~1,650 | elite, tier 2: 911 | 1.81 |
 | Blistered Wizard | ~2,250 | elite, tier 2: 911 | 2.47 |
 | Unstoppable Ogre (Champion) | ~3,400 | Compendium, Raid (Expert/Master): 3,300 | 1.03 |
 
-All but the Wizard match MossyMax's **health tier 2** (matchmade strikes)
-within 6%. Damage numbers already carry the Power delta, so if health
+Psions, Acolytes, Legionaries, Phalanxes and Knights match MossyMax's
+**health tier 2** (matchmade strikes) within 6%. Centurions and Wizards, one
+health class before Edge of Fate, measure 1.8× and 2.5× above it: that
+class was rebalanced, or these are a heavier rank than the tables'. Damage numbers already carry the Power delta, so if health
 pools are fixed, the range's Ultimate pools are tier 2's. If Edge of Fate
 instead grows pools with combatant Power, the same enemies at Normal will
 show smaller totals, and minors will shrink less than elites. Measuring them
