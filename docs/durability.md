@@ -156,8 +156,9 @@ game's damage numbers:
 | Honored Phalanx | ~550 | elite, tier 2: 550 | 1.00 |
 | Revenant Knight | ~1,470 | elite, tier 2: 1,538 | 0.96 |
 | Esteemed Centurion | ~1,650 | elite, tier 2: 911 | 1.81 |
-| Blistered Wizard (orange bar) | ~2,250 | elite, tier 2: 911 | 2.47 |
-| Tarnished Wraith (orange bar) | ~2,255 | elite, tier 2: 1,538 | 1.47 |
+| Blistered Wizard (orange bar, miniboss pedestal) | ~2,250 | elite, tier 2: 911 | 2.47 |
+| Tarnished Wraith (orange bar, miniboss pedestal) | ~2,255 | elite, tier 2: 1,538 | 1.47 |
+| Resolute Captain (yellow bar?, miniboss pedestal) | ~1,825 | elite, tier 2: 911 | 2.00 |
 | Deranged Abomination (orange bar) | ~1,965 | elite, tier 2: 1,951 | 1.01 |
 | Corsair (orange bar) | ~575 | none; elite Vandal, tier 2: 518 | 1.11 |
 | Unstoppable Ogre (Champion) | ~3,400 | Compendium, Raid (Expert/Master): 3,300 | 1.03 |
@@ -165,11 +166,11 @@ game's damage numbers:
 Psions, Acolytes, Legionaries, Phalanxes, Knights and the orange-bar
 Abomination match MossyMax's **health tier 2** (matchmade strikes) within
 6%, and the Unstoppable Ogre the Compendium's raid Champion. The Corsair,
-which the tables lack, is 1.11× their tier-2 elite Vandal. The outliers
-are the Blistered Wizard and Tarnished Wraith, both ~2,250 and seemingly
-miniboss types in the range, and the Esteemed Centurion (1.8×). Bars are
-confirmed for the Wizard, Wraith, Abomination and Corsair; the other ranks
-are the closest match. Damage numbers already carry the Power delta, so if health
+which the tables lack, is 1.11× their tier-2 elite Vandal. The range's
+miniboss pedestal (Wizard, Wraith, Captain) has 1.5–2.5× the tier-2 elite
+health of each archetype. The Esteemed Centurion (1.8×) may be one too.
+Bars are confirmed for the Wizard, Wraith, Abomination and Corsair; the
+other ranks are the closest match. Damage numbers already carry the Power delta, so if health
 pools are fixed, the range's Ultimate pools are tier 2's. If Edge of Fate
 instead grows pools with combatant Power, the same enemies at Normal will
 show smaller totals, and minors will shrink less than elites. Measuring them

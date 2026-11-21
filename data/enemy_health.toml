@@ -3,8 +3,10 @@
 # health: the damage it took to kill the enemy, as the game's damage numbers
 #   show it (approximate when `approximate`).
 # archetype, rank: the enemy in MossyMax's tables (enemy_health) it is
-#   compared with — rank minor (red bar) or elite (orange bar), or champion
-#   (compared with the Data Compendium's Champion health).
+#   compared with — rank minor (red bar) or elite (orange bar); miniboss (a
+#   miniboss type, such as the Shooting Range's miniboss pedestal; compared
+#   with the elite tiers); or champion (compared with the Data Compendium's
+#   Champion health).
 # bar: the health bar's colour as seen in-game (red, orange, yellow); where
 #   it is missing, rank is the closest match.
 # place, step, power_delta: where it was measured.
@@ -88,7 +90,7 @@ source = "In-game, Shooting Range (recorded 2026-11-21)"
 enemy = "Blistered Wizard"
 faction = "Hive"
 archetype = "Wizard"
-rank = "elite"
+rank = "miniboss"
 bar = "orange"
 place = "Shooting Range"
 step = "Ultimate"
@@ -96,13 +98,13 @@ power_delta = -30
 health = 2250
 approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21)"
-note = "Orange bar, but seemingly a miniboss type in the range, like the Tarnished Wraith (the same ~2,250). 2.5x MossyMax's tier-2 elite Wizard (911)."
+note = "Orange bar; from the range's miniboss pedestal. 2.5x MossyMax's tier-2 elite Wizard (911)."
 
 [[measurement]]
 enemy = "Tarnished Wraith"
 faction = "Scorn"
 archetype = "Wraith"
-rank = "elite"
+rank = "miniboss"
 bar = "orange"
 place = "Shooting Range"
 step = "Ultimate"
@@ -110,7 +112,7 @@ power_delta = -30
 health = 2255
 approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21): ~2,250-2,260"
-note = "Orange bar, but seemingly a miniboss type in the range, like the Blistered Wizard (the same ~2,250). 1.47x MossyMax's tier-2 elite Wraith (1,538)."
+note = "Orange bar; from the range's miniboss pedestal. 1.47x MossyMax's tier-2 elite Wraith (1,538)."
 
 [[measurement]]
 enemy = "Deranged Abomination"
@@ -139,6 +141,20 @@ health = 575
 approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21)"
 note = "Corsairs are not in MossyMax's tables; compared with the Vandal, the nearest Fallen elite at tier 2 (518): 1.11x."
+
+[[measurement]]
+enemy = "Resolute Captain"
+faction = "Fallen"
+archetype = "Captain"
+rank = "miniboss"
+bar = "yellow"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 1825
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+note = "From the range's miniboss pedestal; the bar looked yellow (uncertain). 2.0x MossyMax's tier-2 elite Captain (911)."
 
 [[measurement]]
 enemy = "Unstoppable Ogre"

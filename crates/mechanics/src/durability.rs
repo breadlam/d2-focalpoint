@@ -284,7 +284,7 @@ pub struct Observation {
     pub faction: String,
     /// The archetype in `MossyMax`'s tables it is compared with.
     pub archetype: String,
-    /// `minor`, `elite` or `champion`.
+    /// `minor`, `elite`, `miniboss` or `champion`.
     pub rank: String,
     /// The health bar's colour as seen in-game (`red`, `orange`, `yellow`);
     /// without it, `rank` is the closest match.
@@ -312,8 +312,8 @@ pub fn observations(text: &str) -> anyhow::Result<Vec<Observation>> {
     let file: ObservationFile = toml::from_str(text)?;
     for o in &file.measurement {
         anyhow::ensure!(
-            ["minor", "elite", "champion"].contains(&o.rank.as_str()),
-            "{}: rank {:?} is not minor, elite or champion",
+            ["minor", "elite", "miniboss", "champion"].contains(&o.rank.as_str()),
+            "{}: rank {:?} is not minor, elite, miniboss or champion",
             o.enemy,
             o.rank
         );
