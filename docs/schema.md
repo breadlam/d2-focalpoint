@@ -193,7 +193,8 @@ are evaluated in ([contexts.md](contexts.md)); `enemy_health`,
 `enemy_measured`, `power_delta` and `champion_stat` how much damage enemies
 take to kill, with the view `context_enemy_health` per context; and
 `difficulty` and `difficulty_modifier` the Power cap and combatant Power by
-context, step and Feat, with the view `run_difficulty` per run
+context, step and Feat, with the view `run_difficulty` per run; and
+`enemy_observed` (view `enemy_observed_tier`) health measured in-game
 ([durability.md](durability.md)). They are not written by the import: `focalpoint
 mechanics import` adds and replaces them in an existing database
 (`meta.mechanics_version`). See [mechanics.md](mechanics.md).

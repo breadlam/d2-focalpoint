@@ -1,0 +1,96 @@
+# Enemy health measured in-game (docs/durability.md).
+#
+# health: the damage it took to kill the enemy, as the game's damage numbers
+#   show it (approximate when `approximate`).
+# archetype, rank: the enemy in MossyMax's tables (enemy_health) it is
+#   compared with — rank minor or elite as the closest match, or champion
+#   (compared with the Data Compendium's Champion health).
+# place, step, power_delta: where it was measured.
+# `focalpoint mechanics import` writes these to the table enemy_observed;
+# the view enemy_observed_tier compares each with MossyMax's health tiers.
+
+[[measurement]]
+enemy = "Psion"
+faction = "Cabal"
+archetype = "Psion"
+rank = "minor"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 125
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+
+[[measurement]]
+enemy = "Honored Legionary"
+faction = "Cabal"
+archetype = "Legionary"
+rank = "elite"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 525
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+
+[[measurement]]
+enemy = "Honored Phalanx"
+faction = "Cabal"
+archetype = "Phalanx"
+rank = "elite"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 550
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+
+[[measurement]]
+enemy = "Acolyte"
+faction = "Hive"
+archetype = "Acolyte"
+rank = "minor"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 215
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+
+[[measurement]]
+enemy = "Revenant Knight"
+faction = "Hive"
+archetype = "Knight"
+rank = "elite"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 1470
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+
+[[measurement]]
+enemy = "Blistered Wizard"
+faction = "Hive"
+archetype = "Wizard"
+rank = "elite"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 2250
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+note = "2.5x MossyMax's tier-2 elite Wizard (911); the others match tier 2 within 6%."
+
+[[measurement]]
+enemy = "Unstoppable Ogre"
+faction = "Hive"
+archetype = "Ogre"
+rank = "champion"
+place = "Shooting Range"
+step = "Ultimate"
+power_delta = -30
+health = 3400
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+note = "The Data Compendium's Champion health: 3,300 in its Raid (Expert/Master) column."

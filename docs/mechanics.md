@@ -44,7 +44,7 @@ Clarity.
 ```sh
 focalpoint mechanics import                 # reads ~/.local/share/focalpoint/sources
 focalpoint mechanics import --sources DIR
-focalpoint mechanics import --contexts FILE --difficulty FILE   # while editing data/contexts.toml, data/difficulty.toml
+focalpoint mechanics import --contexts FILE --difficulty FILE --enemy-health FILE   # while editing the data/ files
 ```
 
 The import writes into an existing database (it does not need a re-import

@@ -186,6 +186,21 @@ CREATE OR REPLACE TABLE enemy_measured (
     baseline_health   DOUBLE             -- in health units
 );
 
+-- Enemy health measured in-game (data/enemy_health.toml).
+CREATE OR REPLACE TABLE enemy_observed (
+    enemy        VARCHAR NOT NULL,   -- as the game names it
+    faction      VARCHAR NOT NULL,
+    archetype    VARCHAR NOT NULL,   -- enemy_health.enemy it is compared with
+    rank         VARCHAR NOT NULL,   -- minor | elite | champion
+    place        VARCHAR NOT NULL,   -- Shooting Range, an activity, ...
+    step         VARCHAR,
+    power_delta  INTEGER,
+    health       DOUBLE NOT NULL,    -- damage to kill, in the game's damage numbers
+    approximate  BOOLEAN NOT NULL,
+    source       VARCHAR NOT NULL,
+    note         VARCHAR
+);
+
 -- Outgoing damage by Power delta, relative to a delta of 0 (Edge of Fate).
 CREATE OR REPLACE TABLE power_delta (
     delta              INTEGER PRIMARY KEY,
@@ -276,6 +291,22 @@ SELECT r.instance_id, r.context_id, r.power_cap, r.combatant_power, r.power_delt
        p.damage_multiplier, 1 / p.damage_multiplier AS durability, r.confidence
 FROM runs_delta r
 LEFT JOIN power_delta p ON p.delta = greatest(-100, least(100, r.power_delta));
+
+-- Each measurement against MossyMax's health tiers for its archetype and
+-- rank, and Champions against the Compendium's Champion health (the same
+-- for every Champion type).
+CREATE OR REPLACE VIEW enemy_observed_tier AS
+SELECT o.enemy, o.place, o.step, o.power_delta, o.health, o.rank,
+       'tier ' || e.health_tier AS reference, e.health AS reference_health,
+       o.health / e.health AS ratio
+FROM enemy_observed o
+JOIN enemy_health e ON e.faction = o.faction AND e.enemy = o.archetype AND e.rank = o.rank
+UNION ALL
+SELECT o.enemy, o.place, o.step, o.power_delta, o.health, o.rank,
+       c.difficulty, c.value, o.health / c.value
+FROM enemy_observed o
+JOIN champion_stat c ON c.property = 'Champion Health' AND o.rank = 'champion'
+     AND c.champion = 'Barrier Champion';
 
 -- Each enemy archetype's damage to kill in each context with a health tier
 -- and a durability (data/difficulty.toml).

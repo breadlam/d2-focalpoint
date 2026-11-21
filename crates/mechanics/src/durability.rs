@@ -272,6 +272,52 @@ pub fn champions(g: &Grid) -> Vec<ChampionStat> {
     out
 }
 
+/// The repository's `data/enemy_health.toml`, built in.
+pub const ENEMY_HEALTH: &str = include_str!("../../../data/enemy_health.toml");
+
+/// An enemy's health measured in-game.
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Observation {
+    /// As the game names it ("Honored Legionary").
+    pub enemy: String,
+    pub faction: String,
+    /// The archetype in `MossyMax`'s tables it is compared with.
+    pub archetype: String,
+    /// `minor`, `elite` or `champion`.
+    pub rank: String,
+    pub place: String,
+    pub step: Option<String>,
+    pub power_delta: Option<i32>,
+    /// Damage to kill, in the game's damage numbers.
+    pub health: f64,
+    #[serde(default)]
+    pub approximate: bool,
+    pub source: String,
+    pub note: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ObservationFile {
+    #[serde(default)]
+    measurement: Vec<Observation>,
+}
+
+/// Parse a file in the format of `data/enemy_health.toml`.
+pub fn observations(text: &str) -> anyhow::Result<Vec<Observation>> {
+    let file: ObservationFile = toml::from_str(text)?;
+    for o in &file.measurement {
+        anyhow::ensure!(
+            ["minor", "elite", "champion"].contains(&o.rank.as_str()),
+            "{}: rank {:?} is not minor, elite or champion",
+            o.enemy,
+            o.rank
+        );
+    }
+    Ok(file.measurement)
+}
+
 /// The repository's `data/difficulty.toml`, built in.
 pub const DIFFICULTY: &str = include_str!("../../../data/difficulty.toml");
 
@@ -630,6 +676,16 @@ mod tests {
             h.iter()
                 .any(|e| e.faction == "Taken" && e.enemy == "Knight")
         );
+    }
+
+    #[test]
+    fn the_built_in_measurements_parse() {
+        let o = observations(ENEMY_HEALTH).unwrap();
+        assert!(
+            o.iter()
+                .any(|o| o.enemy == "Psion" && o.rank == "minor" && o.power_delta == Some(-30))
+        );
+        assert!(observations("[[measurement]]\nenemy = \"x\"\nfaction = \"y\"\narchetype = \"x\"\nrank = \"boss\"\nplace = \"p\"\nhealth = 1\nsource = \"s\"").is_err());
     }
 
     #[test]

@@ -145,6 +145,8 @@ pub struct Options {
     pub contexts: Option<std::path::PathBuf>,
     /// Instead of `data/difficulty.toml`.
     pub difficulty: Option<std::path::PathBuf>,
+    /// Instead of `data/enemy_health.toml`.
+    pub enemy_health: Option<std::path::PathBuf>,
 }
 
 /// What the import read about enemy durability.
@@ -161,6 +163,8 @@ pub struct DurabilitySummary {
     /// written for the runs.
     pub difficulties: usize,
     pub modifiers: usize,
+    /// In-game health measurements (`data/enemy_health.toml`).
+    pub observed: usize,
     /// `data/difficulty.toml` entries naming no context (activities
     /// Searchlight did not target).
     pub unmatched: Vec<String>,
@@ -236,10 +240,18 @@ pub fn import(
         None => durability::difficulties(durability::DIFFICULTY)?,
     };
     let applied = durability::apply(&mut contexts, &difficulties, &tables.curve);
+    let observed = match &options.enemy_health {
+        Some(path) => durability::observations(
+            &std::fs::read_to_string(path)
+                .with_context(|| format!("reading {}", path.display()))?,
+        )
+        .with_context(|| format!("parsing {}", path.display()))?,
+        None => durability::observations(durability::ENEMY_HEALTH)?,
+    };
 
     progress("writing");
     write(db, &read, &contexts)?;
-    write_durability(db, &tables, &applied)?;
+    write_durability(db, &tables, &applied, &observed)?;
     db.set_meta(meta_key::MECHANICS_VERSION, &MECHANICS_VERSION.to_string())?;
     db.set_meta(meta_key::MECHANICS_SOURCES, &dir.display().to_string())?;
     let now: String =
@@ -277,6 +289,7 @@ pub fn import(
             contexts: applied.contexts,
             difficulties: applied.rows.len(),
             modifiers: applied.modifiers.len(),
+            observed: observed.len(),
             unmatched: applied.unmatched,
         },
     })
@@ -410,6 +423,7 @@ fn write_durability(
     db: &Database,
     t: &durability::Tables,
     applied: &durability::Applied,
+    observed: &[durability::Observation],
 ) -> Result<()> {
     let conn = db.conn();
     conn.execute_batch("BEGIN TRANSACTION")?;
@@ -466,6 +480,22 @@ fn write_durability(
                 m.combatant_power,
                 m.confidence,
                 m.evidence
+            ])?;
+        }
+        let mut observations = conn.appender("enemy_observed")?;
+        for o in observed {
+            observations.append_row(params![
+                o.enemy,
+                o.faction,
+                o.archetype,
+                o.rank,
+                o.place,
+                o.step,
+                o.power_delta,
+                o.health,
+                o.approximate,
+                o.source,
+                o.note
             ])?;
         }
         let mut champions = conn.appender("champion_stat")?;

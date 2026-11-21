@@ -49,6 +49,10 @@ pub struct ImportArgs {
     /// Power delta and health tier by activity group [default: the built-in data/difficulty.toml]
     #[arg(long)]
     pub difficulty: Option<PathBuf>,
+
+    /// In-game enemy health measurements [default: the built-in `data/enemy_health.toml`]
+    #[arg(long)]
+    pub enemy_health: Option<PathBuf>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -82,6 +86,7 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
         &focalpoint_mechanics::Options {
             contexts: a.contexts.clone(),
             difficulty: a.difficulty.clone(),
+            enemy_health: a.enemy_health.clone(),
         },
         |s| eprintln!("  {s}"),
     )
@@ -166,7 +171,7 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
     );
     let d = &imported.durability;
     println!(
-        "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values; {} contexts given a Power delta and health tier; {} difficulty entries and {} modifiers for the runs (view run_difficulty)",
+        "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values; {} contexts given a Power delta and health tier; {} difficulty entries and {} modifiers for the runs (view run_difficulty); {} in-game health measurements",
         d.enemies,
         d.health_rows,
         d.measured,
@@ -174,7 +179,8 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
         d.champion_stats,
         d.contexts,
         d.difficulties,
-        d.modifiers
+        d.modifiers,
+        d.observed
     );
     if !d.unmatched.is_empty() {
         println!(

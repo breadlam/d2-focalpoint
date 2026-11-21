@@ -31,6 +31,7 @@ it is fought at:
 | `power_delta` | MossyMax's `EoF Standard` curve, relative to a delta of 0 | the damage multiplier from −100 to +100. It matches the Data Compendium's ×0.446 at −30 and ×0.144 at −50 |
 | `champion_stat` | the Data Compendium (current) | Champion health (2,200 Standard … 5,475 Master/Grandmaster), shields, regeneration and stun times, by difficulty |
 | view `context_enemy_health` | the above with each context's `health_tier` and `durability` | every archetype's health and damage to kill in every context that has both |
+| `enemy_observed`, view `enemy_observed_tier` | [`data/enemy_health.toml`](../data/enemy_health.toml): in-game measurements | health measured in-game, compared with MossyMax's tiers and the Compendium's Champion health |
 | `difficulty`, `difficulty_modifier` | [`data/difficulty.toml`](../data/difficulty.toml) | Power cap, combatant Power and delta by context and step; what each Feat adds |
 | view `run_difficulty` | the above with each run's step and skulls | every run's Power cap, combatant Power, delta and durability |
 
@@ -142,12 +143,34 @@ Equilibrium's waves cap the kill rate, so its clears take longer instead.
 The kill rate is the measure the evaluator can trust. It is what durability
 does to a build's throughput in that context.
 
+## Measured in-game
+
+The Shooting Range at Ultimate (−30). Health is the damage to kill in the
+game's damage numbers:
+
+| Enemy | Health | Closest pre–Edge of Fate value | Ratio |
+|---|---|---|---|
+| Psion | ~125 | minor, tier 2: 123 | 1.02 |
+| Acolyte | ~215 | minor, tier 2: 202 | 1.06 |
+| Honored Legionary | ~525 | elite, tier 2: 550 | 0.95 |
+| Honored Phalanx | ~550 | elite, tier 2: 550 | 1.00 |
+| Revenant Knight | ~1,470 | elite, tier 2: 1,538 | 0.96 |
+| Blistered Wizard | ~2,250 | elite, tier 2: 911 | 2.47 |
+| Unstoppable Ogre (Champion) | ~3,400 | Compendium, Raid (Expert/Master): 3,300 | 1.03 |
+
+All but the Wizard match MossyMax's **health tier 2** (matchmade strikes)
+within 6%. Damage numbers already carry the Power delta, so if health
+pools are fixed, the range's Ultimate pools are tier 2's. If Edge of Fate
+instead grows pools with combatant Power, the same enemies at Normal will
+show smaller totals, and minors will shrink less than elites. Measuring them
+there will tell which.
+
 ## Gaps
 
 - **Health after Edge of Fate.** The archetype tables predate it, and the
-  health tiers of current content are assumed. Whether combatant Power
-  itself (350 against 600) changes health, beyond the delta, is unknown.
-  Shooting Range measurements at two deltas would settle both.
+  health tiers of current content are assumed (the range at Ultimate
+  matches tier 2, above). Whether health pools grow with combatant Power
+  is unknown until the same enemies are measured at a second delta.
 - **Rank-dependent scaling.** Minors' curve differs from majors' and
   bosses' by an unknown amount.
 - **Enemy composition.** How many of each enemy each activity fields is
