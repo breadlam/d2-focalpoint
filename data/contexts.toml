@@ -1,0 +1,36 @@
+# Hand-maintained detail for context profiles (docs/contexts.md).
+#
+# `focalpoint mechanics import` builds a profile for every activity group and
+# activity from the recorded clears (source "runs") and for every boss
+# encounter of the boss damage workbook (source "aegis"). Each [[context]]
+# here adds to the profile with its id — or creates one — as source
+# "curated"; a curated feature stands beside the same feature from another
+# source rather than replacing it.
+#
+# Ids: group:<slug>, activity:<slug of the activity name>,
+#      encounter:<activity slug>/<boss slug>   (list them:
+#      focalpoint mechanics context)
+#
+# Features take a number, a boolean (stored as 1/0) or a text. Names are
+# dotted and open-ended; the evaluator reads the ones it knows. In use:
+#   kills_per_min, precision_kill_share, ability_kill_share, deaths_per_10min,
+#   duration_min, boss.health, boss.dps_window_s, adds.during_dps (No|Few|Many),
+#   adds.range, setup, mechanics
+# For more detail, for example:
+#   enemies.<type>.count, enemies.<type>.health, adds.waves,
+#   mechanics.<kind> (true when the encounter has it: teleport, verticality,
+#   precision_only, ...)
+#
+# Events are timed: kind = "dps_window" | "add_wave" | "mechanic" | ...,
+# with optional start_s, length_s and detail.
+#
+# Example (not real data):
+#
+# [[context]]
+# id = "encounter:vault-of-glass/atheon"
+# features = { "adds.waves" = 3, "mechanics.teleport" = true }
+#
+# [[context.event]]
+# kind = "add_wave"
+# start_s = 0.0
+# detail = "oracles and hobgoblins"

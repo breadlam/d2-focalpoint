@@ -131,6 +131,14 @@ Weapon perks fall short only on barrels, magazines and stocks — plain stat
 perks nobody documents; armor archetypes, tuning and jumps are not
 documented by these sources.
 
+## Contexts
+
+The import also builds the profiles of the contexts builds are evaluated
+in — activity groups and activities from the recorded clears, boss
+encounters from the boss damage workbook's `Bosses` sheet, and
+hand-maintained detail from `data/contexts.toml`. See
+[contexts.md](contexts.md).
+
 ## Next
 
 - **States a part produces and depends on** (`mechanic_link`): "grants

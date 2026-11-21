@@ -77,7 +77,8 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 | `focalpoint analyze priors\|breadth\|diversity\|highlights\|sets\|attempts\|…` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight, what armor set bonuses are worth, failed attempts in Conquests and Ops ([docs/analysis.md](docs/analysis.md)) |
 | `focalpoint import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `focalpoint info [--detailed]` | provenance, headline counts, coverage, import statistics |
-| `focalpoint mechanics import [--sources DIR]` | read the community's documentation of game mechanics (Clarity, the Destiny Data Compendium) and measured boss-damage rotations with their loadouts into the database, keyed to manifest hashes ([docs/mechanics.md](docs/mechanics.md)) |
+| `focalpoint mechanics import [--sources DIR]` | read the community's documentation of game mechanics (Clarity, the Destiny Data Compendium) and measured boss-damage rotations with their loadouts into the database, keyed to manifest hashes, and build the profiles of the contexts builds are evaluated in ([docs/mechanics.md](docs/mechanics.md), [docs/contexts.md](docs/contexts.md)) |
+| `focalpoint mechanics context [QUERY]` | show context profiles: activity groups, activities and boss encounters with their features and timed events |
 | `focalpoint rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
 | `focalpoint rank players [FACETS] [RUN FILTERS]` | players ranked by skill net of the builds they used (`--min-runs N`, `--sort skill\|runs\|best`); facets list players who used matching builds |
 | `focalpoint site [--out site/data]` | export the rankings for the static site ([docs/site.md](docs/site.md)) |
@@ -109,6 +110,7 @@ for where new features go.
 - [docs/site.md](docs/site.md) — the static build-ranking site: data export, preview, tests, publishing
 - [docs/analysis.md](docs/analysis.md) — the analyses behind the design (`focalpoint analyze`) and their findings
 - [docs/mechanics.md](docs/mechanics.md) — the community's documentation of game mechanics: sources, the `mechanic_*` tables, coverage
+- [docs/contexts.md](docs/contexts.md) — the contexts builds are evaluated in (activity groups, activities, encounters) and their open-ended profiles
 - [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game; the solo premium; partial participants; polished top builds)
 
 ## Development
@@ -119,13 +121,15 @@ cargo clippy --workspace --all-targets   # pedantic, must be clean
 cargo fmt --all
 ```
 
-Rust toolchain is pinned in `rust-toolchain.toml`. If the checkout lives on a
-network share, point cargo's target directory at local disk with a
-git-ignored `.cargo/config.toml`:
+Rust toolchain is pinned in `rust-toolchain.toml`. Builds are large (the
+bundled DuckDB is compiled per profile, and debug output grows past 100 GB
+over time); put cargo's target directory where there is room, for example
+`.tmp/` beside the checkout (git-ignored), with a git-ignored
+`.cargo/config.toml`:
 
 ```toml
 [build]
-target-dir = "/home/<you>/.cache/Focalpoint/target"
+target-dir = "/path/to/checkout/.tmp/target"
 ```
 
 ## License

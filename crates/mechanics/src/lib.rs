@@ -14,6 +14,9 @@
 //!   matched to the manifest by [`names`];
 //! * [`aegis`] — `TheAegisRelic`'s boss damage workbook: measured damage
 //!   rotations and the DIM loadouts they were run with.
+//!
+//! With them it builds the profiles of the [`context`]s builds are evaluated
+//! in: activity groups, activities and boss encounters.
 
 use std::path::Path;
 
@@ -24,6 +27,7 @@ use focalpoint_db::{Database, MECHANICS_SQL, MECHANICS_VERSION, meta_key};
 pub mod aegis;
 pub mod clarity;
 pub mod compendium;
+pub mod context;
 pub mod names;
 pub mod sheet;
 pub mod xlsx;
@@ -119,8 +123,27 @@ pub fn provenance(dir: &Path) -> Result<Provenance> {
     })
 }
 
-/// Read every source under `dir` and replace the `mechanic_*` tables.
-pub fn import(db: &Database, dir: &Path, mut progress: impl FnMut(&str)) -> Result<Vec<Summary>> {
+/// What an import wrote.
+#[derive(Debug, Clone)]
+pub struct Imported {
+    pub sources: Vec<Summary>,
+    pub contexts: usize,
+    pub encounters: usize,
+    pub features: usize,
+    pub events: usize,
+    /// Encounters whose activity has no scored clears: no parent.
+    pub unplaced: Vec<String>,
+}
+
+/// Read every source under `dir`, build the context profiles (with
+/// hand-maintained detail from `curated`, or the built-in
+/// `data/contexts.toml`), and replace the layer's tables.
+pub fn import(
+    db: &Database,
+    dir: &Path,
+    curated: Option<&Path>,
+    mut progress: impl FnMut(&str),
+) -> Result<Imported> {
     let names = names::Names::load(db)?;
     let mut read = Vec::new();
 
@@ -151,8 +174,27 @@ pub fn import(db: &Database, dir: &Path, mut progress: impl FnMut(&str)) -> Resu
         ..Source::default()
     });
 
+    progress("contexts");
+    let runs = context::from_runs(db, focalpoint_db::rank::CHECKPOINT_SHARE)?;
+    let mut stmt = db
+        .conn()
+        .prepare("SELECT activity_hash, name FROM activity WHERE name IS NOT NULL")?;
+    let activities: Vec<(u32, String)> = stmt
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?
+        .collect::<duckdb::Result<_>>()?;
+    let bosses: Vec<aegis::Boss> = read
+        .iter()
+        .flat_map(|s| s.measured.bosses.iter().cloned())
+        .collect();
+    let encounters = context::from_bosses(&bosses, &activities, &runs);
+    let curated = match curated {
+        Some(path) => context::curated(path)?,
+        None => context::parse_curated(context::CURATED)?,
+    };
+    let contexts = context::merge(vec![runs, encounters, curated]);
+
     progress("writing");
-    write(db, &read)?;
+    write(db, &read, &contexts)?;
     db.set_meta(meta_key::MECHANICS_VERSION, &MECHANICS_VERSION.to_string())?;
     db.set_meta(meta_key::MECHANICS_SOURCES, &dir.display().to_string())?;
     let now: String =
@@ -161,14 +203,25 @@ pub fn import(db: &Database, dir: &Path, mut progress: impl FnMut(&str)) -> Resu
                 r.get(0)
             })?;
     db.set_meta(meta_key::MECHANICS_IMPORTED_AT, &now)?;
-    Ok(read.into_iter().map(Source::summary).collect())
+    Ok(Imported {
+        sources: read.into_iter().map(Source::summary).collect(),
+        contexts: contexts.len(),
+        encounters: contexts.iter().filter(|c| c.kind == "encounter").count(),
+        features: contexts.iter().map(|c| c.features.len()).sum(),
+        events: contexts.iter().map(|c| c.events.len()).sum(),
+        unplaced: contexts
+            .iter()
+            .filter(|c| c.kind == "encounter" && c.parent.is_none())
+            .map(|c| c.name.clone())
+            .collect(),
+    })
 }
 
 fn count(n: usize) -> i32 {
     i32::try_from(n).unwrap_or(i32::MAX)
 }
 
-fn write(db: &Database, read: &[Source]) -> Result<()> {
+fn write(db: &Database, read: &[Source], contexts: &[context::Context]) -> Result<()> {
     let conn = db.conn();
     conn.execute_batch("BEGIN TRANSACTION")?;
     conn.execute_batch(MECHANICS_SQL)?;
@@ -247,6 +300,36 @@ fn write(db: &Database, read: &[Source]) -> Result<()> {
                     loadout_items
                         .append_row(params![source, l.id, i.hash, i.role, i.parent, i.socket])?;
                 }
+            }
+        }
+    }
+    {
+        let mut ctx = conn.appender("context")?;
+        let mut acts = conn.appender("context_activity")?;
+        let mut features = conn.appender("context_feature")?;
+        let mut events = conn.appender("context_event")?;
+        for c in contexts {
+            ctx.append_row(params![c.id, c.kind, c.parent, c.name])?;
+            let mut seen = Vec::new();
+            for h in &c.activities {
+                if !seen.contains(h) {
+                    seen.push(*h);
+                    acts.append_row(params![c.id, h])?;
+                }
+            }
+            for f in &c.features {
+                features.append_row(params![c.id, f.name, f.value, f.text, f.source])?;
+            }
+            for (i, e) in c.events.iter().enumerate() {
+                events.append_row(params![
+                    c.id,
+                    count(i),
+                    e.kind,
+                    e.start_s,
+                    e.length_s,
+                    e.detail,
+                    e.source
+                ])?;
             }
         }
     }

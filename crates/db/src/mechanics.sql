@@ -101,3 +101,40 @@ CREATE OR REPLACE TABLE mechanic_loadout_item (
     parent_hash   UINTEGER,           -- for a socket choice: the item it is on
     socket_index  USMALLINT
 );
+
+-- Contexts a build is evaluated in: activity groups, activities, encounters,
+-- each a child of the one above (docs/contexts.md). Profiles are
+-- open-ended: any number of features and timed events, each with its source
+-- (runs | aegis | curated).
+CREATE OR REPLACE TABLE context (
+    context_id  VARCHAR PRIMARY KEY,  -- group:<slug> | activity:<slug> | encounter:<activity slug>/<boss slug>
+    kind        VARCHAR NOT NULL,     -- group | activity | encounter
+    parent_id   VARCHAR,
+    name        VARCHAR NOT NULL
+);
+
+-- The manifest activities a context covers.
+CREATE OR REPLACE TABLE context_activity (
+    context_id     VARCHAR NOT NULL,
+    activity_hash  UINTEGER NOT NULL,
+    PRIMARY KEY (context_id, activity_hash)
+);
+
+CREATE OR REPLACE TABLE context_feature (
+    context_id  VARCHAR NOT NULL,
+    feature     VARCHAR NOT NULL,  -- dotted and open-ended: kills_per_min, boss.dps_window_s, adds.during_dps, ...
+    value       DOUBLE,
+    text        VARCHAR,
+    source      VARCHAR NOT NULL,
+    PRIMARY KEY (context_id, feature, source)
+);
+
+CREATE OR REPLACE TABLE context_event (
+    context_id  VARCHAR NOT NULL,
+    seq         INTEGER NOT NULL,  -- in the order given
+    kind        VARCHAR NOT NULL,  -- dps_window | add_wave | mechanic | ...
+    start_s     DOUBLE,
+    length_s    DOUBLE,
+    detail      VARCHAR,
+    source      VARCHAR NOT NULL
+);

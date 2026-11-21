@@ -77,6 +77,92 @@ pub struct Aegis {
     pub loadouts: Vec<Loadout>,
     /// Share ids linked but not saved.
     pub missing: Vec<String>,
+    /// The boss encounters of the `Bosses` sheet.
+    pub bosses: Vec<Boss>,
+}
+
+/// The sheet of boss encounters.
+pub const BOSSES: &str = "Bosses";
+
+/// A boss encounter as the `Bosses` sheet profiles it.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Boss {
+    pub activity: String,
+    pub name: String,
+    pub health: Option<f64>,
+    /// Health once damage multipliers on the boss are counted.
+    pub effective_health: Option<f64>,
+    pub notes: Option<String>,
+    pub model: Option<String>,
+    pub species: Option<String>,
+    pub mechanics: Option<String>,
+    /// Time to set up a damage phase: None | Short | Medium | Long.
+    pub setup: Option<String>,
+    /// Adds during damage (No | Few | Many) and where (Close | Medium | Far | Varies).
+    pub adds: Option<String>,
+    pub adds_range: Option<String>,
+    /// Range to the boss.
+    pub range: Option<String>,
+    /// Length of a damage phase, seconds.
+    pub phase_s: Option<f64>,
+    pub clearable_dps: Option<f64>,
+    pub one_phase_dps: Option<f64>,
+    pub one_phase: Option<String>,
+    pub mods: Option<String>,
+}
+
+/// The encounters of the bosses sheet: its header row has `Boss` and `Phase`.
+#[must_use]
+pub fn bosses(sheet: &Sheet) -> Vec<Boss> {
+    let flat = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ");
+    let Some(header) = (0..sheet.rows()).find(|&r| {
+        let row: Vec<String> = sheet
+            .cells
+            .range((r, 0)..(r + 1, 0))
+            .map(|(_, v)| flat(v))
+            .collect();
+        row.iter().any(|v| v == "Boss") && row.iter().any(|v| v == "Phase")
+    }) else {
+        return Vec::new();
+    };
+    let col: HashMap<String, u32> = sheet
+        .cells
+        .range((header, 0)..(header + 1, 0))
+        .map(|((_, c), v)| (flat(v), *c))
+        .collect();
+    let at = |r: u32, name: &str| col.get(name).and_then(|&c| sheet.get(r, c));
+    let mut out = Vec::new();
+    for r in header + 1..sheet.rows() {
+        let (Some(activity), Some(name)) = (text(at(r, "Activity")), text(at(r, "Boss"))) else {
+            continue;
+        };
+        let mut adds = at(r, "Adds")
+            .map(str::lines)
+            .into_iter()
+            .flatten()
+            .map(str::trim)
+            .filter(|l| !l.is_empty());
+        out.push(Boss {
+            activity,
+            name: flat(&name),
+            health: number(at(r, "ingame Health")),
+            effective_health: number(at(r, "effective Health")),
+            notes: text(at(r, "Notes")),
+            model: text(at(r, "Model")),
+            species: text(at(r, "Species")),
+            mechanics: text(at(r, "Mechanics")),
+            setup: text(at(r, "Setup")),
+            adds: adds.next().map(String::from),
+            adds_range: adds.next().map(String::from),
+            range: text(at(r, "Range")),
+            phase_s: number(at(r, "Phase")),
+            clearable_dps: number(at(r, "clearable DPS")),
+            one_phase_dps: number(at(r, "1 phase DPS")),
+            one_phase: text(at(r, "1 phase Description")),
+            mods: text(at(r, "Mods")),
+        });
+    }
+    out
 }
 
 /// Read the workbook and the saved loadouts in `dir`.
@@ -87,6 +173,11 @@ pub fn read(dir: &Path) -> Result<Aegis> {
         .find(|s| s.name == RANKING)
         .with_context(|| format!("no sheet {RANKING:?} in boss-damage.xlsx"))?;
     let rotations = rotations(ranking);
+    let bosses = sheets
+        .iter()
+        .find(|s| s.name == BOSSES)
+        .map(bosses)
+        .unwrap_or_default();
     let mut ids: Vec<String> = rotations
         .iter()
         .flat_map(|r| r.loadouts.iter().map(|l| l.0.clone()))
@@ -95,6 +186,7 @@ pub fn read(dir: &Path) -> Result<Aegis> {
     ids.dedup();
     let mut out = Aegis {
         rotations,
+        bosses,
         ..Aegis::default()
     };
     for id in ids {
@@ -384,6 +476,73 @@ mod tests {
         assert_eq!(
             r.notes.as_deref(),
             Some("pre-stacked\nDawn:\nhttps://dim.gg/kry4xua/Nightfall")
+        );
+    }
+
+    #[test]
+    fn bosses_split_adds_into_amount_and_range() {
+        let mut s = Sheet {
+            name: BOSSES.into(),
+            ..Sheet::default()
+        };
+        let header = [
+            "#",
+            "Activity",
+            "Boss",
+            "ingame\nHealth",
+            "Adds",
+            "Phase",
+            "Setup",
+        ];
+        for (c, h) in header.iter().enumerate() {
+            s.cells.insert((1, c as u32), (*h).to_string());
+        }
+        for (c, v) in [
+            "11",
+            "Vault of Glass",
+            "Atheon",
+            "247148",
+            "Many\nVaries",
+            "30",
+            "Long",
+        ]
+        .iter()
+        .enumerate()
+        {
+            s.cells.insert((2, c as u32), (*v).to_string());
+        }
+        for (c, v) in [
+            "9",
+            "Deep Stone Crypt",
+            "Taniks",
+            "277639",
+            "No",
+            "?",
+            "None",
+        ]
+        .iter()
+        .enumerate()
+        {
+            s.cells.insert((3, c as u32), (*v).to_string());
+        }
+        let b = bosses(&s);
+        assert_eq!(b.len(), 2);
+        assert_eq!(
+            (
+                b[0].health,
+                b[0].adds.as_deref(),
+                b[0].adds_range.as_deref(),
+                b[0].phase_s
+            ),
+            (Some(247_148.0), Some("Many"), Some("Varies"), Some(30.0))
+        );
+        assert_eq!(
+            (
+                b[1].adds.as_deref(),
+                b[1].adds_range.as_deref(),
+                b[1].phase_s
+            ),
+            (Some("No"), None, None)
         );
     }
 

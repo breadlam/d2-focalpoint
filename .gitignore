@@ -1,6 +1,8 @@
 /target/
 # Machine-local cargo settings (e.g. a target-dir on local disk).
 /.cargo/config.toml
+# Build output and scratch work beside the checkout.
+/.tmp/
 
 # Databases and import work areas never belong in git.
 *.duckdb
