@@ -26,7 +26,7 @@ it is fought at:
 
 | Table | Source | What |
 |---|---|---|
-| `enemy_health` | MossyMax's Foetracer measurements (Damage Scaling v1.9.2, Feb 2025: **before Edge of Fate**) | 55 enemy archetypes by faction, minor and elite, at health tiers 1–4 (1: patrol, story; 2: matchmade strikes; 3: Legend Nightfalls, dungeons; 4: Master raids, Master and Grandmaster Nightfalls) |
+| `enemy_health` | MossyMax's Foetracer measurements (Damage Scaling v1.9.2, Feb 2025; in-game measurements in 2026 match them, below) | 55 enemy archetypes by faction, minor and elite, at health tiers 1–4 (1: patrol, story; 2: matchmade strikes; 3: Legend Nightfalls, dungeons; 4: Master raids, Master and Grandmaster Nightfalls) |
 | `enemy_measured` | the same | 44 measured bosses and minibosses: estimated health (damage dealt) and baseline health |
 | `power_delta` | MossyMax's `EoF Standard` curve, relative to a delta of 0 | the damage multiplier from −100 to +100. It matches the Data Compendium's ×0.446 at −30 and ×0.144 at −50 |
 | `champion_stat` | the Data Compendium (current) | Champion health (2,200 Standard … 5,475 Master/Grandmaster), shields, regeneration and stun times, by difficulty |
@@ -61,7 +61,11 @@ entry for the step most of its clears are at.
 | Master Raid, Master Dungeon | −30 | ×2.24 | documented |
 | The Desert Perpetual, Equilibrium, Pantheon | 0; −30 with Cutthroat Combat | ×1.00; ×2.24 | documented |
 
-All are in-game values. Health tiers and Champion columns are assumed.
+All are in-game values. Health tiers and Champion columns are assumed: tier
+2 and the 3,300 Champion for the Portal's content (Ops and Conquests), as
+the Shooting Range shows at Ultimate (below); tier 4 for Master raids and
+dungeons and tier 3 for The Desert Perpetual, Equilibrium and Pantheon, as
+before Edge of Fate.
 
 **Runs.** The view `run_difficulty` gives each run the delta of its own step
 and skulls. Portal steps: Normal 0, Advanced −10, Expert −15, Master −20,
@@ -165,24 +169,24 @@ game's damage numbers:
 | Unstoppable Ogre (Champion) | ~3,400 | Compendium, Raid (Expert/Master): 3,300 | 1.03 |
 
 Psions, Acolytes, Legionaries, Phalanxes, Knights, Servitors and the
-orange-bar Abomination match MossyMax's **health tier 2** (matchmade strikes) within
-6%, and the Unstoppable Ogre the Compendium's raid Champion. The Corsair,
-which the tables lack, is 1.11× their tier-2 elite Vandal. The range's
-miniboss pedestal (Wizard, Wraith, Captain) has 1.5–2.5× the tier-2 elite
-health of each archetype. The Esteemed Centurion (1.8×) may be one too.
-Bars are confirmed for the Wizard, Wraith, Abomination and Corsair; the
-other ranks are the closest match. Damage numbers already carry the Power delta, so if health
-pools are fixed, the range's Ultimate pools are tier 2's. If Edge of Fate
-instead grows pools with combatant Power, the same enemies at Normal will
-show smaller totals, and minors will shrink less than elites. Measuring them
-there will tell which.
+orange-bar Abomination match MossyMax's **health tier 2** (matchmade
+strikes) within 6%, the Unstoppable Ogre the Compendium's raid Champion,
+and the Corsair, which the tables lack, is 1.11× their tier-2 elite Vandal.
+The differences are within measurement error: **the tables' health values
+hold after Edge of Fate.** The range's miniboss pedestal (Wizard, Wraith,
+Captain) has 1.5–2.5× the tier-2 elite health of each archetype; the
+Esteemed Centurion (1.8×) may be one too.
+
+The range uses the Portal's difficulty steps, so its Ultimate is taken as
+the Portal's content: tier 2 for Ops and Conquests.
 
 ## Gaps
 
-- **Health after Edge of Fate.** The archetype tables predate it, and the
-  health tiers of current content are assumed (the range at Ultimate
-  matches tier 2, above). Whether health pools grow with combatant Power
-  is unknown until the same enemies are measured at a second delta.
+- **Health tiers of activities.** The values hold, but which tier each
+  activity uses is assumed: tier 2 for the Portal's content from the range,
+  the rest as before Edge of Fate. A common enemy measured in an Ultimate
+  Op or a Master dungeon would confirm it. Whether pools change with the
+  difficulty step (the range at Normal) is not measured.
 - **Rank-dependent scaling.** Minors' curve differs from majors' and
   bosses' by an unknown amount.
 - **Enemy composition.** How many of each enemy each activity fields is

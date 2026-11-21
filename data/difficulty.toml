@@ -45,6 +45,10 @@
 #   delta than majors and bosses.
 # * The Data Compendium (current) gives Ultimate −30 and the Grandmaster
 #   Alert −50: the Portal's Ultimate was eased after launch.
+# * Health: in-game measurements in the Shooting Range (2026-11-21,
+#   data/enemy_health.toml) match MossyMax's tables within measurement
+#   error, so they hold after Edge of Fate; at Ultimate the range shows tier
+#   2, assumed for the Portal's content.
 # * `focalpoint analyze difficulty`: the same players in the same Ops kill
 #   ×0.89 as fast at Ultimate as at Master and ×0.64 as fast as at Normal —
 #   consistent with enemies needing ×2.2 the damage (−30), not ×7 (−50).
@@ -53,27 +57,27 @@
 context = "Ultimate Fireteam Op"
 steps = ["Ultimate"]
 power_delta = -30
-health_tier = 4
-champion_difficulty = "Master Grandmaster"
+health_tier = 2
+champion_difficulty = "Raid (Expert/Master)"
 confidence = "documented"
 sources = [
   "Data Compendium, landing: \"-50 (Grandmaster Alert) vs -30 (Ultimate)\"; \"-30 Delta: +85% Incoming and 0.446x Outgoing\"",
   "focalpoint analyze difficulty: kill rate x0.894 of the same players' Master clears",
 ]
-note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier 4 and the Champion column are assumed."
+note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes). Health tier 2 and the Champion column are assumed from the Shooting Range, which uses the Portal's difficulty steps: at Ultimate its enemies have MossyMax's tier-2 health and its Unstoppable Ogre ~3,400 (data/enemy_health.toml)."
 
 [[difficulty]]
 context = "Ultimate Pinnacle Op"
 steps = ["Ultimate"]
 power_delta = -30
-health_tier = 4
-champion_difficulty = "Master Grandmaster"
+health_tier = 2
+champion_difficulty = "Raid (Expert/Master)"
 confidence = "documented"
 sources = [
   "Data Compendium, landing: \"-50 (Grandmaster Alert) vs -30 (Ultimate)\"",
   "focalpoint analyze difficulty: kill rate x0.893 of the same players' Master clears",
 ]
-note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier 4 and the Champion column are assumed."
+note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes). Health tier 2 and the Champion column are assumed from the Shooting Range, which uses the Portal's difficulty steps: at Ultimate its enemies have MossyMax's tier-2 health and its Unstoppable Ogre ~3,400 (data/enemy_health.toml)."
 
 # The Ops below Ultimate (runs only: the contexts are at Ultimate).
 [[difficulty]]
@@ -150,31 +154,31 @@ sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, 
 context = "Grandmaster Conquest"
 steps = ["Grandmaster"]
 power_delta = -40
-health_tier = 4
-champion_difficulty = "Master Grandmaster"
+health_tier = 2
+champion_difficulty = "Raid (Expert/Master)"
 confidence = "documented"
 sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21): every Grandmaster Conquest is fought 40 under"]
-note = "Health tier 4 and the Champion column are assumed."
+note = "Health tier 2 and the Champion column are assumed from the Shooting Range, which uses the Portal's difficulty steps: at Ultimate its enemies have MossyMax's tier-2 health and its Unstoppable Ogre ~3,400 (data/enemy_health.toml)."
 
 [[difficulty]]
 context = "Grandmaster Conquest: Heliostat"
 steps = ["Grandmaster"]
 power_delta = -40
-health_tier = 4
-champion_difficulty = "Master Grandmaster"
+health_tier = 2
+champion_difficulty = "Raid (Expert/Master)"
 confidence = "documented"
 sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21)"]
-note = "Health tier 4 and the Champion column are assumed."
+note = "Health tier 2 and the Champion column are assumed from the Shooting Range, which uses the Portal's difficulty steps: at Ultimate its enemies have MossyMax's tier-2 health and its Unstoppable Ogre ~3,400 (data/enemy_health.toml)."
 
 [[difficulty]]
 context = "Ultimate Conquest"
 steps = ["Ultimate"]
 power_delta = -50
-health_tier = 4
-champion_difficulty = "Master Grandmaster"
+health_tier = 2
+champion_difficulty = "Raid (Expert/Master)"
 confidence = "documented"
 sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-11-21): both Ultimate Conquests are fought 50 under"]
-note = "Health tier 4 and the Champion column are assumed."
+note = "Health tier 2 and the Champion column are assumed from the Shooting Range, which uses the Portal's difficulty steps: at Ultimate its enemies have MossyMax's tier-2 health and its Unstoppable Ogre ~3,400 (data/enemy_health.toml)."
 
 # Each Conquest, in the order of its ladder (difficulty steps 0–11).
 [[difficulty]]

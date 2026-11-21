@@ -711,7 +711,7 @@ mod tests {
         let uc = d.iter().find(|d| d.context == "Ultimate Conquest").unwrap();
         assert_eq!(
             (uc.delta(), uc.health_tier, uc.confidence.as_str()),
-            (Some(-50), Some(4), "documented")
+            (Some(-50), Some(2), "documented")
         );
         let seraph = d
             .iter()
