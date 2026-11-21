@@ -6,6 +6,7 @@ pub mod import;
 pub mod info;
 pub mod mechanics;
 pub mod rank;
+pub mod sandbox;
 pub mod search;
 pub mod similar;
 pub mod site;

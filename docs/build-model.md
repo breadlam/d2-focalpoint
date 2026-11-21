@@ -1,6 +1,6 @@
 # The build model (proposal)
 
-**Status: proposed.** A design for modelling Destiny 2 builds as a whole,
+**Status: accepted (2026-11-21); stage 1 in progress.** A design for modelling Destiny 2 builds as a whole,
 so the synergy evaluator and build synthesis share one model. It replaces
 the plan to model mechanics loop by loop ([escalation.md](escalation.md)):
 the Scorch/Ignition chain, the Stasis shard loop and the rest fall out of
@@ -109,6 +109,8 @@ systems every build uses:
 - **Survival:** health and shields by stat, damage resistance, healing.
 
 ### 3. Part cards: declarative, sourced, tested
+
+The format and the checks are in [sandbox.md](sandbox.md).
 
 Each part — aspect, fragment, ability, super, exotic and its perks, set
 bonus, artifact perk, armor mod, weapon perk, origin trait — gets a
@@ -317,21 +319,23 @@ exists from the start. Depth then follows coverage.
    explanations. Cards extended to 90% coverage.
 5. **99% coverage, the surrogate,** and the site.
 
-## Decisions to make
+## Decisions
 
-- **Card format.** TOML with a strict schema, like the other `data/`
-  files, or a compact domain-specific language. 2,000 cards may read
-  better in a DSL. TOML is the default.
-- **Assisted drafting** of cards from source prose, with every card checked
-  against its source. This is how coverage reaches 90% at reasonable cost.
-- **Weapons in the first stage.** Their perks, frames, origin traits and
-  mods are over a third of part uses, and most sustained damage. The proposal includes them parametrically from the
-  start.
-- **Fireteam scope.** One build in a default team, or team compositions.
-  The default team comes first.
-- **Clarity.** Cards derived from Clarity's texts are fine for internal
-  use. Arrange the partnership before the site shows evaluations built on
-  them.
+- **Card format: TOML** with a strict schema, like the other `data/` files.
+  A compact language can replace it later; the compiler is the only reader.
+- **Assisted drafting** of cards from source prose, each card checked
+  against its source.
+- **Weapons from the first stage**, parametric by archetype and frame, with
+  perks as cards.
+- **Solo first.** The model and synthesis target the best builds for one
+  player in each context. Team modelling comes later: it matters most for
+  boss damage, while solo builds do well everywhere else.
+- **Clarity without the partnership.** The partnership's terms over-reach
+  on data that is largely the community's. Clarity's content is used as
+  any other source: read from its public repository for this personal
+  project, or through services that partner with it. Every number keeps its
+  provenance, so what rests on Clarity alone is visible should the project
+  go public.
 
 ## Data still to gather
 

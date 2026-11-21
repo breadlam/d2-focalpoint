@@ -1,0 +1,28 @@
+# Exotic armor (docs/sandbox.md).
+
+[[part]]
+name = "Dawn Chorus"
+kind = "armor"
+sources = ["compendium:Exotic Armors/Armor/Dawn Chorus"]
+note = "The Compendium's \"Solar Fulmination doubles the melee energy gained\" is not a rule here: a Fulmination counts as an ignition, so every enemy it damages fires the ignition_hit rule a second time."
+
+[[part.rule]]
+on = { event = "hit", source = "super" }
+when = [{ equipped = "Daybreak" }]
+effect = { emit = "ignition", attributes = { by = "super" } }
+note = "Daybreak projectiles ignite what they hit."
+
+[[part.rule]]
+on = { event = "tick", state = "scorch" }
+effect = { energy = "melee", amount = 0.05 }
+confidence = "assumed"
+note = "The Compendium gives \"5?%\" per Scorch tick."
+
+[[part.modify]]
+damage = "ignition"
+mul = 2.0
+category = "exotic"
+
+[[part.rule]]
+on = "ignition_hit"
+effect = { energy = "melee", amount = 0.40 }

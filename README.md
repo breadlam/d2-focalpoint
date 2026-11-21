@@ -78,6 +78,7 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 | `focalpoint import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `focalpoint info [--detailed]` | provenance, headline counts, coverage, import statistics |
 | `focalpoint mechanics import [--sources DIR]` | read the community's documentation of game mechanics (Clarity, the Destiny Data Compendium) and measured boss-damage rotations with their loadouts into the database, keyed to manifest hashes; enemy health and Power delta scaling; and build the profiles of the contexts builds are evaluated in ([docs/mechanics.md](docs/mechanics.md), [docs/contexts.md](docs/contexts.md), [docs/durability.md](docs/durability.md)) |
+| `focalpoint sandbox check [--dir DIR]` | check the build model's part cards against its vocabulary, resolve them against the manifest, and report their coverage of the parts recorded builds use, with the most-used parts still without a card ([docs/sandbox.md](docs/sandbox.md)) |
 | `focalpoint mechanics context [QUERY]` | show context profiles: activity groups, activities and boss encounters with their features and timed events |
 | `focalpoint rank builds [FACETS] [RUN FILTERS]` | builds ranked by how their players perform with them relative to those players' own usual level, so strong players don't make a build look good (`--group-by core\|build\|exotic-armor\|…`, `--min-players N`, `--sort effect\|raw\|players\|runs`); see [ADR 0006](docs/adr/0006-ranking.md) |
 | `focalpoint rank players [FACETS] [RUN FILTERS]` | players ranked by skill net of the builds they used (`--min-runs N`, `--sort skill\|runs\|best`); facets list players who used matching builds |
@@ -112,7 +113,8 @@ for where new features go.
 - [docs/mechanics.md](docs/mechanics.md) — the community's documentation of game mechanics: sources, the `mechanic_*` tables, coverage
 - [docs/contexts.md](docs/contexts.md) — the contexts builds are evaluated in (activity groups, activities, encounters) and their open-ended profiles
 - [docs/effects.md](docs/effects.md) — what build parts need and do: triggers, payoffs and game states read from the mechanics texts
-- [docs/build-model.md](docs/build-model.md) — proposal: one model of build mechanics (ontology, core verbs, part cards, scenarios, fluid analysis and simulation, calibration) for both the synergy evaluator and build synthesis
+- [docs/sandbox.md](docs/sandbox.md) — the build model's vocabulary and part cards: format, checking, coverage
+- [docs/build-model.md](docs/build-model.md) — one model of build mechanics (ontology, core verbs, part cards, scenarios, fluid analysis and simulation, calibration) for both the synergy evaluator and build synthesis
 - [docs/durability.md](docs/durability.md) — how much damage enemies take to kill, per enemy and context: health tables, the Power delta curve, each activity group's delta, and the difficulty steps measured on the same players
 - [docs/escalation.md](docs/escalation.md) — synergistic escalation: loops that feed themselves past a threshold (Solar ignition chains, the Stasis shard loop, the sword engine, …), their mechanics and the evidence
 - [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game; the solo premium; partial participants; polished top builds)

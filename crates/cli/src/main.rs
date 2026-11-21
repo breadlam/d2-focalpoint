@@ -35,6 +35,8 @@ enum Command {
     Mechanics(commands::mechanics::Args),
     /// Rank builds and players, separating the build from the player
     Rank(Box<commands::rank::Args>),
+    /// The build model: check the part cards against the vocabulary
+    Sandbox(commands::sandbox::Args),
     /// Search builds by class, exotics, abilities, perks, mods, activity, ...
     Search(Box<commands::search::Args>),
     /// List a build's nearest neighbours by the tiered build distance
@@ -58,6 +60,7 @@ fn main() -> ExitCode {
         Command::Info(args) => commands::info::run(&args, &db),
         Command::Mechanics(args) => commands::mechanics::run(&args, &db),
         Command::Rank(args) => commands::rank::run(&args, &db),
+        Command::Sandbox(args) => commands::sandbox::run(&args, &db),
         Command::Search(args) => commands::search::run(&args, &db),
         Command::Similar(args) => commands::similar::run(&args, &db),
         Command::Site(args) => commands::site::run(&args, &db),

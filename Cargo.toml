@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/core", "crates/db", "crates/import", "crates/mechanics", "crates/cli"]
+members = ["crates/core", "crates/db", "crates/import", "crates/mechanics", "crates/sandbox", "crates/cli"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,6 +14,7 @@ focalpoint-core = { path = "crates/core" }
 focalpoint-db = { path = "crates/db" }
 focalpoint-import = { path = "crates/import" }
 focalpoint-mechanics = { path = "crates/mechanics" }
+focalpoint-sandbox = { path = "crates/sandbox" }
 
 anyhow = "1"
 clap = { version = "4.6", features = ["derive", "env", "wrap_help"] }

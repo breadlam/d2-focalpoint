@@ -33,11 +33,13 @@ Google Sheets tabs are saved as their static HTML (`htmlview/sheet`), which
 holds exactly what the sheet shows; the CSV export infers a type per column
 and drops cells that do not fit it (198 of Game Mechanics' 734).
 
-**Terms.** Clarity asks apps that use or display its data to arrange a
-partnership (free for hobbyist developers, via its Discord;
-d2clarity.com/partnerships). The tables are built locally and not
-published; arrange one before the public site shows anything derived from
-Clarity.
+**Clarity.** Clarity asks apps that use or display its data to arrange a
+partnership (d2clarity.com/partnerships). This project does not: the terms
+over-reach on data that is largely the community's, and its database is
+public. Clarity's content is read from that repository for this personal
+project, and every number derived from it keeps its provenance
+(`clarity:<hash>`). Revisit before the public site shows anything that rests
+on Clarity alone.
 
 ## Importing
 

@@ -1,0 +1,682 @@
+# The build model's closed vocabulary (docs/build-model.md, docs/sandbox.md).
+#
+# Part cards (data/sandbox/parts/) may only use the names defined here: an
+# unknown event, state, parameter or attribute value is an error. The core
+# verbs' parameters are their PvE values, each with its source:
+#   compendium:<tab>/<entry>   the Destiny Data Compendium
+#   court:<tab>/<entry>        Court's damage buff/debuff guides
+#   cooldowns:<tab>/<row>      the ability cooldowns and factors workbook
+#   mossymax:<tab>             MossyMax's damage scaling sheets
+#   endgame:<tab>/<entry>      Endgame Analysis
+#   bungie:<patch>             Bungie's patch notes
+#   ingame:<date>              measured in-game
+#   clarity:<hash>             Clarity's database (its public repository)
+# Parameters whose value no source gives are listed without one.
+
+[vocabulary]
+elements = ["kinetic", "arc", "solar", "void", "stasis", "strand"]
+light = ["arc", "solar", "void"]
+darkness = ["stasis", "strand"]
+abilities = ["grenade", "melee", "class", "super", "movement"]
+ammo = ["primary", "special", "heavy"]
+# What dealt the damage or the kill.
+sources = ["weapon", "grenade", "melee", "class", "super", "ability", "verb", "finisher", "environment", "any"]
+# Health-bar ranks (combatant ranks) and Champion types.
+ranks = ["minor", "elite", "miniboss", "champion", "boss", "vehicle", "guardian"]
+champions = ["barrier", "overload", "unstoppable"]
+# Combatant tiers (Compendium: "Combatant Tiers =/= Combatant Ranks"):
+# a type's base tier, raised by its rank; effects that scale "by enemy
+# rank" in the sources use these.
+tiers = [1, 2, 3, 4, 5, 6]
+# Court's damage modifier categories: highest-only within global_debuff,
+# empowering and surge; everything multiplies across categories.
+damage_categories = ["global_debuff", "empowering", "surge", "amplification", "exotic", "weapon_perk", "world"]
+exclusive_categories = ["global_debuff", "empowering", "surge"]
+# Who an effect lands on.
+targets = ["self", "allies", "fireteam", "target", "area", "enemies_hit", "nearest", "objects"]
+# Labels a damage instance carries, for modifiers to select ("ignition
+# damage", "powered melee damage").
+damage_tags = [
+  "any", "weapon", "ability", "grenade", "melee", "powered_melee", "class", "super", "finisher",
+  "ignition", "scorch", "jolt", "volatile", "shatter", "crystal", "unravel", "threadling",
+  "tangle", "bolt", "explosion",
+]
+# Parameters every ability has: `melee.charges`, `grenade.cooldown`, ...
+ability_params = ["charges", "cooldown", "regen", "flat_gain", "damage", "duration", "radius", "damage_resist"]
+movement = ["sprint", "slide", "airborne", "crouch", "jump", "grapple", "glide"]
+# Character stats (Armor 3.0) and weapon stats a modifier may change.
+stats = [
+  "weapons", "health", "class", "grenade", "super", "melee",
+  "handling", "reload", "range", "stability", "aim_assist", "airborne", "mobility", "magazine", "zoom",
+]
+# The families a source citation starts with.
+source_families = ["compendium", "court", "cooldowns", "mossymax", "endgame", "bungie", "ingame", "clarity", "aegis", "manifest"]
+
+# ---------------------------------------------------------------- events
+
+[[event]]
+name = "kill"
+attributes = ["source", "element", "precision", "rank", "tier", "target_has", "ammo", "powered", "multikill"]
+description = "The player (or a summon of theirs) kills an enemy."
+
+[[event]]
+name = "hit"
+attributes = ["source", "element", "precision", "rank", "tier", "target_has", "ammo", "powered"]
+description = "The player deals a damage instance."
+
+[[event]]
+name = "cast"
+attributes = ["ability", "powered"]
+description = "The player uses an ability (a powered melee is a melee cast)."
+
+[[event]]
+name = "super_end"
+attributes = []
+description = "The player's super ends."
+
+[[event]]
+name = "damage_taken"
+attributes = ["from", "melee"]
+description = "The player takes damage."
+
+[[event]]
+name = "pickup"
+attributes = ["object", "size"]
+description = "The player picks up an object (an Orb of Power, an elemental pickup, ammo)."
+
+[[event]]
+name = "finisher"
+attributes = ["rank"]
+description = "The player performs a finisher."
+
+[[event]]
+name = "reload"
+attributes = ["ammo"]
+description = "The player reloads."
+
+[[event]]
+name = "movement"
+attributes = ["kind"]
+description = "Sprint, slide, airborne, crouch, grapple, glide; `kind` names which."
+
+[[event]]
+name = "apply"
+attributes = ["state", "by", "element"]
+description = "The player applies a state (buff or debuff) to themselves, an ally or an enemy."
+
+[[event]]
+name = "gain"
+attributes = ["state"]
+description = "The player gains a buff or a stack of it."
+
+[[event]]
+name = "expire"
+attributes = ["state"]
+description = "A state ends."
+
+[[event]]
+name = "counter_full"
+attributes = ["counter"]
+description = "A part's counter reaches its threshold."
+
+[[event]]
+name = "ignition"
+attributes = ["fulmination", "by"]
+description = "An Ignition explodes (Scorch reached 100, or a part ignites directly). A Fulmination counts as an Ignition."
+
+[[event]]
+name = "ignition_hit"
+attributes = ["origin", "fulmination", "rank"]
+description = "An enemy is damaged by an Ignition; `origin` is the ignited enemy."
+
+[[event]]
+name = "jolt_chain"
+attributes = ["rank"]
+description = "A Jolted enemy releases chain lightning."
+
+[[event]]
+name = "volatile_explosion"
+attributes = ["rank"]
+description = "A Volatile enemy explodes."
+
+[[event]]
+name = "freeze"
+attributes = ["rank"]
+description = "An enemy is frozen (Slow reached 100, or frozen directly)."
+
+[[event]]
+name = "shatter"
+attributes = ["of", "by"]
+description = "A frozen enemy or a Stasis Crystal is shattered; `of` is enemy or crystal."
+
+[[event]]
+name = "crystal_created"
+attributes = ["size"]
+description = "A Stasis Crystal is created."
+
+[[event]]
+name = "suspend"
+attributes = ["rank"]
+description = "An enemy is suspended."
+
+[[event]]
+name = "unravel_thread"
+attributes = []
+description = "An Unraveled enemy releases threads."
+
+[[event]]
+name = "tangle_detonated"
+attributes = []
+description = "A Tangle is detonated."
+
+[[event]]
+name = "threadling_hit"
+attributes = []
+description = "A Threadling explodes on an enemy."
+
+[[event]]
+name = "bolt_discharge"
+attributes = []
+description = "x10 Bolt Charge discharges an Arc Bolt."
+
+[[event]]
+name = "orb_created"
+attributes = ["by"]
+description = "An Orb of Power is created."
+
+[[event]]
+name = "champion_stunned"
+attributes = ["champion"]
+description = "A Champion is stunned."
+
+[[event]]
+name = "transcendence"
+attributes = []
+description = "The player activates Transcendence."
+
+[[event]]
+name = "tick"
+attributes = ["state"]
+description = "A damage-over-time state ticks (Scorch every 0.56 s)."
+
+[[event]]
+name = "periodic"
+attributes = ["interval"]
+description = "Every `interval` seconds."
+
+# ---------------------------------------------------------------- states
+#
+# kind: resource (the player's), buff (on the player or allies), debuff
+# (on enemies), object (in the world, picked up or destroyed), counter (a
+# part's progress toward a threshold).
+
+[[state]]
+name = "grenade_energy"
+kind = "resource"
+description = "Grenade ability energy, 0-1 per charge; cooldowns and flat-gain factors from the cooldown workbook."
+
+[[state]]
+name = "melee_energy"
+kind = "resource"
+description = "Melee ability energy, 0-1 per charge."
+
+[[state]]
+name = "class_energy"
+kind = "resource"
+description = "Class ability energy, 0-1 per charge."
+
+[[state]]
+name = "super_energy"
+kind = "resource"
+description = "Super energy, 0-1."
+
+[[state]]
+name = "special_ammo"
+kind = "resource"
+description = "Special ammo."
+
+[[state]]
+name = "heavy_ammo"
+kind = "resource"
+description = "Heavy ammo."
+
+[[state]]
+name = "health"
+kind = "resource"
+description = "Health and shields."
+
+[[state]]
+name = "armor_charge"
+kind = "resource"
+description = "Armor Charge stacks, from Orbs of Power and other sources; consumed by armor mods."
+
+[[state]]
+name = "transcendence_light"
+kind = "resource"
+element = "prismatic"
+description = "Prismatic's Light alignment bar."
+
+[[state]]
+name = "transcendence_dark"
+kind = "resource"
+element = "prismatic"
+description = "Prismatic's Darkness alignment bar."
+
+# Shared ----------------------------------------------------------------
+
+[[state]]
+name = "orb_of_power"
+kind = "object"
+description = "Grants super energy and Armor Charge on pickup; restores health by the Health stat (0.7 HP per point, 70 at 100)."
+sources = ["compendium:Game Mechanics/Health"]
+params = [
+  { name = "health_per_stat_point", value = 0.7, unit = "hp" },
+]
+
+[[state]]
+name = "transcendence_buff"
+kind = "buff"
+element = "prismatic"
+description = "Transcendence: recharges 2 grenade and melee charges; +5% weapon damage, +10% grenade and melee regeneration, 20% damage resist for 20 s; kills extend it."
+sources = ["compendium:Prismatic/Glossary/Transcendence"]
+params = [
+  { name = "duration", value = 20.0, unit = "s" },
+  { name = "weapon_damage", value = 0.05, unit = "fraction" },
+  { name = "damage_resist", value = 0.20, unit = "fraction" },
+  { name = "regen_bonus", value = 0.10, unit = "fraction" },
+  { name = "extend_t1_t2", value = 0.05, unit = "fraction" },
+  { name = "extend_t3_t4", value = 0.10, unit = "fraction" },
+  { name = "extend_t3_elite_plus", value = 0.15, unit = "fraction" },
+]
+
+# Solar -------------------------------------------------------------------
+
+[[state]]
+name = "scorch"
+kind = "debuff"
+element = "solar"
+description = "Stacks to 100, then Ignites; ticks every 0.56 s for 2.7 + 0.175 x stacks (non-lethal); lasts 2.3 s, then decays 25 stacks/s."
+sources = ["compendium:Solar/Glossary/Scorch"]
+max_stacks = 100
+at_max = "ignition"
+params = [
+  { name = "tick_interval", value = 0.56, unit = "s" },
+  { name = "tick_base", value = 2.7, unit = "damage" },
+  { name = "tick_per_stack", value = 0.175, unit = "damage" },
+  { name = "non_boss_bonus", value = 0.20, unit = "fraction" },
+  { name = "linger", value = 2.3, unit = "s" },
+  { name = "decay_per_s", value = 25.0, unit = "stacks" },
+  { name = "applied_multiplier", value = 1.0, unit = "fraction", note = "Ember of Ashes x1.5, rounded up" },
+]
+
+[[state]]
+name = "ignition"
+kind = "verb"
+element = "solar"
+description = "676 Solar damage in 8 m without falloff; removes Scorch and blocks it for 1.6 s; stuns Unstoppable Champions."
+sources = ["compendium:Solar/Glossary/Ignition"]
+params = [
+  { name = "damage", value = 676.0, unit = "damage" },
+  { name = "radius", value = 8.0, unit = "m" },
+  { name = "scorch_lockout", value = 1.6, unit = "s" },
+]
+
+[[state]]
+name = "radiant"
+kind = "buff"
+element = "solar"
+description = "+20% weapon damage (empowering; 30% against Champions) for 10 s, extendable to 15 s."
+sources = ["compendium:Solar/Glossary/Radiant"]
+damage_category = "empowering"
+params = [
+  { name = "weapon_damage", value = 0.20, unit = "fraction" },
+  { name = "champion_damage", value = 0.30, unit = "fraction" },
+  { name = "duration", value = 10.0, unit = "s" },
+  { name = "max_duration", value = 15.0, unit = "s" },
+]
+
+[[state]]
+name = "restoration"
+kind = "buff"
+element = "solar"
+description = "Uninterruptible healing: x1 35 HP/s, x2 50 HP/s; extendable to 15 s."
+sources = ["compendium:Solar/Glossary/Restoration"]
+max_stacks = 2
+params = [
+  { name = "heal_x1", value = 35.0, unit = "hp_per_s" },
+  { name = "heal_x2", value = 50.0, unit = "hp_per_s" },
+  { name = "max_duration", value = 15.0, unit = "s" },
+]
+
+[[state]]
+name = "cure"
+kind = "verb"
+element = "solar"
+description = "Burst healing: x1 60, x2 120, x3 240 HP; 1 s cooldown."
+sources = ["compendium:Solar/Glossary/Cure"]
+params = [
+  { name = "heal_x1", value = 60.0, unit = "hp" },
+  { name = "heal_x2", value = 120.0, unit = "hp" },
+  { name = "heal_x3", value = 240.0, unit = "hp" },
+  { name = "cooldown", value = 1.0, unit = "s" },
+]
+
+[[state]]
+name = "firesprite"
+kind = "object"
+element = "solar"
+description = "Grants 11.25% grenade energy on pickup; lasts 25 s; 5 s between spawns."
+sources = ["compendium:Solar/Glossary/Firesprite"]
+params = [
+  { name = "grenade_energy", value = 0.1125, unit = "fraction" },
+  { name = "lifetime", value = 25.0, unit = "s" },
+  { name = "spawn_cooldown", value = 5.0, unit = "s" },
+]
+
+# Arc ---------------------------------------------------------------------
+
+[[state]]
+name = "jolt"
+kind = "debuff"
+element = "arc"
+description = "For 10 s, on taking 115 damage releases chain lightning: 119 Arc damage to all enemies within 12 m; 0.8 s between chains; stuns Overload Champions."
+sources = ["compendium:Arc/Glossary/Jolted"]
+params = [
+  { name = "duration", value = 10.0, unit = "s" },
+  { name = "threshold", value = 115.0, unit = "damage" },
+  { name = "chain_damage", value = 119.0, unit = "damage" },
+  { name = "chain_radius", value = 12.0, unit = "m" },
+  { name = "chain_cooldown", value = 0.8, unit = "s" },
+]
+
+[[state]]
+name = "amplified"
+kind = "buff"
+element = "arc"
+description = "From a counter of Arc kills within 6 s (minor 25%, elite 50%, miniboss+ 100%): +50 mobility, +30 handling, 15% damage resist against combatants for 15 s; sprinting 2.5 s grants Speed Booster."
+sources = ["compendium:Arc/Glossary/Amplified"]
+params = [
+  { name = "duration", value = 15.0, unit = "s" },
+  { name = "counter_minor", value = 0.25, unit = "fraction" },
+  { name = "counter_elite", value = 0.50, unit = "fraction" },
+  { name = "counter_miniboss", value = 1.0, unit = "fraction" },
+  { name = "counter_window", value = 6.0, unit = "s" },
+  { name = "damage_resist", value = 0.15, unit = "fraction" },
+]
+
+[[state]]
+name = "speed_booster"
+kind = "buff"
+element = "arc"
+description = "While Amplified and sprinting: maximum movement speed, 15% damage resist against combatants."
+sources = ["compendium:Arc/Glossary/Amplified"]
+params = [{ name = "damage_resist", value = 0.15, unit = "fraction" }]
+
+[[state]]
+name = "blind"
+kind = "debuff"
+element = "arc"
+description = "Disoriented for 10 s; stuns Unstoppable Champions."
+sources = ["compendium:Arc/Glossary/Blind"]
+params = [{ name = "duration", value = 10.0, unit = "s" }]
+
+[[state]]
+name = "bolt_charge"
+kind = "buff"
+element = "arc"
+max_stacks = 10
+at_max = "bolt_discharge"
+description = "Stacks from weapon damage instances ((15% of magazine) + 1 within 5 s each); +2.5% melee energy per stack; at x10 the next ability hit or unpowered melee discharges an Arc Bolt (405 + 270 Arc damage)."
+sources = ["compendium:Arc/Glossary/Bolt Charge"]
+params = [
+  { name = "melee_energy_per_stack", value = 0.025, unit = "fraction" },
+  { name = "discharge_damage", value = 675.0, unit = "damage" },
+  { name = "instance_window", value = 5.0, unit = "s" },
+]
+
+[[state]]
+name = "ionic_trace"
+kind = "object"
+element = "arc"
+description = "Seeks the user at 6 m/s; 11.25% grenade and melee energy, 13.5% class energy on pickup."
+sources = ["compendium:Arc/Glossary/Ionic Trace"]
+params = [
+  { name = "grenade_energy", value = 0.1125, unit = "fraction" },
+  { name = "melee_energy", value = 0.1125, unit = "fraction" },
+  { name = "class_energy", value = 0.135, unit = "fraction" },
+]
+
+# Void --------------------------------------------------------------------
+
+[[state]]
+name = "volatile"
+kind = "debuff"
+element = "void"
+description = "Explodes after taking 190 damage or on death: 145 Void ability damage in 5 m; lasts 10 s; 1 s before it can be reapplied."
+sources = ["compendium:Void/Glossary/Volatile"]
+params = [
+  { name = "duration", value = 10.0, unit = "s" },
+  { name = "threshold", value = 190.0, unit = "damage" },
+  { name = "damage", value = 145.0, unit = "damage" },
+  { name = "radius", value = 5.0, unit = "m" },
+  { name = "reapply_lockout", value = 1.0, unit = "s" },
+]
+
+[[state]]
+name = "weaken"
+kind = "debuff"
+element = "void"
+damage_category = "global_debuff"
+description = "+15% damage taken (global debuff; some sources 30-35%), -20% movement, for 6 s."
+sources = ["compendium:Void/Glossary/Weaken", "court:STACKING GUIDE/Global Debuffs"]
+params = [
+  { name = "damage_taken", value = 0.15, unit = "fraction" },
+  { name = "duration", value = 6.0, unit = "s" },
+]
+
+[[state]]
+name = "devour"
+kind = "buff"
+element = "void"
+description = "70 HP on activation; 10 s; kills restore 70 HP, refresh 5 s and grant grenade energy by tier (T1 7.5%, T2 11.6%, T3 13.75%, T4 20%)."
+sources = ["compendium:Void/Glossary/Devour"]
+params = [
+  { name = "heal", value = 70.0, unit = "hp" },
+  { name = "duration", value = 10.0, unit = "s" },
+  { name = "refresh", value = 5.0, unit = "s" },
+  { name = "grenade_energy_t1", value = 0.075, unit = "fraction" },
+  { name = "grenade_energy_t2", value = 0.116, unit = "fraction" },
+  { name = "grenade_energy_t3", value = 0.1375, unit = "fraction" },
+  { name = "grenade_energy_t4", value = 0.20, unit = "fraction" },
+]
+
+[[state]]
+name = "invisibility"
+kind = "buff"
+element = "void"
+description = "Combatants cannot target the user for 5 s; ends on offensive actions."
+sources = ["compendium:Void/Glossary/Invisibility"]
+params = [{ name = "duration", value = 5.0, unit = "s" }]
+
+[[state]]
+name = "void_overshield"
+kind = "buff"
+element = "void"
+description = "45 HP overshield with 70% damage resist against combatants (150 effective HP) for 10 s."
+sources = ["compendium:Void/Glossary/Overshield"]
+params = [
+  { name = "health", value = 45.0, unit = "hp" },
+  { name = "effective_health", value = 150.0, unit = "hp" },
+  { name = "duration", value = 10.0, unit = "s" },
+]
+
+[[state]]
+name = "suppression"
+kind = "debuff"
+element = "void"
+description = "Unable to use abilities for 10 s; rank-and-file and elites cannot shoot; stuns Overload Champions."
+sources = ["compendium:Void/Glossary/Suppression"]
+params = [{ name = "duration", value = 10.0, unit = "s" }]
+
+[[state]]
+name = "void_breach"
+kind = "object"
+element = "void"
+description = "11.25% class energy on pickup; lasts 25 s; 5 s between spawns."
+sources = ["compendium:Void/Glossary/Void Breach"]
+params = [
+  { name = "class_energy", value = 0.1125, unit = "fraction" },
+  { name = "lifetime", value = 25.0, unit = "s" },
+  { name = "spawn_cooldown", value = 5.0, unit = "s" },
+]
+
+# Stasis ------------------------------------------------------------------
+
+[[state]]
+name = "slow"
+kind = "debuff"
+element = "stasis"
+max_stacks = 100
+at_max = "freeze"
+description = "-50% movement; freezes at 100 stacks; stuns Overload Champions."
+sources = ["compendium:Stasis/Glossary/Slow"]
+
+[[state]]
+name = "frozen"
+kind = "debuff"
+element = "stasis"
+description = "Immobilised for 6 s; +10% damage from special and power weapons, +5% from Arc, Solar and Void abilities, +120% from basic and glaive melee (rank-and-file, elites); shatters on damage; bosses shatter after 3 s."
+sources = ["compendium:Stasis/Glossary/Freeze"]
+params = [
+  { name = "duration", value = 6.0, unit = "s" },
+  { name = "special_heavy_damage", value = 0.10, unit = "fraction" },
+  { name = "light_ability_damage", value = 0.05, unit = "fraction" },
+  { name = "primary_damage", value = -0.05, unit = "fraction" },
+  { name = "melee_damage", value = 1.20, unit = "fraction" },
+]
+
+[[state]]
+name = "shatter"
+kind = "verb"
+element = "stasis"
+description = "A frozen enemy shattered: up to 361 damage nearby; stuns Unstoppable Champions."
+sources = ["compendium:Stasis/Glossary/Shatter"]
+params = [
+  { name = "damage", value = 361.0, unit = "damage" },
+  { name = "radius", unit = "m" },
+]
+
+[[state]]
+name = "stasis_crystal"
+kind = "object"
+element = "stasis"
+description = "Lasts 15 s; freezes enemies within 2.6 m on creation; destroyed, deals up to 158 damage over 8 m."
+sources = ["compendium:Stasis/Glossary/Stasis Crystal"]
+params = [
+  { name = "lifetime", value = 15.0, unit = "s" },
+  { name = "freeze_radius", value = 2.6, unit = "m" },
+  { name = "shatter_damage", value = 158.0, unit = "damage" },
+  { name = "shatter_radius", value = 8.0, unit = "m" },
+]
+
+[[state]]
+name = "stasis_shard"
+kind = "object"
+element = "stasis"
+description = "From shattering crystals or frozen enemies, or killing slowed or frozen enemies (small from rank-and-file, large otherwise); lasts 20 s; small 10%, large 50% melee energy; allies get copies."
+sources = ["compendium:Stasis/Glossary/Stasis Shard"]
+params = [
+  { name = "melee_energy_small", value = 0.10, unit = "fraction" },
+  { name = "melee_energy_large", value = 0.50, unit = "fraction" },
+  { name = "lifetime", value = 20.0, unit = "s" },
+  { name = "pickup_radius", unit = "m" },
+]
+
+[[state]]
+name = "frost_armor"
+kind = "buff"
+element = "stasis"
+max_stacks = 5
+description = "7% damage resist per stack, x5 for 31.25%; decays one stack every 5 s (Whisper of Rime: x7 for 50%, 6 s)."
+sources = ["compendium:Stasis/Glossary/Frost Armor"]
+params = [
+  { name = "damage_resist_per_stack", value = 0.07, unit = "fraction" },
+  { name = "damage_resist_max", value = 0.3125, unit = "fraction" },
+  { name = "max_stacks", value = 5.0, unit = "count" },
+  { name = "stack_duration", value = 5.0, unit = "s" },
+]
+
+# Strand ------------------------------------------------------------------
+
+[[state]]
+name = "sever"
+kind = "debuff"
+element = "strand"
+description = "-40% outgoing damage for 10 s."
+sources = ["compendium:Strand/Glossary/Sever"]
+params = [
+  { name = "damage_dealt", value = -0.40, unit = "fraction" },
+  { name = "duration", value = 10.0, unit = "s" },
+]
+
+[[state]]
+name = "suspend"
+kind = "debuff"
+element = "strand"
+description = "Unable to move, shoot or use abilities: rank-and-file and elites 6 s, minibosses 3 s; bosses take 300 damage instead; stuns Unstoppable Champions."
+sources = ["compendium:Strand/Glossary/Suspend"]
+params = [
+  { name = "duration", value = 6.0, unit = "s" },
+  { name = "duration_miniboss", value = 3.0, unit = "s" },
+  { name = "boss_damage", value = 300.0, unit = "damage" },
+]
+
+[[state]]
+name = "unravel"
+kind = "debuff"
+element = "strand"
+description = "0.25 s after taking 40 damage, releases 3 seeking threads of 26 damage that Unravel; 1.2 s between releases."
+sources = ["compendium:Strand/Glossary/Unravel"]
+params = [
+  { name = "threshold", value = 40.0, unit = "damage" },
+  { name = "threads", value = 3.0, unit = "count" },
+  { name = "thread_damage", value = 26.0, unit = "damage" },
+  { name = "cooldown", value = 1.2, unit = "s" },
+  { name = "radius", unit = "m" },
+]
+
+[[state]]
+name = "tangle"
+kind = "object"
+element = "strand"
+description = "From killing Strand-debuffed enemies, 12 s between spawns; lasts 20 s; detonated, 346 damage over 8 m; grappling it refunds the grenade."
+sources = ["compendium:Strand/Glossary/Tangle"]
+params = [
+  { name = "lifetime", value = 20.0, unit = "s" },
+  { name = "spawn_cooldown", value = 12.0, unit = "s" },
+  { name = "damage", value = 346.0, unit = "damage" },
+  { name = "radius", value = 8.0, unit = "m" },
+]
+
+[[state]]
+name = "threadling"
+kind = "object"
+element = "strand"
+description = "Chases enemies within ~20 m and explodes for up to 366 damage in a small radius; Warlocks perch up to 5."
+sources = ["compendium:Strand/Glossary/Threadling"]
+params = [
+  { name = "damage", value = 366.0, unit = "damage" },
+  { name = "seek_radius", value = 20.0, unit = "m" },
+  { name = "max_perched", value = 5.0, unit = "count" },
+]
+
+[[state]]
+name = "woven_mail"
+kind = "buff"
+element = "strand"
+description = "45% damage resist for 10 s; removed on casting a super."
+sources = ["compendium:Strand/Glossary/Woven Mail"]
+params = [
+  { name = "damage_resist", value = 0.45, unit = "fraction" },
+  { name = "duration", value = 10.0, unit = "s" },
+]

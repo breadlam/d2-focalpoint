@@ -1,0 +1,23 @@
+# Solar parts (docs/sandbox.md).
+
+[[part]]
+name = "Ember of Char"
+kind = "fragment"
+sources = ["compendium:Solar/Fragments/Char", "clarity:362132291"]
+
+# Every enemy an ignition damages, other than the one ignited, takes Scorch:
+# with Ember of Ashes x60, enough with a second source to ignite in turn.
+[[part.rule]]
+on = { event = "ignition_hit", origin = false }
+effect = { apply = "scorch", stacks = 40, target = "target" }
+
+[[part]]
+name = "Ember of Ashes"
+kind = "fragment"
+sources = ["compendium:Solar/Fragments/Ashes", "clarity:1051276349"]
+note = "Some sources apply their own fixed amount instead (Caliban's Hand x60+0, Tommy's Matchbook x15+5); their cards say so with `with` variants."
+
+[[part.modify]]
+param = "scorch.applied_multiplier"
+mul = 1.5
+round = "up"

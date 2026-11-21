@@ -771,6 +771,7 @@ dependencies = [
  "focalpoint-db",
  "focalpoint-import",
  "focalpoint-mechanics",
+ "focalpoint-sandbox",
  "serde_json",
  "tempfile",
  "tracing",
@@ -835,6 +836,18 @@ dependencies = [
  "tempfile",
  "toml",
  "zip",
+]
+
+[[package]]
+name = "focalpoint-sandbox"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "duckdb",
+ "focalpoint-db",
+ "serde",
+ "tempfile",
+ "toml",
 ]
 
 [[package]]
