@@ -112,6 +112,7 @@ for where new features go.
 - [docs/mechanics.md](docs/mechanics.md) — the community's documentation of game mechanics: sources, the `mechanic_*` tables, coverage
 - [docs/contexts.md](docs/contexts.md) — the contexts builds are evaluated in (activity groups, activities, encounters) and their open-ended profiles
 - [docs/effects.md](docs/effects.md) — what build parts need and do: triggers, payoffs and game states read from the mechanics texts
+- [docs/build-model.md](docs/build-model.md) — proposal: one model of build mechanics (ontology, core verbs, part cards, scenarios, fluid analysis and simulation, calibration) for both the synergy evaluator and build synthesis
 - [docs/durability.md](docs/durability.md) — how much damage enemies take to kill, per enemy and context: health tables, the Power delta curve, each activity group's delta, and the difficulty steps measured on the same players
 - [docs/escalation.md](docs/escalation.md) — synergistic escalation: loops that feed themselves past a threshold (Solar ignition chains, the Stasis shard loop, the sword engine, …), their mechanics and the evidence
 - [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game; the solo premium; partial participants; polished top builds)

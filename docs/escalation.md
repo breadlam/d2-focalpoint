@@ -187,6 +187,8 @@ Their mechanics are yet to be read in the same detail.
   sustains loops that need survivors (ignition chains, damage-counted ammo)
   and starves kill-volume engines; enemy **density and spacing** (neighbours
   within 8–15 m) decide whether a chain propagates.
-- **Kernels**, each a quantitative model built from the sources' numbers:
+- **One model, not kernels** ([build-model.md](build-model.md)): the loops
+  below fall out of a single model of build mechanics. Kernels, each a
+  quantitative model built from the sources' numbers:
   Scorch and Ignition; Stasis crystals, shards and Frost Armor; sword ammo,
   guard and Restoration; the Orb economy and elemental buffs; Armor Charge.
