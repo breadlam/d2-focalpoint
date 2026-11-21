@@ -61,11 +61,10 @@ entry for the step most of its clears are at.
 | Master Raid, Master Dungeon | −30 | ×2.24 | documented |
 | The Desert Perpetual, Equilibrium, Pantheon | 0; −30 with Cutthroat Combat | ×1.00; ×2.24 | documented |
 
-All are in-game values. Health tiers and Champion columns are assumed: tier
-2 and the 3,300 Champion for the Portal's content (Ops and Conquests), as
-the Shooting Range shows at Ultimate (below); tier 4 for Master raids and
-dungeons and tier 3 for The Desert Perpetual, Equilibrium and Pantheon, as
-before Edge of Fate.
+All are in-game values. Health is **tier 2** everywhere: measured in the
+Shooting Range at Ultimate and in a Master dungeon (below), assumed for the
+rest. Champion columns are assumed: the 3,300 Champion the range shows for
+the Portal's content, as raids' and dungeons' own column says.
 
 **Runs.** The view `run_difficulty` gives each run the delta of its own step
 and skulls. Portal steps: Normal 0, Advanced −10, Expert −15, Master −20,
@@ -180,12 +179,17 @@ Esteemed Centurion (1.8×) may be one too.
 The range uses the Portal's difficulty steps, so its Ultimate is taken as
 the Portal's content: tier 2 for Ops and Conquests.
 
+**In an activity.** A Lurker in Warlord's Ruin on Master (−30) has ~250.
+MossyMax has no tier-2 value for its class (tier 1 201, tier 3 404, tier 4
+430); for the small enemies he measured, tier 2 is ×1.23–1.35 tier 1, about
+250–270. Before Edge of Fate, Master dungeons were tier 4. Since it,
+health looks flat at tier 2, and difficulty comes from the Power delta.
+
 ## Gaps
 
-- **Health tiers of activities.** The values hold, but which tier each
-  activity uses is assumed: tier 2 for the Portal's content from the range,
-  the rest as before Edge of Fate. A common enemy measured in an Ultimate
-  Op or a Master dungeon would confirm it. Whether pools change with the
+- **Health tiers of activities.** Tier 2 is measured in the range and one
+  Master dungeon, and assumed elsewhere (Master raids, The Desert
+  Perpetual, Equilibrium, Pantheon). Whether pools change with the
   difficulty step (the range at Normal) is not measured.
 - **Rank-dependent scaling.** Minors' curve differs from majors' and
   bosses' by an unknown amount.

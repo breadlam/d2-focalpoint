@@ -48,7 +48,8 @@
 # * Health: in-game measurements in the Shooting Range (2026-11-21,
 #   data/enemy_health.toml) match MossyMax's tables within measurement
 #   error, so they hold after Edge of Fate; at Ultimate the range shows tier
-#   2, assumed for the Portal's content.
+#   2, and so does a Master dungeon (Warlord's Ruin): tier 2 is taken for
+#   all content.
 # * `focalpoint analyze difficulty`: the same players in the same Ops kill
 #   ×0.89 as fast at Ultimate as at Master and ×0.64 as fast as at Normal —
 #   consistent with enemies needing ×2.2 the damage (−30), not ×7 (−50).
@@ -288,20 +289,20 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 [[difficulty]]
 context = "Master Raid"
 power_delta = -30
-health_tier = 4
+health_tier = 2
 champion_difficulty = "Raid (Expert/Master)"
 confidence = "documented"
 sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Master raids are fought 30 under"]
-note = "Before Edge of Fate, -20 (MossyMax, Damage Scaling v1.9.2). Health tier 4 (MossyMax: Master raids) is from before Edge of Fate."
+note = "Before Edge of Fate, -20 and health tier 4 (MossyMax, Damage Scaling v1.9.2). Health tier 2 is assumed like Master dungeons, where it is measured."
 
 [[difficulty]]
 context = "Master Dungeon"
 power_delta = -30
-health_tier = 4
+health_tier = 2
 champion_difficulty = "Raid (Expert/Master)"
 confidence = "documented"
 sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Grasp of Avarice, Sundered Doctrine and every other Master dungeon checked are fought 30 under"]
-note = "Before Edge of Fate, -20 (MossyMax, Damage Scaling v1.9.2). Health tier 4 is assumed, like Master raids."
+note = "Before Edge of Fate, -20 (MossyMax, Damage Scaling v1.9.2). Health tier 2: a Lurker in Warlord's Ruin (Master) has ~250, MossyMax's tier 2 for its class (data/enemy_health.toml)."
 
 # The Desert Perpetual, Equilibrium and Pantheon: fought at even Power;
 # their Feats raise the Power cap and the combatants' Power together
@@ -316,40 +317,40 @@ context = "The Desert Perpetual"
 steps = ["Normal", "Epic", "Custom"]
 power_cap = 350
 combatant_power = 350
-health_tier = 3
+health_tier = 2
 confidence = "documented"
 sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): The Desert Perpetual and its Epic at 350/350 without Feats"]
-note = "Health tier 3 (MossyMax: Legend Nightfalls and dungeons, before Edge of Fate) is assumed."
+note = "Health tier 2 is assumed, as measured in the Shooting Range and a Master dungeon."
 
 [[difficulty]]
 context = "Equilibrium"
 steps = ["Normal", "Custom"]
 power_cap = 350
 combatant_power = 350
-health_tier = 3
+health_tier = 2
 confidence = "documented"
 sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Equilibrium at Normal 350/350"]
-note = "Health tier 3 is assumed."
+note = "Health tier 2 is assumed, as measured in the Shooting Range and a Master dungeon."
 
 [[difficulty]]
 context = "Pantheon 2.0"
 steps = ["Standard", "Custom"]
 power_cap = 350
 combatant_power = 350
-health_tier = 3
+health_tier = 2
 confidence = "documented"
 sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Insurrection Prime Revolutionary at Standard 350/350"]
-note = "Health tier 3 is assumed."
+note = "Health tier 2 is assumed, as measured in the Shooting Range and a Master dungeon."
 
 [[difficulty]]
 context = "Pantheon 2.0"
 steps = ["Adventure"]
 power_cap = 400
 combatant_power = 300
-health_tier = 3
+health_tier = 2
 confidence = "documented"
 sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Insurrection Prime Revolutionary at Adventure 400/300"]
-note = "Players 100 over. Health tier 3 is assumed."
+note = "Players 100 over. Health tier 2 is assumed, as measured in the Shooting Range and a Master dungeon."
 
 [[modifier]]
 contexts = ["The Desert Perpetual", "Pantheon 2.0", "Equilibrium"]
