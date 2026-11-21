@@ -179,6 +179,11 @@ Esteemed Centurion (1.8×) may be one too.
 The range uses the Portal's difficulty steps, so its Ultimate is taken as
 the Portal's content: tier 2 for Ops and Conquests.
 
+**Across difficulty steps.** A Psion has ~120 at Normal (0) and ~125 at
+Ultimate (−30): the same pool. The delta scales the damage dealt, not the
+enemy's health, so a run's damage to kill is its health times its
+durability.
+
 **In an activity.** A Lurker in Warlord's Ruin on Master (−30) has ~250.
 MossyMax has no tier-2 value for its class (tier 1 201, tier 3 404, tier 4
 430); for the small enemies he measured, tier 2 is ×1.23–1.35 tier 1, about
@@ -189,10 +194,13 @@ health looks flat at tier 2, and difficulty comes from the Power delta.
 
 - **Health tiers of activities.** Tier 2 is measured in the range and one
   Master dungeon, and assumed elsewhere (Master raids, The Desert
-  Perpetual, Equilibrium, Pantheon). Whether pools change with the
-  difficulty step (the range at Normal) is not measured.
-- **Rank-dependent scaling.** Minors' curve differs from majors' and
-  bosses' by an unknown amount.
+  Perpetual, Equilibrium, Pantheon).
+- **Rank-dependent scaling.** Health pools do not change with the delta,
+  so Edge of Fate's "red bars do not increase in health as quickly"
+  describes the damage curve: damage against minors falls less with delta
+  than against majors and bosses, by an unknown amount. Per-shot damage
+  numbers against a minor and a major at Normal and Ultimate would
+  measure it.
 - **Enemy composition.** How many of each enemy each activity fields is
   not yet recorded. It can go in `data/contexts.toml` as
   `enemies.<type>.count`.

@@ -27,6 +27,19 @@ approximate = true
 source = "In-game, Shooting Range (recorded 2026-11-21)"
 
 [[measurement]]
+enemy = "Psion"
+faction = "Cabal"
+archetype = "Psion"
+rank = "minor"
+place = "Shooting Range"
+step = "Normal"
+power_delta = 0
+health = 120
+approximate = true
+source = "In-game, Shooting Range (recorded 2026-11-21)"
+note = "The same as at Ultimate (~125): health pools do not change with the difficulty step."
+
+[[measurement]]
 enemy = "Honored Legionary"
 faction = "Cabal"
 archetype = "Legionary"
