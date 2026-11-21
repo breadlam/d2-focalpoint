@@ -20,6 +20,8 @@
 //!   player, and how often top builds lack them (ADR 0010);
 //! * [`attempts`] — failed attempts in content that cannot be resumed, and
 //!   whether build types differ in how often they clear at all;
+//! * [`escalation`] — parts whose lift depends on the content: the pieces of
+//!   synergistic escalation loops;
 //! * [`triggers`] — what sets off the parts of the builds played in each
 //!   activity group (the mechanics layer's trigger tags), against the boss
 //!   damage workbook's rotations.
@@ -30,6 +32,7 @@ pub mod attempts;
 pub mod breadth;
 pub mod completeness;
 pub mod diversity;
+pub mod escalation;
 pub mod highlights;
 pub mod partial;
 pub mod priors;

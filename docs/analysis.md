@@ -13,6 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
+| `analyze escalation [--anchor PART --parts A,B,…]` | Which parts' lift depends on the content — the pieces of synergistic escalation loops? With `--anchor`: how builds with a part do by which of a few others they also run | the escalation model ([escalation.md](escalation.md)) |
 | `analyze triggers` | Do the trigger tags read from the mechanics texts say anything about where builds are played — do players lean less on kill-triggered parts where kills are scarce or hard? | the synergy evaluator's trigger availability per context ([effects.md](effects.md)) |
 | `analyze attempts` | Where are uncleared runs failures rather than sessions, and do build types differ in how often they clear at all — beyond who plays them, and beyond what the clear-only ranking sees? | open: failures in Conquests and Ops are not yet scored |
 | `analyze sets` | What are full armor set bonuses worth to the same player, are players who skip them stronger, and how many top builds lack them? | polished top builds (ADR 0010) |
@@ -410,4 +411,28 @@ in Equilibrium, Fireteam Ops and dungeons through 21–22% in Grandmaster
 Conquests to 18.8% in Ultimate Conquest and 17.0% in the boss rotations,
 which also lean least on pickups (6.9% against 10–15%) and nearby enemies
 (0.8% against 3–5%) and most on hits (20.3% against 14–17%).
+
+## `analyze escalation`
+
+Each scored clear with a recorded build is measured against its player's
+usual level (the mean of their other scored clears; players with 5 or
+more). Per subclass and part (artifact perks, fragments, aspects, exotics
+and their perks, set bonuses), clears with the part are compared with
+clears of the same subclass without it, in hard (Conquests), easy (Ops,
+Equilibrium, dungeons) and boss (raids, Pantheon, The Desert Perpetual)
+content; parts are ranked by hard minus easy lift. `--anchor PART --parts
+A,B,C` splits the builds with one part by which of the others they run.
+
+Findings ([escalation.md](escalation.md)): the top of the ranking is the
+pieces of loops — the Solar ignition chain (Solar Fulmination, Ember of
+Char and Ashes: +21 to +24 points hard over easy, on Warlocks and Titans),
+the Strand and Solar Titan sword engine (Combination Argent Blade, Sword
+Storm Combo, Kinetic Synthesis, Praxic Blade, Stronghold: +24 to +26), the
+Atheon's Memory Orb engine (+21 to +22) and On Your Mark (+22). Split by
+pieces, Dawn Chorus builds with Char, Ashes and Fulmination do +13% in
+hard content and those without Fulmination −13%; Glacial Quake Titans with
+Tectonic Harvest, Hunger and Crystalline Converter +8% and without
+Converter −6%. The bottom is kill-volume engines that flounder in hard
+content: Fever and Chill, Ember of Torches, Kismet, Echo of Starvation,
+Echo of Harvest (−20 to −29 points).
 

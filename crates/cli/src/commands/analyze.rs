@@ -8,8 +8,8 @@ use anyhow::{Result, bail};
 use focalpoint_core::vector::ElementVector;
 use focalpoint_db::Database;
 use focalpoint_db::analysis::{
-    attempts, breadth, completeness, diversity, highlights as hl, partial, priors, sets, solo,
-    subclasses, triggers,
+    attempts, breadth, completeness, diversity, escalation, highlights as hl, partial, priors,
+    sets, solo, subclasses, triggers,
 };
 use focalpoint_db::highlight::{self, NEUTRAL, QUALITY_WEIGHT, candidates, playstyles, select};
 use focalpoint_db::rank::{NEUTRAL_CONTEXT_PRIOR, RankOptions, SoloScoring, load_model};
@@ -103,6 +103,14 @@ for the boss damage workbook's measured rotations. Where kills are scarce or har
 kill-triggered parts."
     )]
     Triggers,
+    /// Parts whose lift depends on the content: pieces of synergistic escalation loops
+    #[command(after_help = "Examples:\n  \
+focalpoint analyze escalation                     # parts by hard-minus-easy lift\n  \
+focalpoint analyze escalation --anchor \"Dawn Chorus\" --parts \"Ember of Char,Ember of Ashes,Solar Fulmination\"\n  \
+focalpoint analyze escalation --anchor \"Glacial Quake\" --parts \"Howl of the Storm,Tectonic Harvest,Whisper of Hunger,Crystalline Converter\"\n\n\
+Clears are measured against their player's usual level. Contexts: hard (Conquests), easy (Ops, Equilibrium, \
+dungeons), boss (raids, Pantheon, The Desert Perpetual). See docs/escalation.md.")]
+    Escalation(EscalationArgs),
     /// Explain the highlight picks, or sweep the quality weight
     #[command(after_help = "Examples:\n  \
 focalpoint analyze highlights                          # neutral game, every class\n  \
@@ -110,6 +118,24 @@ focalpoint analyze highlights --set pantheon-2-0 --class Titan\n  \
 focalpoint analyze highlights --sweep --count 5\n  \
 focalpoint analyze highlights --sets                   # list the set ids")]
     Highlights(HighlightArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct EscalationArgs {
+    /// Compare builds with this part (by name: an exotic, aspect, super, ...) by which of --parts they run
+    #[arg(long)]
+    pub anchor: Option<String>,
+    /// Other parts, comma-separated, for --anchor
+    #[arg(long, value_delimiter = ',')]
+    pub parts: Vec<String>,
+    /// Parts listed at each end of the scan
+    #[arg(long, default_value_t = 25)]
+    pub top: usize,
+    /// Clears (and players) a part needs in both the hard and easy contexts
+    #[arg(long, default_value_t = 100.0)]
+    pub min_clears: f64,
+    #[arg(long, default_value_t = 40)]
+    pub min_players: i64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
@@ -232,6 +258,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Sets => run_sets(&db, args.format),
         What::Attempts => run_attempts(&db, args.format),
         What::Triggers => run_triggers(&db, args.format),
+        What::Escalation(a) => run_escalation(&db, a, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
     }
 }
@@ -1878,6 +1905,73 @@ fn run_triggers(db: &Database, format: Format) -> Result<()> {
     println!(
         "A part counts for every trigger it has; parts are the build's components the mechanics sources document. \
 The workbook's rotations count once each (their first loadout)."
+    );
+    Ok(())
+}
+
+fn run_escalation(db: &Database, a: &EscalationArgs, format: Format) -> Result<()> {
+    if let Some(anchor) = &a.anchor {
+        println!("## Builds with {anchor}, by which of the other parts they run");
+        let mut header: Vec<String> = a.parts.clone();
+        header.extend(["context", "clears", "players", "vs own level"].map(String::from));
+        let rows: Vec<Vec<String>> = escalation::combinations(db, anchor, &a.parts)?
+            .into_iter()
+            .map(|c| {
+                let mut row: Vec<String> = c
+                    .runs
+                    .iter()
+                    .map(|r| if *r { "✓" } else { "·" }.to_string())
+                    .collect();
+                row.extend([
+                    c.context,
+                    thousands(c.clears.round() as i64),
+                    thousands(c.players),
+                    pct(c.vs_level),
+                ]);
+                row
+            })
+            .collect();
+        println!("{}", render(format, &header, &rows));
+        return Ok(());
+    }
+    let lifts = escalation::lifts(db, a.min_clears, a.min_players)?;
+    let header = [
+        "subclass",
+        "kind",
+        "part",
+        "hard clears",
+        "easy clears",
+        "hard lift",
+        "easy lift",
+        "hard − easy",
+        "boss lift",
+    ]
+    .map(String::from);
+    let row = |l: &escalation::PartLift| {
+        vec![
+            l.subclass.clone(),
+            l.kind.clone(),
+            l.part.clone(),
+            thousands(l.hard_clears.round() as i64),
+            thousands(l.easy_clears.round() as i64),
+            pct(l.hard),
+            pct(l.easy),
+            format!("{:+.1} pts", 100.0 * (l.hard - l.easy)),
+            l.boss.map_or("—".into(), pct),
+        ]
+    };
+    println!(
+        "## Parts that lift their players more in hard content (Conquests) than in easy content"
+    );
+    let rows: Vec<Vec<String>> = lifts.iter().take(a.top).map(row).collect();
+    println!("{}", render(format, &header, &rows));
+    println!("\n## Parts that lift their players more in easy content than in hard content");
+    let rows: Vec<Vec<String>> = lifts.iter().rev().take(a.top).map(row).collect();
+    println!("{}", render(format, &header, &rows));
+    println!(
+        "Lift: clears with the part against clears of the same subclass without it, each against its player's usual \
+level, per context; parts with {}+ clears and {}+ players in both contexts.",
+        a.min_clears, a.min_players
     );
     Ok(())
 }

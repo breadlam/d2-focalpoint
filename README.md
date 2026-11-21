@@ -74,7 +74,7 @@ See [docs/schema.md](docs/schema.md) for the model and example queries.
 
 | Command | Purpose |
 |---|---|
-| `focalpoint analyze priors\|breadth\|diversity\|highlights\|sets\|attempts\|triggers\|…` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight, what armor set bonuses are worth, failed attempts in Conquests and Ops, what triggers the parts of builds played in each activity ([docs/analysis.md](docs/analysis.md)) |
+| `focalpoint analyze priors\|breadth\|diversity\|highlights\|sets\|attempts\|triggers\|escalation\|…` | rerun the analyses behind the design: the model's priors by cross-validation, breadth and the neutral-game ranking, distinctness under thresholds, the highlight picks and their quality weight, what armor set bonuses are worth, failed attempts in Conquests and Ops, what triggers the parts of builds played in each activity, parts whose worth depends on the content ([docs/analysis.md](docs/analysis.md)) |
 | `focalpoint import --backups DIR` | rebuild the database ([docs/importing.md](docs/importing.md)) |
 | `focalpoint info [--detailed]` | provenance, headline counts, coverage, import statistics |
 | `focalpoint mechanics import [--sources DIR]` | read the community's documentation of game mechanics (Clarity, the Destiny Data Compendium) and measured boss-damage rotations with their loadouts into the database, keyed to manifest hashes, and build the profiles of the contexts builds are evaluated in ([docs/mechanics.md](docs/mechanics.md), [docs/contexts.md](docs/contexts.md)) |
@@ -112,6 +112,7 @@ for where new features go.
 - [docs/mechanics.md](docs/mechanics.md) — the community's documentation of game mechanics: sources, the `mechanic_*` tables, coverage
 - [docs/contexts.md](docs/contexts.md) — the contexts builds are evaluated in (activity groups, activities, encounters) and their open-ended profiles
 - [docs/effects.md](docs/effects.md) — what build parts need and do: triggers, payoffs and game states read from the mechanics texts
+- [docs/escalation.md](docs/escalation.md) — synergistic escalation: loops that feed themselves past a threshold (Solar ignition chains, the Stasis shard loop, the sword engine, …), their mechanics and the evidence
 - [docs/adr/](docs/adr) — decision records (DuckDB; build identity; element count vectors; tiered distance and stat investment; ranking; highlights and the neutral game; the solo premium; partial participants; polished top builds)
 
 ## Development
