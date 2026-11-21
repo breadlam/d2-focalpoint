@@ -269,6 +269,33 @@ pub fn from_runs(db: &Database, checkpoint_share: f64) -> Result<Vec<Context>> {
         }
         out.push(c);
     }
+    // A group covers every activity of its target group, scored or not
+    // (Pantheon's Insurrection Prime and Morgeth have runs but no scored
+    // clears).
+    let mut stmt = db.conn().prepare(
+        "SELECT target_group, list(activity_hash ORDER BY activity_hash)
+         FROM activity WHERE target_group IS NOT NULL GROUP BY 1",
+    )?;
+    let members: HashMap<String, Vec<u32>> = stmt
+        .query_map([], |r| {
+            let hashes = match r.get::<_, duckdb::types::Value>(1)? {
+                duckdb::types::Value::List(v) => v
+                    .into_iter()
+                    .filter_map(|x| match x {
+                        duckdb::types::Value::UInt(h) => Some(h),
+                        _ => None,
+                    })
+                    .collect(),
+                _ => Vec::new(),
+            };
+            Ok((r.get::<_, String>(0)?, hashes))
+        })?
+        .collect::<duckdb::Result<_>>()?;
+    for c in out.iter_mut().filter(|c| c.kind == "group") {
+        if let Some(hashes) = members.get(&c.name) {
+            c.activities.clone_from(hashes);
+        }
+    }
     Ok(out)
 }
 
@@ -472,7 +499,8 @@ mod tests {
         db.conn()
             .execute_batch(
                 "INSERT INTO activity (activity_hash, name, target_group, difficulty_collection_hash) VALUES
-                    (1, 'Vault of Glass: Master', 'Master Raid', 7), (2, 'King''s Fall: Master', 'Master Raid', NULL);
+                    (1, 'Vault of Glass: Master', 'Master Raid', 7), (2, 'King''s Fall: Master', 'Master Raid', NULL),
+                    (3, 'Last Wish: Master', 'Master Raid', NULL);
                  INSERT INTO difficulty_tier VALUES (7, 0, 'Normal', 31, 10, NULL, 0), (7, 1, 'Master', 40, 40, 300, 0);
                  INSERT INTO skull (skull_hash, name, kind, description) VALUES
                     (100, 'Galvanized II', 'other', 'Combatants are harder to stun.'),
@@ -528,6 +556,11 @@ mod tests {
         assert_eq!(value(vog, "resumable"), Some(0.0));
         assert_eq!(value(&c[1], "resumable"), Some(1.0));
         assert_eq!(value(&c[0], "clears"), Some(4.0));
+        assert_eq!(
+            c[0].activities,
+            [1, 2, 3],
+            "the group covers its unscored activity too"
+        );
         let text = |c: &Context, f: &str| c.feature(f).and_then(|f| f.text.clone());
         assert_eq!(text(vog, "difficulty").as_deref(), Some("Master"));
         assert_eq!(value(vog, "activity_level"), Some(40.0));

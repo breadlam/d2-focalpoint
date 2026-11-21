@@ -203,6 +203,80 @@ CREATE OR REPLACE TABLE champion_stat (
     text        VARCHAR NOT NULL
 );
 
+-- data/difficulty.toml's entries, resolved to contexts: the Power cap,
+-- combatant Power and delta of the runs of the context's activities at the
+-- steps listed (any step when empty).
+CREATE OR REPLACE TABLE difficulty (
+    context_id       VARCHAR NOT NULL,
+    context          VARCHAR NOT NULL,
+    depth            UTINYINT NOT NULL,   -- 0 group, 1 activity: the more specific entry wins
+    steps            VARCHAR[] NOT NULL,  -- difficulty_tier.name values; empty for any
+    power_cap        INTEGER,
+    combatant_power  INTEGER,
+    power_delta      INTEGER,
+    health_tier      UTINYINT,
+    confidence       VARCHAR NOT NULL,    -- documented | dated | assumed
+    evidence         VARCHAR NOT NULL
+);
+
+-- What a skull adds to the Power cap and the combatants' Power in the runs
+-- of the context's activities that have it (Feats: +20/+20 each,
+-- Cutthroat Combat +20/+50).
+CREATE OR REPLACE TABLE difficulty_modifier (
+    context_id       VARCHAR NOT NULL,
+    skull            VARCHAR NOT NULL,    -- skull.name
+    power_cap        INTEGER NOT NULL,
+    combatant_power  INTEGER NOT NULL,
+    confidence       VARCHAR NOT NULL,
+    evidence         VARCHAR NOT NULL
+);
+
+-- Each run's Power cap, combatant Power, delta and durability: the most
+-- specific difficulty entry for its activity and step, plus its skulls'
+-- modifiers. Runs with no entry for their step are absent.
+CREATE OR REPLACE VIEW run_difficulty AS
+WITH covered AS (
+    SELECT DISTINCT ca.activity_hash
+    FROM context_activity ca JOIN difficulty d USING (context_id)
+), runs AS (
+    SELECT r.instance_id, r.activity_hash, r.skull_hashes, t.name AS step
+    FROM run r
+    JOIN covered USING (activity_hash)
+    JOIN activity a USING (activity_hash)
+    LEFT JOIN difficulty_tier t
+           ON t.collection_hash = a.difficulty_collection_hash AND t.tier = r.difficulty_tier
+), base AS (
+    SELECT u.instance_id, u.activity_hash, u.skull_hashes, d.context_id,
+           d.power_cap, d.combatant_power, d.power_delta, d.confidence
+    FROM runs u
+    JOIN context_activity ca ON ca.activity_hash = u.activity_hash
+    JOIN difficulty d ON d.context_id = ca.context_id
+    WHERE d.power_delta IS NOT NULL
+      AND (len(d.steps) = 0 OR list_contains(d.steps, u.step))
+    QUALIFY row_number() OVER (PARTITION BY u.instance_id ORDER BY d.depth DESC) = 1
+), mods AS (
+    SELECT ca.activity_hash, m.skull, m.power_cap, m.combatant_power, list(s.skull_hash) AS skulls
+    FROM difficulty_modifier m
+    JOIN context_activity ca USING (context_id)
+    JOIN skull s ON s.name = m.skull
+    GROUP BY ALL
+), adjust AS (
+    SELECT b.instance_id, sum(m.power_cap) AS cap, sum(m.combatant_power) AS combatants
+    FROM base b
+    JOIN mods m ON m.activity_hash = b.activity_hash AND list_has_any(b.skull_hashes, m.skulls)
+    GROUP BY 1
+), runs_delta AS (
+    SELECT b.instance_id, b.context_id, b.confidence,
+           b.power_cap + coalesce(j.cap, 0) AS power_cap,
+           b.combatant_power + coalesce(j.combatants, 0) AS combatant_power,
+           (b.power_delta + coalesce(j.cap, 0) - coalesce(j.combatants, 0))::INTEGER AS power_delta
+    FROM base b LEFT JOIN adjust j USING (instance_id)
+)
+SELECT r.instance_id, r.context_id, r.power_cap, r.combatant_power, r.power_delta,
+       p.damage_multiplier, 1 / p.damage_multiplier AS durability, r.confidence
+FROM runs_delta r
+LEFT JOIN power_delta p ON p.delta = greatest(-100, least(100, r.power_delta));
+
 -- Each enemy archetype's damage to kill in each context with a health tier
 -- and a durability (data/difficulty.toml).
 CREATE OR REPLACE VIEW context_enemy_health AS

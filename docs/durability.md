@@ -31,13 +31,15 @@ it is fought at:
 | `power_delta` | MossyMax's `EoF Standard` curve, relative to a delta of 0 | the damage multiplier from −100 to +100. It matches the Data Compendium's ×0.446 at −30 and ×0.144 at −50 |
 | `champion_stat` | the Data Compendium (current) | Champion health (2,200 Standard … 5,475 Master/Grandmaster), shields, regeneration and stun times, by difficulty |
 | view `context_enemy_health` | the above with each context's `health_tier` and `durability` | every archetype's health and damage to kill in every context that has both |
+| `difficulty`, `difficulty_modifier` | [`data/difficulty.toml`](../data/difficulty.toml) | Power cap, combatant Power and delta by context and step; what each Feat adds |
+| view `run_difficulty` | the above with each run's step and skulls | every run's Power cap, combatant Power, delta and durability |
 
 ## Each context's difficulty
 
 [`data/difficulty.toml`](../data/difficulty.toml) gives activity groups and
 activities a Power delta (or the Power cap and combatant Power it is the
-difference of), health tier and Champion column, with a **confidence** and
-its sources:
+difference of) at the difficulty steps it lists, health tier and Champion
+column, with a **confidence** and its sources:
 
 - **documented**: a current source states it;
 - **dated**: from before Edge of Fate, or superseded;
@@ -47,15 +49,28 @@ The import adds them as features of the context and its descendants
 ([contexts.md](contexts.md)): `power_delta`, `damage_multiplier`,
 `durability`, `power_cap`, `combatant_power`, `health_tier`,
 `champion_difficulty`, `difficulty_confidence` and `difficulty_evidence`.
-An activity's entry overrides its group's.
+An activity's entry overrides its group's, and a context takes only the
+entry for the step most of its clears are at.
 
 | Group | Delta | Durability | Confidence |
 |---|---|---|---|
 | Ultimate Conquest | −50 | ×6.97 | documented |
 | Grandmaster Conquest, Heliostat | −40 | ×3.47 | documented |
 | Ultimate Fireteam Op, Ultimate Pinnacle Op | −30 | ×2.24 | documented |
-| Master Raid, Master Dungeon | −20 | ×1.62 | dated |
-| Equilibrium, Pantheon, The Desert Perpetual | — | — | unknown |
+| Master Raid, Master Dungeon | −30 | ×2.24 | documented |
+| The Desert Perpetual, Equilibrium, Pantheon | 0; −30 with Cutthroat Combat | ×1.00; ×2.24 | documented |
+
+All are in-game values. Health tiers and Champion columns are assumed.
+
+**Runs.** The view `run_difficulty` gives each run the delta of its own step
+and skulls. Portal steps: Normal 0, Advanced −10, Expert −15, Master −20,
+Grandmaster −25, Ultimate −30. In The Desert Perpetual, Equilibrium and
+Pantheon (350/350 without Feats):
+
+- each Feat raises the Power cap and the combatants' Power by 20, so the
+  delta stays 0;
+- Cutthroat Combat adds +20/+50 (Equilibrium +30/+60), making the delta −30;
+- Pantheon's Adventure step is 400/300, players 100 over.
 
 Each Conquest is played at its own step of one ladder. In-game Power cap
 and combatant Power:
@@ -72,16 +87,15 @@ Searchlight targeted only the Grandmaster and Ultimate ones.
 
 What is known:
 
-- **Edge of Fate** (9.0.0.1 patch notes, July 2025) set the Portal's steps
-  at Normal 0, Advanced −10, Expert −20, Master −30, Grandmaster −40 and
-  Ultimate −50. It also made **red-bar enemies gain health more slowly**
-  with delta than majors and bosses ("kill-triggered perks will be more
-  useful in high-end content"). `durability` applies one curve to every
-  rank, so it overstates minors' durability; the patch notes give no
-  numbers.
-- **The Data Compendium** (current) gives **Ultimate −30** and the
-  Grandmaster Alert −50, so Ultimate was eased after launch.
-- **The recorded clears** agree with −30, not −50 (below).
+- **Edge of Fate** (9.0.0.1 patch notes, July 2025) launched the Portal's
+  steps at Normal 0 … Ultimate −50, since eased to Ultimate −30. It also
+  made **red-bar enemies gain health more slowly** with delta than majors
+  and bosses ("kill-triggered perks will be more useful in high-end
+  content"). `durability` applies one curve to every rank, so it overstates
+  minors' durability; the patch notes give no numbers.
+- **The Data Compendium** (current) gives Ultimate −30 and the Grandmaster
+  Alert −50.
+- **The recorded clears** agree (below).
 - **The manifest's difficulty ladders** give each step an activity level:
   Portal Normal 31, Advanced 33, Expert 35, Master 40, Grandmaster 45,
   Ultimate 50. For Conquests it is the combatants' Power / 10. This is the
@@ -113,17 +127,27 @@ From Normal to Ultimate the same players kill ×0.64 (Fireteam Ops) and ×0.71
 by less than that: fights are not all shooting, and minors scale less. ×6.97
 (−50) would not fit.
 
+`--skull NAME` compares clears with a modifier against the same players'
+clears without it, in the same activity at the same step. Cutthroat
+Combat (−30):
+
+| Group | Kill rate | Clear length |
+|---|---|---|
+| The Desert Perpetual | ×0.66 | ×1.01 |
+| Pantheon | ×0.54 | — |
+| Equilibrium | ×0.96 | ×1.86 |
+
+Equilibrium's waves cap the kill rate, so its clears take longer instead.
+
 The kill rate is the measure the evaluator can trust. It is what durability
 does to a build's throughput in that context.
 
 ## Gaps
 
-- **Health after Edge of Fate.** The archetype tables predate it. Health
-  tiers per Portal step and per Conquest are assumed (tier 4). Whether
-  combatant Power itself (440 against 600) changes health, beyond the
-  delta, is unknown.
-- **Feats.** Cutthroat Combat ("all combatants are tougher") has no
-  published magnitude.
+- **Health after Edge of Fate.** The archetype tables predate it, and the
+  health tiers of current content are assumed. Whether combatant Power
+  itself (350 against 600) changes health, beyond the delta, is unknown.
+  Shooting Range measurements at two deltas would settle both.
 - **Rank-dependent scaling.** Minors' curve differs from majors' and
   bosses' by an unknown amount.
 - **Enemy composition.** How many of each enemy each activity fields is

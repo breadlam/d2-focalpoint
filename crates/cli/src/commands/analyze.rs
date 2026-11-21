@@ -108,7 +108,8 @@ kill-triggered parts."
         after_help = "Each player's kill rate and deaths at every step of an activity's difficulty \
 ladder, against their own clears of the same activity at the base step; kill rates are the geometric \
 mean of the ratios. Comparing players with themselves removes the selection of stronger players into \
-harder steps. See docs/durability.md."
+harder steps. --skull NAME compares clears with and without a modifier instead, at the same step. \
+See docs/durability.md."
     )]
     Difficulty(DifficultyArgs),
     /// Parts whose lift depends on the content: pieces of synergistic escalation loops
@@ -133,9 +134,12 @@ pub struct DifficultyArgs {
     /// The step players are compared with
     #[arg(long, default_value = "Master")]
     pub base: String,
-    /// Player-activity pairs a step needs to be listed
+    /// Player-activity pairs a step (or group, with --skull) needs to be listed
     #[arg(long, default_value_t = 100)]
     pub min_pairs: i64,
+    /// Compare clears with this skull (e.g. "Feat: Cutthroat Combat") and without it instead
+    #[arg(long)]
+    pub skull: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -1929,6 +1933,35 @@ The workbook's rotations count once each (their first loadout)."
 }
 
 fn run_difficulty(db: &Database, a: &DifficultyArgs, format: Format) -> Result<()> {
+    if let Some(skull) = &a.skull {
+        println!(
+            "## Clears with {skull} against the same players' clears without it, same activity and step"
+        );
+        let header = [
+            "group",
+            "pairs",
+            "players",
+            "kill rate",
+            "deaths / 10 min",
+            "clear length",
+        ]
+        .map(String::from);
+        let rows: Vec<Vec<String>> = difficulty::with_skull(db, skull, a.min_pairs)?
+            .into_iter()
+            .map(|e| {
+                vec![
+                    e.group,
+                    thousands(e.pairs),
+                    thousands(e.players),
+                    format!("×{:.3}", e.kill_rate),
+                    format!("{:+.2}", e.deaths_10m),
+                    format!("×{:.3}", e.duration),
+                ]
+            })
+            .collect();
+        println!("{}", render(format, &header, &rows));
+        return Ok(());
+    }
     println!(
         "## Kill rate and deaths at each difficulty step, against the same players' {} clears of the same activity",
         a.base

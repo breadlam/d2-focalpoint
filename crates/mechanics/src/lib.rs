@@ -157,6 +157,10 @@ pub struct DurabilitySummary {
     pub champion_stats: usize,
     /// Contexts given a Power delta and health tier.
     pub contexts: usize,
+    /// `data/difficulty.toml` entries and modifier rows (context × skull)
+    /// written for the runs.
+    pub difficulties: usize,
+    pub modifiers: usize,
     /// `data/difficulty.toml` entries naming no context (activities
     /// Searchlight did not target).
     pub unmatched: Vec<String>,
@@ -231,11 +235,11 @@ pub fn import(
         .with_context(|| format!("parsing {}", path.display()))?,
         None => durability::difficulties(durability::DIFFICULTY)?,
     };
-    let (durable, unmatched) = durability::apply(&mut contexts, &difficulties, &tables.curve);
+    let applied = durability::apply(&mut contexts, &difficulties, &tables.curve);
 
     progress("writing");
     write(db, &read, &contexts)?;
-    write_durability(db, &tables)?;
+    write_durability(db, &tables, &applied)?;
     db.set_meta(meta_key::MECHANICS_VERSION, &MECHANICS_VERSION.to_string())?;
     db.set_meta(meta_key::MECHANICS_SOURCES, &dir.display().to_string())?;
     let now: String =
@@ -270,8 +274,10 @@ pub fn import(
             measured: tables.measured.len(),
             curve_points: tables.curve.len(),
             champion_stats: tables.champions.len(),
-            contexts: durable,
-            unmatched,
+            contexts: applied.contexts,
+            difficulties: applied.rows.len(),
+            modifiers: applied.modifiers.len(),
+            unmatched: applied.unmatched,
         },
     })
 }
@@ -400,7 +406,11 @@ fn write(db: &Database, read: &[Source], contexts: &[context::Context]) -> Resul
     Ok(())
 }
 
-fn write_durability(db: &Database, t: &durability::Tables) -> Result<()> {
+fn write_durability(
+    db: &Database,
+    t: &durability::Tables,
+    applied: &durability::Applied,
+) -> Result<()> {
     let conn = db.conn();
     conn.execute_batch("BEGIN TRANSACTION")?;
     {
@@ -425,6 +435,38 @@ fn write_durability(db: &Database, t: &durability::Tables) -> Result<()> {
         let mut curve = conn.appender("power_delta")?;
         for (d, m) in &t.curve {
             curve.append_row(params![d, m, "mossymax (EoF Standard)"])?;
+        }
+        let mut difficulty = conn.appender("difficulty")?;
+        for r in &applied.rows {
+            let steps = duckdb::types::Value::List(
+                r.steps
+                    .iter()
+                    .map(|s| duckdb::types::Value::Text(s.clone()))
+                    .collect(),
+            );
+            difficulty.append_row(params![
+                r.context_id,
+                r.context,
+                r.depth,
+                steps,
+                r.power_cap,
+                r.combatant_power,
+                r.power_delta,
+                r.health_tier,
+                r.confidence,
+                r.evidence
+            ])?;
+        }
+        let mut modifiers = conn.appender("difficulty_modifier")?;
+        for m in &applied.modifiers {
+            modifiers.append_row(params![
+                m.context_id,
+                m.skull,
+                m.power_cap,
+                m.combatant_power,
+                m.confidence,
+                m.evidence
+            ])?;
         }
         let mut champions = conn.appender("champion_stat")?;
         for c in &t.champions {

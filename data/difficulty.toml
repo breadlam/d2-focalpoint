@@ -12,6 +12,12 @@
 #
 # context: the name of an activity group or an activity. Groups' entries
 #   apply first; an activity's entry replaces the features it gives.
+# steps: the difficulty steps (manifest ladder names) the entry describes;
+#   omitted for any. A context whose clears are mostly at another step takes
+#   no features from it; runs at other steps get nothing from it (view
+#   run_difficulty).
+# [[modifier]]: what a skull (a Feat) adds to the Power cap and combatant
+#   Power in the runs that have it, in the contexts named.
 # power_cap, combatant_power: the Power players are capped at and the
 #   combatants' Power; the delta is their difference (power_delta may be
 #   given instead, or as well, when it agrees).
@@ -27,9 +33,12 @@
 # Master Grandmaster.
 #
 # What is known:
-# * Conquests (in-game, 2026-11-21): Expert −20, Master −30, Grandmaster
-#   −40, Ultimate −50; their ladder's activity level is the combatants'
-#   Power / 10 for all twelve.
+# * In-game (2026-11-21): Conquests Expert −20, Master −30, Grandmaster
+#   −40, Ultimate −50 (their ladder's activity level is the combatants'
+#   Power / 10 for all twelve); Master raids and dungeons −30; The Desert
+#   Perpetual, Equilibrium and Pantheon even, −30 with Cutthroat Combat;
+#   the Portal Normal 0, Advanced −10, Expert −15, Master −20, Grandmaster
+#   −25, Ultimate −30.
 # * Edge of Fate (9.0.0.1 patch notes, July 2025) set the Portal's steps
 #   at Normal 0, Advanced −10, Expert −20, Master −30, Grandmaster −40,
 #   Ultimate −50, and made red-bar enemies gain health more slowly with
@@ -42,6 +51,7 @@
 
 [[difficulty]]
 context = "Ultimate Fireteam Op"
+steps = ["Ultimate"]
 power_delta = -30
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
@@ -54,6 +64,7 @@ note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier
 
 [[difficulty]]
 context = "Ultimate Pinnacle Op"
+steps = ["Ultimate"]
 power_delta = -30
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
@@ -64,8 +75,80 @@ sources = [
 ]
 note = "Edge of Fate launched Ultimate at -50 (9.0.0.1 patch notes); health tier 4 and the Champion column are assumed."
 
+# The Ops below Ultimate (runs only: the contexts are at Ultimate).
+[[difficulty]]
+context = "Ultimate Fireteam Op"
+steps = ["Normal"]
+power_delta = 0
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Fireteam Op"
+steps = ["Advanced"]
+power_delta = -10
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Fireteam Op"
+steps = ["Expert"]
+power_delta = -15
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Fireteam Op"
+steps = ["Master"]
+power_delta = -20
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Fireteam Op"
+steps = ["Grandmaster"]
+power_delta = -25
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Pinnacle Op"
+steps = ["Normal"]
+power_delta = 0
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Pinnacle Op"
+steps = ["Advanced"]
+power_delta = -10
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Pinnacle Op"
+steps = ["Expert"]
+power_delta = -15
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Pinnacle Op"
+steps = ["Master"]
+power_delta = -20
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
+[[difficulty]]
+context = "Ultimate Pinnacle Op"
+steps = ["Grandmaster"]
+power_delta = -25
+confidence = "documented"
+sources = ["In-game Power delta by Portal step (recorded 2026-11-21): Normal 0, Advanced -10, Expert -15, Master -20, Grandmaster -25, Ultimate -30"]
+
 [[difficulty]]
 context = "Grandmaster Conquest"
+steps = ["Grandmaster"]
 power_delta = -40
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
@@ -75,6 +158,7 @@ note = "Health tier 4 and the Champion column are assumed."
 
 [[difficulty]]
 context = "Grandmaster Conquest: Heliostat"
+steps = ["Grandmaster"]
 power_delta = -40
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
@@ -84,6 +168,7 @@ note = "Health tier 4 and the Champion column are assumed."
 
 [[difficulty]]
 context = "Ultimate Conquest"
+steps = ["Ultimate"]
 power_delta = -50
 health_tier = 4
 champion_difficulty = "Master Grandmaster"
@@ -94,6 +179,7 @@ note = "Health tier 4 and the Champion column are assumed."
 # Each Conquest, in the order of its ladder (difficulty steps 0–11).
 [[difficulty]]
 context = "Expert Conquest: Sunless Cell: Customize"
+steps = ["Expert"]
 power_cap = 200
 combatant_power = 220
 champion_difficulty = "Expert"
@@ -103,6 +189,7 @@ note = "Not a Searchlight target; the Champion column is assumed."
 
 [[difficulty]]
 context = "Expert Conquest: Moon: Customize"
+steps = ["Expert"]
 power_cap = 250
 combatant_power = 270
 champion_difficulty = "Expert"
@@ -112,6 +199,7 @@ note = "Not a Searchlight target; the Champion column is assumed."
 
 [[difficulty]]
 context = "Master Conquest: Conductor's Keep: Customize"
+steps = ["Master"]
 power_cap = 300
 combatant_power = 330
 champion_difficulty = "Master Grandmaster"
@@ -121,6 +209,7 @@ note = "Not a Searchlight target; the Champion column is assumed."
 
 [[difficulty]]
 context = "Master Conquest: Derealize: Customize"
+steps = ["Master"]
 power_cap = 350
 combatant_power = 380
 champion_difficulty = "Master Grandmaster"
@@ -130,6 +219,7 @@ note = "Not a Searchlight target; the Champion column is assumed."
 
 [[difficulty]]
 context = "Grandmaster Conquest: Defiant EDZ: Customize"
+steps = ["Grandmaster"]
 power_cap = 400
 combatant_power = 440
 confidence = "documented"
@@ -137,6 +227,7 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Grandmaster Conquest: Arms Dealer: Customize"
+steps = ["Grandmaster"]
 power_cap = 420
 combatant_power = 460
 confidence = "documented"
@@ -144,6 +235,7 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Grandmaster Conquest: Disgraced: Customize"
+steps = ["Grandmaster"]
 power_cap = 460
 combatant_power = 500
 confidence = "documented"
@@ -151,6 +243,7 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Grandmaster Conquest: Heist Mars: Customize"
+steps = ["Grandmaster"]
 power_cap = 470
 combatant_power = 510
 confidence = "documented"
@@ -158,6 +251,7 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Grandmaster Conquest: Scarlet Keep: Customize"
+steps = ["Grandmaster"]
 power_cap = 490
 combatant_power = 530
 confidence = "documented"
@@ -165,6 +259,7 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Grandmaster Conquest: Heliostat: Customize"
+steps = ["Grandmaster"]
 power_cap = 510
 combatant_power = 550
 confidence = "documented"
@@ -172,6 +267,7 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Ultimate Conquest: Lightblade: Customize"
+steps = ["Ultimate"]
 power_cap = 530
 combatant_power = 580
 confidence = "documented"
@@ -179,6 +275,7 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Ultimate Conquest: Operation: Seraph's Shield: Customize"
+steps = ["Ultimate"]
 power_cap = 550
 combatant_power = 600
 confidence = "documented"
@@ -186,25 +283,94 @@ sources = ["In-game Conquest values, Power cap / combatant Power (recorded 2026-
 
 [[difficulty]]
 context = "Master Raid"
-power_delta = -20
+power_delta = -30
 health_tier = 4
 champion_difficulty = "Raid (Expert/Master)"
-confidence = "dated"
-sources = [
-  "MossyMax, Damage Scaling v1.9.2 (Feb 2025), Activity Types and Levels: Master Raid/Dungeon, delta cap -20",
-  "MossyMax, foetracer enemy health summary: health tier 4 = Master Raid",
-]
-note = "Edge of Fate converted legacy raids and dungeons to fixed Power difficulty, value not published."
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Master raids are fought 30 under"]
+note = "Before Edge of Fate, -20 (MossyMax, Damage Scaling v1.9.2). Health tier 4 (MossyMax: Master raids) is from before Edge of Fate."
 
 [[difficulty]]
 context = "Master Dungeon"
-power_delta = -20
+power_delta = -30
 health_tier = 4
 champion_difficulty = "Raid (Expert/Master)"
-confidence = "dated"
-sources = ["MossyMax, Damage Scaling v1.9.2 (Feb 2025), Activity Types and Levels: Master Raid/Dungeon, delta cap -20"]
-note = "MossyMax places normal dungeons at health tier 3; Master is assumed to be tier 4 like Master raids."
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Grasp of Avarice, Sundered Doctrine and every other Master dungeon checked are fought 30 under"]
+note = "Before Edge of Fate, -20 (MossyMax, Damage Scaling v1.9.2). Health tier 4 is assumed, like Master raids."
 
-# Not yet known — Equilibrium, Pantheon and The Desert Perpetual: played at
-# their "Custom" step (activity level 35, the Portal's Expert); their Feats
-# ("Cutthroat Combat": all combatants tougher) have no published magnitude.
+# The Desert Perpetual, Equilibrium and Pantheon: fought at even Power;
+# their Feats raise the Power cap and the combatants' Power together
+# (+20/+20 each) except Cutthroat Combat, which puts the combatants 30
+# over (below). In-game: The Desert Perpetual and Pantheon (Insurrection
+# Prime Revolutionary) at Standard 350/350, Cutthroat Combat 370/400, all
+# Feats 450/480; Equilibrium at Normal 350/350, Cutthroat Combat 380/410,
+# all Feats 460/490.
+
+[[difficulty]]
+context = "The Desert Perpetual"
+steps = ["Normal", "Epic", "Custom"]
+power_cap = 350
+combatant_power = 350
+health_tier = 3
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): The Desert Perpetual and its Epic at 350/350 without Feats"]
+note = "Health tier 3 (MossyMax: Legend Nightfalls and dungeons, before Edge of Fate) is assumed."
+
+[[difficulty]]
+context = "Equilibrium"
+steps = ["Normal", "Custom"]
+power_cap = 350
+combatant_power = 350
+health_tier = 3
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Equilibrium at Normal 350/350"]
+note = "Health tier 3 is assumed."
+
+[[difficulty]]
+context = "Pantheon 2.0"
+steps = ["Standard", "Custom"]
+power_cap = 350
+combatant_power = 350
+health_tier = 3
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Insurrection Prime Revolutionary at Standard 350/350"]
+note = "Health tier 3 is assumed."
+
+[[difficulty]]
+context = "Pantheon 2.0"
+steps = ["Adventure"]
+power_cap = 400
+combatant_power = 300
+health_tier = 3
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Insurrection Prime Revolutionary at Adventure 400/300"]
+note = "Players 100 over. Health tier 3 is assumed."
+
+[[modifier]]
+contexts = ["The Desert Perpetual", "Pantheon 2.0", "Equilibrium"]
+skulls = ["Feat: Battalions", "Feat: Token Limit", "Feat: Token Enabled", "Feat: Phase Limit", "Feat: Encounter Challenges"]
+power_cap = 20
+combatant_power = 20
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): each Feat of The Desert Perpetual adds +20/+20, and Equilibrium's and Pantheon's all-Feats totals agree"]
+
+[[modifier]]
+contexts = ["The Desert Perpetual", "Pantheon 2.0"]
+skulls = ["Feat: Cutthroat Combat"]
+power_cap = 20
+combatant_power = 50
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Cutthroat Combat 370/400 from 350/350"]
+note = "Same players, same activity: kill rate x0.66 in The Desert Perpetual, x0.54 in Pantheon."
+
+[[modifier]]
+contexts = ["Equilibrium"]
+skulls = ["Feat: Cutthroat Combat"]
+power_cap = 30
+combatant_power = 60
+confidence = "documented"
+sources = ["In-game Power cap / combatant Power (recorded 2026-11-21): Cutthroat Combat 380/410 from 350/350"]
+note = "Same players: kill rate x0.96, but clears take x1.86 as long."
+
+# Not yet known: the Portal's Training steps.

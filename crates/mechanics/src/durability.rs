@@ -286,6 +286,12 @@ pub struct Difficulty {
     pub power_cap: Option<i32>,
     pub combatant_power: Option<i32>,
     pub power_delta: Option<i32>,
+    /// The difficulty steps (manifest ladder names) the entry describes;
+    /// empty for any. Runs at other steps get nothing from it, and a
+    /// context whose clears are mostly at another step takes none of its
+    /// features.
+    #[serde(default)]
+    pub steps: Vec<String>,
     pub health_tier: Option<u8>,
     pub champion_difficulty: Option<String>,
     /// documented | dated | assumed
@@ -297,10 +303,39 @@ pub struct Difficulty {
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(deny_unknown_fields)]
-struct DifficultyFile {
+pub struct DifficultyFile {
     #[serde(default)]
-    difficulty: Vec<Difficulty>,
+    pub difficulty: Vec<Difficulty>,
+    #[serde(default)]
+    pub modifier: Vec<Modifier>,
 }
+
+/// What a modifier ("skull", e.g. a Feat) adds to the Power cap and the
+/// combatants' Power in the runs that have it, in the activities of the
+/// contexts named.
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Modifier {
+    pub contexts: Vec<String>,
+    /// Skull names; each adds the change.
+    pub skulls: Vec<String>,
+    pub power_cap: i32,
+    pub combatant_power: i32,
+    /// documented | dated | assumed
+    pub confidence: String,
+    #[serde(default)]
+    pub sources: Vec<String>,
+    pub note: Option<String>,
+}
+
+fn evidence(confidence: &str, sources: &[String], note: Option<&String>) -> String {
+    match note {
+        Some(n) => format!("{confidence}: {} ({n})", sources.join("; ")),
+        None => format!("{confidence}: {}", sources.join("; ")),
+    }
+}
+
+const CONFIDENCE: [&str; 3] = ["documented", "dated", "assumed"];
 
 impl Difficulty {
     /// The Power delta: as given, or the Power cap minus the combatants'
@@ -313,11 +348,19 @@ impl Difficulty {
 }
 
 /// Parse a difficulty file in the format of `data/difficulty.toml`.
-pub fn difficulties(text: &str) -> anyhow::Result<Vec<Difficulty>> {
+pub fn difficulties(text: &str) -> anyhow::Result<DifficultyFile> {
     let file: DifficultyFile = toml::from_str(text)?;
+    for m in &file.modifier {
+        anyhow::ensure!(
+            CONFIDENCE.contains(&m.confidence.as_str()),
+            "modifier {:?}: confidence {:?} is not documented, dated or assumed",
+            m.skulls,
+            m.confidence
+        );
+    }
     for d in &file.difficulty {
         anyhow::ensure!(
-            ["documented", "dated", "assumed"].contains(&d.confidence.as_str()),
+            CONFIDENCE.contains(&d.confidence.as_str()),
             "{}: confidence {:?} is not documented, dated or assumed",
             d.context,
             d.confidence
@@ -332,7 +375,7 @@ pub fn difficulties(text: &str) -> anyhow::Result<Vec<Difficulty>> {
             );
         }
     }
-    Ok(file.difficulty)
+    Ok(file)
 }
 
 /// The damage multiplier at a delta, interpolated on the curve.
@@ -375,6 +418,46 @@ pub fn read(scaling: &std::path::Path, compendium: &std::path::Path) -> anyhow::
     Ok(t)
 }
 
+/// A difficulty entry with its context resolved, as written to the
+/// `difficulty` table.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DifficultyRow {
+    pub context_id: String,
+    pub context: String,
+    /// 0 for a group, 1 for an activity: the more specific entry wins.
+    pub depth: u8,
+    pub steps: Vec<String>,
+    pub power_cap: Option<i32>,
+    pub combatant_power: Option<i32>,
+    pub power_delta: Option<i32>,
+    pub health_tier: Option<u8>,
+    pub confidence: String,
+    pub evidence: String,
+}
+
+/// A modifier for one context and skull, as written to the
+/// `difficulty_modifier` table.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ModifierRow {
+    pub context_id: String,
+    pub skull: String,
+    pub power_cap: i32,
+    pub combatant_power: i32,
+    pub confidence: String,
+    pub evidence: String,
+}
+
+/// What [`apply`] did.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct Applied {
+    /// Contexts given features.
+    pub contexts: usize,
+    /// Entries and modifiers naming no context.
+    pub unmatched: Vec<String>,
+    pub rows: Vec<DifficultyRow>,
+    pub modifiers: Vec<ModifierRow>,
+}
+
 /// Add each difficulty's features to its context and the context's
 /// descendants (a group's activities and encounters, an activity's
 /// encounters): `power_delta`, `damage_multiplier`, `durability` (its
@@ -382,13 +465,14 @@ pub fn read(scaling: &std::path::Path, compendium: &std::path::Path) -> anyhow::
 /// `champion_difficulty`, `difficulty_confidence` and
 /// `difficulty_evidence`. Groups' entries go first; an activity's own entry
 /// replaces the features it gives, keeps the rest of its group's, and adds
-/// its evidence to the group's. Returns the contexts given features and
-/// the entries naming no context.
+/// its evidence to the group's. An entry limited to steps the context's
+/// clears are mostly not at (its `difficulty` feature) gives it no
+/// features, only rows for the runs at those steps.
 pub fn apply(
     contexts: &mut [crate::context::Context],
-    difficulties: &[Difficulty],
+    file: &DifficultyFile,
     curve: &[(i32, f64)],
-) -> (usize, Vec<String>) {
+) -> Applied {
     const SOURCE: &str = "curated";
     fn set(c: &mut crate::context::Context, name: &str, value: Option<f64>, text: Option<&str>) {
         if value.is_none() && text.is_none() {
@@ -402,25 +486,70 @@ pub fn apply(
         }
     }
     let depth = |kind: &str| match kind {
-        "group" => 0,
+        "group" => 0u8,
         "activity" => 1,
         _ => 2,
     };
-    let mut matched: Vec<(usize, &Difficulty, String)> = Vec::new();
-    let mut unmatched = Vec::new();
-    for d in difficulties {
-        match contexts
+    let find = |name: &str| {
+        contexts
             .iter()
-            .filter(|c| c.name == d.context)
+            .filter(|c| c.name == name && c.kind != "encounter")
             .min_by_key(|c| depth(&c.kind))
-        {
-            Some(c) => matched.push((depth(&c.kind), d, c.id.clone())),
-            None => unmatched.push(d.context.clone()),
+            .map(|c| (depth(&c.kind), c.id.clone()))
+    };
+    let mut applied = Applied::default();
+    let mut matched: Vec<(u8, &Difficulty, String)> = Vec::new();
+    for d in &file.difficulty {
+        match find(&d.context) {
+            Some((depth, id)) => matched.push((depth, d, id)),
+            None => applied.unmatched.push(d.context.clone()),
+        }
+    }
+    for m in &file.modifier {
+        for name in &m.contexts {
+            let Some((_, id)) = find(name) else {
+                applied
+                    .unmatched
+                    .push(format!("{name} ({})", m.skulls.join(", ")));
+                continue;
+            };
+            for skull in &m.skulls {
+                applied.modifiers.push(ModifierRow {
+                    context_id: id.clone(),
+                    skull: skull.clone(),
+                    power_cap: m.power_cap,
+                    combatant_power: m.combatant_power,
+                    confidence: m.confidence.clone(),
+                    evidence: evidence(&m.confidence, &m.sources, m.note.as_ref()),
+                });
+            }
         }
     }
     matched.sort_by_key(|(depth, _, _)| *depth);
     let mut touched = std::collections::HashSet::new();
-    for (_, d, root) in matched {
+    for (depth, d, root) in matched {
+        let delta = d.delta();
+        let evidence = evidence(&d.confidence, &d.sources, d.note.as_ref());
+        applied.rows.push(DifficultyRow {
+            context_id: root.clone(),
+            context: d.context.clone(),
+            depth,
+            steps: d.steps.clone(),
+            power_cap: d.power_cap,
+            combatant_power: d.combatant_power,
+            power_delta: delta,
+            health_tier: d.health_tier,
+            confidence: d.confidence.clone(),
+            evidence: evidence.clone(),
+        });
+        let main_step = contexts
+            .iter()
+            .find(|c| c.id == root)
+            .and_then(|c| c.feature("difficulty"))
+            .and_then(|f| f.text.clone());
+        if !d.steps.is_empty() && main_step.is_some_and(|s| !d.steps.contains(&s)) {
+            continue;
+        }
         let mut ids = vec![root];
         for _ in 0..2 {
             let more: Vec<String> = contexts
@@ -432,12 +561,7 @@ pub fn apply(
                 .collect();
             ids.extend(more);
         }
-        let delta = d.delta();
         let m = delta.and_then(|delta| multiplier(curve, delta));
-        let evidence = match &d.note {
-            Some(n) => format!("{}: {} ({n})", d.confidence, d.sources.join("; ")),
-            None => format!("{}: {}", d.confidence, d.sources.join("; ")),
-        };
         for c in contexts.iter_mut().filter(|c| ids.contains(&c.id)) {
             let evidence = match c
                 .features
@@ -465,7 +589,8 @@ pub fn apply(
             touched.insert(c.id.clone());
         }
     }
-    (touched.len(), unmatched)
+    applied.contexts = touched.len();
+    applied
 }
 
 /// Health by enemy, rank and tier, for lookups.
@@ -509,7 +634,13 @@ mod tests {
 
     #[test]
     fn the_built_in_difficulty_file_parses() {
-        let d = difficulties(DIFFICULTY).unwrap();
+        let file = difficulties(DIFFICULTY).unwrap();
+        let d = &file.difficulty;
+        assert!(
+            file.modifier
+                .iter()
+                .any(|m| m.skulls.iter().any(|s| s == "Feat: Cutthroat Combat"))
+        );
         let uc = d.iter().find(|d| d.context == "Ultimate Conquest").unwrap();
         assert_eq!(
             (uc.delta(), uc.health_tier, uc.confidence.as_str()),
@@ -564,8 +695,12 @@ mod tests {
             confidence = "documented"
         "#;
         let curve = [(-50, 0.144), (-40, 0.25), (0, 1.0)];
-        let (touched, unmatched) = apply(&mut contexts, &difficulties(file).unwrap(), &curve);
-        assert_eq!((touched, unmatched), (4, vec!["Expert: C".to_string()]));
+        let applied = apply(&mut contexts, &difficulties(file).unwrap(), &curve);
+        assert_eq!(
+            (applied.contexts, applied.unmatched),
+            (4, vec!["Expert: C".to_string()])
+        );
+        assert_eq!(applied.rows.len(), 2);
         let delta = |i: usize| {
             let f: Vec<_> = contexts[i]
                 .features
@@ -602,6 +737,110 @@ mod tests {
         assert!(
             evidence.starts_with("documented") && evidence.contains(" | assumed"),
             "{evidence}"
+        );
+    }
+
+    #[test]
+    fn steps_and_modifiers() {
+        use crate::context::Context;
+        let mut pantheon = Context {
+            id: "group:pantheon".into(),
+            kind: "group".into(),
+            name: "Pantheon".into(),
+            ..Context::default()
+        };
+        pantheon.text("difficulty", Some("Custom"), "runs");
+        let mut contexts = vec![pantheon];
+        let file = r#"
+            [[difficulty]]
+            context = "Pantheon"
+            steps = ["Standard", "Custom"]
+            power_cap = 350
+            combatant_power = 350
+            confidence = "documented"
+            [[difficulty]]
+            context = "Pantheon"
+            steps = ["Adventure"]
+            power_cap = 400
+            combatant_power = 300
+            confidence = "documented"
+            [[modifier]]
+            contexts = ["Pantheon", "Nowhere"]
+            skulls = ["Feat: Cutthroat Combat"]
+            power_cap = 20
+            combatant_power = 50
+            confidence = "documented"
+        "#;
+        let applied = apply(
+            &mut contexts,
+            &difficulties(file).unwrap(),
+            &[(0, 1.0), (100, 1.1)],
+        );
+        let deltas: Vec<Option<i32>> = applied.rows.iter().map(|r| r.power_delta).collect();
+        assert_eq!(
+            deltas,
+            [Some(0), Some(100)],
+            "both written for the runs at their steps"
+        );
+        let delta = contexts[0].feature("power_delta").and_then(|f| f.value);
+        assert_eq!(
+            delta,
+            Some(0.0),
+            "the context takes its main step's entry only"
+        );
+        assert_eq!(applied.modifiers.len(), 1);
+        assert_eq!(applied.modifiers[0].combatant_power, 50);
+        assert_eq!(applied.unmatched, ["Nowhere (Feat: Cutthroat Combat)"]);
+    }
+
+    #[test]
+    fn runs_take_their_step_and_skulls() {
+        let dir = tempfile::tempdir().unwrap();
+        let db = focalpoint_db::Database::create(&dir.path().join("r.duckdb")).unwrap();
+        db.conn()
+            .execute_batch(focalpoint_db::MECHANICS_SQL)
+            .unwrap();
+        // A raid at Custom without and with Cutthroat Combat (and another
+        // Feat), at Adventure, and at a step no entry covers.
+        db.conn()
+            .execute_batch(
+                "INSERT INTO activity (activity_hash, name, target_group, difficulty_collection_hash)
+                 VALUES (1, 'Raid: Standard', 'Raid', 9);
+                 INSERT INTO difficulty_tier VALUES (9, 0, 'Adventure', 30, 1, NULL, 0),
+                     (9, 1, 'Custom', 35, 5, NULL, 0), (9, 2, 'Other', 35, 6, NULL, 0);
+                 INSERT INTO skull (skull_hash, name, kind) VALUES
+                     (7, 'Feat: Cutthroat Combat', 'feat'), (8, 'Feat: Battalions', 'feat');
+                 INSERT INTO run (instance_id, started_at, activity_hash, difficulty_tier, skull_hashes, source, is_tracked)
+                 VALUES (1, '2026-07-01', 1, 1, [], 'archive', false), (2, '2026-07-01', 1, 1, [7, 8], 'archive', false),
+                        (3, '2026-07-01', 1, 0, NULL, 'archive', false), (4, '2026-07-01', 1, 2, [], 'archive', false);
+                 INSERT INTO context_activity VALUES ('group:raid', 1);
+                 INSERT INTO difficulty VALUES
+                     ('group:raid', 'Raid', 0, ['Custom'], 350, 350, 0, 3, 'documented', ''),
+                     ('group:raid', 'Raid', 0, ['Adventure'], 400, 300, 100, 3, 'documented', '');
+                 INSERT INTO difficulty_modifier VALUES
+                     ('group:raid', 'Feat: Cutthroat Combat', 20, 50, 'documented', ''),
+                     ('group:raid', 'Feat: Battalions', 20, 20, 'documented', '');
+                 INSERT INTO power_delta VALUES (-30, 0.5, 't'), (0, 1.0, 't'), (100, 1.25, 't');",
+            )
+            .unwrap();
+        let mut stmt = db
+            .conn()
+            .prepare("SELECT instance_id, power_cap, combatant_power, power_delta, durability FROM run_difficulty ORDER BY 1")
+            .unwrap();
+        let rows: Vec<(i64, i32, i32, i32, f64)> = stmt
+            .query_map([], |r| {
+                Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?))
+            })
+            .unwrap()
+            .collect::<Result<_, _>>()
+            .unwrap();
+        assert_eq!(
+            rows,
+            [
+                (1, 350, 350, 0, 1.0),
+                (2, 390, 420, -30, 2.0),
+                (3, 400, 300, 100, 0.8)
+            ]
         );
     }
 

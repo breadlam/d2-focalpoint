@@ -166,8 +166,15 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
     );
     let d = &imported.durability;
     println!(
-        "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values; {} contexts given a Power delta and health tier",
-        d.enemies, d.health_rows, d.measured, d.curve_points, d.champion_stats, d.contexts
+        "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values; {} contexts given a Power delta and health tier; {} difficulty entries and {} modifiers for the runs (view run_difficulty)",
+        d.enemies,
+        d.health_rows,
+        d.measured,
+        d.curve_points,
+        d.champion_stats,
+        d.contexts,
+        d.difficulties,
+        d.modifiers
     );
     if !d.unmatched.is_empty() {
         println!(
