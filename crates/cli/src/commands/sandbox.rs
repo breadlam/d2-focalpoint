@@ -53,6 +53,47 @@ focalpoint sandbox unknowns              # the catalog (data/sandbox/variables.t
 focalpoint sandbox unknowns --measure    # with how to measure each in-game\n  \
 focalpoint sandbox unknowns --status guess")]
     Unknowns(UnknownsArgs),
+    /// Search for the best subclass kits for a class, element and context
+    #[command(after_help = "Examples:\n  \
+focalpoint sandbox synthesize --class Warlock --element Solar\n  \
+focalpoint sandbox synthesize --class Titan --element Stasis --top 10\n\n\
+Options are what players run (each slot's parts from the subclass's recorded builds, fragment slots by \
+aspect pair). Kits are scored by the calibrated layer of `focalpoint analyze model`: the effect against a \
+player's usual level its fit on recorded kits predicts from the model's metrics, in hard content \
+(Grandmaster Conquest) or easy (Ultimate Fireteam Op). Weapons, armor mods and most exotic armor are not \
+modelled yet.")]
+    Synthesize(SynthArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SynthArgs {
+    /// Hunter, Titan or Warlock
+    #[arg(long)]
+    pub class: String,
+
+    /// Arc, Solar, Void, Stasis, Strand or Prismatic
+    #[arg(long)]
+    pub element: String,
+
+    /// hard (Grandmaster Conquest) or easy (Ultimate Fireteam Op)
+    #[arg(long, default_value = "hard")]
+    pub context: String,
+
+    /// Kits to list
+    #[arg(long, default_value_t = 5)]
+    pub top: usize,
+
+    /// Kits kept each round
+    #[arg(long, default_value_t = 8)]
+    pub beam: usize,
+
+    /// Rounds of one-part changes
+    #[arg(long, default_value_t = 6)]
+    pub rounds: usize,
+
+    /// Parts per slot to choose from, most used first
+    #[arg(long, default_value_t = 12)]
+    pub options: usize,
 }
 
 #[derive(Debug, clap::Args)]
@@ -125,6 +166,7 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Check(a) => check(a, db, args.format),
         What::Analyze(a) => analyze(a, db, args.format),
         What::Unknowns(a) => unknowns(a, args.format),
+        What::Synthesize(a) => synthesize(a, db, args.format),
     }
 }
 
@@ -593,4 +635,93 @@ fn gain_with(
     let s = scenario(a, db, &vars)?;
     let report = Engine::new(ontology, &compiled, economy, &s).analyse(seeds);
     Ok(focalpoint_sandbox::fluid::loop_gain(&report, member))
+}
+
+fn synthesize(a: &SynthArgs, db: &Path, format: Format) -> Result<()> {
+    use focalpoint_sandbox::{synth, validate};
+    let (ontology, base, vars) = load(None)?;
+    let db = Database::open_read_only(db)?;
+    let economy = Economy::load(&db)?;
+    let model = validate::calibrate(&db, &ontology, &base, &vars, &economy, &a.context, 30.0, 8)?;
+    let modelled: std::collections::BTreeSet<String> =
+        base.modelled().iter().map(ToString::to_string).collect();
+    let options = synth::options(&db, &a.class, &a.element, a.options, &modelled)?;
+    let extras: Vec<String> = base
+        .modelled()
+        .iter()
+        .filter(|p| p.kind == "artifact_perk")
+        .map(|p| p.name.clone())
+        .collect();
+    let (best, seed) = synth::search(
+        &ontology, &base, &economy, &model, &options, &extras, a.beam, a.rounds, a.top,
+    )?;
+    let pct = |x: f64| format!("{:+.1}%", 100.0 * x.exp_m1());
+    println!(
+        "{} {} in {} content ({}), scored by the fit on {} recorded kits",
+        a.class, a.element, model.context, model.scenario.name, model.kits
+    );
+    println!(
+        "Weights on the standardised metrics: {}",
+        focalpoint_sandbox::validate::METRICS
+            .iter()
+            .zip(&model.weights)
+            .filter(|(_, w)| **w > 0.0)
+            .map(|(m, w)| format!("{m} {w:.3}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    println!(
+        "The most-used kit: predicted {} against a player's usual level",
+        pct(seed.score)
+    );
+    let header = [
+        "#",
+        "predicted",
+        "loop gain",
+        "kill capacity",
+        "damage resist",
+        "changes from the most-used kit",
+    ]
+    .map(String::from);
+    let seed_parts: std::collections::BTreeSet<&String> = seed.parts.iter().collect();
+    let rows: Vec<Vec<String>> = best
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let mine: std::collections::BTreeSet<&String> = c.parts.iter().collect();
+            let added: Vec<String> = mine
+                .difference(&seed_parts)
+                .map(|p| format!("+{p}"))
+                .collect();
+            let removed: Vec<String> = seed_parts
+                .difference(&mine)
+                .map(|p| format!("-{p}"))
+                .collect();
+            let changes = removed
+                .into_iter()
+                .chain(added)
+                .collect::<Vec<_>>()
+                .join(", ");
+            vec![
+                (i + 1).to_string(),
+                pct(c.score),
+                format!("{:.2}", c.metrics[4]),
+                format!("{:.2}", c.metrics[0]),
+                format!("{:.0}%", 100.0 * c.metrics[3]),
+                if changes.is_empty() {
+                    "(the most-used kit)".into()
+                } else {
+                    changes
+                },
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    if let Some(c) = best.first() {
+        println!("## The best kit");
+        for p in &c.parts {
+            println!("- {p}");
+        }
+    }
+    Ok(())
 }

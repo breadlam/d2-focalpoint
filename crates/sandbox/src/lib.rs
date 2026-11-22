@@ -16,6 +16,8 @@
 //!   thresholds;
 //! * [`rates`]: a build's steady state in a scenario: casts, damage,
 //!   kills, healing and buff uptimes per minute;
+//! * [`synth`]: synthesis: the best kits for a class, element and
+//!   context by the calibrated layer;
 //! * [`validate`]: the model against the recorded clears: each kit's
 //!   metrics against its measured effect, per context;
 //! * [`variables`]: the values no source gives, as variables with guesses
@@ -29,6 +31,7 @@ pub mod ontology;
 pub mod rates;
 pub mod rules;
 pub mod scenario;
+pub mod synth;
 pub mod validate;
 pub mod variables;
 

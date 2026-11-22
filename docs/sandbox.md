@@ -306,3 +306,34 @@ Not modelled yet:
 - Cooldowns and limits on rules.
 - Regeneration bonuses, which change rates rather than generations.
 - The discrete-event simulation that will check all of this.
+
+## Synthesis
+
+`focalpoint sandbox synthesize --class C --element E [--context hard|easy]`
+searches for the best subclass kits, first version (`docs/build-model.md`
+§8).
+
+- **Options** are what players run: each slot's modelled parts from the
+  subclass's recorded builds (most used first), and each aspect pair's
+  fragment slots from the builds that run it. Modelled artifact perks
+  may be added. Parts the model knows nothing about are left out: they
+  would score as nothing, which a search mistakes for safe.
+- **Score** is the calibrated layer of `analyze model` for the context:
+  the effect against a player's usual level, predicted from the model's
+  metrics by a ridge regression fitted on the recorded kits. Its weights
+  are non-negative, so more kill capacity, loop gain or survival never
+  scores worse; a metric that would get a negative weight is dropped.
+- **Search** is a beam over one-part changes from the subclass's most-used
+  kit: another super, grenade, melee or class ability, aspect or fragment,
+  or an artifact perk added.
+
+On 2026-11-22, in hard content:
+
+- **Solar Warlock:** Char, Ashes, Eruption and Solar Fulmination, with
+  Hellion and Touch of Flame: the ignition chain.
+- **Stasis Titan:** Howl of the Storm and Tectonic Harvest with Whispers
+  of Hunger and Conduction and Crystalline Converter: the shard loop.
+
+The data supports both: they are the combinations with the largest lifts
+in hard content ([escalation.md](escalation.md)). With weapons, armor mods
+and most exotic armor not modelled yet, the search is over the kit alone.

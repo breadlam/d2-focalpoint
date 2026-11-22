@@ -9,8 +9,10 @@ variables ([measurements.md](measurements.md)). Records for the subclass
 kits: 86-100% of recorded use by kind. The validation harness and a first
 calibration are in place (`analyze model`, [analysis.md](analysis.md)).
 Loop gain predicts kits' effects in hard content (+0.39) and not in easy
-content. Next: armor mods, artifact perks, exotic armor and weapons, then
-synthesis.
+content. Synthesis v1 (`sandbox synthesize`) searches subclass kits by
+the calibrated layer and finds the ignition chain and the shard loop.
+Next: armor mods, artifact perks, exotic armor and weapons; the
+discrete-event simulator.
 
 A design for modelling Destiny 2 builds as a whole,
 so the synergy evaluator and build synthesis share one model. It replaces

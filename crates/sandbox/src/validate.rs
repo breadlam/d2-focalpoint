@@ -308,6 +308,80 @@ pub fn validate(
     Ok(out)
 }
 
+/// A context's calibrated layer: the scenario with its fitted efficiency,
+/// and a ridge regression from the model's metrics to the measured effect
+/// of recorded kits. It scores builds no one has played.
+#[derive(Debug, Clone)]
+pub struct Calibrated {
+    pub context: String,
+    pub scenario: Scenario,
+    pub vars: Variables,
+    /// Each metric's mean and deviation over the recorded kits.
+    pub stats: Vec<(f64, f64)>,
+    pub weights: Vec<f64>,
+    /// The kits' mean effect.
+    pub mean: f64,
+    pub kits: usize,
+}
+
+impl Calibrated {
+    /// The predicted effect (log scale against a player's usual level) of
+    /// a build with these metrics.
+    #[must_use]
+    pub fn predict(&self, m: &[f64]) -> f64 {
+        self.mean
+            + m.iter()
+                .zip(&self.stats)
+                .zip(&self.weights)
+                .map(|((v, (mu, sd)), w)| if *sd > 1e-12 { (v - mu) / sd * w } else { 0.0 })
+                .sum::<f64>()
+    }
+}
+
+/// Calibrate a context (`hard` or `easy`, [`SCENARIOS`]) on the recorded
+/// kits with at least `min_clears` clears and `min_players` players.
+#[allow(clippy::too_many_arguments)]
+pub fn calibrate(
+    db: &Database,
+    o: &Ontology,
+    base: &RuleBase,
+    vars: &Variables,
+    e: &Economy,
+    context: &str,
+    min_clears: f64,
+    min_players: i64,
+) -> Result<Calibrated> {
+    let Some((_, name)) = SCENARIOS.iter().find(|(c, _)| *c == context) else {
+        anyhow::bail!("no calibrated context {context:?}: one of hard, easy");
+    };
+    let s = Scenario::from_context(db, name, vars)?;
+    let all = kits(db, min_clears, min_players, &artifact_perks(base))?;
+    let kits: Vec<&Kit> = all.iter().filter(|k| k.context == context).collect();
+    let mut fitted = vars.clone();
+    if let Some(x) = fit_efficiency(o, base, vars, e, &s, &kits)? {
+        fitted.set("scenario.ability_efficiency", x)?;
+    }
+    let mut x = Vec::with_capacity(kits.len());
+    let mut y = Vec::with_capacity(kits.len());
+    for k in &kits {
+        x.push(metrics(o, base, &fitted, e, &s, &k.parts)?);
+        y.push(k.effect);
+    }
+    let (z, stats) = standardise(&x);
+    let weights = ridge_monotone(&z, &y);
+    #[allow(clippy::cast_precision_loss)]
+    let mean = y.iter().sum::<f64>() / y.len().max(1) as f64;
+    Ok(Calibrated {
+        context: context.to_string(),
+        scenario: s,
+        vars: fitted,
+        stats,
+        weights,
+        mean,
+        kits: kits.len(),
+    })
+}
+
 /// A part's measured lift (`analyze escalation`) against the model's
 /// predicted change when the part is removed from the kits that run it.
 #[derive(Debug, Clone)]
@@ -453,6 +527,35 @@ fn ridge(x: &[Vec<f64>], y: &[f64]) -> Vec<f64> {
         row[k] = x.iter().zip(y).map(|(r, v)| r[i] * (v - my)).sum();
     }
     solve(a)
+}
+
+/// Ridge weights constrained to be non-negative: more of what the model
+/// measures (kill capacity, loop gain, survival) never scores worse. A
+/// metric whose weight comes out negative is dropped and the rest refitted.
+fn ridge_monotone(x: &[Vec<f64>], y: &[f64]) -> Vec<f64> {
+    let k = x.first().map_or(0, Vec::len);
+    let mut active: Vec<bool> = vec![true; k];
+    loop {
+        let cols: Vec<usize> = (0..k).filter(|j| active[*j]).collect();
+        let sub: Vec<Vec<f64>> = x
+            .iter()
+            .map(|r| cols.iter().map(|&j| r[j]).collect())
+            .collect();
+        let w = ridge(&sub, y);
+        let mut full = vec![0.0; k];
+        for (c, &j) in cols.iter().enumerate() {
+            full[j] = w[c];
+        }
+        match cols
+            .iter()
+            .zip(&w)
+            .filter(|(_, v)| **v < 0.0)
+            .min_by(|a, b| a.1.total_cmp(b.1))
+        {
+            Some((&j, _)) => active[j] = false,
+            None => return full,
+        }
+    }
 }
 
 /// Solve an augmented linear system by Gaussian elimination with partial
