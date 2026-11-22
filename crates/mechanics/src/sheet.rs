@@ -176,6 +176,15 @@ impl Grid {
             .filter(|t| !t.trim().is_empty())
     }
 
+    /// The text of the cell covering a position, merged positions included,
+    /// and the position of its anchor.
+    #[must_use]
+    pub fn covering(&self, r: usize, c: usize) -> Option<(usize, usize, &str)> {
+        let id = self.id_at(r, c)?;
+        let (ar, ac, cell) = self.anchor(id);
+        Some((ar, ac, cell.text.as_str())).filter(|(_, _, t)| !t.trim().is_empty())
+    }
+
     /// Every anchored cell with text, in reading order: `(id, row, col, cell)`.
     pub fn anchors(&self) -> impl Iterator<Item = (usize, usize, usize, &Cell)> {
         self.cells

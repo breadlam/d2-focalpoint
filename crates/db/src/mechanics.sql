@@ -392,3 +392,38 @@ CREATE OR REPLACE TABLE cooldown_subject (
     hash  UINTEGER NOT NULL,
     PRIMARY KEY (name, hash)
 );
+
+-- Court's stacking guide (focalpoint_mechanics::court): every damage buff
+-- and debuff by category. Global debuffs, empowering buffs and weapon
+-- surges take only the highest of their category; the rest multiply.
+CREATE OR REPLACE TABLE damage_buff (
+    buff_id        INTEGER PRIMARY KEY,  -- in guide order
+    category       VARCHAR NOT NULL,     -- global_debuff | empowering | surge | amplification | exotic | weapon_perk | world
+    section        VARCHAR,              -- the guide's grouping: WEAKEN SANDBOX SOURCES, ARMOR MODS, ...
+    name           VARCHAR NOT NULL,
+    kind           VARCHAR,              -- what the guide says it is: Void Hunter Super, Titan Helmet
+    detail         VARCHAR,
+    requirement    VARCHAR,
+    trigger        VARCHAR,              -- NULL for the guide's name lists (no values)
+    pve            DOUBLE,               -- the largest PvE value the guide gives
+    pve_text       VARCHAR,
+    duration_s     DOUBLE,
+    duration_text  VARCHAR,
+    notes          VARCHAR,
+    introduced     VARCHAR
+);
+
+-- PvE values by stack, where the guide lists one per stack.
+CREATE OR REPLACE TABLE damage_buff_step (
+    buff_id  INTEGER NOT NULL,
+    step     UTINYINT NOT NULL,  -- from 1
+    value    DOUBLE NOT NULL,
+    PRIMARY KEY (buff_id, step)
+);
+
+-- The manifest items each buff's name is.
+CREATE OR REPLACE TABLE damage_buff_subject (
+    buff_id  INTEGER NOT NULL,
+    hash     UINTEGER NOT NULL,
+    PRIMARY KEY (buff_id, hash)
+);

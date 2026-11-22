@@ -197,7 +197,9 @@ context, step and Feat, with the view `run_difficulty` per run; and
 `enemy_observed` (view `enemy_observed_tier`) health measured in-game
 ([durability.md](durability.md)); `ability_cooldown`, `super_damage`,
 `stat_curve`, `regen_effect`, `flat_gain` and `cooldown_subject` the energy
-economy, from the ability cooldown workbook. They are not written by the import: `focalpoint
+economy, from the ability cooldown workbook; `damage_buff`,
+`damage_buff_step` and `damage_buff_subject` damage buffs and debuffs by
+stacking category, from Court's guide. They are not written by the import: `focalpoint
 mechanics import` adds and replaces them in an existing database
 (`meta.mechanics_version`). See [mechanics.md](mechanics.md).
 

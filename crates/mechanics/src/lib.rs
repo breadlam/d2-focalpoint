@@ -15,7 +15,9 @@
 //! * [`aegis`] — `TheAegisRelic`'s boss damage workbook: measured damage
 //!   rotations and the DIM loadouts they were run with;
 //! * [`cooldowns`] — the ability cooldown workbook: cooldowns, flat-gain
-//!   factors, the Armor 3.0 stat curves, regen effects and flat gains.
+//!   factors, the Armor 3.0 stat curves, regen effects and flat gains;
+//! * [`court`] — Court's stacking guide: damage buffs and debuffs by the
+//!   category that decides how they stack.
 //!
 //! With them it builds the profiles of the [`context`]s builds are evaluated
 //! in: activity groups, activities and boss encounters.
@@ -31,6 +33,7 @@ pub mod clarity;
 pub mod compendium;
 pub mod context;
 pub mod cooldowns;
+pub mod court;
 pub mod durability;
 pub mod effects;
 pub mod names;
@@ -140,6 +143,16 @@ pub struct Imported {
     pub unplaced: Vec<String>,
     pub durability: DurabilitySummary,
     pub cooldowns: CooldownSummary,
+    pub damage_buffs: DamageBuffSummary,
+}
+
+/// What the import read from Court's stacking guide.
+#[derive(Debug, Clone, Default)]
+pub struct DamageBuffSummary {
+    /// `(category, rows, rows with a value)`.
+    pub by_category: Vec<(&'static str, usize, usize)>,
+    /// Rows naming a manifest item.
+    pub matched: usize,
 }
 
 /// What the import read from the ability cooldown workbook.
@@ -270,10 +283,14 @@ pub fn import(
     progress("cooldowns");
     let workbook = cooldowns::read(&dir.join("cooldowns"), &names)?;
 
+    progress("court");
+    let buffs = court::read(&dir.join("court"), &names)?;
+
     progress("writing");
     write(db, &read, &contexts)?;
     write_durability(db, &tables, &applied, &observed)?;
     write_cooldowns(db, &workbook)?;
+    write_damage_buffs(db, &buffs)?;
     db.set_meta(meta_key::MECHANICS_VERSION, &MECHANICS_VERSION.to_string())?;
     db.set_meta(meta_key::MECHANICS_SOURCES, &dir.display().to_string())?;
     let now: String =
@@ -323,7 +340,60 @@ pub fn import(
             unmatched: workbook.unmatched(),
             conflicts: workbook.conflicts.clone(),
         },
+        damage_buffs: DamageBuffSummary {
+            by_category: {
+                let mut by: Vec<(&'static str, usize, usize)> = Vec::new();
+                for b in &buffs {
+                    match by.iter_mut().find(|(c, _, _)| *c == b.category) {
+                        Some((_, n, v)) => {
+                            *n += 1;
+                            *v += usize::from(b.pve.is_some());
+                        }
+                        None => by.push((b.category, 1, usize::from(b.pve.is_some()))),
+                    }
+                }
+                by
+            },
+            matched: buffs.iter().filter(|b| !b.hashes.is_empty()).count(),
+        },
     })
+}
+
+fn write_damage_buffs(db: &Database, buffs: &[court::Buff]) -> Result<()> {
+    let conn = db.conn();
+    conn.execute_batch("BEGIN TRANSACTION")?;
+    {
+        let mut rows = conn.appender("damage_buff")?;
+        let mut steps = conn.appender("damage_buff_step")?;
+        let mut subjects = conn.appender("damage_buff_subject")?;
+        for (i, b) in buffs.iter().enumerate() {
+            let id = count(i);
+            rows.append_row(params![
+                id,
+                b.category,
+                b.section,
+                b.name,
+                b.kind,
+                b.detail,
+                b.requirement,
+                b.trigger,
+                b.pve,
+                b.pve_text,
+                b.duration_s,
+                b.duration_text,
+                b.notes,
+                b.introduced
+            ])?;
+            for (step, v) in b.steps.iter().enumerate() {
+                steps.append_row(params![id, count(step + 1), v])?;
+            }
+            for h in &b.hashes {
+                subjects.append_row(params![id, h])?;
+            }
+        }
+    }
+    conn.execute_batch("COMMIT")?;
+    Ok(())
 }
 
 fn write_cooldowns(db: &Database, w: &cooldowns::Workbook) -> Result<()> {

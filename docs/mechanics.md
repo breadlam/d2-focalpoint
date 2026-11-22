@@ -23,7 +23,7 @@ each source's provenance, currency and terms.
 |---|---|---|---|
 | `clarity/` | Clarity Live Database (`descriptions/clarity.json`) | yes | hash |
 | `compendium/` | Destiny Data Compendium, 22 tabs | yes (15 current tabs) | name |
-| `court/` | Court's damage buffs/debuffs stacking guide | not yet | name |
+| `court/` | Court's damage buffs/debuffs stacking guide | damage buffs by stacking category (below) | name |
 | `aegis/` | TheAegisRelic's boss damage workbook (xlsx), and the 205 DIM loadouts it links (`dim/<share id>.json`) | the ranked rotations and their loadouts | hash (loadouts) |
 | `cooldowns/` | Ability cooldowns and energy factors | the energy economy (below) | name |
 | `endgame/` | Endgame Analysis expert ratings | not yet | name |
@@ -203,11 +203,33 @@ cooldown, except Shatter Grenade, Slicewire Grenade and Phantom Surge, which
 the workbook does not list. Uses covered: class abilities and supers 100%,
 melees 97.8%, grenades 92.8%.
 
+## Damage buffs
+
+Court's stacking guide (`court/`) sorts every damage buff and debuff into
+the category that decides how it stacks. Within global debuffs (Weaken,
+Tether…), empowering buffs (Radiant, Well, Rift…) and weapon surges only
+the highest applies. Amplification, exotic, weapon perk and world
+modifiers multiply with everything. These are the sandbox vocabulary's
+`damage_categories`.
+
+| Table | What |
+|---|---|
+| `damage_buff` | one buff, or one way of getting it: `category`, the guide's `section`, `name` and `kind` ("Void Hunter Super"), `trigger`, `pve` (the largest PvE value), `duration_s`, notes, when it was introduced |
+| `damage_buff_step` | PvE values by stack, where the guide gives one per stack (surges: 10%, 17%, 22%, 25%) |
+| `damage_buff_subject` | the manifest items each name is |
+
+The guide gives values for global debuffs (43 rows), empowering buffs (24),
+surges (23) and the amplification table (27). For exotic intrinsics, weapon
+perks and world modifiers it only lists names (158 rows, `trigger` NULL);
+their values are in the Compendium. A few of the guide's names are read as
+the manifest's: Deadfall and Moebius Tether as their Shadowshot supers,
+Banner Shield as Sentinel Shield, "Arc Surge Mod" as Arc Weapon Surge. 278
+of the 304 rows name a manifest item. The rest are not items: the Weapons
+stat, world and activity modifiers, intrinsic effects, and raid mods. PvP
+values are not read.
+
 ## Next
 
-- **Damage-modifier categories** from Court's stacking guide: global
-  debuffs, empowering buffs and weapon surges do not stack within their
-  category.
 - MossyMax's combatant damage scalars by weapon archetype.
 - The boss-damage workbook's base values and per-source DPS, and expert
   ratings (a yardstick for the evaluator).

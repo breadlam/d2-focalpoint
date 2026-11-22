@@ -193,6 +193,18 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
         "Energy economy: {} abilities, {} super damage rows, {} stat curve points, {} regen effects, {} flat gains",
         c.abilities, c.supers, c.stat_points, c.regen, c.flat_gains
     );
+    let b = &imported.damage_buffs;
+    let rows: usize = b.by_category.iter().map(|(_, n, _)| n).sum();
+    println!(
+        "Damage buffs: {} rows ({}); {} name a manifest item",
+        rows,
+        b.by_category
+            .iter()
+            .map(|(c, n, v)| format!("{c} {n}, {v} valued"))
+            .collect::<Vec<_>>()
+            .join("; "),
+        b.matched
+    );
     if !c.conflicts.is_empty() {
         println!(
             "Supers whose rows disagree (the most common kept): {}",
