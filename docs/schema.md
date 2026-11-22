@@ -190,8 +190,8 @@ keyed to manifest hashes, and `mechanic_tag` (with the view
 rotations and the DIM loadouts behind them; `context`, `context_activity`,
 `context_feature` and `context_event` the profiles of the contexts builds
 are evaluated in ([contexts.md](contexts.md)); `enemy_health`,
-`enemy_measured`, `power_delta` and `champion_stat` how much damage enemies
-take to kill, with the view `context_enemy_health` per context; and
+`enemy_measured`, `power_delta`, `champion_stat` and `combatant_scalar`
+how much damage enemies take to kill, with the view `context_enemy_health` per context; and
 `difficulty` and `difficulty_modifier` the Power cap and combatant Power by
 context, step and Feat, with the view `run_difficulty` per run; and
 `enemy_observed` (view `enemy_observed_tier`) health measured in-game

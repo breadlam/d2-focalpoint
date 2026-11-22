@@ -171,12 +171,14 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
     );
     let d = &imported.durability;
     println!(
-        "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values; {} contexts given a Power delta and health tier; {} difficulty entries and {} modifiers for the runs (view run_difficulty); {} in-game health measurements",
+        "Enemy durability: {} enemy archetypes ({} health values), {} measured bosses and minibosses, {} points of the Power delta curve, {} Champion values, combatant scalars for {} weapons ({} values); {} contexts given a Power delta and health tier; {} difficulty entries and {} modifiers for the runs (view run_difficulty); {} in-game health measurements",
         d.enemies,
         d.health_rows,
         d.measured,
         d.curve_points,
         d.champion_stats,
+        d.scalar_weapons,
+        d.scalars,
         d.contexts,
         d.difficulties,
         d.modifiers,

@@ -27,7 +27,7 @@ each source's provenance, currency and terms.
 | `aegis/` | TheAegisRelic's boss damage workbook (xlsx), and the 205 DIM loadouts it links (`dim/<share id>.json`) | the ranked rotations and their loadouts | hash (loadouts) |
 | `cooldowns/` | Ability cooldowns and energy factors | the energy economy (below) | name |
 | `endgame/` | Endgame Analysis expert ratings | not yet | name |
-| `scaling/` | MossyMax's damage scaling (pre-MoT) | enemy health, measured bosses, the Power delta curve ([durability.md](durability.md)) | name |
+| `scaling/` | MossyMax's damage scaling (pre-MoT) | enemy health, measured bosses, the Power delta curve, combatant scalars ([durability.md](durability.md)) | name |
 
 Google Sheets tabs are saved as their static HTML (`htmlview/sheet`), which
 holds exactly what the sheet shows; the CSV export infers a type per column
@@ -230,6 +230,5 @@ values are not read.
 
 ## Next
 
-- MossyMax's combatant damage scalars by weapon archetype.
 - The boss-damage workbook's base values and per-source DPS, and expert
   ratings (a yardstick for the evaluator).

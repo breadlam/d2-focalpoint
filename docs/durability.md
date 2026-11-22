@@ -12,6 +12,10 @@ it is fought at:
     damage to kill = health(enemy, rank, health tier) × durability
     durability     = 1 / damage multiplier(Power delta)
 
+A weapon's damage against a rank is its baseline damage times its
+**combatant scalar** for that rank (`combatant_scalar`), so the hits to kill
+depend on the weapon as well.
+
 | Power delta | Damage multiplier | Durability |
 |---|---|---|
 | 0 | ×1.000 | ×1.00 |
@@ -30,6 +34,7 @@ it is fought at:
 | `enemy_measured` | the same | 44 measured bosses and minibosses: estimated health (damage dealt) and baseline health |
 | `power_delta` | MossyMax's `EoF Standard` curve, relative to a delta of 0 | the damage multiplier from −100 to +100. It matches the Data Compendium's ×0.446 at −30 and ×0.144 at −50 |
 | `champion_stat` | the Data Compendium (current) | Champion health (2,200 Standard … 5,475 Master/Grandmaster), shields, regeneration and stun times, by difficulty |
+| `combatant_scalar` | MossyMax's Weapon Combatant Scaling (the current tables, not the archived ones) | how much more damage each of 44 weapon archetypes and exotics that differ from theirs deals to each rank than to the PvE baseline: a Rocket Launcher ×6.0 against minors and ×4.7 against bosses, an Auto Rifle ×2.1 and ×1.07; with the scalar over the boss's and an exotic's factor over its archetype's |
 | view `context_enemy_health` | the above with each context's `health_tier` and `durability` | every archetype's health and damage to kill in every context that has both |
 | `enemy_observed`, view `enemy_observed_tier` | [`data/enemy_health.toml`](../data/enemy_health.toml): in-game measurements | health measured in-game, compared with MossyMax's tiers and the Compendium's Champion health |
 | `difficulty`, `difficulty_modifier` | [`data/difficulty.toml`](../data/difficulty.toml) | Power cap, combatant Power and delta by context and step; what each Feat adds |

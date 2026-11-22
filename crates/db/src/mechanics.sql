@@ -219,6 +219,18 @@ CREATE OR REPLACE TABLE champion_stat (
     text        VARCHAR NOT NULL
 );
 
+-- How much more damage a weapon deals to each rank of combatant than to
+-- the PvE baseline (MossyMax's "Enclave" target).
+CREATE OR REPLACE TABLE combatant_scalar (
+    source    VARCHAR NOT NULL,
+    weapon    VARCHAR NOT NULL,   -- an archetype (Auto Rifle) or a weapon that differs from it (Anarchy)
+    ammo      VARCHAR NOT NULL,   -- primary | special | heavy: the sheet's section
+    rank      VARCHAR NOT NULL,   -- vehicle | boss | champion | miniboss | elite | minor
+    scalar    DOUBLE,             -- over the baseline
+    vs_boss   DOUBLE,             -- over the boss scalar
+    modifier  DOUBLE              -- a weapon's own factor over its archetype's
+);
+
 -- data/difficulty.toml's entries, resolved to contexts: the Power cap,
 -- combatant Power and delta of the runs of the context's activities at the
 -- steps listed (any step when empty).

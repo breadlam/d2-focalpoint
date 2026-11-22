@@ -440,6 +440,86 @@ pub struct Tables {
     pub measured: Vec<Measured>,
     pub curve: Vec<(i32, f64)>,
     pub champions: Vec<ChampionStat>,
+    pub scalars: Vec<CombatantScalar>,
+}
+
+/// How much more damage a weapon deals to a rank of combatant than to the
+/// `PvE` baseline (`MossyMax`'s "Enclave" target).
+#[derive(Debug, Clone, PartialEq)]
+pub struct CombatantScalar {
+    /// An archetype ("Auto Rifle") or a weapon that differs from its
+    /// archetype ("Anarchy", "Cerberus +1").
+    pub weapon: String,
+    /// `primary`, `special` or `heavy`: the sheet's section.
+    pub ammo: &'static str,
+    /// `vehicle`, `boss`, `champion`, `miniboss`, `elite` or `minor`.
+    pub rank: &'static str,
+    pub scalar: Option<f64>,
+    /// Over the boss scalar.
+    pub vs_boss: Option<f64>,
+    /// A weapon's own factor over its archetype's.
+    pub modifier: Option<f64>,
+}
+
+const RANKS: [&str; 6] = ["vehicle", "boss", "champion", "miniboss", "elite", "minor"];
+
+/// "1.07x" or "2.75".
+fn factor(s: &str) -> Option<f64> {
+    number(s.trim().trim_end_matches('x'))
+}
+
+/// The Weapon Combatant Scaling tab. Under each section header ("Primary
+/// Weapons", "Special Weapons", "Heavy Weapons": the six ranks three times),
+/// a row per weapon gives its scalar for each rank, its modifier over its
+/// archetype where it has one, and the scalar over the boss's. The archived
+/// tables after the row marked `OLD` are not read.
+#[must_use]
+pub fn combatant_scalars(g: &Grid) -> Vec<CombatantScalar> {
+    let mut out = Vec::new();
+    let mut ammo: Option<&'static str> = None;
+    for r in 0..g.rows() {
+        if g.text(r, 0).is_some_and(|t| t.trim() == "OLD") {
+            break;
+        }
+        // The sheet's scratch calculations below the tables are numbers.
+        let Some(name) = g
+            .text(r, 1)
+            .map(str::trim)
+            .filter(|n| n.chars().any(char::is_alphabetic))
+        else {
+            continue;
+        };
+        if g.text(r, 2).map(str::trim) == Some("Vehicle") {
+            ammo = match name {
+                "Primary Weapons" => Some("primary"),
+                "Special Weapons" => Some("special"),
+                "Heavy Weapons" => Some("heavy"),
+                _ => None,
+            };
+            continue;
+        }
+        let Some(ammo) = ammo else { continue };
+        let at = |c: usize| g.text(r, c).and_then(factor);
+        let rows: Vec<CombatantScalar> = RANKS
+            .iter()
+            .enumerate()
+            .map(|(i, rank)| CombatantScalar {
+                weapon: name.to_string(),
+                ammo,
+                rank,
+                scalar: at(2 + i),
+                vs_boss: at(14 + i),
+                modifier: at(8 + i),
+            })
+            .collect();
+        if rows
+            .iter()
+            .any(|s| s.scalar.is_some() || s.modifier.is_some())
+        {
+            out.extend(rows);
+        }
+    }
+    out
 }
 
 /// Read `MossyMax`'s sheets in `scaling` and the Compendium's Game Mechanics
@@ -463,6 +543,9 @@ pub fn read(scaling: &std::path::Path, compendium: &std::path::Path) -> anyhow::
     }
     if let Some(g) = grid(compendium.join("Game_Mechanics.html"))? {
         t.champions = champions(&g);
+    }
+    if let Some(g) = grid(scaling.join("Weapon_Combatant_Scaling.html"))? {
+        t.scalars = combatant_scalars(&g);
     }
     Ok(t)
 }
@@ -679,6 +762,30 @@ mod tests {
             h.iter()
                 .any(|e| e.faction == "Taken" && e.enemy == "Knight")
         );
+    }
+
+    #[test]
+    fn combatant_scalars_read_by_section_until_the_archive() {
+        let ranks = "<td>Vehicle</td><td>Boss</td><td>Champion</td><td>Miniboss</td><td>Elite</td><td>Minor</td>";
+        let g = page(&format!(
+            "<tr><td></td><td>Primary Weapons</td>{ranks}{ranks}{ranks}</tr>
+             <tr><td></td><td>Auto Rifle</td><td>1.07x</td><td>1.07x</td><td>1.116x</td><td>1.116x</td><td>1.780x</td><td>2.100x</td><td></td><td></td><td></td><td></td><td></td><td></td><td>1.00x</td><td>1.00x</td><td>1.04x</td><td>1.04x</td><td>1.66x</td><td>1.96x</td></tr>
+             <tr><td></td><td>Exotic Primary</td><td></td><td></td><td></td><td></td><td></td><td>Minor x1.3</td><td>1.0x</td><td>1.0x</td><td>1.0x</td><td>1.0x</td><td>1.0x</td><td>1.3x</td></tr>
+             <tr><td></td><td>Heavy Weapons</td>{ranks}</tr>
+             <tr><td></td><td>Rocket Launcher</td><td>4.70x</td><td>4.70x</td><td>4.70x</td><td>4.70x</td><td>5.00x</td><td>6.00x</td></tr>
+             <tr><td></td><td>3832</td><td>1761</td><td>1490</td></tr>
+             <tr><td>OLD</td><td>Primary Weapons</td>{ranks}</tr>
+             <tr><td></td><td>Auto Rifle</td><td>1.15x</td></tr>"
+        ));
+        let s = combatant_scalars(&g);
+        assert_eq!(s.len(), 18);
+        let get = |w: &str, rank: &str| s.iter().find(|x| x.weapon == w && x.rank == rank).unwrap();
+        assert_eq!(get("Auto Rifle", "minor").scalar, Some(2.1));
+        assert_eq!(get("Auto Rifle", "elite").vs_boss, Some(1.66));
+        assert_eq!(get("Exotic Primary", "minor").modifier, Some(1.3));
+        assert_eq!(get("Exotic Primary", "minor").scalar, None);
+        let rocket = get("Rocket Launcher", "elite");
+        assert_eq!((rocket.ammo, rocket.scalar), ("heavy", Some(5.0)));
     }
 
     #[test]

@@ -188,6 +188,9 @@ pub struct DurabilitySummary {
     pub measured: usize,
     pub curve_points: usize,
     pub champion_stats: usize,
+    /// Weapons with combatant scalars, and their (weapon, rank) values.
+    pub scalar_weapons: usize,
+    pub scalars: usize,
     /// Contexts given a Power delta and health tier.
     pub contexts: usize,
     /// `data/difficulty.toml` entries and modifier rows (context × skull)
@@ -325,6 +328,13 @@ pub fn import(
             measured: tables.measured.len(),
             curve_points: tables.curve.len(),
             champion_stats: tables.champions.len(),
+            scalar_weapons: {
+                let mut w: Vec<&str> = tables.scalars.iter().map(|s| s.weapon.as_str()).collect();
+                w.sort_unstable();
+                w.dedup();
+                w.len()
+            },
+            scalars: tables.scalars.len(),
             contexts: applied.contexts,
             difficulties: applied.rows.len(),
             modifiers: applied.modifiers.len(),
@@ -686,6 +696,12 @@ fn write_durability(
                 c.difficulty,
                 c.value,
                 c.text
+            ])?;
+        }
+        let mut scalars = conn.appender("combatant_scalar")?;
+        for c in &t.scalars {
+            scalars.append_row(params![
+                "mossymax", c.weapon, c.ammo, c.rank, c.scalar, c.vs_boss, c.modifier
             ])?;
         }
     }
