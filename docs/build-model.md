@@ -354,8 +354,6 @@ exists from the start. Depth then follows coverage.
 
 ## Data still to gather
 
-- MossyMax's tabs that saved empty: Scorch damage, ability and misc damage,
-  weapon damage and DPS, perk damage.
 - The Compendium's ability and verb numbers, read as tables. Today they are
   read as text.
 - Enemy composition and pack sizes per activity, curated in

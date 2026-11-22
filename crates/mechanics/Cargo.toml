@@ -9,6 +9,7 @@ repository.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+csv.workspace = true
 duckdb.workspace = true
 focalpoint-db.workspace = true
 quick-xml.workspace = true

@@ -44,9 +44,15 @@ impl Grid {
                 .filter_map(ElementRef::wrap)
                 .filter(|e| e.value().name() == "td")
                 .collect();
-            if tds.is_empty() || tds.iter().any(|td| has_class(*td, "freezebar-cell")) {
+            // The frozen-pane handle row is all handle; a frozen column puts
+            // one handle cell in every row, which is not a column of the sheet.
+            if tds.iter().all(|td| has_class(*td, "freezebar-cell")) {
                 continue;
             }
+            let tds: Vec<ElementRef> = tds
+                .into_iter()
+                .filter(|td| !has_class(*td, "freezebar-cell"))
+                .collect();
             let mut c = 0;
             for td in tds {
                 while grid.covered(r, c) {
@@ -108,6 +114,35 @@ impl Grid {
         self.cells.push((r, c, cell));
     }
 
+    /// Read a tab's CSV export. It holds the columns the sheet hides, which
+    /// its HTML view leaves out, but drops cells whose type differs from
+    /// the rest of their column; there are no merged cells.
+    pub fn from_csv(text: &str) -> anyhow::Result<Self> {
+        let mut grid = Self::default();
+        let mut reader = csv::ReaderBuilder::new()
+            .has_headers(false)
+            .flexible(true)
+            .from_reader(text.as_bytes());
+        for (r, record) in reader.records().enumerate() {
+            let record = record?;
+            grid.at.push(Vec::with_capacity(record.len()));
+            for (c, field) in record.iter().enumerate() {
+                grid.at[r].push(Some(grid.cells.len()));
+                grid.cells.push((
+                    r,
+                    c,
+                    Cell {
+                        text: field.trim().to_string(),
+                        marks: Vec::new(),
+                        rows: 1,
+                        cols: 1,
+                    },
+                ));
+            }
+        }
+        Ok(grid)
+    }
+
     #[must_use]
     pub fn rows(&self) -> usize {
         self.at.len()
@@ -131,6 +166,16 @@ impl Grid {
         (*r, *c, cell)
     }
 
+    /// The text of the cell anchored exactly at a position, if any.
+    #[must_use]
+    pub fn text(&self, r: usize, c: usize) -> Option<&str> {
+        let id = self.id_at(r, c)?;
+        let (ar, ac, cell) = self.anchor(id);
+        ((ar, ac) == (r, c))
+            .then_some(cell.text.as_str())
+            .filter(|t| !t.trim().is_empty())
+    }
+
     /// Every anchored cell with text, in reading order: `(id, row, col, cell)`.
     pub fn anchors(&self) -> impl Iterator<Item = (usize, usize, usize, &Cell)> {
         self.cells
@@ -139,6 +184,25 @@ impl Grid {
             .filter(|(_, (_, _, cell))| !cell.text.is_empty())
             .map(|(id, (r, c, cell))| (id, *r, *c, cell))
     }
+}
+
+/// A displayed number: `1,234`, `62.5%` (as 0.625), `-7%`, `+7`, `220s`,
+/// `13,483/s`. Dashes and blanks are none.
+#[must_use]
+pub fn value(s: &str) -> Option<f64> {
+    let t = s.trim().replace(',', "");
+    let t = t.strip_suffix("/s").unwrap_or(&t);
+    let (t, scale) = match t.strip_suffix('%') {
+        Some(t) => (t, 0.01),
+        None => (t.strip_suffix('s').unwrap_or(t), 1.0),
+    };
+    let t = t.trim();
+    t.strip_prefix('+')
+        .unwrap_or(t)
+        .parse::<f64>()
+        .ok()
+        .filter(|x| x.is_finite())
+        .map(|x| x * scale)
 }
 
 fn has_class(e: ElementRef, class: &str) -> bool {
@@ -208,6 +272,44 @@ mod tests {
             <td><span style="color:#81cf82;">2 Piece | Force Absorption<br></span>Upon a <span style="color:#A481E1;">Rocket Launcher</span> kill</td></tr>
         <tr><th>3</th><td></td><td>4 Piece&nbsp;| Reactive Shock</td></tr>
     </tbody></table></body></html>"#;
+
+    #[test]
+    fn a_frozen_column_is_not_a_column() {
+        let g = Grid::parse(
+            r#"<table class="waffle"><tbody>
+            <tr><th>1</th><td>Items Affected</td><td class="freezebar-cell"></td><td>Grenade</td></tr>
+            <tr><th></th><td class="freezebar-cell"></td><td class="freezebar-cell"></td><td class="freezebar-cell"></td></tr>
+            <tr><th>2</th><td>Absolution</td><td class="freezebar-cell"></td><td>5.0%</td></tr>
+            </tbody></table>"#,
+        );
+        assert_eq!(g.rows(), 2);
+        assert_eq!(g.text(1, 0), Some("Absolution"));
+        assert_eq!(g.text(1, 1), Some("5.0%"));
+    }
+
+    #[test]
+    fn a_csv_export_reads_as_a_grid() {
+        let g = Grid::from_csv(
+            "\"\",\"Super\",\"T3 Cooldown\"\n\"\",\"Nova Bomb: Cataclysm\",\"500s\"\n",
+        )
+        .unwrap();
+        assert_eq!((g.rows(), g.cols()), (2, 3));
+        assert_eq!(g.text(0, 0), None);
+        assert_eq!(g.text(1, 1), Some("Nova Bomb: Cataclysm"));
+        assert_eq!(g.text(1, 2).and_then(value), Some(500.0));
+    }
+
+    #[test]
+    fn displayed_values_parse() {
+        assert_eq!(value("1,234"), Some(1234.0));
+        assert_eq!(value("62.5%"), Some(0.625));
+        assert_eq!(value("+7"), Some(7.0));
+        assert_eq!(value("220s"), Some(220.0));
+        assert_eq!(value("13,483/s"), Some(13483.0));
+        assert!((value("-7%").unwrap() + 0.07).abs() < 1e-12);
+        assert_eq!(value("---"), None);
+        assert_eq!(value(""), None);
+    }
 
     #[test]
     fn merged_cells_are_anchored_once_and_cover_their_span() {

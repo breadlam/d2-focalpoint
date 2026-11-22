@@ -45,21 +45,12 @@ fn number(s: &str) -> Option<f64> {
         .filter(|x| x.is_finite())
 }
 
-fn text_at(g: &Grid, r: usize, c: usize) -> Option<&str> {
-    let id = g.id_at(r, c)?;
-    let (ar, ac, cell) = g.anchor(id);
-    ((ar, ac) == (r, c))
-        .then_some(cell.text.as_str())
-        .filter(|t| !t.trim().is_empty())
-}
-
 /// The archetype table of the "foetracer enemy health summary" sheet: a
 /// header row naming the six factions, the base health class and minor
 /// and elite health at tiers 1–4 (the row above numbers the tiers).
 #[must_use]
 pub fn enemy_health(g: &Grid) -> Vec<EnemyHealth> {
-    let Some(header) =
-        (0..g.rows()).find(|&r| (0..6).all(|c| text_at(g, r, c) == Some(FACTIONS[c])))
+    let Some(header) = (0..g.rows()).find(|&r| (0..6).all(|c| g.text(r, c) == Some(FACTIONS[c])))
     else {
         return Vec::new();
     };
@@ -69,14 +60,14 @@ pub fn enemy_health(g: &Grid) -> Vec<EnemyHealth> {
     // The block of minor/elite columns after the base health class; the
     // sheet repeats the table further right, which is not read.
     for c in 7..g.cols() {
-        let rank = match text_at(g, header, c).map(str::trim) {
+        let rank = match g.text(header, c).map(str::trim) {
             Some("minor") => "minor",
             Some("elite") => "elite",
             _ => break,
         };
         let tier = (0..=c)
             .rev()
-            .find_map(|cc| text_at(g, header.saturating_sub(1), cc).and_then(number))
+            .find_map(|cc| g.text(header.saturating_sub(1), cc).and_then(number))
             .map_or(0, |t| t as u8);
         if (1..=4).contains(&tier) {
             tiers.push((c, tier, rank));
@@ -84,17 +75,17 @@ pub fn enemy_health(g: &Grid) -> Vec<EnemyHealth> {
     }
     let mut out = Vec::new();
     for r in header + 1..g.rows() {
-        let Some(base) = text_at(g, r, 6).and_then(number) else {
+        let Some(base) = g.text(r, 6).and_then(number) else {
             break;
         };
         for (c, faction) in FACTIONS.iter().enumerate() {
-            let Some(names) = text_at(g, r, c) else {
+            let Some(names) = g.text(r, c) else {
                 continue;
             };
             for name in names.split(',').map(str::trim).filter(|n| !n.is_empty()) {
                 let enemy = name.trim_end_matches("(?)").trim().to_string();
                 for &(col, tier, rank) in &tiers {
-                    if let Some(health) = text_at(g, r, col).and_then(number) {
+                    if let Some(health) = g.text(r, col).and_then(number) {
                         out.push(EnemyHealth {
                             faction: (*faction).to_string(),
                             enemy: enemy.clone(),
@@ -132,34 +123,34 @@ pub struct Measured {
 #[must_use]
 pub fn measured(g: &Grid) -> Vec<Measured> {
     let Some(header) = (0..g.rows())
-        .find(|&r| text_at(g, r, 0) == Some("Combatant Tier") && text_at(g, r, 1) == Some("Enemy"))
+        .find(|&r| g.text(r, 0) == Some("Combatant Tier") && g.text(r, 1) == Some("Enemy"))
     else {
         return Vec::new();
     };
     let mut out = Vec::new();
     let (mut kind, mut enemy) = (String::new(), String::new());
     for r in header + 1..g.rows() {
-        let activity = text_at(g, r, 2);
-        let estimated = text_at(g, r, 4).and_then(number);
+        let activity = g.text(r, 2);
+        let estimated = g.text(r, 4).and_then(number);
         if activity.is_none() && estimated.is_none() {
-            if text_at(g, r, 1).is_none() {
+            if g.text(r, 1).is_none() {
                 break;
             }
             continue;
         }
-        if let Some(k) = text_at(g, r, 0) {
+        if let Some(k) = g.text(r, 0) {
             kind = k.trim().to_string();
         }
-        if let Some(e) = text_at(g, r, 1) {
+        if let Some(e) = g.text(r, 1) {
             enemy = e.trim().to_string();
         }
         out.push(Measured {
             kind: kind.clone(),
             enemy: enemy.clone(),
             activity: activity.unwrap_or("").trim().to_string(),
-            tier: text_at(g, r, 3).and_then(number).map(|t| t as u8),
+            tier: g.text(r, 3).and_then(number).map(|t| t as u8),
             estimated,
-            baseline: text_at(g, r, 5).and_then(number),
+            baseline: g.text(r, 5).and_then(number),
         });
     }
     out
@@ -171,8 +162,8 @@ pub fn measured(g: &Grid) -> Vec<Measured> {
 #[must_use]
 pub fn power_delta(g: &Grid) -> Vec<(i32, f64)> {
     let Some((header, delta_col, eof_col)) = (0..g.rows()).find_map(|r| {
-        let d = (0..g.cols()).find(|&c| text_at(g, r, c) == Some("Power Delta"))?;
-        let e = (0..g.cols()).find(|&c| text_at(g, r, c) == Some("EoF Standard"))?;
+        let d = (0..g.cols()).find(|&c| g.text(r, c) == Some("Power Delta"))?;
+        let e = (0..g.cols()).find(|&c| g.text(r, c) == Some("EoF Standard"))?;
         Some((r, d, e))
     }) else {
         return Vec::new();
@@ -180,8 +171,8 @@ pub fn power_delta(g: &Grid) -> Vec<(i32, f64)> {
     let mut raw: Vec<(i32, f64)> = Vec::new();
     for r in header + 1..g.rows() {
         let (Some(d), Some(m)) = (
-            text_at(g, r, delta_col).and_then(number),
-            text_at(g, r, eof_col).and_then(number),
+            g.text(r, delta_col).and_then(number),
+            g.text(r, eof_col).and_then(number),
         ) else {
             continue;
         };
@@ -215,7 +206,8 @@ pub fn champions(g: &Grid) -> Vec<ChampionStat> {
     let mut r = 0;
     while r < g.rows() {
         let heading = (0..g.cols()).find_map(|c| {
-            text_at(g, r, c).filter(|t| t.trim().ends_with("Champions") && t.len() < 40)
+            g.text(r, c)
+                .filter(|t| t.trim().ends_with("Champions") && t.len() < 40)
         });
         let Some(heading) = heading.map(|h| h.trim().trim_end_matches('s').to_string()) else {
             r += 1;
@@ -223,14 +215,14 @@ pub fn champions(g: &Grid) -> Vec<ChampionStat> {
         };
         // The Information row within the next few rows.
         let Some(info) = (r + 1..(r + 4).min(g.rows()))
-            .find(|&rr| (0..g.cols()).any(|c| text_at(g, rr, c) == Some("Information")))
+            .find(|&rr| (0..g.cols()).any(|c| g.text(rr, c) == Some("Information")))
         else {
             r += 1;
             continue;
         };
         let columns: Vec<(usize, String)> = (0..g.cols())
             .filter_map(|c| {
-                let t = text_at(g, info, c)?;
+                let t = g.text(info, c)?;
                 (t != "Information" && t.len() < 40).then(|| (c, t.replace('\n', " ")))
             })
             .take(5)
@@ -238,7 +230,7 @@ pub fn champions(g: &Grid) -> Vec<ChampionStat> {
         let mut rr = info + 1;
         while rr < g.rows() {
             let Some(property) =
-                (0..columns.first().map_or(0, |c| c.0)).find_map(|c| text_at(g, rr, c))
+                (0..columns.first().map_or(0, |c| c.0)).find_map(|c| g.text(rr, c))
             else {
                 break;
             };
