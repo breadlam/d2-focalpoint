@@ -13,7 +13,9 @@
 //!   health and durability;
 //! * [`compile`]: a loadout's records and parameters;
 //! * [`fluid`]: the mean-field analysis: generations, loop gains and
-//!   thresholds.
+//!   thresholds;
+//! * [`variables`]: the values no source gives, as variables with guesses
+//!   (`data/sandbox/variables.toml`).
 
 pub mod check;
 pub mod compile;
@@ -22,6 +24,7 @@ pub mod fluid;
 pub mod ontology;
 pub mod rules;
 pub mod scenario;
+pub mod variables;
 
 use rules::RuleBase;
 
@@ -63,7 +66,8 @@ mod tests {
         let o = ontology::Ontology::builtin().unwrap();
         let base = builtin_rules().unwrap();
         assert!(!base.rules.is_empty());
-        let report = check::check(&o, &base);
+        let vars = variables::Variables::builtin().unwrap();
+        let report = check::check(&o, &base, &vars);
         assert!(report.problems.is_empty(), "{:?}", report.problems);
     }
 }

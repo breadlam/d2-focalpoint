@@ -8,6 +8,7 @@ use crate::rules::{
     Amount, CONFIDENCE, Condition, Effect, Grant, Modifier, PART_KINDS, Part, Rule, RuleBase,
     Trigger,
 };
+use crate::variables::{self, Variables};
 
 /// Something wrong with a record.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -30,6 +31,7 @@ const SIZES: [&str; 3] = ["small", "medium", "large"];
 
 struct Checker<'a> {
     o: &'a Ontology,
+    vars: &'a Variables,
     counters: &'a BTreeSet<&'a str>,
     file: &'a str,
     record: String,
@@ -39,12 +41,14 @@ struct Checker<'a> {
 impl<'a> Checker<'a> {
     fn new(
         o: &'a Ontology,
+        vars: &'a Variables,
         counters: &'a BTreeSet<&'a str>,
         file: &'a str,
         record: String,
     ) -> Self {
         Self {
             o,
+            vars,
             counters,
             file,
             record,
@@ -276,12 +280,20 @@ impl<'a> Checker<'a> {
             t.by_rank.is_some(),
             t.by_counter.is_some(),
             t.by_count.is_some(),
+            t.var.is_some(),
         ]
         .iter()
         .filter(|s| **s)
         .count();
         if n != 1 {
-            self.problem(format!("{what}: a table sets {n} of by_tier, by_rank, by_counter, by_count; it must set one"));
+            self.problem(format!("{what}: a table sets {n} of by_tier, by_rank, by_counter, by_count, var; it must set one"));
+        }
+        if let Some(v) = &t.var
+            && !self.vars.has(v)
+        {
+            self.problem(format!(
+                "{what}: variable {v:?} is not in data/sandbox/variables.toml"
+            ));
         }
         if let Some(r) = &t.by_rank {
             for k in r.keys() {
@@ -342,6 +354,9 @@ impl<'a> Checker<'a> {
             ("amount", &e.amount),
             ("stacks", &e.stacks),
             ("count", &e.count),
+            ("radius", &e.radius),
+            ("duration", &e.duration),
+            ("max_duration", &e.max_duration),
         ] {
             if let Some(a) = a {
                 self.amount(name, a);
@@ -404,10 +419,15 @@ impl<'a> Checker<'a> {
         for e in &r.effect {
             self.effect(e);
         }
-        if let Some(p) = r.chance
+        if let Some(Amount::Number(p)) = r.chance
             && !(0.0..=1.0).contains(&p)
         {
             self.problem(format!("chance {p} is not a probability"));
+        }
+        for (name, a) in [("chance", &r.chance), ("cooldown", &r.cooldown)] {
+            if let Some(a) = a {
+                self.amount(name, a);
+            }
         }
     }
 
@@ -427,6 +447,11 @@ impl<'a> Checker<'a> {
             .count();
         if ops != 1 {
             self.problem("a modifier sets one of `add`, `mul`, `set`");
+        }
+        for (name, a) in [("add", &m.add), ("mul", &m.mul), ("set", &m.set)] {
+            if let Some(a) = a {
+                self.amount(name, a);
+            }
         }
         let v = self.o.vocabulary.clone();
         if let Some(p) = &m.param
@@ -462,10 +487,10 @@ impl<'a> Checker<'a> {
 
 /// Check the rule base against the ontology.
 #[must_use]
-pub fn check(o: &Ontology, base: &RuleBase) -> Report {
+pub fn check(o: &Ontology, base: &RuleBase, vars: &Variables) -> Report {
     let mut report = Report::default();
     let counters: BTreeSet<&str> = base.counters.iter().map(|c| c.item.name.as_str()).collect();
-    let checker = |file, record| Checker::new(o, &counters, file, record);
+    let checker = |file, record| Checker::new(o, vars, &counters, file, record);
     let mut problems = Vec::new();
     for r in &base.rules {
         let mut c = checker(&r.file, format!("rule {} ({})", r.index, r.item.granted_by));
@@ -509,6 +534,31 @@ pub fn check(o: &Ontology, base: &RuleBase) -> Report {
         }
         c.sources(&g.item.sources);
         problems.append(&mut c.out);
+    }
+    // Every variable is read by something: a record, the engine, or a core
+    // verb's parameter the ontology leaves without a value; and every such
+    // parameter has its variable.
+    let mut referenced: BTreeSet<String> =
+        variables::ENGINE.iter().map(|s| (*s).to_string()).collect();
+    for st in o.states.values() {
+        for p in st.params.iter().filter(|p| p.value.is_none()) {
+            let name = format!("{}.{}", st.name, p.name);
+            if !vars.has(&name) {
+                let mut c = checker("ontology.toml", format!("parameter {name}"));
+                c.problem("no value and no variable in data/sandbox/variables.toml");
+                problems.append(&mut c.out);
+            }
+            referenced.insert(name);
+        }
+    }
+    referenced.extend(base.variables().into_iter().map(String::from));
+    for v in vars.iter() {
+        let core_param = o.has_param(&v.name);
+        if !referenced.contains(&v.name) && !core_param {
+            let mut c = checker("variables.toml", format!("variable {}", v.name));
+            c.problem("nothing reads it");
+            problems.append(&mut c.out);
+        }
     }
     problems.sort();
     report.problems = problems;
@@ -632,7 +682,11 @@ mod tests {
 
     fn messages(text: &str) -> (Vec<String>, Report) {
         let o = Ontology::builtin().unwrap();
-        let r = check(&o, &RuleBase::parse("t.toml", text).unwrap());
+        // The variables the engine and the core verbs read; the records'
+        // own belong to the built-in rule base.
+        let mut vars = Variables::builtin().unwrap();
+        vars.retain(|v| variables::ENGINE.contains(&v.name.as_str()) || o.has_param(&v.name));
+        let r = check(&o, &RuleBase::parse("t.toml", text).unwrap(), &vars);
         (r.problems.iter().map(|p| p.message.clone()).collect(), r)
     }
 

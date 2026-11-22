@@ -9,7 +9,9 @@ kinds of file, both built into the binary:
   - the **events** that rules fire on, with each event's attributes;
   - the **states**, with the core verbs' parameters and their sources.
 - **`rules/*.toml`**, the **rule base**: rules, modifiers, counters and
-  gaps.
+  gaps;
+- **`variables.toml`**, the **variables**: values no source gives, each
+  with a guess, a range and how to measure it ([measurements.md](measurements.md)).
 
 ```sh
 focalpoint sandbox check                      # check the rule base; coverage, gaps and the drafting worklist
@@ -139,7 +141,11 @@ tables:
 - `{ by_rank = { minor = ..., elite = ... } }`;
 - `{ by_counter = [[value, amount], ...], counter = "..." }`: the highest
   row reached;
-- `{ by_count = [...] }`: by copies of the granting part equipped.
+- `{ by_count = [...] }`: by copies of the granting part equipped;
+- `{ var = "howl_of_the_storm.freeze_radius" }`: a variable's value.
+
+Radii, durations, chances, cooldowns and modifiers' values are amounts
+too, so any of them can be a variable.
 
 ## Modifiers
 
@@ -190,11 +196,15 @@ missing behaviour stays visible.
 - Where sources disagree, use the better one and say so in the `note`. For
   example, Whisper of Hunger: the Compendium has +60%, Clarity has 17.5%
   and 75%.
-- Where no source gives a number, do one of the following:
-  - mark the record `assumed` and say so;
-  - leave the behaviour out and record a gap.
+- Where no source gives a number, add a variable to `variables.toml` and
+  reference it: `{ var = "part_name.quantity" }`. The variable needs:
+  - a best guess and a range;
+  - the basis of the guess;
+  - how to measure it.
 
-  Never put an invented number in as documented.
+  Mark the record `assumed`. Never put an invented number in as
+  documented. Record a gap only for behaviour the vocabulary cannot
+  express yet.
 - Write what the game does, not what it adds up to. Dawn Chorus has no rule
   for the Compendium's "Fulmination doubles the melee energy". A
   Fulmination counts as an ignition, so each enemy it damages fires the
@@ -238,12 +248,21 @@ contexts from `focalpoint mechanics import`.
     generation cover a share of the pack.
   - Every shatter leaves a Stasis Shard (a large one from an elite). A
     picked-up shard grants melee energy.
-- **What it takes without data** it lists under "Taken without data":
-  the player's policy (slides into the melee, shatters what is frozen),
-  conditions read as always or never true, unknown radii.
+- **What it takes without data.** Every value no source gives is a
+  variable ([measurements.md](measurements.md)): the player's policy
+  (`policy.*`), the scenario's priors (`scenario.*`), the economy's
+  readings (`economy.*`) and parts' unknown numbers.
+  - `analyze` lists the variables a result reads.
+  - `--set name=value` changes one for a run.
+  - `--sensitivity` shows each loop's gain at each variable's low and
+    high.
+  - Conditions it reads as always or never true are listed under "Taken
+    without data".
 
 The acceptance cases ([escalation.md](escalation.md)) come out of the
-records, with no rule written for them. Default pack and stat 100:
+records, with no rule written for them. Default pack, stats at 100, Howl of
+the Storm's freeze radius 3 m (the tests pin the variables they read, with
+stats at 70):
 
 | Loop | Build | Gain | Crosses 1 |
 |---|---|---|---|
@@ -251,17 +270,20 @@ records, with no rule written for them. Default pack and stat 100:
 | | the same, Grandmaster Conquest | 1.65 | |
 | | the same, durability 1 | 0.46 | neighbours die first |
 | | without Fulmination | 0 | 60 Scorch a neighbour, short of 100 |
-| Shard loop | Howl, Shiver Strike, Conduction | 0.96 | at 8.8 enemies a pack |
-| | + Whisper of Hunger | 1.54 | at melee stat 41.5 |
-| | + Crystalline Converter | 1.15 | at melee stat 67.9 |
-| | + both | 1.84 | at melee stat 27.4 |
+| Shard loop | Howl, Shiver Strike, Conduction | 1.00 | at 8 enemies a pack |
+| | + Whisper of Hunger | 1.60 | at melee stat 38.6 |
+| | + Crystalline Converter | 1.18 | at melee stat 64.8 |
+| | + both | 1.89 | at melee stat 25.0 |
 
 The chain's durability threshold sits between Master content (×2.24) and
-Grandmaster Conquests (×3.47), as the recorded clears suggest. The shard
-loop's numbers are lower than the 1.4 of a naive count. Shiver Strike's
-chunk scalar (0.7) and the stat (0.9 at 100) cut each shard's energy. The
-shards from frozen enemies, large ones from elites, make up the
-difference.
+Grandmaster Conquests (×3.47), as the recorded clears suggest.
+
+In the shard loop, Shiver Strike's chunk scalar (0.7) and the stat (0.9 at
+100) cut each shard's energy below a naive count's. The shards from frozen
+enemies, large ones from elites, make up the difference. Without Hunger
+or Converter the loop sits right at 1 in packs of eight. How far it gets
+past that depends on the variables, above all
+`economy.documented_chunk_scale` ([measurements.md](measurements.md)).
 
 Not modelled yet:
 

@@ -165,9 +165,9 @@ pub struct Rule {
     #[serde(deserialize_with = "one_or_many")]
     pub effect: Vec<Effect>,
     /// Seconds before the rule can fire again.
-    pub cooldown: Option<f64>,
+    pub cooldown: Option<Amount>,
     /// Probability the rule fires.
-    pub chance: Option<f64>,
+    pub chance: Option<Amount>,
     /// Times the rule can fire per activation (per super, per buff).
     pub limit: Option<u32>,
 }
@@ -247,8 +247,9 @@ pub struct Condition {
     pub min: Option<f64>,
 }
 
-/// A number, or a table of numbers by enemy tier, rank, a counter's value
-/// or the count of copies equipped.
+/// A number, a variable (`{ var = "howl_of_the_storm.freeze_radius" }`,
+/// `data/sandbox/variables.toml`), or a table of numbers by enemy tier,
+/// rank, a counter's value or the count of copies equipped.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum Amount {
@@ -269,6 +270,37 @@ pub struct AmountTable {
     pub counter: Option<String>,
     /// By copies of the granting part equipped, from one.
     pub by_count: Option<Vec<f64>>,
+    /// A variable's value.
+    pub var: Option<String>,
+}
+
+impl Amount {
+    /// A variable amount.
+    #[must_use]
+    pub fn var(name: &str) -> Self {
+        Self::Table(AmountTable {
+            var: Some(name.to_string()),
+            ..AmountTable::default()
+        })
+    }
+
+    /// The variable an amount names, if it is one.
+    #[must_use]
+    pub fn var_name(&self) -> Option<&str> {
+        match self {
+            Amount::Table(t) => t.var.as_deref(),
+            Amount::Number(_) => None,
+        }
+    }
+
+    /// A plain number or a variable's value; tables need a scenario.
+    #[must_use]
+    pub fn fixed(&self, vars: &crate::variables::Variables) -> Option<f64> {
+        match self {
+            Amount::Number(x) => Some(*x),
+            Amount::Table(t) => t.var.as_deref().and_then(|v| vars.value(v)),
+        }
+    }
 }
 
 /// One effect; exactly one of the leading (primary) fields is set.
@@ -300,10 +332,10 @@ pub struct Effect {
     pub stacks: Option<Amount>,
     pub count: Option<Amount>,
     /// Seconds.
-    pub duration: Option<f64>,
-    pub max_duration: Option<f64>,
+    pub duration: Option<Amount>,
+    pub max_duration: Option<Amount>,
     /// Metres.
-    pub radius: Option<f64>,
+    pub radius: Option<Amount>,
     /// Damage at the edge of `radius`, as a fraction.
     pub falloff: Option<f64>,
     pub size: Option<String>,
@@ -365,9 +397,9 @@ pub struct Modifier {
     pub stat: Option<String>,
     /// Restricts a damage modifier to damage of this element.
     pub element: Option<String>,
-    pub add: Option<f64>,
-    pub mul: Option<f64>,
-    pub set: Option<f64>,
+    pub add: Option<Amount>,
+    pub mul: Option<Amount>,
+    pub set: Option<Amount>,
     /// Court's category of a damage modifier.
     pub category: Option<String>,
     /// `up` to round the result up (Ember of Ashes' Scorch).
@@ -469,6 +501,59 @@ impl RuleBase {
             .collect()
     }
 
+    /// Every amount the records hold, with the grant of its record.
+    #[must_use]
+    pub fn amounts(&self) -> Vec<(&Grant, &Amount)> {
+        let mut out: Vec<(&Grant, &Option<Amount>)> = Vec::new();
+        for r in &self.rules {
+            let g = &r.item.granted_by;
+            out.extend([(g, &r.item.chance), (g, &r.item.cooldown)]);
+            for e in &r.item.effect {
+                out.extend(
+                    [
+                        &e.damage,
+                        &e.heal,
+                        &e.amount,
+                        &e.stacks,
+                        &e.count,
+                        &e.radius,
+                        &e.duration,
+                        &e.max_duration,
+                    ]
+                    .map(|a| (g, a)),
+                );
+            }
+        }
+        for m in &self.modifiers {
+            let g = &m.item.granted_by;
+            out.extend([(g, &m.item.add), (g, &m.item.mul), (g, &m.item.set)]);
+        }
+        out.into_iter()
+            .filter_map(|(g, a)| a.as_ref().map(|a| (g, a)))
+            .collect()
+    }
+
+    /// Every variable the records reference.
+    #[must_use]
+    pub fn variables(&self) -> BTreeSet<&str> {
+        self.amounts()
+            .into_iter()
+            .filter_map(|(_, a)| a.var_name())
+            .collect()
+    }
+
+    /// The parts whose records reference each variable.
+    #[must_use]
+    pub fn variable_users(&self) -> BTreeMap<&str, BTreeSet<String>> {
+        let mut out: BTreeMap<&str, BTreeSet<String>> = BTreeMap::new();
+        for (g, a) in self.amounts() {
+            if let Some(v) = a.var_name() {
+                out.entry(v).or_default().insert(g.to_string());
+            }
+        }
+        out
+    }
+
     /// The parts with behaviour of their own: each grants some record alone.
     /// A part named only in combinations (Daybreak, in Dawn Chorus's rule) is
     /// not modelled by them.
@@ -538,7 +623,7 @@ mod tests {
         assert_eq!(chorus.item.on.event, "ignition_hit");
         assert_eq!(chorus.item.effect.len(), 2);
         assert_eq!(chorus.item.confidence, "documented");
-        assert_eq!(base.modifiers[0].item.mul, Some(2.0));
+        assert_eq!(base.modifiers[0].item.mul, Some(Amount::Number(2.0)));
     }
 
     #[test]

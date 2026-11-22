@@ -18,10 +18,10 @@ on = { event = "cast", ability = "melee" }
 when = [{ movement = "slide" }]
 effect = [
   { damage = 146, element = "stasis", source = "melee", tags = ["melee", "powered_melee"] },
-  { apply = "frozen", target = "area" },
+  { apply = "frozen", target = "area", radius = { var = "howl_of_the_storm.freeze_radius" } },
   { spawn = "stasis_crystal", sizes = { small = 2, medium = 4, large = 2 }, source = "melee", tags = ["powered_melee", "crystal"], falloff = 0.45 },
 ]
-note = "The freeze radius is not stated."
+note = "No source states the freeze radius: a variable."
 
 [[modifier]]
 granted_by = "aspect:Howl of the Storm"
@@ -57,9 +57,9 @@ granted_by = "aspect:Tectonic Harvest"
 sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
 on = { event = "kill", source = "weapon" }
 when = [{ has = "frost_armor" }]
-effect = { progress = "harvest_shatter", amount = 0.2 }
+effect = { progress = "harvest_shatter", amount = { var = "tectonic_harvest.progress_per_kill" } }
 confidence = "assumed"
-note = "Kinetic and Stasis weapon kills only; the progress per kill (rising with Frost Armor stacks) is not documented."
+note = "Kinetic and Stasis weapon kills only; the progress per kill (rising with Frost Armor stacks) is not documented: a variable."
 
 [[rule]]
 granted_by = "aspect:Tectonic Harvest"
@@ -67,10 +67,15 @@ sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
 on = { event = "counter_full", counter = "harvest_shatter" }
 effect = [{ emit = "shatter", attributes = { of = "enemy" } }, { consume = "harvest_shatter" }]
 
-[[gap]]
-part = "aspect:Tectonic Harvest"
-note = "Taking damage while Frost Armor is active grants melee energy, at most once a second; no source gives the amount."
+[[rule]]
+granted_by = "aspect:Tectonic Harvest"
 sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
+on = "damage_taken"
+when = [{ has = "frost_armor" }]
+effect = { energy = "melee", amount = { var = "tectonic_harvest.damage_taken_energy" } }
+cooldown = 1
+confidence = "assumed"
+note = "No source gives the amount: a variable."
 
 # Whisper of Hunger: the sources disagree. The Compendium has +60%, additive
 # with other increases (10% -> 16%, 50% -> 80%); Clarity has 10% -> 17.5%

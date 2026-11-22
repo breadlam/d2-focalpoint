@@ -16,6 +16,8 @@ use std::collections::BTreeMap;
 use anyhow::{Context, Result, bail};
 use focalpoint_db::Database;
 
+use crate::variables::Variables;
+
 /// A combatant rank, as the scenario models it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Rank {
@@ -41,16 +43,6 @@ pub struct Pack {
     pub size: f64,
     pub radius_m: f64,
 }
-
-/// The prior pack: eight enemies within 10 m.
-pub const DEFAULT_PACK: Pack = Pack {
-    size: 8.0,
-    radius_m: 10.0,
-};
-/// The prior share of elites in a pack.
-pub const DEFAULT_ELITE_SHARE: f64 = 0.25;
-/// The stat value assumed where a scenario gives none.
-pub const DEFAULT_STAT: f64 = 100.0;
 
 /// P(d ≤ r) for the distance d between two points uniform in a disc of
 /// radius `radius`.
@@ -84,40 +76,52 @@ pub struct Scenario {
     pub durability: f64,
     /// Stat values by stat: `melee`, `grenade`, `class`, `super`, ...
     pub stats: BTreeMap<String, f64>,
+    /// A stat's value where `stats` gives none.
+    pub default_stat: f64,
     /// What the scenario takes without data.
     pub assumptions: Vec<String>,
+    /// The variables its priors came from.
+    pub variables: Vec<String>,
 }
 
 impl Scenario {
-    /// A scenario with the priors and the given health and durability.
+    /// A scenario with the priors (`scenario.*` variables) and the given
+    /// health and durability.
     #[must_use]
     pub fn new(
         name: &str,
         minor_health: Vec<f64>,
         elite_health: Vec<f64>,
         durability: f64,
+        vars: &Variables,
     ) -> Self {
         Self {
             name: name.to_string(),
-            pack: DEFAULT_PACK,
-            elite_share: DEFAULT_ELITE_SHARE,
+            pack: Pack {
+                size: vars.engine("scenario.pack_size", 8.0),
+                radius_m: vars.engine("scenario.pack_radius", 10.0),
+            },
+            elite_share: vars.engine("scenario.elite_share", 0.25),
             minor_health,
             elite_health,
             durability,
             stats: BTreeMap::new(),
-            assumptions: vec![
-                format!(
-                    "packs of {} enemies within {} m (a prior)",
-                    DEFAULT_PACK.size, DEFAULT_PACK.radius_m
-                ),
-                format!("{:.0}% elites (a prior)", DEFAULT_ELITE_SHARE * 100.0),
-            ],
+            default_stat: vars.engine("build.default_stat", 100.0),
+            assumptions: Vec::new(),
+            variables: [
+                "scenario.pack_size",
+                "scenario.pack_radius",
+                "scenario.elite_share",
+                "build.default_stat",
+            ]
+            .map(String::from)
+            .to_vec(),
         }
     }
 
     /// A context's scenario: its durability and health tier from the
     /// database (`focalpoint mechanics import`), with the priors.
-    pub fn from_context(db: &Database, query: &str) -> Result<Self> {
+    pub fn from_context(db: &Database, query: &str, vars: &Variables) -> Result<Self> {
         let mut stmt = db.conn().prepare(
             "SELECT c.context_id, c.name, d.value, t.value
              FROM context c
@@ -154,6 +158,7 @@ impl Scenario {
             health("minor")?,
             health("elite")?,
             durability,
+            vars,
         );
         s.assumptions.push(format!(
             "health tier {tier}, every archetype of a rank equally likely"
@@ -163,7 +168,7 @@ impl Scenario {
 
     /// Durability 1 (a Power delta of 0) with health tier 2: the scenario
     /// without a context.
-    pub fn baseline(db: &Database) -> Result<Self> {
+    pub fn baseline(db: &Database, vars: &Variables) -> Result<Self> {
         let mut stmt = db.conn().prepare(
             "SELECT rank, health FROM enemy_health WHERE health_tier = 2 ORDER BY health",
         )?;
@@ -176,7 +181,13 @@ impl Scenario {
                 .map(|(_, h)| *h)
                 .collect()
         };
-        let mut s = Self::new("durability 1, health tier 2", of("minor"), of("elite"), 1.0);
+        let mut s = Self::new(
+            "durability 1, health tier 2",
+            of("minor"),
+            of("elite"),
+            1.0,
+            vars,
+        );
         s.assumptions
             .push("no context: durability 1 (a Power delta of 0)".into());
         Ok(s)
@@ -185,7 +196,7 @@ impl Scenario {
     /// A stat's value, or the default.
     #[must_use]
     pub fn stat(&self, stat: &str) -> f64 {
-        self.stats.get(stat).copied().unwrap_or(DEFAULT_STAT)
+        self.stats.get(stat).copied().unwrap_or(self.default_stat)
     }
 
     /// The share of a pack of a rank.
@@ -252,6 +263,7 @@ pub(crate) mod tests {
             vec![120.0, 215.0, 323.0, 525.0],
             vec![550.0, 1470.0, 1825.0, 2250.0],
             durability,
+            &Variables::builtin().unwrap(),
         )
     }
 

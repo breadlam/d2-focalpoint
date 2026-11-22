@@ -12,6 +12,7 @@ use focalpoint_sandbox::fluid::{Engine, Event, Knob, Setup, threshold};
 use focalpoint_sandbox::ontology::Ontology;
 use focalpoint_sandbox::rules::RuleBase;
 use focalpoint_sandbox::scenario::Scenario;
+use focalpoint_sandbox::variables::Variables;
 
 use crate::output::{Format, render, thousands};
 
@@ -46,6 +47,27 @@ Parts are `kind:name`, as the rule base writes them. Each equipped ability's cas
 events (ignition). The scenario is the context's durability and health tier with the pack priors; \
 without --context, durability 1. Needs `focalpoint mechanics import`.")]
     Analyze(AnalyzeArgs),
+    /// The values no source gives: each variable's guess, range, what reads it and how to measure it
+    #[command(after_help = "Examples:\n  \
+focalpoint sandbox unknowns              # the catalog (data/sandbox/variables.toml)\n  \
+focalpoint sandbox unknowns --measure    # with how to measure each in-game\n  \
+focalpoint sandbox unknowns --status guess")]
+    Unknowns(UnknownsArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct UnknownsArgs {
+    /// Show how to measure each, and the basis of its guess
+    #[arg(long)]
+    pub measure: bool,
+
+    /// Only variables of this status: guess, estimate, measured
+    #[arg(long)]
+    pub status: Option<String>,
+
+    /// A sandbox folder (`ontology.toml`, `variables.toml`, `rules/`) instead of the built-in one
+    #[arg(long)]
+    pub dir: Option<PathBuf>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -74,9 +96,17 @@ pub struct AnalyzeArgs {
     #[arg(long)]
     pub elites: Option<f64>,
 
-    /// A stat's value, `melee=70` (repeat; 100 where not given)
+    /// A stat's value, `melee=70` (repeat; `build.default_stat` where not given)
     #[arg(long = "stat")]
     pub stats: Vec<String>,
+
+    /// Set a variable for this run, `howl_of_the_storm.freeze_radius=4` (repeat)
+    #[arg(long = "set")]
+    pub set: Vec<String>,
+
+    /// Also report each loop's gain at the low and high end of every variable it reads
+    #[arg(long)]
+    pub sensitivity: bool,
 }
 
 #[derive(Debug, clap::Args)]
@@ -94,17 +124,12 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
     match &args.what {
         What::Check(a) => check(a, db, args.format),
         What::Analyze(a) => analyze(a, db, args.format),
+        What::Unknowns(a) => unknowns(a, args.format),
     }
 }
 
 fn check(a: &CheckArgs, db: &Path, format: Format) -> Result<()> {
-    let (ontology, base) = match &a.dir {
-        Some(dir) => (
-            Ontology::parse(&std::fs::read_to_string(dir.join("ontology.toml"))?)?,
-            focalpoint_sandbox::rules_in(&dir.join("rules"))?,
-        ),
-        None => (Ontology::builtin()?, focalpoint_sandbox::builtin_rules()?),
-    };
+    let (ontology, base, vars) = load(a.dir.as_deref())?;
     println!(
         "Vocabulary: {} events, {} states. Rule base: {} rules, {} modifiers, {} counters, {} gaps; {} parts modelled",
         ontology.events.len(),
@@ -115,7 +140,7 @@ fn check(a: &CheckArgs, db: &Path, format: Format) -> Result<()> {
         base.gaps.len(),
         base.modelled().len(),
     );
-    let report = check::check(&ontology, &base);
+    let report = check::check(&ontology, &base, &vars);
     if !report.clarity_only.is_empty() {
         println!(
             "Resting on Clarity alone: {}",
@@ -217,10 +242,94 @@ fn coverage(db: &Database, base: &RuleBase, top: usize, format: Format) -> Resul
     Ok(())
 }
 
-fn scenario(a: &AnalyzeArgs, db: &Database) -> Result<Scenario> {
+/// The vocabulary, rule base and variables: built in, or from a folder.
+fn load(dir: Option<&Path>) -> Result<(Ontology, RuleBase, Variables)> {
+    Ok(match dir {
+        Some(dir) => (
+            Ontology::parse(&std::fs::read_to_string(dir.join("ontology.toml"))?)?,
+            focalpoint_sandbox::rules_in(&dir.join("rules"))?,
+            Variables::parse(&std::fs::read_to_string(dir.join("variables.toml"))?)?,
+        ),
+        None => (
+            Ontology::builtin()?,
+            focalpoint_sandbox::builtin_rules()?,
+            Variables::builtin()?,
+        ),
+    })
+}
+
+fn pairs(list: &[String], what: &str) -> Result<Vec<(String, f64)>> {
+    list.iter()
+        .map(|kv| {
+            let Some((k, v)) = kv.split_once('=') else {
+                bail!("--{what} {kv:?}: expected name=value");
+            };
+            Ok((k.trim().to_string(), v.trim().parse()?))
+        })
+        .collect()
+}
+
+fn unknowns(a: &UnknownsArgs, format: Format) -> Result<()> {
+    let (ontology, base, vars) = load(a.dir.as_deref())?;
+    let users = base.variable_users();
+    let engine: std::collections::BTreeSet<&str> = focalpoint_sandbox::variables::ENGINE
+        .iter()
+        .copied()
+        .collect();
+    let read_by = |name: &str| -> String {
+        let mut who: Vec<String> = users
+            .get(name)
+            .map(|u| u.iter().cloned().collect())
+            .unwrap_or_default();
+        if engine.contains(name) {
+            who.push("the engine".into());
+        }
+        if ontology.has_param(name) {
+            who.push("the core verb".into());
+        }
+        who.join(", ")
+    };
+    let rows: Vec<&focalpoint_sandbox::variables::Variable> = vars
+        .iter()
+        .filter(|v| a.status.as_ref().is_none_or(|s| *s == v.status))
+        .collect();
+    let mut header = vec!["variable", "guess", "range", "unit", "status", "read by"];
+    if a.measure {
+        header.extend(["basis", "how to measure"]);
+    }
+    let header: Vec<String> = header.into_iter().map(String::from).collect();
+    let table: Vec<Vec<String>> = rows
+        .iter()
+        .map(|v| {
+            let mut row = vec![
+                v.name.clone(),
+                format!("{}", v.guess),
+                format!("{}–{}", v.low, v.high),
+                v.unit.clone(),
+                v.status.clone(),
+                read_by(&v.name),
+            ];
+            if a.measure {
+                row.extend([v.basis.clone(), v.measure.clone()]);
+            }
+            row
+        })
+        .collect();
+    println!(
+        "{} variables ({} guesses, {} estimates, {} measured)",
+        rows.len(),
+        rows.iter().filter(|v| v.status == "guess").count(),
+        rows.iter().filter(|v| v.status == "estimate").count(),
+        rows.iter().filter(|v| v.status == "measured").count()
+    );
+    println!("{}", render(format, &header, &table));
+    Ok(())
+}
+
+fn scenario(a: &AnalyzeArgs, db: &Database, vars: &Variables) -> Result<Scenario> {
     let mut s = match &a.context {
-        Some(q) => Scenario::from_context(db, q)?,
-        None => Scenario::baseline(db)?,
+        Some(q) => Scenario::from_context(db, q, vars)?,
+        None => Scenario::baseline(db, vars)?,
     };
     if let Some(n) = a.pack {
         s.pack.size = n;
@@ -231,18 +340,17 @@ fn scenario(a: &AnalyzeArgs, db: &Database) -> Result<Scenario> {
     if let Some(e) = a.elites {
         s.elite_share = e;
     }
-    for kv in &a.stats {
-        let Some((k, v)) = kv.split_once('=') else {
-            bail!("--stat {kv:?}: expected name=value");
-        };
-        s.stats.insert(k.trim().to_string(), v.trim().parse()?);
+    for (k, v) in pairs(&a.stats, "stat")? {
+        s.stats.insert(k, v);
     }
     Ok(s)
 }
 
 fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
-    let ontology = Ontology::builtin()?;
-    let base = focalpoint_sandbox::builtin_rules()?;
+    let (ontology, base, mut vars) = load(None)?;
+    for (k, v) in pairs(&a.set, "set")? {
+        vars.set(&k, v)?;
+    }
     let db = Database::open_read_only(db)?;
     let economy = Economy::load(&db)?;
     let build = Build::parse(a.parts.iter().map(String::as_str))?;
@@ -252,8 +360,8 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
         .filter(|p| !base.parts().contains(p))
         .map(ToString::to_string)
         .collect();
-    let compiled = compile(&ontology, &base, &build);
-    let s = scenario(a, &db)?;
+    let compiled = compile(&ontology, &base, &build, &vars);
+    let s = scenario(a, &db, &vars)?;
     let mut seeds: Vec<Event> = [
         ("grenade", "grenade"),
         ("melee", "melee"),
@@ -379,5 +487,77 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
     for n in s.assumptions.iter().chain(report.notes.iter()) {
         println!("- {n}");
     }
+    let read: Vec<&focalpoint_sandbox::variables::Variable> = report
+        .variables
+        .iter()
+        .filter_map(|n| vars.get(n))
+        .collect();
+    if !read.is_empty() {
+        println!("## Variables this result reads (`focalpoint sandbox unknowns`)");
+        let mut header = vec!["variable", "value", "status"];
+        if a.sensitivity {
+            header.extend(["at low", "at high"]);
+        }
+        let header: Vec<String> = header.into_iter().map(String::from).collect();
+        let main = report.loops.first().map(|l| l.members[0].clone());
+        let rows: Vec<Vec<String>> = read
+            .iter()
+            .map(|v| {
+                let value = vars.overrides().get(&v.name).copied().unwrap_or(v.guess);
+                let mut row = vec![
+                    v.name.clone(),
+                    format!("{value} {}", v.unit),
+                    v.status.clone(),
+                ];
+                if a.sensitivity {
+                    for x in [v.low, v.high] {
+                        row.push(match &main {
+                            Some(member) => {
+                                let gain = gain_with(
+                                    &ontology, &base, &build, &vars, &economy, a, &db, &seeds,
+                                    &v.name, x, member,
+                                );
+                                format!(
+                                    "{x} → {}",
+                                    gain.map_or_else(|e| e.to_string(), |g| format!("{g:.2}"))
+                                )
+                            }
+                            None => "—".into(),
+                        });
+                    }
+                }
+                row
+            })
+            .collect();
+        println!("{}", render(format, &header, &rows));
+        if a.sensitivity
+            && let Some(m) = &main
+        {
+            println!("(gains are of the loop through {m})");
+        }
+    }
     Ok(())
+}
+
+/// The gain of the loop through `member` with one variable set to `x`.
+#[allow(clippy::too_many_arguments)]
+fn gain_with(
+    ontology: &Ontology,
+    base: &RuleBase,
+    build: &Build,
+    vars: &Variables,
+    economy: &Economy,
+    a: &AnalyzeArgs,
+    db: &Database,
+    seeds: &[Event],
+    name: &str,
+    x: f64,
+    member: &str,
+) -> Result<f64> {
+    let mut vars = vars.clone();
+    vars.set(name, x)?;
+    let compiled = compile(ontology, base, build, &vars);
+    let s = scenario(a, db, &vars)?;
+    let report = Engine::new(ontology, &compiled, economy, &s).analyse(seeds);
+    Ok(focalpoint_sandbox::fluid::loop_gain(&report, member))
 }

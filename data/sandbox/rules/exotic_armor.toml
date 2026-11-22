@@ -13,9 +13,9 @@ effect = { emit = "ignition", attributes = { by = "super" } }
 granted_by = "armor:Dawn Chorus"
 sources = ["compendium:Exotic Armors/Armor/Dawn Chorus"]
 on = { event = "tick", state = "scorch" }
-effect = { energy = "melee", amount = 0.05 }
+effect = { energy = "melee", amount = { var = "dawn_chorus.scorch_tick_energy" } }
 confidence = "assumed"
-note = "The Compendium gives \"5?%\" per Scorch tick."
+note = "The Compendium gives \"5?%\" per Scorch tick: a variable."
 
 [[modifier]]
 granted_by = "armor:Dawn Chorus"

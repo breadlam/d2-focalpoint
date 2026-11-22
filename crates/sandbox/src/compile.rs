@@ -9,6 +9,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::ontology::Ontology;
 use crate::rules::{Modifier, Part, Rule, RuleBase};
+use crate::variables::Variables;
 
 /// A loadout: the parts equipped.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -41,6 +42,8 @@ impl Build {
 #[derive(Debug, Clone)]
 pub struct Compiled<'a> {
     pub build: Build,
+    /// The variables the build reads (`data/sandbox/variables.toml`).
+    pub vars: &'a Variables,
     pub rules: Vec<&'a Rule>,
     /// Modifiers with conditions, on damage or on stats.
     pub modifiers: Vec<&'a Modifier>,
@@ -52,7 +55,12 @@ pub struct Compiled<'a> {
 
 /// Compile a build against the rule base.
 #[must_use]
-pub fn compile<'a>(o: &Ontology, base: &'a RuleBase, build: &Build) -> Compiled<'a> {
+pub fn compile<'a>(
+    o: &Ontology,
+    base: &'a RuleBase,
+    build: &Build,
+    vars: &'a Variables,
+) -> Compiled<'a> {
     let granted = base.granted(&build.parts);
     let mut by_param: BTreeMap<&str, Vec<&Modifier>> = BTreeMap::new();
     let mut modifiers = Vec::new();
@@ -65,15 +73,18 @@ pub fn compile<'a>(o: &Ontology, base: &'a RuleBase, build: &Build) -> Compiled<
     let mut params = BTreeMap::new();
     let mut round_up = BTreeSet::new();
     for (param, mods) in by_param {
-        let sets = mods.iter().filter_map(|m| m.set);
-        let mut v = sets
+        let num = |a: &Option<crate::rules::Amount>| a.as_ref().and_then(|a| a.fixed(vars));
+        let mut v = mods
+            .iter()
+            .filter_map(|m| num(&m.set))
             .fold(None, |acc: Option<f64>, x| {
                 Some(acc.map_or(x, |a| a.max(x)))
             })
             .or_else(|| o.param(param))
+            .or_else(|| vars.value(param))
             .unwrap_or(0.0);
-        v += mods.iter().filter_map(|m| m.add).sum::<f64>();
-        v *= mods.iter().filter_map(|m| m.mul).product::<f64>();
+        v += mods.iter().filter_map(|m| num(&m.add)).sum::<f64>();
+        v *= mods.iter().filter_map(|m| num(&m.mul)).product::<f64>();
         params.insert(param.to_string(), v);
         if mods.iter().any(|m| m.round.as_deref() == Some("up")) {
             round_up.insert(param.to_string());
@@ -81,6 +92,7 @@ pub fn compile<'a>(o: &Ontology, base: &'a RuleBase, build: &Build) -> Compiled<
     }
     Compiled {
         build: build.clone(),
+        vars,
         rules: granted.rules,
         modifiers,
         counters: base
@@ -94,10 +106,15 @@ pub fn compile<'a>(o: &Ontology, base: &'a RuleBase, build: &Build) -> Compiled<
 }
 
 impl Compiled<'_> {
-    /// A parameter after the build's passive modifiers, or the ontology's.
+    /// A parameter after the build's passive modifiers, or the ontology's,
+    /// or (where the ontology has no value) its variable's.
     #[must_use]
     pub fn param(&self, o: &Ontology, path: &str) -> Option<f64> {
-        self.params.get(path).copied().or_else(|| o.param(path))
+        self.params
+            .get(path)
+            .copied()
+            .or_else(|| o.param(path))
+            .or_else(|| self.vars.value(path))
     }
 
     /// Whether the build modifies a parameter at all.
@@ -148,7 +165,12 @@ impl Compiled<'_> {
             if m.element.is_some() && element.is_none() {
                 continue;
             }
-            let factor = 1.0 + p.get(i).copied().unwrap_or(1.0) * (m.mul.unwrap_or(1.0) - 1.0);
+            let mul = m
+                .mul
+                .as_ref()
+                .and_then(|a| a.fixed(self.vars))
+                .unwrap_or(1.0);
+            let factor = 1.0 + p.get(i).copied().unwrap_or(1.0) * (mul - 1.0);
             match m.category.as_deref() {
                 Some(c) if o.vocabulary.exclusive_categories.iter().any(|x| x == c) => {
                     let e = exclusive.entry(c).or_insert(1.0);
@@ -176,7 +198,8 @@ mod tests {
             "armor:Dawn Chorus",
         ])
         .unwrap();
-        let c = compile(&o, &base, &b);
+        let vars = Variables::builtin().unwrap();
+        let c = compile(&o, &base, &b, &vars);
         assert!((c.param(&o, "stasis_shard.melee_energy_small").unwrap() - 0.16).abs() < 1e-12);
         assert_eq!(c.param(&o, "frost_armor.max_stacks"), Some(7.0));
         assert!((c.applied_stacks(&o, "scorch", 40.0) - 60.0).abs() < 1e-12);

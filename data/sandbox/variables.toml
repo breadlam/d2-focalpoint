@@ -1,0 +1,228 @@
+# Values the build model needs and no source gives exactly (docs/sandbox.md,
+# docs/measurements.md). Each is a variable: the model runs on its `guess`,
+# any run can set it (`focalpoint sandbox analyze --set name=value`), and
+# `focalpoint sandbox unknowns` lists them with what each affects and how
+# sensitive results are to it.
+#
+#   name      a core verb's parameter (`shatter.radius`, completing the
+#             ontology where it has no value), a part's number
+#             (`howl_of_the_storm.freeze_radius`, which records reference
+#             as `{ var = "..." }`), the player's policy (`policy.*`), a
+#             scenario prior (`scenario.*`) or a reading of the economy
+#             (`economy.*`)
+#   guess     the value used until measured; `low`..`high` the plausible range
+#   status    guess: no source gives it; estimate: a source gives it
+#             approximately, for an older version, or for something
+#             similar; measured: in-game, with the date in `basis`
+#   basis     why this guess
+#   measure   how to measure it in-game
+#
+# Keep each guess honest: a range wide enough to hold the true value, and a
+# basis that says what it rests on.
+
+# ------------------------------------------------- core verbs' parameters
+
+[[variable]]
+name = "shatter.radius"
+guess = 5.0
+low = 3.0
+high = 8.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\". Shatter is a small burst around the frozen enemy; Stasis Crystal shatters reach 8 m with falloff, and enemy shatters look smaller."
+measure = "Freeze two enemies a known distance apart (Shooting Range markers) and shatter one; repeat at 3, 5 and 8 m and note when the other takes shatter damage."
+sources = ["compendium:Stasis/Glossary/Shatter"]
+
+[[variable]]
+name = "stasis_shard.pickup_radius"
+guess = 1.5
+low = 1.0
+high = 3.0
+unit = "m"
+status = "guess"
+basis = "Without Whisper of Conduction shards are walked over, like other elemental pickups; Conduction pulls from 15 m."
+measure = "Walk towards a shard and note the distance at which it is collected."
+
+[[variable]]
+name = "unravel.radius"
+guess = 10.0
+low = 6.0
+high = 15.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for the seeking threads' range; seekers of this kind usually reach 10-15 m."
+measure = "Unravel an enemy with another 8, 10, 12 and 15 m away; note which distances the threads reach."
+sources = ["compendium:Strand/Glossary/Unravel"]
+
+[[variable]]
+name = "abilities.boss_scalar"
+guess = 0.56
+low = 0.45
+high = 1.0
+unit = "fraction"
+status = "estimate"
+basis = "MossyMax's ability damage sheet: most abilities deal about 1.8x as much to minors and elites as to bosses (Shield Throw 154 against bosses, 272-299 otherwise). Documented ability damage is taken as against non-bosses."
+measure = "Throw the same ability at a boss and a minor in the Shooting Range at the same Power delta; the ratio of the damage numbers."
+sources = ["mossymax:Abilities and misc damage"]
+
+# ------------------------------------------------------ parts' numbers
+
+[[variable]]
+name = "howl_of_the_storm.freeze_radius"
+guess = 5.0
+low = 3.0
+high = 8.0
+unit = "m"
+status = "guess"
+basis = "The Compendium and Clarity give \"?\". The uppercut freezes the enemies close in front, before the crystals' line."
+measure = "Slide-uppercut towards a line of enemies at 2, 4, 6 and 8 m; note the farthest one frozen by the uppercut itself (not by a crystal)."
+sources = ["compendium:Stasis/Aspect/Howl of the Storm", "clarity:1563930741"]
+
+[[variable]]
+name = "dawn_chorus.scorch_tick_energy"
+guess = 0.05
+low = 0.02
+high = 0.08
+unit = "fraction"
+status = "estimate"
+basis = "The Compendium gives \"5?%\" melee energy per Scorch tick."
+measure = "With no melee energy, Scorch one enemy with a single source and count the ticks until the bar fills (adjust for the chunk scalar and stat)."
+sources = ["compendium:Exotic Armors/Armor/Dawn Chorus"]
+
+[[variable]]
+name = "tectonic_harvest.progress_per_kill"
+guess = 0.2
+low = 0.1
+high = 0.34
+unit = "fraction"
+status = "guess"
+basis = "Kinetic and Stasis weapon kills while Frost Armor is active progress a shatter, faster with more stacks; a shatter about every five kills at middling stacks."
+measure = "At x1 and at x5 Frost Armor, count Kinetic weapon kills between Tectonic Harvest shatters."
+sources = ["compendium:Stasis/Aspect/Tectonic Harvest"]
+
+[[variable]]
+name = "tectonic_harvest.damage_taken_energy"
+guess = 0.05
+low = 0.02
+high = 0.10
+unit = "fraction"
+status = "guess"
+basis = "The sources give \"?%\" melee energy on taking damage, at most once a second; Whisper of Torment, the same kind of effect, gives 7% grenade energy."
+measure = "With Frost Armor active and no melee energy, take a hit a second for ten seconds; the melee bar's gain over ten (adjust for the chunk scalar and stat)."
+sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
+
+# ---------------------------------------------------------- the player
+
+[[variable]]
+name = "policy.shard_pickup"
+guess = 0.75
+low = 0.5
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "Shards land where enemies stood; a player picks up most, not all, without Whisper of Conduction's pull."
+measure = "From recordings of Stasis play without Conduction: shards picked up over shards created."
+
+[[variable]]
+name = "policy.shatter_frozen"
+guess = 1.0
+low = 0.5
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "A frozen enemy near a Stasis build is almost always hit (and so shattered) before the freeze ends."
+measure = "From recordings: frozen enemies shattered over enemies frozen."
+
+[[variable]]
+name = "policy.crystals_in_pack"
+guess = 1.0
+low = 0.3
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "The player aims crystal-making abilities into the pack, so crystals form among enemies."
+measure = "From recordings: crystals that freeze someone as they form, over crystals formed."
+
+[[variable]]
+name = "policy.slide_form"
+guess = 1.0
+low = 0.5
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "When a melee has a sliding form a build is made around (Howl of the Storm), the player slides into it."
+measure = "From recordings: sliding casts over casts."
+
+[[variable]]
+name = "policy.critical_health"
+guess = 0.05
+low = 0.0
+high = 0.25
+unit = "fraction"
+status = "guess"
+basis = "The share of a fight spent below a health threshold (critically wounded); endgame players avoid it, harder content forces more."
+measure = "From recordings: time below 30% health over the encounter."
+
+# --------------------------------------------------------- the scenario
+
+[[variable]]
+name = "scenario.pack_size"
+guess = 8.0
+low = 3.0
+high = 15.0
+unit = "count"
+status = "guess"
+basis = "Ad packs in strikes, Conquests and dungeons are commonly five to twelve enemies; to be calibrated on the recorded clears."
+measure = "Count the enemies of typical packs in recordings of each activity."
+
+[[variable]]
+name = "scenario.pack_radius"
+guess = 10.0
+low = 6.0
+high = 20.0
+unit = "m"
+status = "guess"
+basis = "Packs spread over a room or a corridor's width; most fall within 15-20 m across."
+measure = "Estimate pack spread in recordings against known distances (doorways, the Shooting Range markers)."
+
+[[variable]]
+name = "scenario.elite_share"
+guess = 0.25
+low = 0.1
+high = 0.5
+unit = "fraction"
+status = "guess"
+basis = "Packs are mostly minors with a few elites; harder content adds elites."
+measure = "Count minors and elites in packs in recordings of each activity."
+
+[[variable]]
+name = "build.default_stat"
+guess = 100.0
+low = 30.0
+high = 200.0
+unit = "stat"
+status = "guess"
+basis = "The value a stat takes when a build does not give it; 100 is where Armor 3.0 stops reducing cooldowns and many endgame builds invest."
+measure = "Use the build's own stats: the recorded builds carry them."
+
+# ----------------------------------------------------------- the economy
+
+[[variable]]
+name = "economy.documented_chunk_scale"
+guess = 1.0
+low = 0.8
+high = 2.5
+unit = "fraction"
+status = "guess"
+basis = "Documented chunks of energy (a shard's 10%) are taken as the pre-Edge of Fate figures the workbook scales: 0.40 of them at 0 stat, 0.90 at 100. If they were already the 0-stat figures, this would be 2.5."
+measure = "With Shiver Strike (chunk scalar 0.7) and no melee energy, pick up one small Stasis Shard at 0 and at 100 melee stat. The model expects 2.8% and 6.3% of the bar."
+
+[[variable]]
+name = "economy.regen_relative_to_current"
+guess = 0.0
+low = 0.0
+high = 1.0
+unit = "flag"
+status = "guess"
+basis = "The workbook gives regeneration bonuses relative to the 0-stat cooldown (0: a bonus adds charges a second in units of the 0-stat rate). 1: a bonus multiplies the current rate."
+measure = "Time a grenade's cooldown with Spark of Recharge active at 0 and at 100 grenade stat, against without it."

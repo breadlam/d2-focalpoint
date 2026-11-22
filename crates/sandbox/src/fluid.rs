@@ -168,6 +168,8 @@ pub struct Report {
     pub gain: f64,
     /// Counter values at the moment they are spent (the operating point).
     pub counters: BTreeMap<String, f64>,
+    /// The variables the result depends on.
+    pub variables: BTreeSet<String>,
     pub notes: BTreeSet<String>,
 }
 
@@ -211,6 +213,16 @@ impl<'a> Engine<'a> {
 
     fn param(&self, path: &str) -> Option<f64> {
         self.c.param(self.o, path)
+    }
+
+    /// A variable's value (`data/sandbox/variables.toml`).
+    fn var(&mut self, name: &str) -> f64 {
+        if let Some(v) = self.c.vars.value(name) {
+            v
+        } else {
+            self.note(format!("variable {name} is not defined; 0 taken"));
+            0.0
+        }
     }
 
     /// Ability casts, and events a state reaching its maximum set off,
@@ -259,18 +271,14 @@ impl<'a> Engine<'a> {
             }
             return f64::from(u8::from(self.applies(name)));
         }
-        if let Some(m) = &c.movement {
-            self.note(format!(
-                "policy: the player uses the `{m}` form whenever a rule has one"
-            ));
-            return 1.0;
+        if c.movement.is_some() {
+            return self.var("policy.slide_form");
         }
         if let Some(v) = c.in_super {
             return if v { 0.0 } else { 1.0 };
         }
         if c.health_below.is_some() {
-            self.note("`health_below`: the player is taken to be healthy");
-            return 0.0;
+            return self.var("policy.critical_health");
         }
         if let Some(r) = c.enemies_within {
             let n = 1.0 + self.s.neighbours(r);
@@ -300,6 +308,9 @@ impl<'a> Engine<'a> {
         match a {
             Amount::Number(x) => *x,
             Amount::Table(t) => {
+                if let Some(v) = &t.var {
+                    return self.var(v);
+                }
                 if let Some(rows) = &t.by_counter {
                     let at = t
                         .counter
@@ -348,7 +359,8 @@ impl<'a> Engine<'a> {
         match eff.target.as_deref() {
             None | Some("target" | "enemies_hit" | "nearest") => 1.0,
             Some("area") => {
-                if let Some(r) = eff.radius {
+                if let Some(a) = &eff.radius {
+                    let r = self.amount(a);
                     1.0 + self.s.neighbours(r)
                 } else {
                     self.note("an area effect without a radius lands on its target only");
@@ -384,7 +396,14 @@ impl<'a> Engine<'a> {
             ));
         }
         let stat = self.s.stat(stat_of(slot));
-        let charges = self.e.chunk(slot, &name, stat, amount, scaling);
+        let documented = if scaling == Scaling::Fixed {
+            1.0
+        } else {
+            self.var("economy.documented_chunk_scale")
+        };
+        let charges = self
+            .e
+            .chunk(slot, &name, stat, amount * documented, scaling);
         Some((Event::cast(ability), charges))
     }
 
@@ -392,8 +411,7 @@ impl<'a> Engine<'a> {
         if self.c.modifies("stasis_shard.pickup_radius") {
             1.0
         } else {
-            self.note("policy: three in four Stasis Shards are picked up without a pull");
-            0.75
+            self.var("policy.shard_pickup")
         }
     }
 
@@ -487,7 +505,7 @@ impl<'a> Engine<'a> {
                 child.attrs.insert(k.clone(), value_text(v));
             }
             child.damage = eff.damage.as_ref().map(|a| self.amount(a));
-            child.radius = eff.radius;
+            child.radius = eff.radius.as_ref().map(|a| self.amount(a));
             child.tags.clone_from(&eff.tags);
             child.element.clone_from(&eff.element);
             child.member = *ev == parent.name;
@@ -525,7 +543,8 @@ impl<'a> Engine<'a> {
             .collect();
         let mut out = Vec::new();
         for r in rules {
-            let p = self.holds_all(&r.when) * r.chance.unwrap_or(1.0);
+            let chance = r.chance.as_ref().map_or(1.0, |a| self.amount(a));
+            let p = self.holds_all(&r.when) * chance;
             if r.cooldown.is_some() || r.limit.is_some() {
                 self.note(format!(
                     "{}: its cooldown or limit is not modelled in the gains",
@@ -590,7 +609,7 @@ impl<'a> Engine<'a> {
                         m.attrs.insert(k.clone(), value_text(v));
                     }
                     m.damage = eff.damage.as_ref().map(|a| self.amount(a));
-                    m.radius = eff.radius;
+                    m.radius = eff.radius.as_ref().map(|a| self.amount(a));
                     m.tags.clone_from(&eff.tags);
                     m.member = true;
                     members.push((m, p));
@@ -678,8 +697,8 @@ impl<'a> Engine<'a> {
             "ignition" => out.extend(self.ignition(e, y, w)),
             "crystal_created" => {
                 let r = self.param("stasis_crystal.freeze_radius").unwrap_or(2.6);
-                self.note("policy: crystals form in the pack and are all shattered");
-                out.push((Event::new("freeze"), self.s.around(r)));
+                let in_pack = self.var("policy.crystals_in_pack");
+                out.push((Event::new("freeze"), in_pack * self.s.around(r)));
                 out.push((Event::new("shatter").with("of", "crystal"), 1.0));
             }
             "shatter" => {
@@ -763,8 +782,8 @@ impl<'a> Engine<'a> {
                 let pack = self.s.pack.size.max(1.0);
                 let frozen = pack * (1.0 - (-freezes / pack).exp());
                 y.frozen = frozen;
-                self.note("policy: frozen enemies are shattered");
-                stack.push((Event::new("shatter").with("of", "enemy"), frozen, 1));
+                let shattered = frozen * self.var("policy.shatter_frozen");
+                stack.push((Event::new("shatter").with("of", "enemy"), shattered, 1));
             }
         }
         Generation {
@@ -814,6 +833,13 @@ impl<'a> Engine<'a> {
             loops,
             gain,
             counters: self.counters.clone(),
+            variables: self
+                .c
+                .vars
+                .take_read()
+                .into_iter()
+                .chain(self.s.variables.iter().cloned())
+                .collect(),
             notes: std::mem::take(&mut self.notes),
         }
     }
@@ -1011,13 +1037,36 @@ mod tests {
     use crate::economy::tests::economy;
     use crate::scenario::tests::scenario;
 
+    #[allow(clippy::many_single_char_names)]
     fn gain(parts: &[&str], seed: Event, durability: f64) -> Report {
         let o = Ontology::builtin().unwrap();
         let base = crate::builtin_rules().unwrap();
         let build = Build::parse(parts.iter().copied()).unwrap();
-        let c = compile(&o, &base, &build);
+        // The acceptance cases are pinned to stated values, not to the
+        // variables' current guesses.
+        let mut v = crate::variables::Variables::builtin().unwrap();
+        for (name, x) in [
+            ("scenario.pack_size", 8.0),
+            ("scenario.pack_radius", 10.0),
+            ("scenario.elite_share", 0.25),
+            ("build.default_stat", 70.0),
+            ("howl_of_the_storm.freeze_radius", 3.0),
+            ("policy.shard_pickup", 0.75),
+            ("policy.shatter_frozen", 1.0),
+            ("policy.crystals_in_pack", 1.0),
+            ("policy.slide_form", 1.0),
+            ("economy.documented_chunk_scale", 1.0),
+        ] {
+            v.set(name, x).unwrap();
+        }
+        let vars = Box::leak(Box::new(v));
+        let c = compile(&o, &base, &build, vars);
         let e = economy();
-        let s = scenario(durability);
+        let mut s = scenario(durability);
+        s.pack = crate::scenario::Pack {
+            size: 8.0,
+            radius_m: 10.0,
+        };
         Engine::new(&o, &c, &e, &s).analyse(&[seed])
     }
 
