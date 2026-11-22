@@ -123,3 +123,8 @@ leans on lets the fit mean what it says:
   whose abilities rarely kill outright, against their damage;
 - `policy.min_cast_interval`: casts a minute of a build that never runs
   out of an ability's energy.
+
+The simulator (`sandbox simulate`) adds one value of its own,
+`sim.weapon_headroom`: how much faster than the supply its weapons could
+kill. A recording's weapon damage a minute against the health of the
+enemies it kills gives it.
