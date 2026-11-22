@@ -844,3 +844,15 @@ sources = ["compendium:Prismatic/Aspects/Feed the Void"]
 params = [
   { name = "duration", value = 10.0, unit = "s" },
 ]
+
+# --------------------------------------------------------- artifact, more
+
+[[state]]
+name = "armorsmith"
+kind = "buff"
+description = "Armorsmith: 10% damage resistance and +100% melee damage for 6 s after a shield break or finisher."
+sources = ["compendium:Artifact Perks/Armorsmith"]
+params = [
+  { name = "duration", value = 6.0, unit = "s" },
+  { name = "damage_resist", value = 0.1, unit = "fraction" },
+]

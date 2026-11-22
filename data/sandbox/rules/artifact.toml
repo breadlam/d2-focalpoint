@@ -60,3 +60,186 @@ effect = [{ spawn = "stasis_shard", count = 1 }, { consume = "converter_primed" 
 part = "artifact_perk:Crystalline Converter"
 note = "A Diamond Lance hit spends the shard count too."
 sources = ["compendium:Artifact Perks/Tablet of Ruin (Heresy)/Crystalline Converter"]
+
+# ------------------------------------------------------- more artifact perks
+
+[[rule]]
+granted_by = "artifact_perk:Elemental Siphon"
+sources = ["compendium:Artifact Perks/Elemental Siphon"]
+on = { event = "kill", source = "weapon" }
+effect = { energy = "super", amount = 0.05 }
+chance = 0.33
+cooldown = 2
+confidence = "assumed"
+note = "Three quick kills with a Kinetic or super-element weapon make an elemental pickup worth 5% super energy: one kill in three."
+
+[[rule]]
+granted_by = "artifact_perk:Dielectric"
+sources = ["compendium:Artifact Perks/Dielectric"]
+on = { event = "kill", target_has = "jolt" }
+effect = { apply = "bolt_charge", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "artifact_perk:Dielectric"
+sources = ["compendium:Artifact Perks/Dielectric"]
+on = { event = "kill", target_has = "jolt" }
+effect = [{ spawn = "orb_of_power", count = 1, size = "large" }, { heal = 35 }]
+chance = 0.33
+note = "Three Arc-debuffed kills within 6 s: one kill in three."
+
+[[rule]]
+granted_by = "artifact_perk:Unraveling Orbs"
+sources = ["compendium:Artifact Perks/Unraveling Orbs"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { apply = "unraveling_rounds", duration = 14, target = "self" }
+
+[[rule]]
+granted_by = "artifact_perk:Flashover"
+sources = ["compendium:Artifact Perks/Flashover"]
+on = "bolt_discharge"
+effect = { apply = "amplified", target = "self" }
+note = "Reaching x10 Bolt Charge grants Amplified: the discharge stands in for it."
+
+[[modifier]]
+granted_by = "artifact_perk:Flashover"
+sources = ["compendium:Artifact Perks/Flashover"]
+damage = "bolt"
+mul = 1.5
+
+[[rule]]
+granted_by = "artifact_perk:Horde Shuttle"
+sources = ["compendium:Artifact Perks/Horde Shuttle"]
+on = { event = "kill", source = "weapon", target_has = "unravel" }
+effect = { spawn = "threadling", count = 1 }
+note = "Weapon damage of 10% of an Unraveled enemy's health spawns a Threadling: weapon kills stand in for it."
+
+[[rule]]
+granted_by = "artifact_perk:Armorsmith"
+sources = ["compendium:Artifact Perks/Armorsmith"]
+on = "finisher"
+effect = { apply = "armorsmith", target = "self" }
+note = "Shield breaks trigger it too; they are not events the model follows."
+
+[[modifier]]
+granted_by = "artifact_perk:Armorsmith"
+sources = ["compendium:Artifact Perks/Armorsmith"]
+damage = "melee"
+mul = 2.0
+when = [{ has = "armorsmith" }]
+
+[[rule]]
+granted_by = "artifact_perk:Hail The Storm"
+sources = ["compendium:Artifact Perks/Hail The Storm"]
+on = { event = "shatter", of = "crystal" }
+effect = [
+  { damage = 46, times = 5, element = "stasis", source = "ability", tags = ["shatter"] },
+  { apply = "slow", stacks = 10, times = 5 },
+]
+
+[[modifier]]
+granted_by = "artifact_perk:Hail The Storm"
+sources = ["compendium:Artifact Perks/Hail The Storm"]
+damage = "shatter"
+mul = 1.125
+
+[[rule]]
+granted_by = "artifact_perk:Power from Pain"
+sources = ["compendium:Artifact Perks/Power from Pain"]
+on = { event = "kill", target_has = "weaken" }
+effect = [{ apply = "devour", duration = 5, target = "self" }, { spawn = "void_breach", count = 1 }]
+chance = 0.33
+note = "Three weakened kills within 4 s: one kill in three."
+
+[[rule]]
+granted_by = "artifact_perk:Singularity Blade"
+sources = ["compendium:Artifact Perks/Singularity Blade"]
+on = { event = "kill", source = "melee" }
+when = [{ has = "devour" }]
+effect = { apply = "weaken", target = "area", radius = 4 }
+
+[[rule]]
+granted_by = "artifact_perk:Singularity Blade"
+sources = ["compendium:Artifact Perks/Singularity Blade"]
+on = { event = "hit", source = "melee" }
+when = [{ has = "devour" }]
+effect = { apply = "weaken" }
+note = "With any Void buff (Devour, Invisibility, Overshield): Devour stands in for them."
+
+[[rule]]
+granted_by = "artifact_perk:Radiant Orbs"
+sources = ["compendium:Artifact Perks/Radiant Orbs"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { apply = "radiant", duration = 10, target = "self" }
+note = "With a Solar or Prismatic subclass."
+
+[[rule]]
+granted_by = "artifact_perk:To Shreds"
+sources = ["compendium:Artifact Perks/To Shreds"]
+on = { event = "kill", target_has = "sever" }
+effect = [{ heal = 45 }, { apply = "woven_mail", target = "allies" }]
+
+[[modifier]]
+granted_by = "artifact_perk:Energy Diffusion Substrate"
+sources = ["compendium:Artifact Perks/Energy Diffusion Substrate"]
+param = "guardian.damage_resist"
+add = 0.1
+
+[[modifier]]
+granted_by = "artifact_perk:Shieldcrush"
+sources = ["compendium:Artifact Perks/Shieldcrush"]
+damage = "powered_melee"
+mul = 1.5
+when = [{ has = "frost_armor" }]
+note = "While Frost Armor, Void Overshield or Woven Mail is active; its regeneration bonuses are not stated."
+
+[[modifier]]
+granted_by = "artifact_perk:Shieldcrush"
+sources = ["compendium:Artifact Perks/Shieldcrush"]
+damage = "grenade"
+mul = 1.25
+when = [{ has = "radiant" }]
+note = "While Amplified or Radiant is active."
+
+[[modifier]]
+granted_by = "artifact_perk:Limit Break"
+sources = ["compendium:Artifact Perks/Limit Break"]
+damage = "super"
+mul = 1.15
+confidence = "assumed"
+note = "On a super cast at critical health or with an element-matching buff: taken as always met."
+
+[[rule]]
+granted_by = "artifact_perk:Fever and Chill"
+sources = ["compendium:Artifact Perks/Fever and Chill"]
+on = { event = "kill", source = "weapon", precision = true, element = "solar" }
+effect = { apply = "radiant", duration = 10, target = "self" }
+
+[[rule]]
+granted_by = "artifact_perk:Fever and Chill"
+sources = ["compendium:Artifact Perks/Fever and Chill"]
+on = { event = "kill", source = "weapon", precision = true, element = "stasis" }
+effect = { apply = "frost_armor", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "artifact_perk:Brain Freeze"
+sources = ["compendium:Artifact Perks/Brain Freeze"]
+on = "freeze"
+effect = { apply = "slow", stacks = 40, target = "area", radius = 4 }
+
+[[rule]]
+granted_by = "artifact_perk:Served Cold"
+sources = ["compendium:Artifact Perks/Served Cold"]
+on = { event = "pickup", object = "stasis_shard" }
+effect = { energy = "class", amount = 0.1 }
+
+[[rule]]
+granted_by = "artifact_perk:Served Cold"
+sources = ["compendium:Artifact Perks/Served Cold"]
+on = { event = "pickup", object = "void_breach" }
+effect = { energy = "melee", amount = 0.1 }
+
+[[rule]]
+granted_by = "artifact_perk:Defibrillating Blast"
+sources = ["compendium:Artifact Perks/Defibrillating Blast"]
+on = "bolt_discharge"
+effect = [{ heal = 50 }, { apply = "jolt", target = "area", radius = 4 }]
