@@ -65,6 +65,38 @@ basis = "MossyMax's ability damage sheet: most abilities deal about 1.8x as much
 measure = "Throw the same ability at a boss and a minor in the Shooting Range at the same Power delta; the ratio of the damage numbers."
 sources = ["mossymax:Abilities and misc damage"]
 
+[[variable]]
+name = "jolt.chain_targets"
+guess = 3.0
+low = 1.0
+high = 5.0
+unit = "count"
+status = "guess"
+basis = "Jolt's chain lightning jumps to a few enemies near the Jolted one; the sources give its damage (119) and reach (12 m) but not how many it hits."
+measure = "Jolt one enemy in a pack, damage it once, and count the enemies the lightning hits."
+sources = ["compendium:Arc/Glossary/Jolt"]
+
+[[variable]]
+name = "bolt_charge.discharge_radius"
+guess = 4.0
+low = 2.0
+high = 8.0
+unit = "m"
+status = "guess"
+basis = "A full Bolt Charge discharges as a lightning strike at the target; strikes of this kind reach a few metres."
+measure = "Discharge Bolt Charge on an enemy beside others at known distances."
+sources = ["compendium:Arc/Glossary/Bolt Charge"]
+
+[[variable]]
+name = "policy.jolt_chains_per_enemy"
+guess = 3.0
+low = 1.0
+high = 6.0
+unit = "count"
+status = "guess"
+basis = "A Jolted enemy chains each time it is damaged again, at most every 0.8 s for 10 s; most Jolted enemies take a few more hits before they die."
+measure = "From recordings: chain lightning bursts per Jolted enemy."
+
 # ------------------------------------------------------ parts' numbers
 
 [[variable]]
@@ -395,3 +427,49 @@ unit = "fraction"
 status = "guess"
 basis = "The share of buffs a player gives (Cure, Radiant, Restoration) that reach an ally, which Ember of Benevolence needs: 0 solo, high in a close fireteam."
 measure = "Solo content: 0. Fireteam content: from recordings."
+
+# ------------------------------------------------------------------- Arc
+
+[[variable]]
+name = "combination_blow.damage"
+guess = 300.0
+low = 150.0
+high = 600.0
+unit = "damage"
+status = "guess"
+basis = "The Compendium gives Combination Blow's damage increases but not its base damage; an empowered Hunter melee is a few hundred."
+measure = "Punch an enemy in the Shooting Range with Combination Blow and no stacks."
+sources = ["compendium:Arc/Melee Abilities/Combination Blow"]
+
+[[variable]]
+name = "ionic_sentry.shots"
+guess = 10.0
+low = 6.0
+high = 16.0
+unit = "count"
+status = "guess"
+basis = "The Sentry shoots every second at enemies within 16 m until it expires or runs out; its lifetime is not stated."
+measure = "Count an Ionic Sentry's shots in a dense room."
+sources = ["compendium:Arc/Aspects/Ionic Sentry"]
+
+[[variable]]
+name = "stormtrance.chains"
+guess = 30.0
+low = 15.0
+high = 47.0
+unit = "count"
+status = "estimate"
+basis = "Light attacks chain every 0.34 s over a 16 s super, less time moving and recasting."
+measure = "Count chain-lightning ticks in one Stormtrance spent on a pack."
+sources = ["compendium:Arc/Super Abilities/Stormtrance"]
+
+[[variable]]
+name = "spark_of_recharge.duration"
+guess = 6.0
+low = 3.0
+high = 10.0
+unit = "s"
+status = "guess"
+basis = "The bonus lasts until shields are full again after reaching critical health: a few seconds."
+measure = "Time from critical health to full shields with no healing."
+sources = ["compendium:Arc/Fragments/Spark of Recharge"]

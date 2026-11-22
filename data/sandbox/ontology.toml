@@ -749,3 +749,26 @@ sources = ["compendium:Solar/Aspects/Heat Rises"]
 params = [
   { name = "duration", value = 15.0, unit = "s" },
 ]
+
+# ------------------------------------------------------------- Arc, more
+
+[[state]]
+name = "combination_blow"
+kind = "buff"
+element = "arc"
+max_stacks = 3
+description = "Melee kills with Combination Blow: increased melee damage, by stacks."
+sources = ["compendium:Arc/Melee Abilities/Combination Blow"]
+params = [
+  { name = "duration", value = 20.0, unit = "s" },
+]
+
+[[state]]
+name = "arc_soul"
+kind = "buff"
+element = "arc"
+description = "An Arc Soul from a Rift: a companion firing homing Arc grenade damage."
+sources = ["compendium:Arc/Aspects/Arc Soul"]
+params = [
+  { name = "duration", value = 15.0, unit = "s" },
+]

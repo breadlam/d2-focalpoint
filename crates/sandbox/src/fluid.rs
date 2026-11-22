@@ -199,6 +199,10 @@ pub struct Report {
     pub counters: BTreeMap<String, f64>,
     /// The variables the result depends on.
     pub variables: BTreeSet<String>,
+    /// Regeneration bonuses held while conditions hold (Spark of Focus
+    /// while sprinting): modifiers of `<ability>.regen`, by ability, as the
+    /// documented bonus times the probability they hold.
+    pub passive_regen: BTreeMap<String, f64>,
     pub notes: BTreeSet<String>,
 }
 
@@ -473,6 +477,20 @@ impl<'a> Engine<'a> {
         }
         if let Some(state) = &eff.apply {
             let on_player = matches!(eff.target.as_deref(), Some("self" | "allies" | "fireteam"));
+            if state == "jolt" && !on_player {
+                // A Jolted enemy chains lightning each time it is damaged
+                // again, at most once per `jolt.chain_cooldown`.
+                let chains = self.var("policy.jolt_chains_per_enemy");
+                out.push((Event::new("jolt_chain"), p * n * chains));
+            }
+            if self.thresholds.contains_key(state) && on_player {
+                // Stacks on the player (Bolt Charge) add up to their
+                // threshold without decay.
+                let stacks = eff.stacks.as_ref().map_or(1.0, |a| self.amount(a));
+                let acc = y.accumulated.entry(state.clone()).or_default();
+                acc.0 += w * p * stacks;
+                acc.1 += w * p;
+            }
             if state == "frozen" {
                 out.push((Event::new("freeze"), p * n));
             } else if self.thresholds.contains_key(state) && !on_player {
@@ -858,6 +876,30 @@ impl<'a> Engine<'a> {
         let mut out = Vec::new();
         match e.name.as_str() {
             "ignition" => out.extend(self.ignition(e, y, w)),
+            "jolt_chain" => {
+                // Chain lightning from a Jolted enemy to its neighbours.
+                let r = self.param("jolt.chain_radius").unwrap_or(12.0);
+                let targets = self.s.neighbours(r).min(self.var("jolt.chain_targets"));
+                let dmg = self.param("jolt.chain_damage").unwrap_or(0.0)
+                    * self.damage_multiplier(&["jolt".to_string()], Some("arc"));
+                y.damage += w * targets * dmg;
+                y.pack_damage += w * targets * dmg;
+                *y.pack_damage_by
+                    .entry(("verb".into(), "arc".into()))
+                    .or_default() += w * targets * dmg;
+            }
+            "bolt_discharge" => {
+                // A full Bolt Charge discharges at the target and around it.
+                let r = self.var("bolt_charge.discharge_radius");
+                let targets = 1.0 + self.s.neighbours(r);
+                let dmg = self.param("bolt_charge.discharge_damage").unwrap_or(0.0)
+                    * self.damage_multiplier(&["bolt".to_string()], Some("arc"));
+                y.damage += w * targets * dmg;
+                y.pack_damage += w * targets * dmg;
+                *y.pack_damage_by
+                    .entry(("verb".into(), "arc".into()))
+                    .or_default() += w * targets * dmg;
+            }
             "crystal_created" => {
                 let r = self.param("stasis_crystal.freeze_radius").unwrap_or(2.6);
                 let in_pack = self.var("policy.crystals_in_pack");
@@ -1095,11 +1137,28 @@ impl<'a> Engine<'a> {
             .collect();
         let loops = loops(&keys, &gains);
         let gain = spectral_radius(&gains);
+        let mut passive_regen = BTreeMap::new();
+        let mods: Vec<&Modifier> = self.c.modifiers.clone();
+        for m in mods {
+            let Some(ability) = m.param.as_deref().and_then(|p| p.strip_suffix(".regen")) else {
+                continue;
+            };
+            let add = m.add.as_ref().map_or(0.0, |a| self.amount(a));
+            let p = self.holds_all(&m.when);
+            *passive_regen.entry(ability.to_string()).or_default() += add * p;
+        }
+        if let Some(base) = ["grenade", "melee", "class", "super"]
+            .iter()
+            .find(|a| self.c.modifies(&format!("{a}.regen")))
+        {
+            self.note(format!("{base}.regen: passive bonuses read as held"));
+        }
         Report {
             generations: gens,
             gains,
             loops,
             gain,
+            passive_regen,
             counters: self.counters.clone(),
             variables: self
                 .c

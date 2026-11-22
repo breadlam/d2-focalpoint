@@ -172,7 +172,11 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
                 *seconds.entry((a.as_str(), *level)).or_default() += x[i] * b;
             }
         }
-        let mut bonus: BTreeMap<&str, f64> = BTreeMap::new();
+        let mut bonus: BTreeMap<&str, f64> = report
+            .passive_regen
+            .iter()
+            .map(|(a, b)| (a.as_str(), *b))
+            .collect();
         for ((a, level), b) in seconds {
             let amount = f64::from(level) / 1000.0;
             if amount > 0.0 {
@@ -226,9 +230,14 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             let (Some(max), Some(at_max)) = (def.max_stacks, &def.at_max) else {
                 continue;
             };
-            let linger = c.param(o, &format!("{st}.linger")).unwrap_or(2.3);
-            let per_enemy = apps / s.pack.size.max(1.0);
-            let efficiency = (per_enemy * linger).min(1.0);
+            // Stacks on the player (Bolt Charge) do not decay.
+            let efficiency = if def.kind == "buff" {
+                1.0
+            } else {
+                let linger = c.param(o, &format!("{st}.linger")).unwrap_or(2.3);
+                let per_enemy = apps / s.pack.size.max(1.0);
+                (per_enemy * linger).min(1.0)
+            };
             let rate = stacks / f64::from(max) * efficiency;
             if let Some(j) = gens
                 .iter()

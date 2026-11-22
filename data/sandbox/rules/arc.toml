@@ -1,0 +1,508 @@
+# Arc (docs/sandbox.md). Jolt's chains and Bolt Charge's discharges are
+# core verbs; Ionic Traces' energy comes from their parameters.
+
+# ------------------------------------------------------------- fragments
+
+[[rule]]
+granted_by = "fragment:Spark of Shock"
+sources = ["compendium:Arc/Fragments/Spark of Shock"]
+on = { event = "hit", source = "grenade", element = "arc" }
+effect = { apply = "jolt" }
+
+[[counter]]
+name = "discharge_progress"
+threshold = 1
+note = "Spark of Discharge: Arc weapon kills towards an Ionic Trace."
+
+[[rule]]
+granted_by = "fragment:Spark of Discharge"
+sources = ["compendium:Arc/Fragments/Spark of Discharge"]
+on = { event = "kill", source = "weapon", element = "arc" }
+effect = { progress = "discharge_progress", amount = { by_rank = { minor = 0.34, elite = 0.67 } } }
+
+[[rule]]
+granted_by = "fragment:Spark of Discharge"
+sources = ["compendium:Arc/Fragments/Spark of Discharge"]
+on = { event = "counter_full", counter = "discharge_progress" }
+effect = [{ spawn = "ionic_trace", count = 1 }, { consume = "discharge_progress" }]
+
+[[rule]]
+granted_by = "fragment:Spark of Discharge"
+sources = ["compendium:Arc/Fragments/Spark of Discharge"]
+on = { event = "pickup", object = "ionic_trace" }
+effect = { apply = "bolt_charge", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "fragment:Spark of Ions"
+sources = ["compendium:Arc/Fragments/Spark of Ions"]
+on = { event = "kill", target_has = "jolt" }
+effect = { spawn = "ionic_trace", count = 1 }
+cooldown = 10
+
+[[rule]]
+granted_by = "fragment:Spark of Amplitude"
+sources = ["compendium:Arc/Fragments/Spark of Amplitude"]
+on = "kill"
+when = [{ has = "amplified" }]
+effect = { spawn = "orb_of_power", count = 1 }
+chance = 0.5
+cooldown = 10
+confidence = "assumed"
+note = "Two kills within 4 s while Amplified make an Orb, 10 s cooldown: one kill in two taken as the second."
+
+[[rule]]
+granted_by = "fragment:Spark of Beacons"
+sources = ["compendium:Arc/Fragments/Spark of Beacons"]
+on = { event = "kill", source = "weapon", element = "arc" }
+when = [{ has = "amplified" }]
+effect = { apply = "blind", target = "area", radius = 6 }
+note = "Special and heavy Arc weapon kills only; the ammo split is not modelled."
+
+[[rule]]
+granted_by = "fragment:Spark of Brilliance"
+sources = ["compendium:Arc/Fragments/Spark of Brilliance"]
+on = { event = "kill", precision = true, target_has = "blind" }
+effect = { apply = "blind", target = "area", radius = 6 }
+
+[[rule]]
+granted_by = "fragment:Spark of Recharge"
+sources = ["compendium:Arc/Fragments/Spark of Recharge"]
+on = "damage_taken"
+when = [{ health_below = 0.3 }]
+effect = [
+  { regen = "grenade", amount = 4.0, duration = { var = "spark_of_recharge.duration" } },
+  { regen = "melee", amount = 4.0, duration = { var = "spark_of_recharge.duration" } },
+]
+
+[[rule]]
+granted_by = "fragment:Spark of Volts"
+sources = ["compendium:Arc/Fragments/Spark of Volts"]
+on = "finisher"
+effect = [{ apply = "amplified", target = "self" }, { apply = "bolt_charge", stacks = 1, target = "self" }]
+
+[[modifier]]
+granted_by = "fragment:Spark of Focus"
+sources = ["compendium:Arc/Fragments/Spark of Focus"]
+param = "class.regen"
+add = 1.5
+when = [{ movement = "sprint" }]
+note = "+150% class ability regeneration while sprinting, until a charge is ready."
+
+[[rule]]
+granted_by = "fragment:Spark of Instinct"
+sources = ["compendium:Arc/Fragments/Spark of Instinct"]
+on = "damage_taken"
+when = [{ health_below = 0.3 }]
+effect = [
+  { damage = 46, target = "area", radius = 8, element = "arc", source = "ability" },
+  { apply = "jolt", target = "area", radius = 8 },
+]
+cooldown = 15
+
+[[rule]]
+granted_by = "fragment:Spark of Momentum"
+sources = ["compendium:Arc/Fragments/Spark of Momentum"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { apply = "bolt_charge", stacks = 3, target = "self" }
+confidence = "assumed"
+note = "Sliding over ammo bricks grants x3 Bolt Charge; ammo bricks are not modelled, so Orb pickups stand in for them."
+
+# --------------------------------------------------------------- aspects
+
+[[rule]]
+granted_by = "aspect:Ascension"
+sources = ["compendium:Arc/Aspects/Ascension"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { apply = "amplified", target = "allies" },
+  { damage = 181, target = "area", radius = 10, element = "arc", source = "class", tags = ["class"] },
+  { apply = "jolt", target = "area", radius = 10 },
+]
+note = "The airborne class-ability twirl: with Ascension, class casts taken as twirls."
+
+[[rule]]
+granted_by = "aspect:Storm's Keep"
+sources = ["compendium:Arc/Aspects/Storm's Keep"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "bolt_charge", stacks = 4, target = "self" }
+
+[[rule]]
+granted_by = ["aspect:Storm's Keep", "class_ability:Thruster"]
+sources = ["compendium:Arc/Aspects/Storm's Keep"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "bolt_charge", stacks = 2, target = "self" }
+note = "Thruster grants x6, not x4: the other two."
+
+[[rule]]
+granted_by = "aspect:Ionic Sentry"
+sources = ["compendium:Arc/Aspects/Ionic Sentry"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { apply = "blind", target = "area", radius = 5 },
+  { damage = 202, times = { var = "ionic_sentry.shots" }, target = "area", radius = 6, element = "arc", source = "grenade", tags = ["grenade"] },
+]
+note = "Replaces the grenade; its charge from Arc and Kinetic kills is taken as the grenade's own."
+
+[[rule]]
+granted_by = "aspect:Tempest Strike"
+sources = ["compendium:Arc/Aspects/Tempest Strike"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "slide" }]
+effect = [
+  { damage = 739, target = "area", radius = 3, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "jolt", target = "area", radius = 3 },
+]
+note = "An Arc wave 22 m along the ground; a 3 m half-width taken."
+
+[[rule]]
+granted_by = "aspect:Tempest Strike"
+sources = ["compendium:Arc/Aspects/Tempest Strike"]
+on = { event = "kill", target_has = "jolt" }
+effect = { apply = "bolt_charge", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "aspect:Electrostatic Mind"
+sources = ["compendium:Arc/Aspects/Electrostatic Mind"]
+on = { event = "kill", source = "ability", element = "arc" }
+effect = { spawn = "ionic_trace", count = 1 }
+cooldown = 1
+
+[[rule]]
+granted_by = "aspect:Electrostatic Mind"
+sources = ["compendium:Arc/Aspects/Electrostatic Mind"]
+on = { event = "kill", target_has = "jolt" }
+effect = { spawn = "ionic_trace", count = 1 }
+cooldown = 1
+
+[[rule]]
+granted_by = "aspect:Electrostatic Mind"
+sources = ["compendium:Arc/Aspects/Electrostatic Mind"]
+on = { event = "pickup", object = "ionic_trace" }
+effect = { apply = "amplified", target = "self" }
+
+[[rule]]
+granted_by = "aspect:Arc Soul"
+sources = ["compendium:Arc/Aspects/Arc Soul"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { apply = "arc_soul", target = "allies" },
+  { damage = 69, times = 25, element = "arc", source = "grenade", tags = ["grenade"] },
+]
+note = "A Rift's Arc Soul fires 3-round bursts at 100 RPM for 15 s: about 25 rounds."
+
+[[rule]]
+granted_by = "aspect:Flow State"
+sources = ["compendium:Arc/Aspects/Flow State"]
+on = { event = "kill", target_has = "jolt" }
+effect = { apply = "amplified", target = "self" }
+
+[[rule]]
+granted_by = "aspect:Flow State"
+sources = ["compendium:Arc/Aspects/Flow State"]
+on = { event = "gain", state = "amplified" }
+effect = { regen = "class", amount = 2.0, duration = 15 }
+note = "+200% class ability regeneration while Amplified."
+
+[[rule]]
+granted_by = "aspect:Lethal Current"
+sources = ["compendium:Arc/Aspects/Lethal Current"]
+on = { event = "hit", source = "melee" }
+effect = [
+  { apply = "jolt" },
+  { damage = 195, target = "area", radius = 6, element = "arc", source = "melee", tags = ["melee"] },
+]
+confidence = "assumed"
+note = "The next melee hit within 10 s of a class ability: every melee taken as following one."
+
+[[rule]]
+granted_by = "aspect:Juggernaut"
+sources = ["compendium:Arc/Aspects/Juggernaut"]
+on = "damage_taken"
+when = [{ movement = "sprint" }]
+effect = { apply = "bolt_charge", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = ["aspect:Touch of Thunder", "grenade:Flashbang Grenade"]
+sources = ["compendium:Arc/Aspects/Touch of Thunder"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 684, target = "area", radius = 7.5, falloff = 0.0, element = "arc", source = "grenade", tags = ["grenade"] },
+  { apply = "blind", target = "area", radius = 5 },
+]
+
+[[rule]]
+granted_by = ["aspect:Touch of Thunder", "grenade:Lightning Grenade"]
+sources = ["compendium:Arc/Aspects/Touch of Thunder"]
+on = { event = "cast", ability = "grenade" }
+effect = [{ apply = "jolt", times = 3 }, { apply = "bolt_charge", stacks = 5, times = 4, target = "self" }]
+
+[[modifier]]
+granted_by = ["aspect:Touch of Thunder", "grenade:Lightning Grenade"]
+sources = ["compendium:Arc/Aspects/Touch of Thunder"]
+param = "grenade.charges"
+add = 1
+
+[[rule]]
+granted_by = ["aspect:Touch of Thunder", "grenade:Pulse Grenade"]
+sources = ["compendium:Arc/Aspects/Touch of Thunder"]
+on = { event = "hit", source = "grenade", element = "arc" }
+effect = { spawn = "ionic_trace", count = 1 }
+cooldown = 1
+
+# -------------------------------------------------------------- grenades
+
+[[rule]]
+granted_by = "grenade:Storm Grenade"
+sources = ["compendium:Arc/Grenade Abilities/Storm Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 440, target = "area", radius = 7, element = "arc", source = "grenade", tags = ["grenade"] },
+  { damage = 311, target = "area", radius = 7, element = "arc", source = "grenade", tags = ["grenade"] },
+]
+
+[[rule]]
+granted_by = "grenade:Pulse Grenade"
+sources = ["compendium:Arc/Grenade Abilities/Pulse Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 156, target = "area", radius = 6, element = "arc", source = "grenade", tags = ["grenade"] },
+  { damage = 249, times = 5, target = "area", radius = 6, element = "arc", source = "grenade", tags = ["grenade"] },
+]
+
+[[rule]]
+granted_by = "grenade:Skip Grenade"
+sources = ["compendium:Arc/Grenade Abilities/Skip Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 138, times = 4, element = "arc", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "grenade:Flashbang Grenade"
+sources = ["compendium:Arc/Grenade Abilities/Flashbang Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 684, target = "area", radius = 7.5, falloff = 0.0, element = "arc", source = "grenade", tags = ["grenade"] },
+  { apply = "blind", target = "area", radius = 10 },
+]
+
+[[rule]]
+granted_by = "grenade:Flux Grenade"
+sources = ["compendium:Arc/Grenade Abilities/Flux Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 901, target = "area", radius = 6, falloff = 0.0, element = "arc", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "grenade:Arcbolt Grenade"
+sources = ["compendium:Arc/Grenade Abilities/Arcbolt Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 521, times = 4, element = "arc", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "grenade:Lightning Grenade"
+sources = ["compendium:Arc/Grenade Abilities/Lightning Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 373, times = 4, element = "arc", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = ["fragment:Spark of Magnitude", "grenade:Pulse Grenade"]
+sources = ["compendium:Arc/Fragments/Spark of Magnitude"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 249, times = 2, target = "area", radius = 6, element = "arc", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = ["fragment:Spark of Magnitude", "grenade:Storm Grenade"]
+sources = ["compendium:Arc/Fragments/Spark of Magnitude"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 311, target = "area", radius = 7, element = "arc", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = ["fragment:Spark of Magnitude", "grenade:Lightning Grenade"]
+sources = ["compendium:Arc/Fragments/Spark of Magnitude"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 373, element = "arc", source = "grenade", tags = ["grenade"] }
+
+# ---------------------------------------------------------------- melees
+
+[[rule]]
+granted_by = "melee:Combination Blow"
+sources = ["compendium:Arc/Melee Abilities/Combination Blow"]
+on = { event = "cast", ability = "melee" }
+effect = { damage = { var = "combination_blow.damage" }, element = "arc", source = "melee", tags = ["melee", "powered_melee"] }
+
+[[rule]]
+granted_by = "melee:Combination Blow"
+sources = ["compendium:Arc/Melee Abilities/Combination Blow"]
+on = { event = "kill", source = "melee" }
+effect = [
+  { energy = "class", amount = 1.0, scaling = "stat" },
+  { heal = 100 },
+  { apply = "combination_blow", stacks = 1, target = "self" },
+]
+
+[[modifier]]
+granted_by = "melee:Combination Blow"
+sources = ["compendium:Arc/Melee Abilities/Combination Blow"]
+damage = "melee"
+mul = 2.33
+when = [{ stacks = "combination_blow", min = 1 }]
+
+[[modifier]]
+granted_by = "melee:Combination Blow"
+sources = ["compendium:Arc/Melee Abilities/Combination Blow"]
+damage = "melee"
+mul = 1.5708
+when = [{ stacks = "combination_blow", min = 2 }]
+
+[[modifier]]
+granted_by = "melee:Combination Blow"
+sources = ["compendium:Arc/Melee Abilities/Combination Blow"]
+damage = "melee"
+mul = 1.3661
+when = [{ stacks = "combination_blow", min = 3 }]
+
+[[rule]]
+granted_by = "melee:Thunderclap"
+sources = ["compendium:Arc/Melee Abilities/Thunderclap"]
+on = { event = "cast", ability = "melee" }
+effect = { damage = 703, target = "area", radius = 5, element = "arc", source = "melee", tags = ["melee", "powered_melee"] }
+note = "A 7.5 m wide cone up to 16 m: a 5 m area taken; charging doubles it."
+
+[[rule]]
+granted_by = "melee:Chain Lightning"
+sources = ["compendium:Arc/Melee Abilities/Chain Lightning"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 390, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "jolt" },
+  { damage = 265, target = "area", radius = 9, element = "arc", source = "melee", tags = ["melee"] },
+]
+
+[[modifier]]
+granted_by = "melee:Chain Lightning"
+sources = ["compendium:Arc/Melee Abilities/Chain Lightning"]
+param = "melee.charges"
+add = 1
+
+[[rule]]
+granted_by = "melee:Ball Lightning"
+sources = ["compendium:Arc/Melee Abilities/Ball Lightning"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 117, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { damage = 271, target = "area", radius = 2, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+]
+
+[[rule]]
+granted_by = "melee:Ball Lightning"
+sources = ["compendium:Arc/Melee Abilities/Ball Lightning"]
+on = { event = "cast", ability = "melee" }
+when = [{ has = "amplified" }]
+effect = { damage = 163, times = 2, target = "area", radius = 2, element = "arc", source = "melee", tags = ["melee"] }
+
+[[rule]]
+granted_by = "melee:Seismic Strike"
+sources = ["compendium:Arc/Melee Abilities/Seismic Strike"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "sprint" }]
+effect = [
+  { damage = 1073, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { damage = 391, target = "area", radius = 6, element = "arc", source = "melee", tags = ["melee"] },
+  { apply = "blind", target = "area", radius = 6 },
+]
+
+[[rule]]
+granted_by = "melee:Disorienting Blow"
+sources = ["compendium:Arc/Melee Abilities/Disorienting Blow"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 162, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { damage = 976, target = "area", radius = 7, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "blind", target = "area", radius = 9.6 },
+  { apply = "amplified", target = "self" },
+  { apply = "bolt_charge", stacks = 2, target = "self" },
+]
+
+[[rule]]
+granted_by = "melee:Ballistic Slam"
+sources = ["compendium:Arc/Melee Abilities/Ballistic Slam"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "airborne" }]
+effect = [
+  { damage = 210, target = "area", radius = 8, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "bolt_charge", stacks = 3, target = "self" },
+]
+note = "x3 Bolt Charge and 3% super energy per enemy hit: per cast here."
+
+# ---------------------------------------------------------------- supers
+
+[[rule]]
+granted_by = "super:Thundercrash"
+sources = ["compendium:Arc/Super Abilities/Thundercrash"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 8440, target = "area", radius = 10, element = "arc", source = "super", tags = ["super"] },
+  { damage = 108, times = 4, target = "area", radius = 10, element = "arc", source = "super", tags = ["super"] },
+]
+
+[[rule]]
+granted_by = "super:Gathering Storm"
+sources = ["compendium:Arc/Super Abilities/Gathering Storm"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 544, element = "arc", source = "super", tags = ["super"] },
+  { apply = "jolt" },
+  { damage = 1958, target = "area", radius = 10, element = "arc", source = "super", tags = ["super"] },
+  { damage = 446, times = 7, target = "area", radius = 10, element = "arc", source = "super", tags = ["super"] },
+]
+note = "The explosion (608) and the lightning strike (1,350) over 10 m, then the field every 0.7 s: seven ticks taken."
+
+[[rule]]
+granted_by = "super:Chaos Reach"
+sources = ["compendium:Arc/Super Abilities/Chaos Reach"]
+on = { event = "cast", ability = "super" }
+effect = { damage = 378, times = 25, element = "arc", source = "super", tags = ["super"] }
+note = "A beam hit every 0.13 s over its 4 s, less the first 0.67 s."
+
+[[rule]]
+granted_by = "super:Stormtrance"
+sources = ["compendium:Arc/Super Abilities/Stormtrance"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 690, target = "area", radius = 6, element = "arc", source = "super", tags = ["super"] },
+  { damage = 440, times = 5, element = "arc", source = "super", tags = ["super"] },
+  { apply = "jolt", times = 5 },
+  { damage = 178, times = { var = "stormtrance.chains" }, target = "area", radius = 6, element = "arc", source = "super", tags = ["super"] },
+]
+
+[[rule]]
+granted_by = "super:Storm's Edge"
+sources = ["compendium:Arc/Super Abilities/Storm's Edge"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 261, times = 3, target = "area", radius = 3, element = "arc", source = "super", tags = ["super"] },
+  { damage = 2880, times = 3, target = "area", radius = 6, element = "arc", source = "super", tags = ["super"] },
+]
+
+[[rule]]
+granted_by = "super:Arc Staff"
+sources = ["compendium:Arc/Super Abilities/Arc Staff"]
+on = { event = "cast", ability = "super" }
+effect = { damage = 864, times = 20, target = "area", radius = 3, element = "arc", source = "super", tags = ["super"] }
+confidence = "assumed"
+note = "Light attacks drain 2.5% each against 5% a second passive: about twenty hits a cast."
+
+[[rule]]
+granted_by = "super:Arc Staff"
+sources = ["compendium:Arc/Super Abilities/Arc Staff"]
+on = { event = "kill", source = "super" }
+effect = { apply = "bolt_charge", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "super:Fists of Havoc"
+sources = ["compendium:Arc/Super Abilities/Fists of Havoc"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 1619, times = 4, target = "area", radius = 11, element = "arc", source = "super", tags = ["super"] },
+  { apply = "blind", target = "area", radius = 11 },
+]
+confidence = "assumed"
+note = "Heavy slams drain 12% against 4% a second passive: about four slams a cast, light attacks aside."
