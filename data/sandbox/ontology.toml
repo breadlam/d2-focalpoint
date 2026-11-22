@@ -772,3 +772,15 @@ sources = ["compendium:Arc/Aspects/Arc Soul"]
 params = [
   { name = "duration", value = 15.0, unit = "s" },
 ]
+
+# ------------------------------------------------------------ Void, more
+
+[[state]]
+name = "volatile_rounds"
+kind = "buff"
+element = "void"
+description = "Void weapons inflict Volatile."
+sources = ["compendium:Void/Fragments/Echo of Instability"]
+params = [
+  { name = "duration", value = 11.25, unit = "s" },
+]

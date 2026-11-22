@@ -1,0 +1,442 @@
+# Void (docs/sandbox.md). Volatile's explosions are a core verb; Devour and
+# Weaken are core records (core.toml).
+
+# ------------------------------------------------------------- fragments
+
+[[rule]]
+granted_by = "fragment:Echo of Starvation"
+sources = ["compendium:Void/Fragments/Echo of Starvation"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { apply = "devour", duration = 5, target = "self" }
+
+[[rule]]
+granted_by = "fragment:Echo of Starvation"
+sources = ["compendium:Void/Fragments/Echo of Starvation"]
+on = { event = "pickup", object = "void_breach" }
+effect = { apply = "devour", duration = 5, target = "self" }
+
+[[rule]]
+granted_by = "fragment:Echo of Undermining"
+sources = ["compendium:Void/Fragments/Echo of Undermining"]
+on = { event = "hit", source = "grenade", element = "void" }
+effect = { apply = "weaken" }
+
+[[modifier]]
+granted_by = "fragment:Echo of Persistence"
+sources = ["compendium:Void/Fragments/Echo of Persistence"]
+param = "devour.duration"
+mul = 1.5
+
+[[modifier]]
+granted_by = "fragment:Echo of Persistence"
+sources = ["compendium:Void/Fragments/Echo of Persistence"]
+param = "invisibility.duration"
+mul = 1.4
+
+[[modifier]]
+granted_by = "fragment:Echo of Persistence"
+sources = ["compendium:Void/Fragments/Echo of Persistence"]
+param = "void_overshield.duration"
+mul = 1.5
+
+[[rule]]
+granted_by = "fragment:Echo of Harvest"
+sources = ["compendium:Void/Fragments/Echo of Harvest"]
+on = { event = "kill", target_has = "weaken" }
+effect = [{ spawn = "orb_of_power", count = 1 }, { spawn = "void_breach", count = 1 }]
+cooldown = 10
+
+[[rule]]
+granted_by = "fragment:Echo of Expulsion"
+sources = ["compendium:Void/Fragments/Echo of Expulsion"]
+on = { event = "kill", source = "ability", element = "void" }
+effect = { damage = 160, target = "area", radius = 7, element = "void", source = "ability", tags = ["ability", "explosion"] }
+
+[[rule]]
+granted_by = "fragment:Echo of Reprisal"
+sources = ["compendium:Void/Fragments/Echo of Reprisal"]
+on = "kill"
+when = [{ enemies_within = 8, min = 3 }]
+effect = { energy = "super", amount = 0.01, scaling = "fixed" }
+cooldown = 0.75
+note = "+0.3% to +2.3% super energy by enemies around (3 to 7): 1% (five) taken."
+
+[[rule]]
+granted_by = "fragment:Echo of Vigilance"
+sources = ["compendium:Void/Fragments/Echo of Vigilance"]
+on = "kill"
+when = [{ health_below = 0.3 }]
+effect = { apply = "void_overshield", duration = 5, target = "self" }
+cooldown = 10
+
+[[rule]]
+granted_by = "fragment:Echo of Instability"
+sources = ["compendium:Void/Fragments/Echo of Instability"]
+on = { event = "kill", source = "grenade" }
+effect = { apply = "volatile_rounds", target = "self" }
+
+[[rule]]
+granted_by = "fragment:Echo of Instability"
+sources = ["compendium:Void/Fragments/Echo of Instability"]
+on = { event = "hit", source = "weapon", element = "void" }
+when = [{ has = "volatile_rounds" }]
+effect = { apply = "volatile" }
+note = "Weapon hits are not followed one by one; weapon kills stand in for them."
+
+[[rule]]
+granted_by = "fragment:Echo of Exchange"
+sources = ["compendium:Void/Fragments/Echo of Exchange"]
+on = { event = "kill", source = "melee" }
+effect = { energy = "grenade", amount = { by_tier = [0.075, 0.11, 0.1625, 0.25] } }
+
+[[rule]]
+granted_by = "fragment:Echo of Obscurity"
+sources = ["compendium:Void/Fragments/Echo of Obscurity"]
+on = "finisher"
+effect = { apply = "invisibility", duration = 5, target = "self" }
+
+[[rule]]
+granted_by = "fragment:Echo of Provision"
+sources = ["compendium:Void/Fragments/Echo of Provision"]
+on = { event = "hit", source = "grenade" }
+effect = { energy = "melee", amount = 0.08 }
+note = "3% for Scatter, Spike, Void Wall and Vortex, 8% for Axion, Magnetic and Suppressor: 8% taken, once per grenade damage instance."
+
+[[rule]]
+granted_by = "fragment:Echo of Leeching"
+sources = ["compendium:Void/Fragments/Echo of Leeching"]
+on = { event = "kill", source = "melee" }
+effect = { apply = "restoration", stacks = 1, duration = 4, target = "allies" }
+confidence = "assumed"
+note = "Melee kills start health regeneration; taken as Restoration x1 for 4 s."
+
+[[rule]]
+granted_by = "fragment:Echo of Domineering"
+sources = ["compendium:Void/Fragments/Echo of Domineering"]
+on = { event = "kill", target_has = "suppression" }
+effect = { spawn = "void_breach", count = 1 }
+
+[[rule]]
+granted_by = "fragment:Echo of Cessation"
+sources = ["compendium:Void/Fragments/Echo of Cessation"]
+on = { event = "kill", target_has = "volatile" }
+effect = { spawn = "void_breach", count = 1 }
+
+# --------------------------------------------------------------- aspects
+
+[[rule]]
+granted_by = "aspect:On the Prowl"
+sources = ["compendium:Void/Aspects/On the Prowl"]
+on = { event = "gain", state = "invisibility" }
+effect = [{ apply = "weaken", target = "area", radius = 6 }, { apply = "invisibility", duration = 2, target = "allies" }]
+confidence = "assumed"
+note = "Invisibility marks a Priority Target; killing it releases a weakening smoke. Taken as weakening the pack around it."
+
+[[rule]]
+granted_by = "aspect:Vanishing Step"
+sources = ["compendium:Void/Aspects/Vanishing Step"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "invisibility", duration = 5, target = "self" }
+
+[[rule]]
+granted_by = "aspect:Trapper's Ambush"
+sources = ["compendium:Void/Aspects/Trapper's Ambush"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { damage = 630, target = "area", radius = { var = "trappers_ambush.radius" }, element = "void", source = "class", tags = ["class"] },
+  { apply = "weaken", target = "area", radius = { var = "trappers_ambush.radius" } },
+]
+note = "Quickfall consumes the class charge: class casts taken as Quickfalls."
+
+[[rule]]
+granted_by = "aspect:Trapper's Ambush"
+sources = ["compendium:Void/Aspects/Trapper's Ambush"]
+on = { event = "kill", source = "class" }
+effect = { apply = "devour", duration = 10, target = "self" }
+
+[[rule]]
+granted_by = "aspect:Offensive Bulwark"
+sources = ["compendium:Void/Aspects/Offensive Bulwark"]
+on = "kill"
+when = [{ has = "void_overshield" }]
+effect = [{ energy = "grenade", amount = 0.09 }, { energy = "melee", amount = 0.09 }]
+
+[[modifier]]
+granted_by = "aspect:Offensive Bulwark"
+sources = ["compendium:Void/Aspects/Offensive Bulwark"]
+damage = "melee"
+mul = 2.6
+when = [{ has = "void_overshield" }]
+
+[[rule]]
+granted_by = "aspect:Bastion"
+sources = ["compendium:Void/Aspects/Bastion"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "void_overshield", target = "allies" }
+
+[[rule]]
+granted_by = "aspect:Bastion"
+sources = ["compendium:Void/Aspects/Bastion"]
+on = { event = "cast", ability = "super" }
+effect = { apply = "void_overshield", target = "allies" }
+
+[[rule]]
+granted_by = "aspect:Unbreakable"
+sources = ["compendium:Void/Aspects/Unbreakable"]
+on = { event = "cast", ability = "grenade" }
+effect = { apply = "void_overshield", duration = 5, target = "self" }
+note = "The held Void Shield: 95% damage resistance to blocked damage and an Overshield; it deals no damage."
+
+[[rule]]
+granted_by = "aspect:Controlled Demolition"
+sources = ["compendium:Void/Aspects/Controlled Demolition"]
+on = { event = "hit", source = "ability", element = "void" }
+effect = { apply = "volatile" }
+
+[[rule]]
+granted_by = "aspect:Controlled Demolition"
+sources = ["compendium:Void/Aspects/Controlled Demolition"]
+on = "volatile_explosion"
+effect = { heal = 90 }
+
+[[modifier]]
+granted_by = "aspect:Chaos Accelerant"
+sources = ["compendium:Void/Aspects/Chaos Accelerant"]
+param = "grenade.charges"
+add = 1
+
+[[rule]]
+granted_by = ["aspect:Chaos Accelerant", "grenade:Vortex Grenade"]
+sources = ["compendium:Void/Aspects/Chaos Accelerant"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 78, times = 3, target = "area", radius = 4, element = "void", source = "grenade", tags = ["grenade"] }
+note = "Overcharged Vortexes last longer: about three more ticks."
+
+[[rule]]
+granted_by = ["aspect:Chaos Accelerant", "grenade:Scatter Grenade"]
+sources = ["compendium:Void/Aspects/Chaos Accelerant"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 185, times = 4, target = "area", radius = 4, element = "void", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "aspect:Child of the Old Gods"
+sources = ["compendium:Void/Aspects/Child of the Old Gods"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { damage = 41, times = 13, target = "area", radius = 10, element = "void", source = "grenade", tags = ["grenade"] },
+  { apply = "weaken", target = "area", radius = 10 },
+  { apply = "suppression", target = "area", radius = 10 },
+]
+note = "A Void Soul's draining field: 41 damage every 0.7 s for 9.25 s."
+
+[[rule]]
+granted_by = "aspect:Soul Siphon"
+sources = ["compendium:Void/Aspects/Soul Siphon"]
+on = { event = "hit", source = "melee", powered = true }
+effect = [
+  { damage = 400, times = 4, element = "void", source = "melee", tags = ["melee"] },
+  { apply = "void_overshield", duration = 15, target = "self" },
+]
+confidence = "assumed"
+note = "The tether's rising melee ticks on up to four enemies; their damage is not stated."
+
+# -------------------------------------------------------------- grenades
+
+[[rule]]
+granted_by = "grenade:Vortex Grenade"
+sources = ["compendium:Void/Grenade Abilities/Vortex Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 195, target = "area", radius = 5, element = "void", source = "grenade", tags = ["grenade"] },
+  { damage = 78, times = 12, target = "area", radius = 4, element = "void", source = "grenade", tags = ["grenade"] },
+]
+
+[[rule]]
+granted_by = "grenade:Magnetic Grenade"
+sources = ["compendium:Void/Grenade Abilities/Magnetic Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 472, times = 2, target = "area", radius = 5, element = "void", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "grenade:Scatter Grenade"
+sources = ["compendium:Void/Grenade Abilities/Scatter Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 185, times = 8, target = "area", radius = 4, element = "void", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "grenade:Suppressor Grenade"
+sources = ["compendium:Void/Grenade Abilities/Suppressor Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 863, target = "area", radius = 9, element = "void", source = "grenade", tags = ["grenade"] },
+  { apply = "suppression", target = "area", radius = 9 },
+]
+
+[[rule]]
+granted_by = "grenade:Axion Bolt"
+sources = ["compendium:Void/Grenade Abilities/Axion Bolt"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 575, times = 2, element = "void", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "grenade:Void Wall"
+sources = ["compendium:Void/Grenade Abilities/Void Wall"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 173, target = "area", radius = 4, element = "void", source = "grenade", tags = ["grenade"] },
+  { damage = 120, times = 9, target = "area", radius = 4, element = "void", source = "grenade", tags = ["grenade"] },
+]
+note = "Enemies stand in the wall about half its 18 ticks."
+
+[[rule]]
+granted_by = "grenade:Void Spike"
+sources = ["compendium:Void/Grenade Abilities/Void Spike"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 80, times = 16, target = "area", radius = 3, element = "void", source = "grenade", tags = ["grenade"] }
+
+# ---------------------------------------------------------------- melees
+
+[[rule]]
+granted_by = "melee:Snare Bomb"
+sources = ["compendium:Void/Melee Abilities/Snare Bomb"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 153, target = "area", radius = { var = "snare_bomb.radius" }, element = "void", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "weaken", target = "area", radius = { var = "snare_bomb.radius" } },
+  { apply = "invisibility", duration = 5, target = "allies" },
+]
+
+[[rule]]
+granted_by = "melee:Pocket Singularity"
+sources = ["compendium:Void/Melee Abilities/Pocket Singularity"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 240, target = "area", radius = 3.75, element = "void", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "volatile", target = "area", radius = 3.75 },
+]
+confidence = "assumed"
+note = "The explosion's damage is cut off in the Compendium's text; MossyMax's sheet gives about 160-210."
+
+[[modifier]]
+granted_by = "melee:Pocket Singularity"
+sources = ["compendium:Void/Melee Abilities/Pocket Singularity"]
+param = "melee.charges"
+add = 1
+
+[[rule]]
+granted_by = "melee:Shield Throw"
+sources = ["compendium:Void/Melee Abilities/Shield Throw"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 400, times = 3, element = "void", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "void_overshield", target = "self" },
+]
+note = "Ricochets up to four times: three hits taken."
+
+[[rule]]
+granted_by = "melee:Phantom Surge"
+sources = ["compendium:Void/Melee Abilities/Phantom Surge"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 595, target = "area", radius = 2, element = "void", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "void_overshield", target = "self" },
+]
+
+[[rule]]
+granted_by = "melee:Phantom Surge"
+sources = ["compendium:Void/Melee Abilities/Phantom Surge"]
+on = { event = "kill", source = "melee" }
+effect = { energy = "melee", amount = 0.6 }
+
+[[rule]]
+granted_by = "melee:Shield Bash"
+sources = ["compendium:Void/Melee Abilities/Shield Bash"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "sprint" }]
+effect = [
+  { damage = 1073, element = "void", source = "melee", tags = ["melee", "powered_melee"] },
+  { damage = 391, target = "area", radius = 7, element = "void", source = "melee", tags = ["melee"] },
+]
+
+# ---------------------------------------------------------------- supers
+
+[[rule]]
+granted_by = "super:Shadowshot: Deadfall"
+sources = ["compendium:Void/Super Abilities/Shadowshot: Deadfall"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 2583, target = "area", radius = { var = "deadfall.radius" }, element = "void", source = "super", tags = ["super"] },
+  { apply = "weaken", target = "area", radius = { var = "deadfall.radius" } },
+  { apply = "suppression", target = "area", radius = { var = "deadfall.radius" } },
+]
+
+[[rule]]
+granted_by = "super:Shadowshot: Moebius Quiver"
+sources = ["compendium:Void/Super Abilities/Shadowshot: Moebius Quiver"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 2500, times = 6, element = "void", source = "super", tags = ["super"] },
+  { apply = "weaken", times = 6 },
+]
+confidence = "assumed"
+note = "Six anchors; their damage (rising to +127% with damage dealt) is not stated: 2,500 taken."
+
+[[rule]]
+granted_by = "super:Nova Bomb: Cataclysm"
+sources = ["compendium:Void/Super Abilities/Nova Bomb: Cataclysm"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 3241, target = "area", radius = 12, element = "void", source = "super", tags = ["super"] },
+  { damage = 649, times = 6, target = "area", radius = 4, element = "void", source = "super", tags = ["super"] },
+]
+
+[[rule]]
+granted_by = "super:Nova Bomb: Vortex"
+sources = ["compendium:Void/Super Abilities/Nova Bomb: Vortex"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 3021, target = "area", radius = 8, element = "void", source = "super", tags = ["super"] },
+  { damage = 52, times = 76, target = "area", radius = 6, element = "void", source = "super", tags = ["super"] },
+]
+
+[[rule]]
+granted_by = "super:Twilight Arsenal"
+sources = ["compendium:Void/Super Abilities/Twilight Arsenal"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 3000, times = 3, target = "area", radius = 5, element = "void", source = "super", tags = ["super"] },
+  { apply = "weaken", times = 3, target = "area", radius = 5 },
+]
+
+[[rule]]
+granted_by = "super:Ward of Dawn"
+sources = ["compendium:Void/Super Abilities/Ward of Dawn"]
+on = { event = "cast", ability = "super" }
+effect = [{ charges = "grenade", count = 1 }, { spawn = "orb_of_power", count = 3 }]
+
+[[rule]]
+granted_by = "super:Nova Warp"
+sources = ["compendium:Void/Super Abilities/Nova Warp"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 964, times = 12, target = "area", radius = 6, element = "void", source = "super", tags = ["super"] },
+  { apply = "volatile", times = 12, target = "area", radius = 6 },
+]
+confidence = "assumed"
+note = "Light attacks drain 5% against 4.1% a second passive: about twelve a cast."
+
+[[rule]]
+granted_by = "super:Sentinel Shield"
+sources = ["compendium:Void/Super Abilities/Sentinel Shield"]
+on = { event = "cast", ability = "super" }
+effect = { damage = 1516, times = 6, target = "area", radius = 4, element = "void", source = "super", tags = ["super"] }
+confidence = "assumed"
+note = "Combo finishers and throws over 17 s: six area hits of the finisher's 1,516 taken."
+
+[[rule]]
+granted_by = "super:Spectral Blades"
+sources = ["compendium:Void/Super Abilities/Spectral Blades"]
+on = { event = "cast", ability = "super" }
+effect = { damage = 1107, times = 15, element = "void", source = "super", tags = ["super"] }
+confidence = "assumed"
+note = "Light attacks over 23.5 s: fifteen hits taken."

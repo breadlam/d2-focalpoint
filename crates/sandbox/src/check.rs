@@ -69,7 +69,7 @@ impl<'a> Checker<'a> {
     }
 
     fn part(&mut self, p: &Part) {
-        if !PART_KINDS.contains(&p.kind.as_str()) {
+        if p.kind != crate::rules::CORE && !PART_KINDS.contains(&p.kind.as_str()) {
             self.problem(format!(
                 "part {p}: kind {:?} is not one of {PART_KINDS:?}",
                 p.kind
@@ -692,7 +692,7 @@ pub fn coverage(
     let unresolved = base
         .parts()
         .into_iter()
-        .filter(|p| !names.contains(&p.name))
+        .filter(|p| p.kind != crate::rules::CORE && !names.contains(&p.name))
         .map(ToString::to_string)
         .collect();
     Ok((by_kind.into_values().collect(), unmodelled, unresolved))

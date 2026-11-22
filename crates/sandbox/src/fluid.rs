@@ -477,6 +477,11 @@ impl<'a> Engine<'a> {
         }
         if let Some(state) = &eff.apply {
             let on_player = matches!(eff.target.as_deref(), Some("self" | "allies" | "fireteam"));
+            if state == "volatile" && !on_player {
+                // A Volatile enemy explodes when it is damaged again.
+                let explosions = self.var("policy.volatile_explosions_per_enemy");
+                out.push((Event::new("volatile_explosion"), p * n * explosions));
+            }
             if state == "jolt" && !on_player {
                 // A Jolted enemy chains lightning each time it is damaged
                 // again, at most once per `jolt.chain_cooldown`.
@@ -886,6 +891,17 @@ impl<'a> Engine<'a> {
                 y.pack_damage += w * targets * dmg;
                 *y.pack_damage_by
                     .entry(("verb".into(), "arc".into()))
+                    .or_default() += w * targets * dmg;
+            }
+            "volatile_explosion" => {
+                let r = self.param("volatile.radius").unwrap_or(5.0);
+                let targets = 1.0 + self.s.neighbours(r);
+                let dmg = self.param("volatile.damage").unwrap_or(0.0)
+                    * self.damage_multiplier(&["volatile".to_string()], Some("void"));
+                y.damage += w * targets * dmg;
+                y.pack_damage += w * targets * dmg;
+                *y.pack_damage_by
+                    .entry(("verb".into(), "void".into()))
                     .or_default() += w * targets * dmg;
             }
             "bolt_discharge" => {

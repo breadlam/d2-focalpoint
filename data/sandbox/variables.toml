@@ -97,6 +97,16 @@ status = "guess"
 basis = "A Jolted enemy chains each time it is damaged again, at most every 0.8 s for 10 s; most Jolted enemies take a few more hits before they die."
 measure = "From recordings: chain lightning bursts per Jolted enemy."
 
+[[variable]]
+name = "policy.volatile_explosions_per_enemy"
+guess = 1.0
+low = 0.5
+high = 2.0
+unit = "count"
+status = "guess"
+basis = "A Volatile enemy explodes when damaged again, once per application (with a 1 s lockout before it can be reapplied); most are damaged again before they die or it expires."
+measure = "From recordings: Volatile explosions per Volatile enemy."
+
 # ------------------------------------------------------ parts' numbers
 
 [[variable]]
@@ -473,3 +483,51 @@ status = "guess"
 basis = "The bonus lasts until shields are full again after reaching critical health: a few seconds."
 measure = "Time from critical health to full shields with no healing."
 sources = ["compendium:Arc/Fragments/Spark of Recharge"]
+
+# ------------------------------------------------------------------- core
+
+[[variable]]
+name = "orb_of_power.super_energy"
+guess = 0.05
+low = 0.025
+high = 0.0715
+unit = "fraction"
+status = "estimate"
+basis = "Orbs of Power grant super energy that differs by source: 2.5% (Ember of Wonder, Echo of Harvest), 3.6% (Well of Radiance), 7.15% (Glacial Quake's kills)."
+measure = "Pick up one Orb of a known source with an empty super bar at 100 Super."
+sources = ["compendium:Solar/Fragments/Wonder", "compendium:Solar/Super Abilities/Well of Radiance", "compendium:Stasis/Super Abilities/Glacial Quake"]
+
+# ------------------------------------------------------------------- Void
+
+[[variable]]
+name = "snare_bomb.radius"
+guess = 4.0
+low = 2.0
+high = 6.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for the smoke explosion's radius."
+measure = "Snare an enemy in a pack and note which neighbours are weakened."
+sources = ["compendium:Void/Melee Abilities/Snare Bomb"]
+
+[[variable]]
+name = "deadfall.radius"
+guess = 10.0
+low = 6.0
+high = 12.5
+unit = "m"
+status = "guess"
+basis = "The anchor pulls enemies within 12.5 m; the Compendium gives \"?\" for the radius it weakens and suppresses."
+measure = "Fire Deadfall into a spread pack and note the farthest enemy tethered."
+sources = ["compendium:Void/Super Abilities/Shadowshot: Deadfall"]
+
+[[variable]]
+name = "trappers_ambush.radius"
+guess = 6.0
+low = 4.0
+high = 8.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for Quickfall's slam radius."
+measure = "Quickfall into a pack and note the farthest enemy damaged."
+sources = ["compendium:Void/Aspects/Trapper's Ambush"]

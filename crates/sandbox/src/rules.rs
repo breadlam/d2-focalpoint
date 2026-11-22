@@ -48,6 +48,10 @@ pub const PART_KINDS: [&str; 18] = [
     "weapon_mod",
 ];
 
+/// The kind of the sandbox's own verbs written as records
+/// (`core:Devour`): granted to every build, never a part of one.
+pub const CORE: &str = "core";
+
 /// How sure a number or rule is, as in `data/difficulty.toml`.
 pub const CONFIDENCE: [&str; 3] = ["documented", "dated", "assumed"];
 
@@ -96,10 +100,14 @@ pub struct Grant {
 }
 
 impl Grant {
-    /// Whether a loadout grants the record: it has every part.
+    /// Whether a loadout grants the record: it has every part. Parts of
+    /// kind `core` (the sandbox's own verbs, written as records) are in
+    /// every loadout.
     #[must_use]
     pub fn by(&self, loadout: &BTreeSet<Part>) -> bool {
-        self.all.iter().all(|p| loadout.contains(p))
+        self.all
+            .iter()
+            .all(|p| p.kind == CORE || loadout.contains(p))
     }
 
     /// The part, when one part grants the record alone.
@@ -565,7 +573,10 @@ impl RuleBase {
     /// not modelled by them.
     #[must_use]
     pub fn modelled(&self) -> BTreeSet<&Part> {
-        self.grants().filter_map(Grant::sole).collect()
+        self.grants()
+            .filter_map(Grant::sole)
+            .filter(|p| p.kind != CORE)
+            .collect()
     }
 
     /// The rules and modifiers a loadout grants: those whose parts it has.

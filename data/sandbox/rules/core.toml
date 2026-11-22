@@ -1,0 +1,37 @@
+# The sandbox's own verbs, written as records (docs/sandbox.md): granted by
+# `core:` parts, which every build has. What needs code (ignition bursts,
+# Jolt chains, Volatile explosions, crystals and shards) is in the engine.
+
+[[rule]]
+granted_by = "core:Devour"
+sources = ["compendium:Void/Glossary/Devour"]
+on = "kill"
+when = [{ has = "devour" }]
+effect = [
+  { heal = 70 },
+  { energy = "grenade", amount = { by_tier = [0.075, 0.116, 0.1375, 0.2] } },
+  { extend = "devour", duration = 5 },
+]
+note = "Kills while Devour is active heal 70 HP, grant grenade energy by tier and refresh Devour."
+
+[[modifier]]
+granted_by = "core:Weaken"
+sources = ["compendium:Void/Glossary/Weaken", "court:Global Debuffs/Weaken"]
+damage = "any"
+mul = 1.15
+category = "global_debuff"
+when = [{ target_has = "weaken" }]
+
+[[modifier]]
+granted_by = "core:Frozen"
+sources = ["compendium:Stasis/Glossary/Freeze"]
+damage = "melee"
+mul = 2.2
+when = [{ target_has = "frozen" }]
+note = "Frozen enemies take 120% more melee damage."
+
+[[rule]]
+granted_by = "core:Orb of Power"
+sources = ["compendium:Game Mechanics/Orbs of Power"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { energy = "super", amount = { var = "orb_of_power.super_energy" } }

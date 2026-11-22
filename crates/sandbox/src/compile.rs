@@ -205,8 +205,14 @@ mod tests {
         assert!((c.applied_stacks(&o, "scorch", 40.0) - 60.0).abs() < 1e-12);
         assert!((c.applied_stacks(&o, "scorch", 15.0) - 23.0).abs() < 1e-12);
         let ignition = ["ignition".to_string()];
-        assert!((c.damage_multiplier(&o, &ignition, Some("solar"), &[]) - 2.0).abs() < 1e-12);
-        assert!((c.damage_multiplier(&o, &[], Some("solar"), &[]) - 1.0).abs() < 1e-12);
+        // Conditional modifiers (the core Weaken and Frozen ones) held off.
+        let p: Vec<f64> = c
+            .modifiers
+            .iter()
+            .map(|m| if m.when.is_empty() { 1.0 } else { 0.0 })
+            .collect();
+        assert!((c.damage_multiplier(&o, &ignition, Some("solar"), &p) - 2.0).abs() < 1e-12);
+        assert!((c.damage_multiplier(&o, &[], Some("solar"), &p) - 1.0).abs() < 1e-12);
         assert_eq!(c.build.equipped("armor"), Some("Dawn Chorus"));
     }
 }
