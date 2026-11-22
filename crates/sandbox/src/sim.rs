@@ -151,35 +151,56 @@ pub fn simulate(
     s: &Scenario,
     config: Config,
 ) -> Outcome {
-    let threads = std::thread::available_parallelism()
-        .map_or(4, std::num::NonZeroUsize::get)
-        .min(config.runs.max(1));
-    let mut total = Outcome::default();
-    std::thread::scope(|scope| {
-        let handles: Vec<_> = (0..threads)
-            .map(|t| {
-                // Variables keep a record of what is read, so each thread
-                // compiles its own copy.
-                let vars = vars.clone();
-                scope.spawn(move || {
-                    let c = compile(o, base, build, &vars);
-                    let mut out = Outcome::default();
-                    for run in (t..config.runs).step_by(threads) {
-                        let seed = config.seed ^ (run as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
-                        let mut sim = Sim::new(o, &c, e, s, seed);
-                        sim.run(config.seconds);
-                        out.add(&sim.out);
-                    }
-                    out
-                })
-            })
-            .collect();
-        for h in handles {
-            if let Ok(o) = h.join() {
-                total.add(&o);
-            }
+    let cores = std::thread::available_parallelism().map_or(4, std::num::NonZeroUsize::get);
+    simulate_on(o, base, build, vars, e, s, config, cores)
+}
+
+/// [`simulate`] on at most `threads` threads (1 runs on the caller's).
+#[must_use]
+#[allow(clippy::too_many_arguments)]
+pub fn simulate_on(
+    o: &Ontology,
+    base: &RuleBase,
+    build: &Build,
+    vars: &Variables,
+    e: &Economy,
+    s: &Scenario,
+    config: Config,
+    threads: usize,
+) -> Outcome {
+    let threads = threads.clamp(1, config.runs.max(1));
+    let work = |t: usize, vars: &Variables| {
+        let c = compile(o, base, build, vars);
+        let mut out = Outcome::default();
+        for run in (t..config.runs).step_by(threads) {
+            let seed = config.seed ^ (run as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+            let mut sim = Sim::new(o, &c, e, s, seed);
+            sim.run(config.seconds);
+            out.add(&sim.out);
         }
-    });
+        out
+    };
+    let mut total = Outcome::default();
+    if threads == 1 {
+        total.add(&work(0, vars));
+    } else {
+        std::thread::scope(|scope| {
+            let handles: Vec<_> = (0..threads)
+                .map(|t| {
+                    // Variables keep a record of what is read, so each thread
+                    // compiles its own copy.
+                    let vars = vars.clone();
+                    let work = &work;
+                    scope.spawn(move || work(t, &vars))
+                })
+                .collect();
+            for h in handles {
+                if let Ok(o) = h.join() {
+                    total.add(&o);
+                }
+            }
+        });
+    }
     total.normalise();
     total
 }
@@ -625,6 +646,13 @@ impl<'a> Sim<'a> {
         let base = self.param("scorch.tick_base").unwrap_or(0.0);
         let per = self.param("scorch.tick_per_stack").unwrap_or(0.0);
         let bonus = 1.0 + self.param("scorch.non_boss_bonus").unwrap_or(0.0);
+        if !self
+            .enemies
+            .iter()
+            .any(|e| e.alive && e.states.contains_key("scorch"))
+        {
+            return;
+        }
         let mult = self.multiplier(&["scorch".to_string()], Some("solar"), None);
         let mut ticks = Vec::new();
         for (i, e) in self.enemies.iter_mut().enumerate() {

@@ -337,7 +337,52 @@ Not modelled yet:
 - Kills of slowed (not frozen) enemies leaving Stasis Shards.
 - Shield breaks and Champion stuns as events.
 - Exotic class items' spirit perks.
-- The discrete-event simulation that will check all of this.
+- Super durations: a super is one cast, its effects at once.
+
+## Simulating a build
+
+`focalpoint sandbox simulate` runs the same records as a seeded Monte
+Carlo (`docs/build-model.md` §5). Where the analysis takes expected
+values, the simulator draws them:
+
+- **Enemies** stand at sampled points of each pack's disc, with health
+  drawn from the scenario's archetypes. Packs arrive at the context's
+  rate of kills.
+- **Weapons** wear the enemies down at a steady rate: `sim.weapon_headroom`
+  times the damage that kills what the scenario supplies. Ability damage
+  that kills nothing outright adds up with theirs on the same health
+  bars, and the final blow decides whose kill it is. The rates' chip kills
+  and enemy availability come out of this instead of being assumed.
+- **The player** regenerates energy by the economy and casts each ability
+  when charged, at a live enemy, once per `policy.min_cast_interval` at
+  most.
+- **Rules** fire on concrete events. Chances, conditions, a weapon kill's
+  precision and element and the player's movement are drawn. Cooldowns
+  and per-activation limits are kept per rule. An effect on a target
+  that has died does nothing, except repeated hits, which move on.
+- **Core verbs** act on positions: ignitions hit everyone in their
+  radius, crystals freeze the enemies around them, Jolt chains to the
+  nearest enemies. Scorch ticks and decays after its linger.
+
+It reports casts, kills by final blow, damage, healing and buff uptimes
+beside the analysis's rates. `--offspring ignition` measures how many
+ignitions each one sets off in a fresh pack, against the analysis's loop
+gain:
+
+| Dawn Chorus ignition chain (Char, Ashes, Fulmination) | Simulated | Analysis |
+|---|---|---|
+| Ultimate Conquest | 2.98 | 2.98 |
+| Grandmaster Conquest | 2.88 | 2.98 |
+| Ultimate Fireteam Op | 2.71 | 2.96 |
+| Ultimate Conquest, `scenario.ability_efficiency` 1 | 1.73 | 2.12 |
+
+Where damage is high the simulator branches less: neighbours igniting at
+once hit each other and die before they go off, which the averages miss.
+
+For the Stasis shard loop (Synthoceps Behemoth with Crystalline Converter
+and Hail the Storm, Grandmaster Conquest) the simulator sustains 8.6 melee
+casts a minute where the analysis reaches 20. Abilities kill 41% where
+the analysis says 31%; the recorded clears say about 47%.
 
 ## Synthesis
 

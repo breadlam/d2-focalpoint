@@ -813,13 +813,42 @@ fn simulated_shares(
     kits: &[&Kit],
     config: crate::sim::Config,
 ) -> Result<Vec<f64>> {
-    kits.iter()
+    // Kits in parallel, each kit's runs on one thread.
+    let builds: Vec<Build> = kits
+        .iter()
         .map(|k| {
             let parts = k.build();
-            let build = Build::parse(parts.iter().map(String::as_str))?;
-            Ok(crate::sim::simulate(o, base, &build, vars, e, s, config).ability_kill_share())
+            Build::parse(parts.iter().map(String::as_str))
         })
-        .collect()
+        .collect::<Result<_>>()?;
+    let cores = std::thread::available_parallelism().map_or(4, std::num::NonZeroUsize::get);
+    let mut shares = vec![0.0; builds.len()];
+    std::thread::scope(|scope| {
+        let chunk = builds.len().div_ceil(cores).max(1);
+        let handles: Vec<_> = builds
+            .chunks(chunk)
+            .enumerate()
+            .map(|(n, part)| {
+                let vars = vars.clone();
+                scope.spawn(move || {
+                    let out: Vec<f64> = part
+                        .iter()
+                        .map(|b| {
+                            crate::sim::simulate_on(o, base, b, &vars, e, s, config, 1)
+                                .ability_kill_share()
+                        })
+                        .collect();
+                    (n * chunk, out)
+                })
+            })
+            .collect();
+        for h in handles {
+            if let Ok((at, out)) = h.join() {
+                shares[at..at + out.len()].copy_from_slice(&out);
+            }
+        }
+    });
+    Ok(shares)
 }
 
 #[allow(clippy::cast_precision_loss)]

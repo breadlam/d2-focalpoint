@@ -1,22 +1,32 @@
 # The build model (proposal)
 
-**Status: accepted (2026-11-21); stage 1 in progress.** Done: the
-vocabulary and rule base, the imported economy, damage-buff and combatant
-tables, scenarios, compiling, and the fluid analysis with the first core
-verbs, which the ignition-chain and shard-loop cases pass
-([sandbox.md](sandbox.md)). Rates per minute. Unknown values as
-variables ([measurements.md](measurements.md)). Records for the subclass
-kits: 86-100% of recorded use by kind. The validation harness and a first
-calibration are in place (`analyze model`, [analysis.md](analysis.md)).
-Records for the most-used armor mods (the Orb economy, Armor Charge,
-Fonts, resistances), artifact perks and exotic armor: 39% of all part
-uses. The model predicts each recorded kit's share of kills by abilities
-(Pearson 0.89 over 86 Grandmaster kits, 0.62 over 60 Ultimate Fireteam
-Op kits). Loop gain predicts kits' effects in hard content (+0.42) and
-not in easy content. Synthesis v1 (`sandbox synthesize`) searches
-subclass kits by the calibrated layer and finds the ignition chain and
-the shard loop. Next: weapons and their perks; the discrete-event
-simulator; the measurements ([measurements.md](measurements.md)).
+**Status: accepted (2026-11-21); stages 1-4 in first versions.**
+
+- **Done:**
+  - the vocabulary and rule base;
+  - the imported economy, damage-buff and combatant tables;
+  - scenarios and compiling;
+  - the fluid analysis with the core verbs, which the ignition-chain and
+    shard-loop cases pass, and rates per minute ([sandbox.md](sandbox.md));
+  - the discrete-event simulator, which agrees with the analysis on the
+    ignition chain;
+  - unknown values as variables ([measurements.md](measurements.md)).
+- **Records:** the subclass kits (86-100% of recorded use by kind), the
+  most-used armor mods (the Orb economy, Armor Charge, Fonts,
+  resistances), artifact perks, exotic armor, and the weapon perks and
+  origin traits that act on abilities. That is 320 parts, 42% of all part
+  uses; most of the rest are weapon and armor stat perks, which do not
+  act on abilities.
+- **Validation** (`analyze model`, [analysis.md](analysis.md)):
+  - The analysis orders recorded kits by their share of kills by
+    abilities: Pearson 0.89 over 86 Grandmaster kits, 0.62 over 60
+    Ultimate Fireteam Op kits.
+  - Loop gain predicts kits' effects in hard content (+0.42), and not in
+    easy content.
+- **Synthesis v1** (`sandbox synthesize`) searches subclass kits by the
+  calibrated layer and finds the ignition chain and the shard loop.
+- **Next:** the measurements; weapons' own damage by archetype; supers'
+  durations; synthesis over accessories.
 
 A design for modelling Destiny 2 builds as a whole,
 so the synergy evaluator and build synthesis share one model. It replaces
