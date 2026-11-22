@@ -328,6 +328,16 @@ basis = "Ad-clear content brings a new pack every 30-60 s of combat; dense conte
 measure = "From the recorded clears: kills per minute over pack size, per activity (calibration); or count packs in recordings."
 
 [[variable]]
+name = "scenario.ability_efficiency"
+guess = 0.24
+low = 0.02
+high = 1.0
+unit = "fraction"
+status = "estimate"
+basis = "The share of ability and verb damage that counts towards kills: less overkill, misses, damage on enemies that weapons finish, and the pack's uneven spread. Fitted so the model's share of kills by abilities matches the recorded clears' (`focalpoint analyze model --fit`, 2026-11-22): 0.226 in Grandmaster Conquest, 0.245 in Ultimate Fireteam Ops."
+measure = "Fitted, not measured: the recorded clears' ability kill share per context."
+
+[[variable]]
 name = "scenario.elite_share"
 guess = 0.25
 low = 0.1

@@ -13,6 +13,7 @@ for further processing). The numbers below are from the import of
 | `analyze completeness [--count K]` | Which captured builds are missing significant parts, how much evidence do they carry, and what do they do to highlights? | the completeness boundary of highlights (ADR 0007) |
 | `analyze subclasses [--neutral-per N] [--prismatic N] [--activity-per N]` | What would a quota of highlights per subclass pick, and how distinct, well ranked and well evidenced are those picks? | how highlights are organised |
 | `analyze solo [--min-players N] [--top N]` | How did Searchlight capture solo play, what does a solo clear take against the fireteam clears, do solo clears look like full clears, and what does crediting them do to the rankings? | the solo premium (ADR 0008) |
+| `analyze model [--fit] [--parts]` | Does the build model's evaluation of recorded kits say anything about how they perform? With `--fit`, each context is first calibrated to its recorded share of kills by abilities; with `--parts`, each modelled part's predicted marginal value against its measured lift | the build model's validation ([build-model.md](build-model.md) §7) |
 | `analyze escalation [--anchor PART --parts A,B,…]` | Which parts' lift depends on the content — the pieces of synergistic escalation loops? With `--anchor`: how builds with a part do by which of a few others they also run | the escalation model ([escalation.md](escalation.md)) |
 | `analyze difficulty [--base STEP] [--skull NAME] [--min-pairs N]` | How much does each difficulty step (or a modifier such as Cutthroat Combat) slow the same players' kills in the same activities? | the Power deltas in `data/difficulty.toml` ([durability.md](durability.md)) |
 | `analyze triggers` | Do the trigger tags read from the mechanics texts say anything about where builds are played — do players lean less on kill-triggered parts where kills are scarce or hard? | the synergy evaluator's trigger availability per context ([effects.md](effects.md)) |
@@ -456,3 +457,56 @@ Converter −6%. The bottom is kill-volume engines that flounder in hard
 content: Fever and Chill, Ember of Torches, Kismet, Echo of Starvation,
 Echo of Harvest (−20 to −29 points).
 
+
+## `analyze model`
+
+Validates the build model ([build-model.md](build-model.md),
+[sandbox.md](sandbox.md)) against the recorded clears.
+
+- **Kits.** Each recorded kit is measured per context against its players'
+  usual level, as `analyze escalation` measures parts. A kit is the super,
+  abilities, aspects, fragments, Transcendence, exotic armor and the
+  artifact perks the model knows. The model evaluates the same kits in a
+  scenario per context:
+  - hard: Grandmaster Conquest;
+  - easy: Ultimate Fireteam Op.
+
+  The report gives each metric's rank correlation with the measured
+  effect. It also gives a ridge regression of the effect on all metrics,
+  scored on kits held out of its fit in five folds. That regression is the
+  first calibrated layer.
+- **`--fit`** calibrates each context first, one moment with one parameter.
+  It finds the `scenario.ability_efficiency` at which the kits' mean share
+  of kills by abilities matches the recorded share in the context profile.
+- **`--parts`** checks parts instead. For each modelled part with a
+  measured lift, the model removes the part from up to 20 kits that run
+  it. The mean change in each metric is then correlated with the measured
+  lifts.
+
+Results on 2026-11-22: kits with at least 30 clears by 8 players, the
+subclass kits modelled for about 85% of their parts, weapons, armor mods
+and most artifact perks not yet.
+
+| | Hard (87 kits) | Easy (54 kits) |
+|---|---|---|
+| fitted `scenario.ability_efficiency` | 0.23 | 0.25 |
+| share of kills by abilities, model / recorded | 13% / 17% | 30% / 28% |
+| loop gain: rank correlation with effect | **+0.39** | −0.27 |
+| damage resistance | +0.14 | −0.24 |
+| held-out prediction (Pearson / Spearman) | 0.24 / 0.35 | 0.00 / 0.08 |
+
+What the results show:
+
+- **Calibration.** The fitted efficiency is about the same in both contexts:
+  roughly a quarter of ability damage counts towards kills. That value is
+  now the variable's guess.
+- **Loop gain.** It predicts kits' effects in hard content and goes the
+  other way in easy content, as the escalation hypothesis expects: loops
+  pay where enemies survive long enough to feed them.
+- **Parts.** Across 112 parts, the predicted change in loop gain correlates
+  +0.23 with the measured hard-content lifts. The parts with the largest
+  lifts are the ones the model gives the largest gain: Ember of Ashes and
+  Ember of Char (+27% to +33%), Solar Fulmination and Whisper of Hunger.
+- **Limits.** Easy content is not predicted, and the signal is modest. The
+  model leaves out weapons, armor mods and most artifact perks, which
+  drive much of what kits do. Small kits' measured effects are also noisy.

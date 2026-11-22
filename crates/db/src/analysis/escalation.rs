@@ -49,7 +49,8 @@ fn quoted(groups: &[&str]) -> String {
 
 /// The CTE `c (build_id, share, membership_id, sub, ctx, resid)`: scored
 /// clears with a recorded build against their player's usual level.
-fn clears_cte() -> String {
+#[must_use]
+pub fn clears_cte() -> String {
     format!(
         "lvl AS (SELECT membership_id, avg(perf) AS level, count(*) AS n FROM run_score GROUP BY 1),
          c AS (

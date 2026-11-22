@@ -561,7 +561,8 @@ impl<'a> Engine<'a> {
                 );
                 *y.pack_damage_by.entry(key).or_default() += w * p * n * dmg;
             } else {
-                let kills = p * n * (1.0 - self.s.survives_mixed(dmg));
+                let eff = self.var("scenario.ability_efficiency");
+                let kills = p * n * (1.0 - self.s.survives_mixed(dmg * eff));
                 y.kills += w * kills;
                 if kills > 0.0 {
                     let mut kill = hit;
@@ -847,7 +848,8 @@ impl<'a> Engine<'a> {
         radii.dedup();
         let mut inner = 0.0;
         let mut ignited: BTreeMap<String, f64> = BTreeMap::new();
-        let mut killed = 1.0 - self.s.survives_mixed(origin_damage);
+        let eff = self.var("scenario.ability_efficiency");
+        let mut killed = 1.0 - self.s.survives_mixed(origin_damage * eff);
         for r in radii {
             let band = self.s.neighbours(r) - self.s.neighbours(inner);
             inner = r;
@@ -855,7 +857,7 @@ impl<'a> Engine<'a> {
                 reach.iter().filter(|(mr, ..)| *mr + 1e-9 >= r).collect();
             let damage: f64 = covering.iter().map(|(_, p, d, _)| p * d).sum();
             y.damage += w * band * damage;
-            let alive = self.s.survives_mixed(damage);
+            let alive = self.s.survives_mixed(damage * eff);
             killed += band * (1.0 - alive);
             let mut stacks: BTreeMap<&str, f64> = BTreeMap::new();
             for (_, _, _, s) in &covering {
@@ -1128,7 +1130,8 @@ impl<'a> Engine<'a> {
                 // Area damage spreads over the pack: each enemy takes its share.
                 1 if y.pack_damage > 0.0 => {
                     let per_enemy = y.pack_damage / pack;
-                    let killed = pack * (1.0 - self.s.survives_mixed(per_enemy));
+                    let eff = self.var("scenario.ability_efficiency");
+                    let killed = pack * (1.0 - self.s.survives_mixed(per_enemy * eff));
                     y.kills += killed;
                     if killed > 0.0 {
                         let total: f64 = y.pack_damage_by.values().sum();
@@ -1461,6 +1464,7 @@ mod tests {
             ("policy.crystals_in_pack", 1.0),
             ("policy.slide_form", 1.0),
             ("economy.documented_chunk_scale", 1.0),
+            ("scenario.ability_efficiency", 1.0),
         ] {
             v.set(name, x).unwrap();
         }

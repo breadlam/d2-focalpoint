@@ -78,6 +78,13 @@ pub struct Scenario {
     pub stats: BTreeMap<String, f64>,
     /// A stat's value where `stats` gives none.
     pub default_stat: f64,
+    /// Enemies a minute the player kills in this context, where the
+    /// recorded clears give it; otherwise pack size times
+    /// `scenario.packs_per_minute`.
+    pub supply_per_min: Option<f64>,
+    /// The recorded share of kills by abilities, where known: what the
+    /// model's should come close to.
+    pub recorded_ability_kill_share: Option<f64>,
     /// What the scenario takes without data.
     pub assumptions: Vec<String>,
     /// The variables its priors came from.
@@ -107,6 +114,8 @@ impl Scenario {
             durability,
             stats: BTreeMap::new(),
             default_stat: vars.engine("build.default_stat", 100.0),
+            supply_per_min: None,
+            recorded_ability_kill_share: None,
             assumptions: Vec::new(),
             variables: [
                 "scenario.pack_size",
@@ -163,6 +172,24 @@ impl Scenario {
         s.assumptions.push(format!(
             "health tier {tier}, every archetype of a rank equally likely"
         ));
+        // The recorded clears' kill rate and kill mix (context profiles).
+        let feature = |name: &str| -> Result<Option<f64>> {
+            let mut stmt = db.conn().prepare(
+                "SELECT value FROM context_feature WHERE context_id = ?1 AND feature = ?2",
+            )?;
+            let v: Option<Option<f64>> = stmt
+                .query_map(duckdb::params![id, name], |r| r.get(0))?
+                .next()
+                .transpose()?;
+            Ok(v.flatten())
+        };
+        if let Some(kpm) = feature("kills_per_min")? {
+            s.supply_per_min = Some(kpm);
+            s.assumptions.push(format!(
+                "{kpm:.1} kills a minute, as the recorded clears make"
+            ));
+        }
+        s.recorded_ability_kill_share = feature("ability_kill_share")?;
         Ok(s)
     }
 

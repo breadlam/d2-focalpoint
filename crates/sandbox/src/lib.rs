@@ -16,6 +16,8 @@
 //!   thresholds;
 //! * [`rates`]: a build's steady state in a scenario: casts, damage,
 //!   kills, healing and buff uptimes per minute;
+//! * [`validate`]: the model against the recorded clears: each kit's
+//!   metrics against its measured effect, per context;
 //! * [`variables`]: the values no source gives, as variables with guesses
 //!   (`data/sandbox/variables.toml`).
 
@@ -27,6 +29,7 @@ pub mod ontology;
 pub mod rates;
 pub mod rules;
 pub mod scenario;
+pub mod validate;
 pub mod variables;
 
 use rules::RuleBase;

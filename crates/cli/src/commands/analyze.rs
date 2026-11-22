@@ -127,6 +127,39 @@ focalpoint analyze highlights --set pantheon-2-0 --class Titan\n  \
 focalpoint analyze highlights --sweep --count 5\n  \
 focalpoint analyze highlights --sets                   # list the set ids")]
     Highlights(HighlightArgs),
+    /// The build model against the recorded clears: each kit's metrics against its measured effect
+    #[command(
+        after_help = "Each recorded kit (super, abilities, aspects, fragments, Transcendence, exotic \
+armor) with enough clears in a context is measured against its players' usual level, as `analyze \
+escalation` does, and evaluated by the build model in that context's scenario (hard: Grandmaster Conquest; \
+easy: Ultimate Fireteam Op). Reports each metric's rank correlation with the effect, and a ridge \
+regression of the effect on the metrics scored on held-out kits. Needs `focalpoint mechanics import`. \
+See docs/build-model.md and docs/sandbox.md."
+    )]
+    Model(ModelArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct ModelArgs {
+    /// Clears (by build share) a kit needs in a context
+    #[arg(long, default_value_t = 100.0)]
+    pub min_clears: f64,
+
+    /// Players a kit needs in a context
+    #[arg(long, default_value_t = 15)]
+    pub min_players: i64,
+
+    /// Instead: each modelled part's predicted marginal value against its measured lift
+    #[arg(long)]
+    pub parts: bool,
+
+    /// Calibrate each scenario's ability efficiency to the recorded share of kills by abilities first
+    #[arg(long)]
+    pub fit: bool,
+
+    /// Kits each part is judged on (--parts)
+    #[arg(long, default_value_t = 20)]
+    pub max_kits: usize,
 }
 
 #[derive(Debug, clap::Args)]
@@ -283,7 +316,109 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Difficulty(a) => run_difficulty(&db, a, args.format),
         What::Escalation(a) => run_escalation(&db, a, args.format),
         What::Highlights(a) => run_highlights(&db, a, args.format),
+        What::Model(a) => run_model(&db, a, args.format),
     }
+}
+
+fn run_model(db: &Database, a: &ModelArgs, format: Format) -> Result<()> {
+    use focalpoint_sandbox::validate;
+    let ontology = focalpoint_sandbox::ontology::Ontology::builtin()?;
+    let base = focalpoint_sandbox::builtin_rules()?;
+    let vars = focalpoint_sandbox::variables::Variables::builtin()?;
+    if a.parts {
+        let checks = validate::part_checks(db, &ontology, &base, &vars, 150.0, 20, a.max_kits)?;
+        println!(
+            "## {} modelled parts with a measured lift (`analyze escalation`): predicted change against measured lift",
+            checks.len()
+        );
+        let header = [
+            "metric",
+            "hard: rank correlation",
+            "hard minus easy: rank correlation",
+        ]
+        .map(String::from);
+        let rows: Vec<Vec<String>> = validate::part_correlations(&checks)
+            .into_iter()
+            .map(|(m, h, d)| vec![m.to_string(), format!("{h:+.2}"), format!("{d:+.2}")])
+            .collect();
+        println!("{}", render(format, &header, &rows));
+        println!("## Parts by measured hard-content lift");
+        let header = [
+            "subclass",
+            "part",
+            "kits",
+            "lift hard",
+            "lift easy",
+            "Δ kill share hard",
+            "Δ loop gain hard",
+            "Δ damage resist hard",
+        ]
+        .map(String::from);
+        let mut sorted = checks.clone();
+        sorted.sort_by(|a, b| b.measured_hard.total_cmp(&a.measured_hard));
+        let rows: Vec<Vec<String>> = sorted
+            .iter()
+            .map(|c| {
+                vec![
+                    c.subclass.clone(),
+                    c.part.clone(),
+                    c.kits.to_string(),
+                    pct(c.measured_hard.exp_m1()),
+                    pct(c.measured_easy.exp_m1()),
+                    format!("{:+.3}", c.hard[0]),
+                    format!("{:+.2}", c.hard[4]),
+                    format!("{:+.3}", c.hard[3]),
+                ]
+            })
+            .collect();
+        println!("{}", render(format, &header, &rows));
+        return Ok(());
+    }
+    let reports = validate::validate(
+        db,
+        &ontology,
+        &base,
+        &vars,
+        a.min_clears,
+        a.min_players,
+        a.fit,
+    )?;
+    for r in &reports {
+        println!(
+            "## {} content, in {}: {} kits ({:.0}% of their parts modelled)",
+            r.context,
+            r.scenario,
+            r.kits,
+            100.0 * r.modelled_share
+        );
+        println!(
+            "Held-out prediction of the kits' effects: Pearson {:.2}, Spearman {:.2}",
+            r.held_out_pearson, r.held_out_spearman
+        );
+        if let Some(x) = r.fitted_efficiency {
+            println!("Calibrated: scenario.ability_efficiency = {x:.3}");
+        }
+        println!(
+            "Share of kills by abilities: model {:.0}% (mean over the kits), recorded {}",
+            100.0 * r.model_ability_kill_share,
+            r.recorded_ability_kill_share
+                .map_or_else(|| "—".to_string(), |v| format!("{:.0}%", 100.0 * v))
+        );
+        let header = [
+            "metric",
+            "rank correlation with effect",
+            "weight (standardised)",
+        ]
+        .map(String::from);
+        let rows: Vec<Vec<String>> = r
+            .correlations
+            .iter()
+            .zip(&r.weights)
+            .map(|((m, c), (_, w))| vec![(*m).to_string(), format!("{c:+.2}"), format!("{w:+.4}")])
+            .collect();
+        println!("{}", render(format, &header, &rows));
+    }
+    Ok(())
 }
 
 fn pct(x: f64) -> String {

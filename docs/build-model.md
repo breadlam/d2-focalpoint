@@ -4,7 +4,13 @@
 vocabulary and rule base, the imported economy, damage-buff and combatant
 tables, scenarios, compiling, and the fluid analysis with the first core
 verbs, which the ignition-chain and shard-loop cases pass
-([sandbox.md](sandbox.md)).
+([sandbox.md](sandbox.md)). Rates per minute. Unknown values as
+variables ([measurements.md](measurements.md)). Records for the subclass
+kits: 86-100% of recorded use by kind. The validation harness and a first
+calibration are in place (`analyze model`, [analysis.md](analysis.md)).
+Loop gain predicts kits' effects in hard content (+0.39) and not in easy
+content. Next: armor mods, artifact perks, exotic armor and weapons, then
+synthesis.
 
 A design for modelling Destiny 2 builds as a whole,
 so the synergy evaluator and build synthesis share one model. It replaces

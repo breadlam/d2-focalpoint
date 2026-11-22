@@ -47,6 +47,9 @@ pub struct Rates {
     /// and verbs; weapons' own damage is not modelled), before durability.
     pub damage_per_s: f64,
     pub ability_kills_per_min: f64,
+    /// The same before the cap at the enemies supplied: what the build's
+    /// abilities could kill.
+    pub ability_kill_capacity_per_min: f64,
     pub weapon_kills_per_min: f64,
     /// Enemies the scenario supplies a minute.
     pub supply_per_min: f64,
@@ -136,7 +139,10 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
     let vars = c.vars;
     let gens = &report.generations;
     let n = gens.len();
-    let supply = s.pack.size * vars.engine("scenario.packs_per_minute", 1.5) / 60.0;
+    let supply = s.supply_per_min.map_or_else(
+        || s.pack.size * vars.engine("scenario.packs_per_minute", 1.5) / 60.0,
+        |kpm| kpm / 60.0,
+    );
     let min_interval = vars.engine("policy.min_cast_interval", 1.5).max(0.1);
     let regen_mode = vars.engine("economy.regen_relative_to_current", 0.0);
     // Passive regeneration per cast boundary, and the 0-stat rate bonuses
@@ -302,6 +308,7 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             *stack_seconds.entry(b.clone()).or_default() += x[i] * v;
         }
     }
+    r.ability_kill_capacity_per_min = r.ability_kills_per_min;
     // Abilities cannot kill more than the scenario supplies.
     if r.ability_kills_per_min > r.supply_per_min {
         r.capped.push(format!(
