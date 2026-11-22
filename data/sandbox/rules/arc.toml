@@ -52,10 +52,9 @@ sources = ["compendium:Arc/Fragments/Spark of Amplitude"]
 on = "kill"
 when = [{ has = "amplified" }]
 effect = { spawn = "orb_of_power", count = 1 }
-chance = 0.5
+chance = { var = "policy.rapid_kills" }
 cooldown = 10
-confidence = "assumed"
-note = "Two kills within 4 s while Amplified make an Orb, 10 s cooldown: one kill in two taken as the second."
+note = "Two kills within 4 s while Amplified make an Orb, 10 s cooldown."
 
 [[rule]]
 granted_by = "fragment:Spark of Beacons"

@@ -779,3 +779,128 @@ unit = "fraction"
 status = "estimate"
 basis = "The share of a single-target hit's documented damage that counts towards a kill (a thrown hammer, a knife, a shuriken): misses and hits on enemies already hurt or dying, but no falloff or spacing as area damage has (`scenario.ability_efficiency`)."
 measure = "Fitted with `analyze model --fit`: the value that best orders the recorded kits' ability kill shares once `scenario.ability_efficiency` matches their mean. On 2026-11-22 (86 hard, 60 easy kits): 0.1 gives Pearson 0.87 / 0.59, 0.25 gives 0.89 / 0.62, and at 0.5 or more single-target hits alone exceed the kits' recorded share."
+
+# ------------------------------------------------- streaks and exotics
+
+[[variable]]
+name = "policy.kill_streaks"
+guess = 0.33
+low = 0.1
+high = 0.6
+unit = "fraction"
+status = "guess"
+basis = "Perks that need three quick kills (Elemental Siphon, Dielectric, Power from Pain) fire on about one kill in three in ad-clear."
+measure = "From recordings: elemental pickups or Dielectric Orbs per qualifying kill."
+
+[[variable]]
+name = "policy.sword_blocking"
+guess = 0.2
+low = 0.05
+high = 0.5
+unit = "fraction"
+status = "guess"
+basis = "The share of time a Stronghold player blocks with a sword (50% damage resistance while blocking)."
+measure = "From recordings of Stronghold players: time spent guarding."
+
+[[variable]]
+name = "getaway_artist.arc_soul_rounds"
+guess = 33
+low = 15
+high = 60
+unit = "count"
+status = "guess"
+basis = "Rounds an Arc Soul fires in its 20 s: bursts of three about every 1.8 s while enemies are in range."
+measure = "Count an Arc Soul's rounds over its life at a group of enemies in the Shooting Range."
+
+[[variable]]
+name = "getaway_artist.arc_soul_bursts"
+guess = 11
+low = 5
+high = 20
+unit = "count"
+status = "guess"
+basis = "Bursts an Arc Soul fires in its 20 s; each burst's hit grants 5% grenade energy once."
+measure = "Count an Arc Soul's bursts over its life, or the grenade energy it returns."
+
+[[variable]]
+name = "winters_guile.melee_bonus_x5"
+guess = 2.0
+low = 1.5
+high = 2.5
+unit = "multiplier"
+status = "guess"
+basis = "Winter's Guile's melee damage multiplier at x5 Warlord's Sigil: the Compendium gives no per-stack value."
+measure = "Punch the same enemy at x0 and x5 Warlord's Sigil and compare the damage numbers."
+
+[[variable]]
+name = "deadfall.tethered"
+guess = 4
+low = 1
+high = 8
+unit = "count"
+status = "guess"
+basis = "Enemies a Deadfall anchor tethers in ad-clear: Orpheus Rig returns energy per enemy tethered."
+measure = "From recordings: enemies tethered per Deadfall."
+
+[[variable]]
+name = "electrified_snare.radius"
+guess = 6
+low = 4
+high = 8
+unit = "m"
+status = "guess"
+basis = "Electrified Snare's burst radius: the Compendium does not state it."
+measure = "In the Shooting Range: the farthest enemy the Transcendence grenade suspends."
+sources = ["compendium:Prismatic/Titan/Electrified Snare"]
+
+[[variable]]
+name = "lightning_surge.bolt_damage"
+guess = 300
+low = 150
+high = 600
+unit = "damage"
+status = "guess"
+basis = "Damage of each of Lightning Surge's five bolts: cut off in the Compendium's text."
+measure = "In the Shooting Range: the damage number of one bolt on a minor."
+sources = ["compendium:Prismatic/Aspects/Lightning Surge"]
+
+[[variable]]
+name = "towering_barricade.damage_resist"
+guess = 0.2
+low = 0.05
+high = 0.4
+unit = "fraction"
+status = "guess"
+basis = "Towering Barricade blocks all damage through it for 20 s: the resistance it is worth on average, given how often players fight from behind it."
+measure = "From recordings: damage taken a minute with and without a Barricade up."
+
+[[variable]]
+name = "rally_barricade.damage_resist"
+guess = 0.1
+low = 0.02
+high = 0.25
+unit = "fraction"
+status = "guess"
+basis = "Rally Barricade, waist-high, blocks less: the resistance it is worth on average."
+measure = "From recordings: damage taken a minute with and without a Barricade up."
+
+[[variable]]
+name = "glacial_harvest.shatter_chance"
+guess = 0.5
+low = 0.1
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "Glacial Harvest's weapon kills shatter with a chance rising with Frost Armor stacks, 10% at x1 to 100% at x7: the mean over the stacks held."
+measure = "From recordings: shatters per weapon kill with Frost Armor up."
+
+[[variable]]
+name = "winters_wrath.shard_pairs"
+guess = 20
+low = 10
+high = 30
+unit = "count"
+status = "guess"
+basis = "Twin shard pairs a Winter's Wrath fires: each drains 4.5% of the super against 4.08% a second of decay."
+measure = "Count the pairs fired over one super."
+sources = ["compendium:Stasis/Super Abilities/Winter's Wrath"]

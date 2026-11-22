@@ -259,19 +259,49 @@ contexts from `focalpoint mechanics import`.
   - Conditions it reads as always or never true are listed under "Taken
     without data".
 
+- **Kills in a generation.**
+  - The damage an enemy actually takes spreads log-normally around the
+    documented amount (`scenario.damage_spread`), so the share killed
+    moves smoothly with damage instead of stepping at each health value.
+  - Area damage counts by `scenario.ability_efficiency`, single-target
+    hits by `scenario.direct_hit_efficiency`; both are fitted to the
+    recorded kits ([analysis.md](analysis.md)).
+  - An effect that hits one target many times (an Arc Soul's 33 rounds)
+    spreads over at most the pack. Its damage adds up to kills, and what
+    its hits apply reaches distinct enemies that many times fewer.
+  - Jolt chains, Volatile explosions, Unravel threads and freezes are
+    capped at the pack's enemies not yet affected in the generation.
+- **Orbs and Armor Charge** are core records: every build has them.
+  Orbs from abilities are large (`orb_of_power.super_energy`), those from
+  armor mods small (1.25%). Each Orb grants a stack of Armor Charge,
+  which Font mods turn into stat while it is up; stat modifiers feed the
+  cooldowns and the energy scaling.
+
 **Rates** put time in: the steady state per minute in the scenario.
 - **Casts** come from passive regeneration: the economy's cooldowns at
-  the build's stats, plus regeneration bonuses by their uptime. They also
-  come from the energy the build returns.
-- **Kills:** the scenario supplies `scenario.pack_size ×
-  scenario.packs_per_minute` enemies a minute. Abilities and verbs kill
-  some of them; area damage is spread over the pack. Weapons take the
-  rest, and weapon kills fire the rules that need them.
+  the build's stats (Font bonuses by Armor Charge's uptime), plus
+  regeneration bonuses by their uptime. They also come from the energy
+  the build returns. Abilities the cooldown workbook lacks take the
+  Compendium's base cooldown and chunk scalar
+  (`economy.unknown_chunk_scalar` where it gives none).
+- **Kills:** the scenario supplies the context's recorded kills a minute.
+  Abilities and verbs kill some of them:
+  - outright, as the generations count;
+  - by **chip damage**: damage a generation deals beyond what its kills
+    used still wears enemies down, and the final blow falls by damage
+    share. It counts as kills at damage over mean health, times
+    `scenario.chip_kill_credit`.
+
+  Weapons take the rest, and weapon kills fire the rules that need them.
+- **Enemy availability:** an enemy meets at most
+  `scenario.engagements_per_enemy` bursts before it dies. Casts beyond
+  what the supply allows find no one fresh, and what they would do to
+  enemies scales down.
 - **Damage, healing and buff uptimes:** each buff's mean stacks come from
   its applications times its duration, up to its maximum.
 - **Caps:** a self-feeding loop is capped at one cast per
-  `policy.min_cast_interval`, and chained events at the enemies supplied.
-  `analyze` reports which caps were hit.
+  `policy.min_cast_interval`, and chained events and kills at the enemies
+  supplied. `analyze` reports which caps were hit.
 
 The acceptance cases ([escalation.md](escalation.md)) come out of the
 records, with no rule written for them. Default pack, stats at 100, Howl of
@@ -301,10 +331,12 @@ past that depends on the variables, above all
 
 Not modelled yet:
 
-- Scorch from separate applications adding up over time.
-- Kills of slowed or frozen enemies leaving shards.
-- Cooldowns and limits on rules.
-- Regeneration bonuses, which change rates rather than generations.
+- Weapons: their damage, and the perks that act on abilities (Voltshot,
+  Incandescent, Demolitionist and the like).
+- A loadout's copies of an armor mod: one copy's amounts are taken.
+- Kills of slowed (not frozen) enemies leaving Stasis Shards.
+- Shield breaks and Champion stuns as events.
+- Exotic class items' spirit perks.
 - The discrete-event simulation that will check all of this.
 
 ## Synthesis

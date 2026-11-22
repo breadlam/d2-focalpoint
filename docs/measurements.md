@@ -80,13 +80,46 @@ These need enemies at known distances. The range's markers give them.
 - `tectonic_harvest.progress_per_kill` and
   `tectonic_harvest.damage_taken_energy`.
 
+- Parts' unstated numbers: `electrified_snare.radius`,
+  `lightning_surge.bolt_damage`, `winters_guile.melee_bonus_x5` (punch
+  at x0 and x5 Warlord's Sigil), `getaway_artist.arc_soul_rounds` and
+  `.arc_soul_bursts` (count an Arc Soul's fire over its 20 s).
+
 ### From recordings
 
 The player's habits and the shape of packs (`policy.*`, `scenario.*`):
 
 - shards picked up out of shards made;
 - frozen enemies shattered;
-- typical pack sizes, spreads and elite counts per activity.
+- typical pack sizes, spreads and elite counts per activity;
+- streaks: Siphon Orbs per weapon kill (`policy.rapid_kills`),
+  elemental pickups or Dielectric Orbs per kill (`policy.kill_streaks`);
+- incoming damage by element and from area attacks
+  (`scenario.incoming_share.*`), which the resistance mods cut;
+- Icicles a Rime-coat Raiment turret fires
+  (`rime_coat_raiment.icicles`), enemies a Deadfall tethers
+  (`deadfall.tethered`), time spent blocking with Stronghold
+  (`policy.sword_blocking`).
 
-The scenario priors will also be fitted to the recorded clears, which is
-the better source; recordings check the fit.
+### Fitted to the recorded kits
+
+`analyze model --fit` fits some values to the recorded clears
+([analysis.md](analysis.md)); their entries in `variables.toml` say
+how, with the scan behind each:
+
+- `scenario.ability_efficiency`: matched to the kits' mean share of kills
+  by abilities, per context (0.079 hard, 0.048 easy).
+- `scenario.direct_hit_efficiency` (0.25) and
+  `scenario.engagements_per_enemy` (20): the values that best order the
+  kits' recorded shares.
+
+A fitted value is not a measurement. It absorbs what the model gets
+wrong elsewhere, above all loops' cast rates. Measuring the guesses it
+leans on lets the fit mean what it says:
+
+- `scenario.damage_spread`: the share of one enemy type an ability of
+  known damage kills in one hit;
+- `scenario.chip_kill_credit`: kills credited to abilities in a build
+  whose abilities rarely kill outright, against their damage;
+- `policy.min_cast_interval`: casts a minute of a build that never runs
+  out of an ability's energy.

@@ -327,9 +327,8 @@ sources = ["compendium:Stasis/Aspects/Glacial Harvest"]
 on = { event = "kill", source = "weapon" }
 when = [{ has = "frost_armor" }]
 effect = { emit = "shatter", attributes = { of = "enemy" } }
-chance = 0.5
-confidence = "assumed"
-note = "A chance rising with Frost Armor stacks (10% at x1 to 100% at x7): 50% taken."
+chance = { var = "glacial_harvest.shatter_chance" }
+note = "A chance rising with Frost Armor stacks (10% at x1 to 100% at x7)."
 
 [[gap]]
 part = "aspect:Shatterdive"
@@ -453,8 +452,7 @@ granted_by = "super:Winter's Wrath"
 sources = ["compendium:Stasis/Super Abilities/Winter's Wrath"]
 on = { event = "cast", ability = "super" }
 effect = [
-  { apply = "frozen", times = 20 },
-  { damage = 61, times = 20, target = "area", radius = 3, element = "stasis", source = "super", tags = ["super"] },
+  { apply = "frozen", times = { var = "winters_wrath.shard_pairs" } },
+  { damage = 61, times = { var = "winters_wrath.shard_pairs" }, target = "area", radius = 3, element = "stasis", source = "super", tags = ["super"] },
 ]
-confidence = "assumed"
-note = "Twin shards drain 4.5% each against 4.08% a second: about twenty pairs, each freezing; the shockwave's shatter damage on frozen enemies is not modelled."
+note = "Twin shards, each pair freezing; the shockwave's shatter damage on frozen enemies is not modelled."

@@ -463,50 +463,78 @@ Echo of Harvest (−20 to −29 points).
 Validates the build model ([build-model.md](build-model.md),
 [sandbox.md](sandbox.md)) against the recorded clears.
 
-- **Kits.** Each recorded kit is measured per context against its players'
-  usual level, as `analyze escalation` measures parts. A kit is the super,
-  abilities, aspects, fragments, Transcendence, exotic armor and the
-  artifact perks the model knows. The model evaluates the same kits in a
-  scenario per context:
+- **Kits.** A kit is the super, abilities, aspects, fragments,
+  Transcendence and exotic armor. The modelled artifact perks and armor
+  mods that most of a kit's clears ran (by build share) are evaluated
+  with it but do not split it. Each kit is measured per context:
+  - its effect against its players' usual level, as `analyze escalation`
+    measures parts;
+  - its share of kills by abilities: grenade, melee, super and other
+    ability kills over all kills, from the activity reports.
+
+  The model evaluates the same kits in a scenario per context:
   - hard: Grandmaster Conquest;
   - easy: Ultimate Fireteam Op.
-
-  The report gives each metric's rank correlation with the measured
-  effect. It also gives a ridge regression of the effect on all metrics,
-  scored on kits held out of its fit in five folds. That regression is the
-  first calibrated layer.
-- **`--fit`** calibrates each context first, one moment with one parameter.
-  It finds the `scenario.ability_efficiency` at which the kits' mean share
-  of kills by abilities matches the recorded share in the context profile.
+- **The report** gives:
+  - how well the model's share of kills by abilities orders the kits'
+    recorded shares, a mechanism it predicts directly;
+  - each metric's rank correlation with the measured effect;
+  - a ridge regression of the effect on all metrics, scored on kits held
+    out of its fit in five folds. That regression is the calibrated layer
+    synthesis uses.
+- **`--fit`** calibrates each context first, one moment with one
+  parameter: the `scenario.ability_efficiency` at which the kits' mean
+  modelled share matches their mean recorded share.
+- **`--kits`** lists each kit with its accessories, its recorded and
+  modelled shares, loop gain and casts a minute. **`--set`** changes a
+  variable, as `sandbox analyze --set` does.
 - **`--parts`** checks parts instead. For each modelled part with a
   measured lift, the model removes the part from up to 20 kits that run
-  it. The mean change in each metric is then correlated with the measured
-  lifts.
+  it. It compares the mean change in each metric with the measured lift,
+  and the change in the share of kills by abilities with the recorded
+  difference with and without the part.
 
-Results on 2026-11-22: kits with at least 30 clears by 8 players, the
-subclass kits modelled for about 85% of their parts, weapons, armor mods
-and most artifact perks not yet.
+Results on 2026-11-22: kits with at least 30 clears by 8 players, 89% of
+their parts modelled. Weapons are not modelled.
 
-| | Hard (87 kits) | Easy (54 kits) |
+| | Hard (86 kits) | Easy (60 kits) |
 |---|---|---|
-| fitted `scenario.ability_efficiency` | 0.23 | 0.25 |
-| share of kills by abilities, model / recorded | 13% / 17% | 30% / 28% |
-| loop gain: rank correlation with effect | **+0.39** | −0.27 |
-| damage resistance | +0.14 | −0.24 |
-| held-out prediction (Pearson / Spearman) | 0.24 / 0.35 | 0.00 / 0.08 |
+| fitted `scenario.ability_efficiency` | 0.079 | 0.048 |
+| kits' share of kills by abilities, model against recorded (Pearson / Spearman) | **0.89 / 0.88** | 0.62 / 0.68 |
+| loop gain: rank correlation with effect | **+0.42** | +0.02 |
+| held-out prediction of effect (Pearson / Spearman) | 0.38 / 0.38 | −0.23 / −0.17 |
 
 What the results show:
 
-- **Calibration.** The fitted efficiency is about the same in both contexts:
-  roughly a quarter of ability damage counts towards kills. That value is
-  now the variable's guess.
-- **Loop gain.** It predicts kits' effects in hard content and goes the
-  other way in easy content, as the escalation hypothesis expects: loops
-  pay where enemies survive long enough to feed them.
-- **Parts.** Across 112 parts, the predicted change in loop gain correlates
-  +0.23 with the measured hard-content lifts. The parts with the largest
-  lifts are the ones the model gives the largest gain: Ember of Ashes and
-  Ember of Char (+27% to +33%), Solar Fulmination and Whisper of Hunger.
-- **Limits.** Easy content is not predicted, and the signal is modest. The
-  model leaves out weapons, armor mods and most artifact perks, which
-  drive much of what kits do. Small kits' measured effects are also noisy.
+- **Kill shares.** The model orders kits by how much their abilities kill
+  about as the recorded clears do, best in hard content. Getting there
+  took four changes to how kills are counted, each found from a kit the
+  model missed (`--kits`):
+  - a smooth survival curve (`scenario.damage_spread`);
+  - repeated hits counted on distinct enemies (Getaway Artist's Arc Soul
+    had jolted 33 enemies a grenade);
+  - chip damage credited with kills (Mask of Fealty's shatters kill by
+    wearing enemies down);
+  - casts limited by the enemies there are
+    (`scenario.engagements_per_enemy`; the Stasis shard loop had run at
+    the cast cap).
+
+  `scenario.engagements_per_enemy` and `scenario.direct_hit_efficiency`
+  are estimates from this fit; their entries in `variables.toml` record
+  the scans.
+- **Effect.** Loop gain predicts kits' effects in hard content and not in
+  easy content, as the escalation hypothesis expects: loops pay where
+  enemies survive long enough to feed them.
+- **Parts.** A part's predicted change in kill share does not agree with
+  the recorded difference with and without it (Pearson 0.07 over 161
+  parts). Players who pick a part also pick different weapons and
+  exotics: Stronghold's Titans have 27 points fewer ability kills, because
+  they use swords. The model holds everything else fixed, so the
+  kit-level comparison is the meaningful one.
+- **Limits.**
+  - The fitted efficiency absorbs what the model overstates, above all
+    loops' cast rates.
+  - Some kits are still far off. The Sunbreaker kits with Hallowfire
+    Heart kill 46-49% by abilities in easy content against the model's
+    2-6%. The Stasis shard loop is overstated in easy content.
+  - Easy content's effects are not predicted.

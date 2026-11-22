@@ -8,11 +8,15 @@ verbs, which the ignition-chain and shard-loop cases pass
 variables ([measurements.md](measurements.md)). Records for the subclass
 kits: 86-100% of recorded use by kind. The validation harness and a first
 calibration are in place (`analyze model`, [analysis.md](analysis.md)).
-Loop gain predicts kits' effects in hard content (+0.39) and not in easy
-content. Synthesis v1 (`sandbox synthesize`) searches subclass kits by
-the calibrated layer and finds the ignition chain and the shard loop.
-Next: armor mods, artifact perks, exotic armor and weapons; the
-discrete-event simulator.
+Records for the most-used armor mods (the Orb economy, Armor Charge,
+Fonts, resistances), artifact perks and exotic armor: 39% of all part
+uses. The model predicts each recorded kit's share of kills by abilities
+(Pearson 0.89 over 86 Grandmaster kits, 0.62 over 60 Ultimate Fireteam
+Op kits). Loop gain predicts kits' effects in hard content (+0.42) and
+not in easy content. Synthesis v1 (`sandbox synthesize`) searches
+subclass kits by the calibrated layer and finds the ignition chain and
+the shard loop. Next: weapons and their perks; the discrete-event
+simulator; the measurements ([measurements.md](measurements.md)).
 
 A design for modelling Destiny 2 builds as a whole,
 so the synergy evaluator and build synthesis share one model. It replaces

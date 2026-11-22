@@ -68,10 +68,9 @@ granted_by = "artifact_perk:Elemental Siphon"
 sources = ["compendium:Artifact Perks/Elemental Siphon"]
 on = { event = "kill", source = "weapon" }
 effect = { energy = "super", amount = 0.05 }
-chance = 0.33
+chance = { var = "policy.kill_streaks" }
 cooldown = 2
-confidence = "assumed"
-note = "Three quick kills with a Kinetic or super-element weapon make an elemental pickup worth 5% super energy: one kill in three."
+note = "Three quick kills with a Kinetic or super-element weapon make an elemental pickup worth 5% super energy."
 
 [[rule]]
 granted_by = "artifact_perk:Dielectric"
@@ -84,8 +83,8 @@ granted_by = "artifact_perk:Dielectric"
 sources = ["compendium:Artifact Perks/Dielectric"]
 on = { event = "kill", target_has = "jolt" }
 effect = [{ spawn = "orb_of_power", count = 1, size = "large" }, { heal = 35 }]
-chance = 0.33
-note = "Three Arc-debuffed kills within 6 s: one kill in three."
+chance = { var = "policy.kill_streaks" }
+note = "Three Arc-debuffed kills within 6 s."
 
 [[rule]]
 granted_by = "artifact_perk:Unraveling Orbs"
@@ -147,8 +146,8 @@ granted_by = "artifact_perk:Power from Pain"
 sources = ["compendium:Artifact Perks/Power from Pain"]
 on = { event = "kill", target_has = "weaken" }
 effect = [{ apply = "devour", duration = 5, target = "self" }, { spawn = "void_breach", count = 1 }]
-chance = 0.33
-note = "Three weakened kills within 4 s: one kill in three."
+chance = { var = "policy.kill_streaks" }
+note = "Three weakened kills within 4 s."
 
 [[rule]]
 granted_by = "artifact_perk:Singularity Blade"

@@ -55,12 +55,11 @@ granted_by = "transcendence:Electrified Snare"
 sources = ["compendium:Prismatic/Titan/Electrified Snare"]
 on = "transcendence"
 effect = [
-  { damage = 105, target = "area", radius = 6, element = "arc", source = "grenade", tags = ["grenade"] },
-  { apply = "suspend", target = "area", radius = 6 },
-  { apply = "jolt", target = "area", radius = 6 },
+  { damage = 105, target = "area", radius = { var = "electrified_snare.radius" }, element = "arc", source = "grenade", tags = ["grenade"] },
+  { apply = "suspend", target = "area", radius = { var = "electrified_snare.radius" } },
+  { apply = "jolt", target = "area", radius = { var = "electrified_snare.radius" } },
 ]
-confidence = "assumed"
-note = "The burst's radius and the suspended enemies' damage ticks are not stated: 6 m taken."
+note = "The suspended enemies' damage ticks are not stated."
 
 # ------------------------------------------------------------- fragments
 
@@ -312,12 +311,11 @@ sources = ["compendium:Prismatic/Aspects/Lightning Surge"]
 on = { event = "cast", ability = "melee" }
 when = [{ movement = "slide" }]
 effect = [
-  { damage = 300, times = 5, target = "area", radius = 3, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { damage = { var = "lightning_surge.bolt_damage" }, times = 5, target = "area", radius = 3, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
   { apply = "amplified", target = "self" },
   { apply = "bolt_charge", stacks = 3, target = "self" },
 ]
-confidence = "assumed"
-note = "Five lightning bolts in a ring 7 m out; their damage is cut off in the Compendium's text."
+note = "Five lightning bolts in a ring 7 m out."
 
 [[rule]]
 granted_by = "aspect:Drengr's Lash"
@@ -385,14 +383,12 @@ note = "+20% damage while standing in the Rift: always held here, which overstat
 granted_by = "class_ability:Towering Barricade"
 sources = ["compendium:Class Abilities/Titans/Towering Barricade"]
 param = "guardian.damage_resist"
-add = 0.2
-confidence = "assumed"
-note = "The Barricade blocks all damage through it for 20 s; taken as 20% resistance held."
+add = { var = "towering_barricade.damage_resist" }
+note = "The Barricade blocks all damage through it for 20 s: an equivalent resistance held."
 
 [[modifier]]
 granted_by = "class_ability:Rally Barricade"
 sources = ["compendium:Class Abilities/Titans/Rally Barricade"]
 param = "guardian.damage_resist"
-add = 0.1
-confidence = "assumed"
-note = "The short Barricade blocks damage for 20 s and reloads weapons; taken as 10% resistance held."
+add = { var = "rally_barricade.damage_resist" }
+note = "The short Barricade blocks damage for 20 s and reloads weapons: an equivalent resistance held."

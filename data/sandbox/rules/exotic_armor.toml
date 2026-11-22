@@ -42,10 +42,10 @@ on = { event = "cast", ability = "grenade" }
 effect = [
   { apply = "arc_soul", duration = 20, target = "self" },
   { apply = "amplified", target = "self" },
-  { damage = 69, times = 33, element = "arc", source = "grenade", tags = ["grenade"] },
-  { energy = "grenade", amount = 0.05, times = 11 },
+  { damage = 69, times = { var = "getaway_artist.arc_soul_rounds" }, element = "arc", source = "grenade", tags = ["grenade"] },
+  { energy = "grenade", amount = 0.05, times = { var = "getaway_artist.arc_soul_bursts" } },
 ]
-note = "Holding grenade summons an Arc Soul for 20 s (about 33 rounds in 11 bursts), each burst's hit granting 5% grenade energy."
+note = "Holding grenade summons an Arc Soul for 20 s, each burst's hit granting 5% grenade energy."
 
 [[modifier]]
 granted_by = "armor:Synthoceps"
@@ -140,9 +140,8 @@ effect = [{ energy = "grenade", amount = 0.042 }, { apply = "bolt_charge", stack
 granted_by = "armor:Stronghold"
 sources = ["compendium:Exotic Armors/Armor/Stronghold"]
 param = "guardian.damage_resist"
-add = 0.1
-confidence = "assumed"
-note = "50% while blocking with a sword; blocking a fifth of the time taken."
+add = { var = "policy.sword_blocking", scale = 0.5 }
+note = "50% while blocking with a sword."
 
 [[modifier]]
 granted_by = "armor:Cuirass of the Falling Star"
@@ -181,19 +180,18 @@ effect = { apply = "warlords_sigil", stacks = 3, target = "self" }
 granted_by = "armor:Winter's Guile"
 sources = ["compendium:Exotic Armors/Armor/Winter's Guile"]
 damage = "melee"
-mul = 2.0
+mul = { var = "winters_guile.melee_bonus_x5" }
 category = "exotic"
 when = [{ stacks = "warlords_sigil", min = 5 }]
-confidence = "assumed"
-note = "Melee damage rises with Warlord's Sigil stacks; +100% at x5 taken."
+note = "Melee damage rises with Warlord's Sigil stacks: its multiplier at x5."
 
 [[rule]]
 granted_by = "armor:Icefall Mantle"
 sources = ["compendium:Exotic Armors/Armor/Icefall Mantle"]
 on = { event = "kill", element = "stasis" }
 effect = { apply = "frost_armor", stacks = 1, target = "self" }
-chance = 0.5
-note = "Two Stasis kills within 3 s grant a stack: one kill in two."
+chance = { var = "policy.rapid_kills" }
+note = "Two Stasis kills within 3 s grant a stack."
 
 [[rule]]
 granted_by = "armor:Icefall Mantle"
@@ -206,12 +204,12 @@ granted_by = ["armor:Orpheus Rig", "super:Shadowshot: Deadfall"]
 sources = ["compendium:Exotic Armors/Armor/Orpheus Rig"]
 on = { event = "cast", ability = "super" }
 effect = [
-  { energy = "grenade", amount = 0.1, times = 4 },
-  { energy = "melee", amount = 0.1, times = 4 },
-  { energy = "class", amount = 0.1, times = 4 },
-  { energy = "super", amount = 0.4, scaling = "fixed" },
+  { energy = "grenade", amount = 0.1, times = { var = "deadfall.tethered" } },
+  { energy = "melee", amount = 0.1, times = { var = "deadfall.tethered" } },
+  { energy = "class", amount = 0.1, times = { var = "deadfall.tethered" } },
+  { energy = "super", amount = 0.1, times = { var = "deadfall.tethered" }, scaling = "fixed" },
 ]
-note = "For each enemy tethered: 10% grenade, melee and class energy and a super refund (up to 50%): four tethered taken."
+note = "For each enemy tethered: 10% grenade, melee and class energy and a super refund (up to 50%; 10% each taken)."
 
 [[modifier]]
 granted_by = "armor:St0mp-EE5"
