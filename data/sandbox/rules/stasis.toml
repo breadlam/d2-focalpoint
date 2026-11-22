@@ -172,3 +172,289 @@ note = "All Stasis damage against frozen enemies (light attacks and contact dama
 part = "super:Glacial Quake"
 note = "Contact damage (300 every 0.15 s to frozen enemies and crystals), the light and heavy attacks, and Glacial Howl (15% super energy per uppercut)."
 sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
+
+# ------------------------------------------------------------- fragments
+
+[[rule]]
+granted_by = "fragment:Whisper of Fissures"
+sources = ["compendium:Stasis/Fragments/Whisper of Fissures"]
+on = "shatter"
+effect = { damage = 20, target = "area", radius = 10, element = "stasis", source = "ability", tags = ["shatter"] }
+note = "25 damage at the centre down to 15 at 10 m: 20 taken."
+
+[[rule]]
+granted_by = "fragment:Whisper of Shards"
+sources = ["compendium:Stasis/Fragments/Whisper of Shards"]
+on = { event = "shatter", of = "crystal" }
+effect = { regen = "grenade", amount = 5.0, duration = 6 }
+
+[[rule]]
+granted_by = "fragment:Whisper of Refraction"
+sources = ["compendium:Stasis/Fragments/Whisper of Refraction"]
+on = { event = "kill", target_has = "slow" }
+effect = { energy = "class", amount = { by_tier = [0.09, 0.13, 0.2, 0.3] } }
+
+[[rule]]
+granted_by = "fragment:Whisper of Refraction"
+sources = ["compendium:Stasis/Fragments/Whisper of Refraction"]
+on = { event = "kill", target_has = "frozen" }
+effect = { energy = "class", amount = { by_tier = [0.09, 0.13, 0.2, 0.3] } }
+
+[[counter]]
+name = "chains_progress"
+threshold = 1
+note = "Whisper of Chains: kills while Frost Armor is active towards a shard."
+
+[[rule]]
+granted_by = "fragment:Whisper of Chains"
+sources = ["compendium:Stasis/Fragments/Whisper of Chains"]
+on = "kill"
+when = [{ has = "frost_armor" }]
+effect = { progress = "chains_progress", amount = { by_rank = { minor = 0.34, elite = 0.67 } } }
+
+[[rule]]
+granted_by = "fragment:Whisper of Chains"
+sources = ["compendium:Stasis/Fragments/Whisper of Chains"]
+on = { event = "counter_full", counter = "chains_progress" }
+effect = [{ spawn = "stasis_shard", count = 1, size = "small" }, { consume = "chains_progress" }]
+
+[[rule]]
+granted_by = "fragment:Whisper of Torment"
+sources = ["compendium:Stasis/Fragments/Whisper of Torment"]
+on = "damage_taken"
+effect = { energy = "grenade", amount = 0.07 }
+cooldown = 1
+
+[[rule]]
+granted_by = "fragment:Whisper of Torment"
+sources = ["compendium:Stasis/Fragments/Whisper of Torment"]
+on = "damage_taken"
+when = [{ has = "frost_armor" }]
+effect = { energy = "grenade", amount = 0.05 }
+cooldown = 1
+note = "12% rather than 7% while Frost Armor is active: the other 5%."
+
+[[rule]]
+granted_by = "fragment:Whisper of Bonds"
+sources = ["compendium:Stasis/Fragments/Whisper of Bonds"]
+on = { event = "kill", target_has = "frozen" }
+effect = { spawn = "orb_of_power", count = 1 }
+cooldown = 10
+
+[[rule]]
+granted_by = "fragment:Whisper of Fractures"
+sources = ["compendium:Stasis/Fragments/Whisper of Fractures"]
+on = { event = "shatter", of = "enemy" }
+effect = { apply = "frost_armor", stacks = 1, target = "self" }
+note = "Shattering with melee damage only; every enemy shatter taken."
+
+[[counter]]
+name = "chill_progress"
+threshold = 1
+note = "Whisper of Chill: Stasis weapon kills towards a shard."
+
+[[rule]]
+granted_by = "fragment:Whisper of Chill"
+sources = ["compendium:Stasis/Fragments/Whisper of Chill"]
+on = { event = "kill", source = "weapon", element = "stasis" }
+effect = { progress = "chill_progress", amount = { by_rank = { minor = 0.34, elite = 0.67 } } }
+
+[[rule]]
+granted_by = "fragment:Whisper of Chill"
+sources = ["compendium:Stasis/Fragments/Whisper of Chill"]
+on = { event = "counter_full", counter = "chill_progress" }
+effect = [{ spawn = "stasis_shard", count = 1, size = "small" }, { consume = "chill_progress" }]
+cooldown = 5
+
+[[rule]]
+granted_by = "fragment:Whisper of Reversal"
+sources = ["compendium:Stasis/Fragments/Whisper of Reversal"]
+on = { event = "hit", source = "melee" }
+when = [{ has = "frost_armor" }]
+effect = { apply = "slow", stacks = 10 }
+
+# --------------------------------------------------------------- aspects
+
+[[rule]]
+granted_by = "aspect:Winter's Shroud"
+sources = ["compendium:Stasis/Aspects/Winter's Shroud"]
+on = { event = "apply", state = "slow" }
+effect = { regen = "class", amount = 3.0, duration = 3 }
+
+[[rule]]
+granted_by = "aspect:Winter's Shroud"
+sources = ["compendium:Stasis/Aspects/Winter's Shroud"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "slow", stacks = 60, target = "area", radius = 9 }
+
+# Grim and Glacial Harvest share Tectonic Harvest's shard rules.
+[[rule]]
+granted_by = "aspect:Grim Harvest"
+sources = ["compendium:Stasis/Aspects/Grim Harvest"]
+on = { event = "pickup", object = "stasis_shard", size = "small" }
+effect = [{ heal = 10 }, { apply = "frost_armor", stacks = 1, target = "self" }]
+
+[[rule]]
+granted_by = "aspect:Grim Harvest"
+sources = ["compendium:Stasis/Aspects/Grim Harvest"]
+on = { event = "pickup", object = "stasis_shard", size = "large" }
+effect = [{ heal = 20 }, { apply = "frost_armor", stacks = 3, target = "self" }]
+
+[[rule]]
+granted_by = "aspect:Grim Harvest"
+sources = ["compendium:Stasis/Aspects/Grim Harvest"]
+on = "damage_taken"
+when = [{ has = "frost_armor" }]
+effect = { energy = "class", amount = { var = "grim_harvest.damage_taken_energy" } }
+cooldown = 1
+confidence = "assumed"
+
+[[rule]]
+granted_by = "aspect:Glacial Harvest"
+sources = ["compendium:Stasis/Aspects/Glacial Harvest"]
+on = { event = "pickup", object = "stasis_shard", size = "small" }
+effect = [{ heal = 10 }, { apply = "frost_armor", stacks = 1, target = "self" }]
+
+[[rule]]
+granted_by = "aspect:Glacial Harvest"
+sources = ["compendium:Stasis/Aspects/Glacial Harvest"]
+on = { event = "pickup", object = "stasis_shard", size = "large" }
+effect = [{ heal = 20 }, { apply = "frost_armor", stacks = 3, target = "self" }]
+
+[[rule]]
+granted_by = "aspect:Glacial Harvest"
+sources = ["compendium:Stasis/Aspects/Glacial Harvest"]
+on = { event = "kill", source = "weapon" }
+when = [{ has = "frost_armor" }]
+effect = { emit = "shatter", attributes = { of = "enemy" } }
+chance = 0.5
+confidence = "assumed"
+note = "A chance rising with Frost Armor stacks (10% at x1 to 100% at x7): 50% taken."
+
+[[gap]]
+part = "aspect:Shatterdive"
+note = "A dive on the jump (4 s cooldown) that shatters frozen enemies and crystals within 8.5 m; jumps are not events the model follows."
+sources = ["compendium:Stasis/Aspects/Shatterdive"]
+
+[[rule]]
+granted_by = "aspect:Frostpulse"
+sources = ["compendium:Stasis/Aspects/Frostpulse"]
+on = { event = "cast", ability = "class" }
+effect = [{ apply = "frozen", target = "area", radius = 8.5 }, { apply = "frost_armor", stacks = 5, target = "self" }]
+
+[[rule]]
+granted_by = "aspect:Frostpulse"
+sources = ["compendium:Stasis/Aspects/Frostpulse"]
+on = "freeze"
+effect = { energy = "class", amount = 0.11 }
+
+[[rule]]
+granted_by = "aspect:Iceflare Bolts"
+sources = ["compendium:Stasis/Aspects/Iceflare Bolts"]
+on = { event = "shatter", of = "enemy" }
+effect = { apply = "frozen", target = "area", radius = 3 }
+cooldown = 8
+note = "A seeker per shattered frozen enemy freezes enemies within 3 m (8 s cooldown after seven)."
+
+[[rule]]
+granted_by = ["aspect:Touch of Winter", "grenade:Glacier Grenade"]
+sources = ["compendium:Stasis/Aspects/Touch of Winter"]
+on = { event = "cast", ability = "grenade" }
+effect = { spawn = "stasis_crystal", count = 3, size = "large" }
+note = "A ring of crystals and two more large ones."
+
+[[rule]]
+granted_by = ["aspect:Touch of Winter", "grenade:Duskfield Grenade"]
+sources = ["compendium:Stasis/Aspects/Touch of Winter"]
+on = { event = "cast", ability = "grenade" }
+effect = { spawn = "stasis_crystal", count = 1, size = "small" }
+
+[[rule]]
+granted_by = ["aspect:Touch of Winter", "grenade:Coldsnap Grenade"]
+sources = ["compendium:Stasis/Aspects/Touch of Winter"]
+on = { event = "cast", ability = "grenade" }
+effect = { spawn = "stasis_crystal", count = 2, size = "medium" }
+
+# -------------------------------------------------------------- grenades
+
+[[rule]]
+granted_by = "grenade:Glacier Grenade"
+sources = ["compendium:Stasis/Grenade Abilities/Glacier Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { spawn = "stasis_crystal", count = 5, size = "medium" }
+
+[[rule]]
+granted_by = "grenade:Shatter Grenade"
+sources = ["compendium:Stasis/Grenade Abilities/Shatter Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { apply = "frozen" },
+  { damage = 325, target = "area", radius = { var = "shatter_grenade.radius" }, element = "stasis", source = "grenade", tags = ["grenade"] },
+  { damage = 216, times = 9, element = "stasis", source = "grenade", tags = ["grenade"] },
+]
+
+[[rule]]
+granted_by = "grenade:Duskfield Grenade"
+sources = ["compendium:Stasis/Grenade Abilities/Duskfield Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { apply = "slow", stacks = 20, target = "area", radius = { var = "duskfield_grenade.radius" } },
+  { apply = "slow", stacks = 10, times = 20, target = "area", radius = 4 },
+]
+
+[[rule]]
+granted_by = "grenade:Coldsnap Grenade"
+sources = ["compendium:Stasis/Grenade Abilities/Coldsnap Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [{ apply = "slow", stacks = 50 }, { apply = "frozen", times = 2 }]
+note = "The seeker freezes the enemy it reaches and chains: two freezes taken."
+
+# ---------------------------------------------------------------- melees
+
+[[rule]]
+granted_by = "melee:Withering Blade"
+sources = ["compendium:Stasis/Melee Abilities/Withering Blade"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 296, times = 2, element = "stasis", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "slow", stacks = 60, times = 2 },
+]
+
+[[modifier]]
+granted_by = "melee:Withering Blade"
+sources = ["compendium:Stasis/Melee Abilities/Withering Blade"]
+param = "melee.charges"
+add = 1
+
+[[rule]]
+granted_by = "melee:Penumbral Blast"
+sources = ["compendium:Stasis/Melee Abilities/Penumbral Blast"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 240, element = "stasis", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "frozen", target = "area", radius = 2.7 },
+]
+
+# ---------------------------------------------------------------- supers
+
+[[rule]]
+granted_by = "super:Silence and Squall"
+sources = ["compendium:Stasis/Super Abilities/Silence and Squall"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 338, times = 2, element = "stasis", source = "super", tags = ["super"] },
+  { apply = "frozen", target = "area", radius = 8.5 },
+  { damage = 28, times = 60, target = "area", radius = 5.5, element = "stasis", source = "super", tags = ["super"] },
+  { apply = "slow", stacks = 20, times = 60, target = "area", radius = 5.5 },
+]
+
+[[rule]]
+granted_by = "super:Winter's Wrath"
+sources = ["compendium:Stasis/Super Abilities/Winter's Wrath"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { apply = "frozen", times = 20 },
+  { damage = 61, times = 20, target = "area", radius = 3, element = "stasis", source = "super", tags = ["super"] },
+]
+confidence = "assumed"
+note = "Twin shards drain 4.5% each against 4.08% a second: about twenty pairs, each freezing; the shockwave's shatter damage on frozen enemies is not modelled."

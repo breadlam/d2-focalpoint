@@ -586,3 +586,38 @@ status = "guess"
 basis = "Damage grants grenade energy that varies with the source and the damage; a small amount per damage instance."
 measure = "With no grenade energy, deal one damage instance of a known kind and read the bar."
 sources = ["compendium:Strand/Fragments/Thread of Generation"]
+
+# ----------------------------------------------------------------- Stasis
+
+[[variable]]
+name = "shatter_grenade.radius"
+guess = 5.0
+low = 3.0
+high = 8.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for the explosion's radius."
+measure = "Stick it to an enemy in a pack and note the farthest neighbour damaged by the explosion."
+sources = ["compendium:Stasis/Grenade Abilities/Shatter Grenade"]
+
+[[variable]]
+name = "duskfield_grenade.radius"
+guess = 4.0
+low = 3.0
+high = 6.0
+unit = "m"
+status = "estimate"
+basis = "The Compendium gives \"?\" for the impact's radius; the Slowing Field it leaves is 4 m."
+measure = "Throw it at a pack and note the farthest enemy slowed on impact."
+sources = ["compendium:Stasis/Grenade Abilities/Duskfield Grenade"]
+
+[[variable]]
+name = "grim_harvest.damage_taken_energy"
+guess = 0.05
+low = 0.02
+high = 0.10
+unit = "fraction"
+status = "guess"
+basis = "The sources give \"?%\" class energy on taking damage with Frost Armor, at most once a second, as for Tectonic Harvest's melee energy."
+measure = "With Frost Armor active and no class energy, take a hit a second for ten seconds; the class bar's gain over ten."
+sources = ["compendium:Stasis/Aspects/Grim Harvest"]

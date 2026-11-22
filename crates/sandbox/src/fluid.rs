@@ -1095,7 +1095,9 @@ impl<'a> Engine<'a> {
                     }
                     continue;
                 }
-                if e.name == "freeze" {
+                // Freezes are merged per generation; the merged ones (marked
+                // as members) then fire their rules.
+                if e.name == "freeze" && !e.member {
                     freezes += w;
                     continue;
                 }
@@ -1116,6 +1118,9 @@ impl<'a> Engine<'a> {
                     y.frozen = frozen;
                     let shattered = frozen * self.var("policy.shatter_frozen");
                     stack.push((Event::new("shatter").with("of", "enemy"), shattered, 1));
+                    let mut freeze = Event::new("freeze");
+                    freeze.member = true;
+                    stack.push((freeze, frozen, 1));
                 }
                 // Area damage spreads over the pack: each enemy takes its share.
                 1 if y.pack_damage > 0.0 => {
