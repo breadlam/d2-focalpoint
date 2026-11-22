@@ -5,14 +5,18 @@
 //! * **Options** are what players run: each slot's parts from the recorded
 //!   builds of the subclass, and each aspect pair's fragment slots from the
 //!   builds that run it. Modelled artifact perks may be added.
+//! * **Accessories** (artifact perks, armor mods, weapon perks, origin
+//!   traits) are the subclass's most-used modelled ones, as many of each
+//!   kind as its builds run on average. The search swaps them for others
+//!   players run, keeping the count: the weights never penalise, so adding
+//!   would stack every one.
 //! * **Search** is a beam over one-part changes: another super, grenade,
-//!   melee or class ability; another aspect; another fragment; an artifact
-//!   perk added. It starts from the subclass's most-used kit.
+//!   melee or class ability; another aspect; another fragment; another
+//!   accessory. It starts from the subclass's most-used kit and
+//!   accessories.
 //! * **Score** is [`Calibrated::predict`]: the effect against a player's
 //!   usual level the recorded kits' fit predicts from the model's metrics.
 //!
-//! Weapons, armor mods and most exotic armor are not modelled yet, so the
-//! search is over the kit alone.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -40,9 +44,12 @@ pub struct Options {
     pub parts: BTreeMap<String, Vec<String>>,
     /// Fragment slots by aspect pair (sorted names).
     pub fragment_slots: BTreeMap<(String, String), usize>,
-    /// The most-used kit: kind → names.
+    /// The most-used kit and accessories: kind → names.
     pub seed: BTreeMap<String, Vec<String>>,
 }
+
+/// The kinds of part swapped rather than chosen per slot.
+const ACCESSORIES: [&str; 4] = ["artifact_perk", "armor_mod", "weapon_perk", "origin_trait"];
 
 /// The recorded options of a class and element (`Prismatic` included),
 /// keeping only parts in `modelled` (`kind:name`): a part the model knows
@@ -114,6 +121,50 @@ pub fn options(
                 .entry(kind.to_string())
                 .or_default()
                 .push(name.to_string());
+        }
+    }
+    // Accessories: the most used modelled ones, as many of each kind as a
+    // build runs on average.
+    let mut stmt = db.conn().prepare(
+        "SELECT bc.kind, i.name, count(*) AS uses,
+                (SELECT count(*) FROM build WHERE class = ?1 AND element = ?2) AS builds
+         FROM build b JOIN build_component bc USING (build_id)
+         JOIN item i ON i.item_hash = bc.component_hash
+         WHERE b.class = ?1 AND b.element = ?2
+           AND bc.kind IN ('artifact_perk', 'armor_mod', 'weapon_perk', 'origin_trait')
+         GROUP BY bc.kind, i.name ORDER BY bc.kind, uses DESC, i.name",
+    )?;
+    let rows: Vec<(String, String, i64, i64)> = stmt
+        .query_map([class, element], |r| {
+            Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?))
+        })?
+        .collect::<duckdb::Result<_>>()?;
+    let mut per_build: BTreeMap<String, f64> = BTreeMap::new();
+    for (kind, name, uses, builds) in rows {
+        if !modelled.contains(&format!("{kind}:{name}")) {
+            continue;
+        }
+        #[allow(clippy::cast_precision_loss)]
+        let share = uses as f64 / builds.max(1) as f64;
+        *per_build.entry(kind.clone()).or_default() += share;
+        let list = o.parts.entry(kind).or_default();
+        if list.len() < top {
+            list.push(name);
+        }
+    }
+    for (kind, n) in per_build {
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+        let k = n.round() as usize;
+        let chosen: Vec<String> = o
+            .parts
+            .get(&kind)
+            .into_iter()
+            .flatten()
+            .take(k)
+            .cloned()
+            .collect();
+        if !chosen.is_empty() {
+            o.seed.insert(kind, chosen);
         }
     }
     Ok(o)
@@ -193,6 +244,20 @@ fn neighbours(
             }
         }
     }
+    for kind in ACCESSORIES {
+        let current = kit.get(kind).cloned().unwrap_or_default();
+        for (i, _) in current.iter().enumerate() {
+            for alt in o.parts.get(kind).into_iter().flatten() {
+                if !current.contains(alt) {
+                    let mut k = kit.clone();
+                    let mut c = current.clone();
+                    c[i].clone_from(alt);
+                    k.insert(kind.into(), c);
+                    out.push(k);
+                }
+            }
+        }
+    }
     for extra in extras {
         let perks = kit.get("artifact_perk").cloned().unwrap_or_default();
         if !perks.contains(extra) {
@@ -263,10 +328,24 @@ pub fn search(
         if next.is_empty() {
             break;
         }
-        next.sort_by(|a, b| b.1.score.total_cmp(&a.1.score));
+        // Ties go to the kit closest to the start: a change that scores
+        // nothing is not worth making.
+        let changes = |c: &Candidate| {
+            let a: BTreeSet<&String> = c.parts.iter().collect();
+            let b: BTreeSet<&String> = start.parts.iter().collect();
+            a.symmetric_difference(&b).count()
+        };
+        let order = |a: &Candidate, b: &Candidate| {
+            if (a.score - b.score).abs() < 1e-9 {
+                changes(a).cmp(&changes(b))
+            } else {
+                b.score.total_cmp(&a.score)
+            }
+        };
+        next.sort_by(|a, b| order(&a.1, &b.1));
         next.truncate(beam);
         best.extend(next.iter().map(|(_, c)| c.clone()));
-        best.sort_by(|a, b| b.score.total_cmp(&a.score));
+        best.sort_by(order);
         best.truncate(keep.max(beam));
         frontier = next;
     }

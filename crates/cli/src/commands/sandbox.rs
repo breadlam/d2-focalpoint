@@ -60,8 +60,8 @@ focalpoint sandbox synthesize --class Titan --element Stasis --top 10\n\n\
 Options are what players run (each slot's parts from the subclass's recorded builds, fragment slots by \
 aspect pair). Kits are scored by the calibrated layer of `focalpoint analyze model`: the effect against a \
 player's usual level its fit on recorded kits predicts from the model's metrics, in hard content \
-(Grandmaster Conquest) or easy (Ultimate Fireteam Op). Weapons, armor mods and most exotic armor are not \
-modelled yet.")]
+(Grandmaster Conquest) or easy (Ultimate Fireteam Op). Accessories (artifact perks, armor mods, weapon perks, \
+origin traits) start as the subclass's most-used modelled ones and are swapped, keeping their count.")]
     Synthesize(SynthArgs),
     /// Simulate a build fighting packs in a context, against the analysis's rates
     #[command(after_help = "Examples:\n  \
@@ -802,12 +802,8 @@ fn synthesize(a: &SynthArgs, db: &Path, format: Format) -> Result<()> {
     let modelled: std::collections::BTreeSet<String> =
         base.modelled().iter().map(ToString::to_string).collect();
     let options = synth::options(&db, &a.class, &a.element, a.options, &modelled)?;
-    let extras: Vec<String> = base
-        .modelled()
-        .iter()
-        .filter(|p| p.kind == "artifact_perk")
-        .map(|p| p.name.clone())
-        .collect();
+    // Accessories are swapped from the recorded options, not added.
+    let extras: Vec<String> = Vec::new();
     let (best, seed) = synth::search(
         &ontology, &base, &economy, &model, &options, &extras, a.beam, a.rounds, a.top,
     )?;

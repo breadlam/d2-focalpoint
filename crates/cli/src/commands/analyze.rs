@@ -162,7 +162,7 @@ pub struct ModelArgs {
     #[arg(long, default_value_t = 20)]
     pub max_kits: usize,
 
-    /// Instead: list each context's kits with their accessories and metrics
+    /// Instead: list each context's kits with their accessories and metrics (with --sim, the simulator's share too)
     #[arg(long)]
     pub kits: bool,
 
@@ -370,14 +370,29 @@ fn list_kits(
             "effect",
             "ability kill share",
             "recorded",
+            "simulated",
             "loop gain",
             "casts a minute",
             "damage resist",
         ]
         .map(String::from);
+        let config = focalpoint_sandbox::sim::Config {
+            seconds: a.sim_minutes * 60.0,
+            runs: a.sim_runs,
+            seed: 1,
+        };
         let mut rows = Vec::new();
         for k in all.iter().filter(|k| k.context == context) {
             let m = validate::metrics(o, base, vars, &e, &s, &k.build())?;
+            let simulated = if a.sim {
+                let parts = k.build();
+                let build =
+                    focalpoint_sandbox::compile::Build::parse(parts.iter().map(String::as_str))?;
+                let out = focalpoint_sandbox::sim::simulate(o, base, &build, vars, &e, &s, config);
+                format!("{:.0}%", 100.0 * out.ability_kill_share())
+            } else {
+                "—".to_string()
+            };
             let short = |parts: &[String]| {
                 parts
                     .iter()
@@ -393,6 +408,7 @@ fn list_kits(
                 format!("{:.0}%", 100.0 * m[0].exp_m1().min(1.0)),
                 k.ability_kill_share
                     .map_or_else(|| "—".to_string(), |v| format!("{:.0}%", 100.0 * v)),
+                simulated,
                 format!("{:.2}", m[4]),
                 format!("{:.1}", m[5]),
                 format!("{:.2}", m[3]),
