@@ -414,6 +414,10 @@ fn run_model(db: &Database, a: &ModelArgs, format: Format) -> Result<()> {
             "hard minus easy: rank correlation",
         ]
         .map(String::from);
+        let (sp, ss, sn) = validate::share_correlation(&checks);
+        println!(
+            "Predicted change in the share of kills by abilities against the recorded difference with and without the part (hard content, {sn} parts): Pearson {sp:.2}, Spearman {ss:.2}"
+        );
         let rows: Vec<Vec<String>> = validate::part_correlations(&checks)
             .into_iter()
             .map(|(m, h, d)| vec![m.to_string(), format!("{h:+.2}"), format!("{d:+.2}")])
@@ -426,7 +430,8 @@ fn run_model(db: &Database, a: &ModelArgs, format: Format) -> Result<()> {
             "kits",
             "lift hard",
             "lift easy",
-            "Δ kill share hard",
+            "Δ ability kill share hard: recorded",
+            "model",
             "Δ loop gain hard",
             "Δ damage resist hard",
         ]
@@ -442,7 +447,9 @@ fn run_model(db: &Database, a: &ModelArgs, format: Format) -> Result<()> {
                     c.kits.to_string(),
                     pct(c.measured_hard.exp_m1()),
                     pct(c.measured_easy.exp_m1()),
-                    format!("{:+.3}", c.hard[0]),
+                    c.measured_share_hard
+                        .map_or_else(|| "—".to_string(), |v| format!("{:+.1} pts", 100.0 * v)),
+                    format!("{:+.1} pts", 100.0 * c.predicted_share_hard),
                     format!("{:+.2}", c.hard[4]),
                     format!("{:+.3}", c.hard[3]),
                 ]

@@ -17,7 +17,7 @@
 // Numeric code: the usual short names (x, y, e, s, o, k) read best.
 #![allow(clippy::many_single_char_names)]
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use anyhow::Result;
 use focalpoint_db::Database;
@@ -462,6 +462,58 @@ pub struct PartCheck {
     /// scenario.
     pub hard: Vec<f64>,
     pub easy: Vec<f64>,
+    /// The recorded share of kills by abilities in hard content with the
+    /// part minus without it, within the subclass, where enough clears
+    /// have both.
+    pub measured_share_hard: Option<f64>,
+    /// The model's change in that share (hard scenario).
+    pub predicted_share_hard: f64,
+}
+
+/// Per subclass and part, the recorded share of kills by abilities in hard
+/// content with the part minus without it, where each side has at least
+/// `min_clears` clears (by build share).
+fn share_differences(db: &Database, min_clears: f64) -> Result<BTreeMap<(String, String), f64>> {
+    let sql = format!(
+        "WITH {clears}, {parts},
+         pk AS (
+             SELECT instance_id, membership_id, sum(kills) AS kills,
+                    sum(grenade_kills + melee_kills + super_kills + ability_kills) AS abilities
+             FROM run_player GROUP BY ALL),
+         runs AS (
+             SELECT c.sub, c.build_id, c.share, pk.kills, pk.abilities
+             FROM c JOIN pk USING (instance_id, membership_id) WHERE c.ctx = 'hard'),
+         tot AS (SELECT sub, sum(share * abilities) AS a, sum(share * kills) AS k, sum(share) AS w FROM runs GROUP BY 1),
+         wp AS (
+             SELECT r.sub, p.kind || ':' || p.part AS part, sum(r.share * r.abilities) AS a,
+                    sum(r.share * r.kills) AS k, sum(r.share) AS w
+             FROM runs r JOIN parts p USING (build_id) GROUP BY ALL)
+         SELECT wp.sub, wp.part, wp.a / wp.k - (tot.a - wp.a) / (tot.k - wp.k)
+         FROM wp JOIN tot USING (sub)
+         WHERE wp.w >= ? AND tot.w - wp.w >= ? AND wp.k > 0 AND tot.k - wp.k > 0",
+        clears = escalation::clears_cte(),
+        parts = escalation::PARTS_CTE,
+    );
+    let mut stmt = db.conn().prepare(&sql)?;
+    let rows = stmt.query_map(duckdb::params![min_clears, min_clears], |r| {
+        Ok((
+            (r.get::<_, String>(0)?, r.get::<_, String>(1)?),
+            r.get::<_, f64>(2)?,
+        ))
+    })?;
+    Ok(rows.collect::<duckdb::Result<_>>()?)
+}
+
+/// The rank and linear correlation of the parts' predicted change in the
+/// share of kills by abilities with the recorded difference, and how many
+/// parts have both.
+#[must_use]
+pub fn share_correlation(checks: &[PartCheck]) -> (f64, f64, usize) {
+    let (p, m): (Vec<f64>, Vec<f64>) = checks
+        .iter()
+        .filter_map(|c| c.measured_share_hard.map(|m| (c.predicted_share_hard, m)))
+        .unzip();
+    (pearson(&p, &m), spearman(&p, &m), p.len())
 }
 
 /// Compare the model's marginal value of each modelled part with its
@@ -484,6 +536,7 @@ pub fn part_checks(
     let mut pool = kits(db, 10.0, 3, &accessories(base))?;
     pool.sort_by(|a, b| b.clears.total_cmp(&a.clears));
     let modelled: BTreeSet<String> = base.modelled().iter().map(ToString::to_string).collect();
+    let shares = share_differences(db, min_clears)?;
     let mut out = Vec::new();
     for lift in escalation::lifts(db, min_clears, min_players)? {
         let key = format!("{}:{}", lift.kind, lift.part);
@@ -500,12 +553,16 @@ pub fn part_checks(
             continue;
         }
         let mut deltas = [vec![0.0; METRICS.len()], vec![0.0; METRICS.len()]];
+        let mut share_delta = 0.0;
         for k in &with {
             let build = k.build();
             let without: Vec<String> = build.iter().filter(|p| **p != key).cloned().collect();
             for (si, s) in scenarios.iter().enumerate() {
                 let a = metrics(o, base, vars, &e, s, &build)?;
                 let b = metrics(o, base, vars, &e, s, &without)?;
+                if si == 0 {
+                    share_delta += a[0].exp_m1().min(1.0) - b[0].exp_m1().min(1.0);
+                }
                 for (j, d) in deltas[si].iter_mut().enumerate() {
                     *d += a[j] - b[j];
                 }
@@ -514,6 +571,7 @@ pub fn part_checks(
         #[allow(clippy::cast_precision_loss)]
         let n = with.len() as f64;
         let [hard, easy] = deltas.map(|d| d.into_iter().map(|x| x / n).collect::<Vec<f64>>());
+        let measured_share = shares.get(&(lift.subclass.clone(), key.clone())).copied();
         out.push(PartCheck {
             subclass: lift.subclass,
             part: key,
@@ -522,6 +580,8 @@ pub fn part_checks(
             kits: with.len(),
             hard,
             easy,
+            measured_share_hard: measured_share,
+            predicted_share_hard: share_delta / n,
         });
     }
     Ok(out)

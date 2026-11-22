@@ -617,7 +617,9 @@ impl<'a> Engine<'a> {
                 );
                 *y.pack_damage_by.entry(key).or_default() += w * p * n * dmg;
             } else {
-                let eff = self.var("scenario.ability_efficiency");
+                // An aimed hit on one target lands whole more often than
+                // area damage does.
+                let eff = self.var("scenario.direct_hit_efficiency");
                 let kills = if repeat > 1.0 {
                     // Damage adds up on the few enemies hit: kills by
                     // damage, at most one an enemy.

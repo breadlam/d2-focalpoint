@@ -69,7 +69,7 @@ pub fn clears_cte() -> String {
 }
 
 /// The CTE `parts (build_id, kind, part)`: the parts compared.
-const PARTS_CTE: &str = "parts AS (
+pub const PARTS_CTE: &str = "parts AS (
     SELECT DISTINCT bc.build_id, bc.kind, coalesce(i.name, sp.name) AS part
     FROM build_component bc
     LEFT JOIN item i ON i.item_hash = bc.component_hash AND bc.kind <> 'set_bonus'

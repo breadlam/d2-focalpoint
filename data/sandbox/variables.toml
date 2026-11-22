@@ -287,12 +287,12 @@ measure = "From recordings: time below 30% health over the encounter."
 
 [[variable]]
 name = "policy.min_cast_interval"
-guess = 1.5
-low = 0.8
-high = 3.0
+guess = 3.0
+low = 1.5
+high = 6.0
 unit = "s"
 status = "guess"
-basis = "The shortest time between two casts of one ability: its animation and the time to find the next target."
+basis = "The shortest sustained time between two casts of one ability: its animation and the time to find the next target. Against the recorded kits (`analyze model --fit`, 2026-11-22), 3 s orders their effects a little better than 1.5 s (held-out 0.39 against 0.34 in hard content) and their kill shares as well."
 measure = "From recordings of a build that never runs out of an ability's energy: the time between casts."
 
 # --------------------------------------------------------- the scenario
@@ -329,13 +329,13 @@ measure = "From the recorded clears: kills per minute over pack size, per activi
 
 [[variable]]
 name = "scenario.ability_efficiency"
-guess = 0.24
+guess = 0.07
 low = 0.02
 high = 1.0
 unit = "fraction"
 status = "estimate"
-basis = "The share of ability and verb damage that counts towards kills: less overkill, misses, damage on enemies that weapons finish, and the pack's uneven spread. Fitted so the model's share of kills by abilities matches the recorded clears' (`focalpoint analyze model --fit`, 2026-11-22): 0.226 in Grandmaster Conquest, 0.245 in Ultimate Fireteam Ops."
-measure = "Fitted, not measured: the recorded clears' ability kill share per context."
+basis = "The share of area and verb damage that counts towards kills (single-target hits have `scenario.direct_hit_efficiency`): less overkill, falloff, damage on enemies that weapons finish, and the pack's uneven spread. It also absorbs what the model overstates, above all loops' cast rates. Fitted so the kits' mean share of kills by abilities matches their recorded mean (`focalpoint analyze model --fit`, 2026-11-22, with chip kills and enemy availability): 0.079 over 86 Grandmaster Conquest kits, 0.048 over 60 Ultimate Fireteam Op kits."
+measure = "Fitted, not measured: the recorded kits' ability kill shares per context."
 
 [[variable]]
 name = "scenario.elite_share"
@@ -769,3 +769,13 @@ unit = "count"
 status = "estimate"
 basis = "Ability bursts (a cast and what follows it) that reach one enemy before it dies, any hit counting: casts beyond what the enemies supplied allow find no one fresh, so what they would do to enemies scales down. Against the recorded kits' ability kill shares (`analyze model --fit`, 2026-11-22): 3 gives Pearson 0.32 hard / 0.10 easy, 10 gives 0.89 / 0.89, 20 gives 0.92 / 0.97, no limit 0.88 / 0.93."
 measure = "From recordings of a loop build (Stasis shard loop): its casts a minute against the kills a minute, where casts stop rising."
+
+[[variable]]
+name = "scenario.direct_hit_efficiency"
+guess = 0.25
+low = 0.1
+high = 1.0
+unit = "fraction"
+status = "estimate"
+basis = "The share of a single-target hit's documented damage that counts towards a kill (a thrown hammer, a knife, a shuriken): misses and hits on enemies already hurt or dying, but no falloff or spacing as area damage has (`scenario.ability_efficiency`)."
+measure = "Fitted with `analyze model --fit`: the value that best orders the recorded kits' ability kill shares once `scenario.ability_efficiency` matches their mean. On 2026-11-22 (86 hard, 60 easy kits): 0.1 gives Pearson 0.87 / 0.59, 0.25 gives 0.89 / 0.62, and at 0.5 or more single-target hits alone exceed the kits' recorded share."
