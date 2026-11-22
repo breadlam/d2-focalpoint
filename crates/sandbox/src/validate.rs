@@ -784,3 +784,118 @@ mod tests {
         assert_eq!(solve(a), vec![2.0, 0.0]);
     }
 }
+
+/// The simulator against the recorded kits in a context: each kit's
+/// simulated share of kills by abilities against its recorded share, and
+/// the analysis's on the same kits and variables.
+#[derive(Debug, Clone)]
+pub struct SimReport {
+    pub context: String,
+    pub scenario: String,
+    pub kits: usize,
+    /// `scenario.ability_efficiency` fitted so the kits' mean simulated
+    /// share matches their mean recorded share, if fitted.
+    pub fitted_efficiency: Option<f64>,
+    pub mean_simulated: f64,
+    pub mean_recorded: f64,
+    pub pearson: f64,
+    pub spearman: f64,
+    pub analysis_pearson: f64,
+    pub analysis_spearman: f64,
+}
+
+fn simulated_shares(
+    o: &Ontology,
+    base: &RuleBase,
+    vars: &Variables,
+    e: &Economy,
+    s: &Scenario,
+    kits: &[&Kit],
+    config: crate::sim::Config,
+) -> Result<Vec<f64>> {
+    kits.iter()
+        .map(|k| {
+            let parts = k.build();
+            let build = Build::parse(parts.iter().map(String::as_str))?;
+            Ok(crate::sim::simulate(o, base, &build, vars, e, s, config).ability_kill_share())
+        })
+        .collect()
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn mean(v: &[f64]) -> f64 {
+    v.iter().sum::<f64>() / v.len().max(1) as f64
+}
+
+/// Validate the simulator on the recorded kits; with `fit`, each context's
+/// `scenario.ability_efficiency` is first fitted to the kits' mean share.
+#[allow(clippy::too_many_arguments)]
+pub fn validate_sim(
+    db: &Database,
+    o: &Ontology,
+    base: &RuleBase,
+    vars: &Variables,
+    min_clears: f64,
+    min_players: i64,
+    fit: bool,
+    config: crate::sim::Config,
+) -> Result<Vec<SimReport>> {
+    let e = Economy::load(db, vars)?;
+    let all = kits(db, min_clears, min_players, &accessories(base))?;
+    let mut out = Vec::new();
+    for (context, name) in SCENARIOS {
+        let s = Scenario::from_context(db, name, vars)?;
+        let kits: Vec<&Kit> = all
+            .iter()
+            .filter(|k| k.context == context && k.ability_kill_share.is_some())
+            .collect();
+        let recorded: Vec<f64> = kits.iter().filter_map(|k| k.ability_kill_share).collect();
+        let target = mean(&recorded);
+        let mut v = vars.clone();
+        let mut fitted = None;
+        if fit {
+            let at = |x: f64| -> Result<f64> {
+                let mut w = vars.clone();
+                w.set("scenario.ability_efficiency", x)?;
+                Ok(mean(&simulated_shares(o, base, &w, &e, &s, &kits, config)?) - target)
+            };
+            let (mut lo, mut hi) = (0.002f64.ln(), 0.0f64);
+            let (flo, fhi) = (at(lo.exp())?, at(hi.exp())?);
+            if flo.signum() != fhi.signum() {
+                for _ in 0..12 {
+                    let mid = f64::midpoint(lo, hi);
+                    if at(mid.exp())?.signum() == flo.signum() {
+                        lo = mid;
+                    } else {
+                        hi = mid;
+                    }
+                }
+                let x = f64::midpoint(lo, hi).exp();
+                v.set("scenario.ability_efficiency", x)?;
+                fitted = Some(x);
+            }
+        }
+        let simulated = simulated_shares(o, base, &v, &e, &s, &kits, config)?;
+        let analysis: Vec<f64> = kits
+            .iter()
+            .map(|k| {
+                Ok(metrics(o, base, &v, &e, &s, &k.build())?[0]
+                    .exp_m1()
+                    .min(1.0))
+            })
+            .collect::<Result<_>>()?;
+        out.push(SimReport {
+            context: context.to_string(),
+            scenario: s.name.clone(),
+            kits: kits.len(),
+            fitted_efficiency: fitted,
+            mean_simulated: mean(&simulated),
+            mean_recorded: target,
+            pearson: pearson(&simulated, &recorded),
+            spearman: spearman(&simulated, &recorded),
+            analysis_pearson: pearson(&analysis, &recorded),
+            analysis_spearman: spearman(&analysis, &recorded),
+        });
+    }
+    Ok(out)
+}

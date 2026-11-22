@@ -31,6 +31,7 @@ pub mod ontology;
 pub mod rates;
 pub mod rules;
 pub mod scenario;
+pub mod sim;
 pub mod synth;
 pub mod validate;
 pub mod variables;

@@ -936,3 +936,15 @@ unit = "fraction"
 status = "guess"
 basis = "Bray Inheritance grants 0.3-2% grenade, melee and class energy per weapon hit, by magazine: about 3% a kill's worth of hits."
 measure = "Empty an ability bar, kill minors with a Bray weapon and read the energy gained a kill."
+
+# ------------------------------------------------------------ simulator
+
+[[variable]]
+name = "sim.weapon_headroom"
+guess = 1.3
+low = 1.0
+high = 2.0
+unit = "multiplier"
+status = "guess"
+basis = "The simulator's weapons deal this many times the damage that kills what the scenario supplies: enough to keep up when abilities kill little, idle when they kill much."
+measure = "From recordings: a build's weapon damage a minute against the health of the enemies it kills."

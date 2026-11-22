@@ -63,6 +63,39 @@ player's usual level its fit on recorded kits predicts from the model's metrics,
 (Grandmaster Conquest) or easy (Ultimate Fireteam Op). Weapons, armor mods and most exotic armor are not \
 modelled yet.")]
     Synthesize(SynthArgs),
+    /// Simulate a build fighting packs in a context, against the analysis's rates
+    #[command(after_help = "Examples:\n  \
+focalpoint sandbox simulate --part 'aspect:Howl of the Storm' --part 'melee:Shiver Strike' \\\n    \
+--part 'fragment:Whisper of Hunger' --context 'Grandmaster Conquest'\n  \
+focalpoint sandbox simulate --part 'fragment:Ember of Char' --part 'fragment:Ember of Ashes' \\\n    \
+--part 'artifact_perk:Solar Fulmination' --part 'armor:Dawn Chorus' --offspring ignition \\\n    \
+--context 'Ultimate Conquest'\n\n\
+A seeded Monte Carlo on the same records (docs/sandbox.md): concrete enemies in packs at the context's \
+rate of kills, weapons wearing them down, the player casting when charged. --offspring measures how many \
+of an event each one sets off in a fresh pack, against the analysis's loop gain.")]
+    Simulate(SimulateArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct SimulateArgs {
+    #[command(flatten)]
+    pub build: AnalyzeArgs,
+
+    /// Minutes each run lasts
+    #[arg(long, default_value_t = 10.0)]
+    pub minutes: f64,
+
+    /// Runs, spread over the cores
+    #[arg(long, default_value_t = 32)]
+    pub runs: usize,
+
+    /// The random seed
+    #[arg(long, default_value_t = 1)]
+    pub rng: u64,
+
+    /// Instead: how many of this event each one sets off in a fresh pack (`ignition`)
+    #[arg(long)]
+    pub offspring: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -167,7 +200,129 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
         What::Analyze(a) => analyze(a, db, args.format),
         What::Unknowns(a) => unknowns(a, args.format),
         What::Synthesize(a) => synthesize(a, db, args.format),
+        What::Simulate(a) => simulate(a, db, args.format),
     }
+}
+
+fn simulate(a: &SimulateArgs, db: &Path, format: Format) -> Result<()> {
+    use focalpoint_sandbox::sim;
+    let (ontology, base, mut vars) = load(None)?;
+    for (k, v) in pairs(&a.build.set, "set")? {
+        vars.set(&k, v)?;
+    }
+    let db = Database::open_read_only(db)?;
+    let economy = Economy::load(&db, &vars)?;
+    let build = Build::parse(a.build.parts.iter().map(String::as_str))?;
+    let s = scenario(&a.build, &db, &vars)?;
+    let compiled = compile(&ontology, &base, &build, &vars);
+    println!(
+        "{}: durability ×{:.2}, packs of {} within {} m, {:.0}% elites, {:.1} kills a minute",
+        s.name,
+        s.durability,
+        s.pack.size,
+        s.pack.radius_m,
+        s.elite_share * 100.0,
+        s.supply_per_min.unwrap_or(f64::NAN)
+    );
+    let mut seeds = focalpoint_sandbox::rates::seeds_with(&ontology, &compiled);
+    seeds.extend(a.build.seeds.iter().map(|e| Event::new(e)));
+    if let Some(event) = &a.offspring {
+        let simulated = sim::offspring(
+            &ontology,
+            &compiled,
+            &economy,
+            &s,
+            event,
+            a.runs * 50,
+            a.rng,
+        );
+        seeds.push(Event::new(event));
+        let report = Engine::new(&ontology, &compiled, &economy, &s).analyse(&seeds);
+        let gain = focalpoint_sandbox::fluid::loop_gain(&report, event);
+        println!(
+            "{event}: each sets off {simulated:.2} more in a fresh pack (simulated, {} trials); the analysis's loop gain is {gain:.2}",
+            a.runs * 50
+        );
+        return Ok(());
+    }
+    let config = sim::Config {
+        seconds: a.minutes * 60.0,
+        runs: a.runs,
+        seed: a.rng,
+    };
+    let out = sim::simulate(&ontology, &base, &build, &vars, &economy, &s, config);
+    let report = Engine::new(&ontology, &compiled, &economy, &s).analyse(&seeds);
+    let r = focalpoint_sandbox::rates::rates(&ontology, &compiled, &economy, &s, &report);
+    println!("{} runs of {} minutes", out.runs, a.minutes);
+    let header = ["per minute", "simulated", "analysis"].map(String::from);
+    let mut rows = Vec::new();
+    for ability in ["grenade", "melee", "class", "super"] {
+        let sim_v = out.casts_per_min.get(ability).copied().unwrap_or(0.0);
+        let fluid_v = r.casts_per_min.get(ability).copied().unwrap_or(0.0);
+        if sim_v > 0.0 || fluid_v > 0.0 {
+            rows.push(vec![
+                format!("{ability} casts"),
+                format!("{sim_v:.1}"),
+                format!("{fluid_v:.1}"),
+            ]);
+        }
+    }
+    rows.push(vec![
+        "kills by abilities and verbs".into(),
+        format!(
+            "{:.1} ({:.0}%)",
+            out.ability_kills_per_min,
+            100.0 * out.ability_kill_share()
+        ),
+        format!(
+            "{:.1} ({:.0}%)",
+            r.ability_kills_per_min,
+            100.0 * r.ability_kill_share()
+        ),
+    ]);
+    rows.push(vec![
+        "kills by weapons".into(),
+        format!("{:.1}", out.weapon_kills_per_min),
+        format!("{:.1}", r.weapon_kills_per_min),
+    ]);
+    rows.push(vec![
+        "damage a second (abilities, verbs)".into(),
+        format!("{:.0}", out.damage_per_s),
+        format!("{:.0}", r.damage_per_s),
+    ]);
+    rows.push(vec![
+        "healing a second".into(),
+        format!("{:.1}", out.heal_per_s),
+        format!("{:.1}", r.heal_per_s),
+    ]);
+    for (b, u) in &r.buffs {
+        let simulated = out.uptime.get(b).copied().unwrap_or(0.0);
+        rows.push(vec![
+            format!("{b} uptime"),
+            format!("{:.0}%", 100.0 * simulated),
+            format!("{:.0}%", 100.0 * u.uptime),
+        ]);
+    }
+    println!("{}", render(format, &header, &rows));
+    println!("## Kills by final blow (simulated, a minute)");
+    let header = ["by", "kills"].map(String::from);
+    let rows: Vec<Vec<String>> = out
+        .kills_by
+        .iter()
+        .map(|(k, v)| vec![k.clone(), format!("{v:.2}")])
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    println!("## Events (simulated, a minute)");
+    let rows: Vec<Vec<String>> = out
+        .events_per_min
+        .iter()
+        .map(|(k, v)| vec![k.clone(), format!("{v:.1}")])
+        .collect();
+    println!(
+        "{}",
+        render(format, &["event", "a minute"].map(String::from), &rows)
+    );
+    Ok(())
 }
 
 fn check(a: &CheckArgs, db: &Path, format: Format) -> Result<()> {

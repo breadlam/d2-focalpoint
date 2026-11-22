@@ -108,7 +108,7 @@ impl fmt::Display for Event {
     }
 }
 
-fn value_text(v: &toml::Value) -> String {
+pub(crate) fn value_text(v: &toml::Value) -> String {
     match v {
         toml::Value::String(s) => s.clone(),
         other => other.to_string(),
@@ -131,7 +131,7 @@ pub fn matches(t: &Trigger, e: &Event) -> bool {
 /// Whether an event's attribute value satisfies a trigger's: equal, or a
 /// grenade, melee, class or super source for `source = "ability"`, or
 /// anything for `any`.
-fn attr_eq(key: &str, want: &str, have: &str) -> bool {
+pub(crate) fn attr_eq(key: &str, want: &str, have: &str) -> bool {
     want == have
         || want == "any"
         || (key == "source"
@@ -1305,11 +1305,14 @@ impl<'a> Engine<'a> {
             let p = self.holds_all(&m.when);
             *passive_regen.entry(ability.to_string()).or_default() += add * p;
         }
-        if let Some(base) = ["grenade", "melee", "class", "super"]
-            .iter()
-            .find(|a| self.c.modifies(&format!("{a}.regen")))
-        {
-            self.note(format!("{base}.regen: passive bonuses read as held"));
+        // Unconditional regeneration bonuses, resolved when compiling.
+        for a in ["grenade", "melee", "class", "super"] {
+            let path = format!("{a}.regen");
+            if self.c.modifies(&path)
+                && let Some(v) = self.param(&path)
+            {
+                *passive_regen.entry(a.to_string()).or_default() += v;
+            }
         }
         Report {
             generations: gens,

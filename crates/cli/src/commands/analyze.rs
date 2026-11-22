@@ -139,6 +139,7 @@ See docs/build-model.md and docs/sandbox.md."
     Model(ModelArgs),
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, clap::Args)]
 pub struct ModelArgs {
     /// Clears (by build share) a kit needs in a context
@@ -164,6 +165,18 @@ pub struct ModelArgs {
     /// Instead: list each context's kits with their accessories and metrics
     #[arg(long)]
     pub kits: bool,
+
+    /// Instead: the simulator's share of kills by abilities against each kit's recorded share
+    #[arg(long)]
+    pub sim: bool,
+
+    /// Simulated runs a kit (--sim)
+    #[arg(long, default_value_t = 8)]
+    pub sim_runs: usize,
+
+    /// Minutes a simulated run lasts (--sim)
+    #[arg(long, default_value_t = 5.0)]
+    pub sim_minutes: f64,
 
     /// Set a variable (`name=value`), as `sandbox analyze --set`
     #[arg(long, value_name = "NAME=VALUE")]
@@ -400,6 +413,41 @@ fn run_model(db: &Database, a: &ModelArgs, format: Format) -> Result<()> {
     }
     if a.kits {
         return list_kits(db, &ontology, &base, &vars, a, format);
+    }
+    if a.sim {
+        let config = focalpoint_sandbox::sim::Config {
+            seconds: a.sim_minutes * 60.0,
+            runs: a.sim_runs,
+            seed: 1,
+        };
+        for r in validate::validate_sim(
+            db,
+            &ontology,
+            &base,
+            &vars,
+            a.min_clears,
+            a.min_players,
+            a.fit,
+            config,
+        )? {
+            println!(
+                "## {} content, in {}: {} kits",
+                r.context, r.scenario, r.kits
+            );
+            if let Some(x) = r.fitted_efficiency {
+                println!("Calibrated: scenario.ability_efficiency = {x:.3}");
+            }
+            println!(
+                "Share of kills by abilities: simulated {:.0}% (mean over the kits), recorded {:.0}%",
+                100.0 * r.mean_simulated,
+                100.0 * r.mean_recorded
+            );
+            println!(
+                "Each kit's share against recorded: simulated Pearson {:.2}, Spearman {:.2}; the analysis at the same variables {:.2}, {:.2}",
+                r.pearson, r.spearman, r.analysis_pearson, r.analysis_spearman
+            );
+        }
+        return Ok(());
     }
     if a.parts {
         let checks = validate::part_checks(db, &ontology, &base, &vars, 150.0, 20, a.max_kits)?;
