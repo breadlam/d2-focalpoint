@@ -392,25 +392,33 @@ searches for the best subclass kits, first version (`docs/build-model.md`
 
 - **Options** are what players run: each slot's modelled parts from the
   subclass's recorded builds (most used first), and each aspect pair's
-  fragment slots from the builds that run it. Modelled artifact perks
-  may be added. Parts the model knows nothing about are left out: they
-  would score as nothing, which a search mistakes for safe.
+  fragment slots from the builds that run it. Parts the model knows
+  nothing about are left out: they would score as nothing, which a search
+  mistakes for safe.
+- **Accessories** (artifact perks, armor mods, weapon perks, origin
+  traits) start as the subclass's most-used modelled ones, as many of
+  each kind as its builds run on average.
 - **Score** is the calibrated layer of `analyze model` for the context:
   the effect against a player's usual level, predicted from the model's
   metrics by a ridge regression fitted on the recorded kits. Its weights
   are non-negative, so more kill capacity, loop gain or survival never
   scores worse; a metric that would get a negative weight is dropped.
 - **Search** is a beam over one-part changes from the subclass's most-used
-  kit: another super, grenade, melee or class ability, aspect or fragment,
-  or an artifact perk added.
+  kit: another super, grenade, melee or class ability, aspect, fragment
+  or accessory. Accessories are swapped, never added: with weights that
+  never penalise, adding would stack every one. Ties go to the kit with
+  fewer changes.
 
 On 2026-11-22, in hard content:
 
 - **Solar Warlock:** Char, Ashes, Eruption and Solar Fulmination, with
-  Hellion and Touch of Flame: the ignition chain.
-- **Stasis Titan:** Howl of the Storm and Tectonic Harvest with Whispers
-  of Hunger and Conduction and Crystalline Converter: the shard loop.
+  Hellion: the ignition chain.
+- **Stasis Titan:** Howl of the Storm with Whispers of Hunger and
+  Conduction and Crystalline Converter: the shard loop.
 
 The data supports both: they are the combinations with the largest lifts
-in hard content ([escalation.md](escalation.md)). With weapons, armor mods
-and most exotic armor not modelled yet, the search is over the kit alone.
+in hard content ([escalation.md](escalation.md)). The calibrated layer
+now weighs loop gain and super casts only, so once a kit's loop runs the
+search is near flat: it finds the loops and little beyond them. Scoring
+by the share of kills by abilities, which the model predicts far better
+than effect, is the next step.
