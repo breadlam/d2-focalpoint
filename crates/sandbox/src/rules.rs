@@ -327,7 +327,11 @@ pub struct Effect {
     pub consume: Option<String>,
     /// Advance a counter (`amount`).
     pub progress: Option<String>,
+    /// Lengthen an active buff (`duration`).
+    pub extend: Option<String>,
 
+    /// The effect happens this many times (projectiles, ticks, waves).
+    pub times: Option<Amount>,
     pub amount: Option<Amount>,
     pub stacks: Option<Amount>,
     pub count: Option<Amount>,
@@ -373,6 +377,7 @@ impl Effect {
             ("charges", self.charges.is_some()),
             ("consume", self.consume.is_some()),
             ("progress", self.progress.is_some()),
+            ("extend", self.extend.is_some()),
         ];
         set.into_iter()
             .filter(|(_, s)| *s)
@@ -519,6 +524,7 @@ impl RuleBase {
                         &e.radius,
                         &e.duration,
                         &e.max_duration,
+                        &e.times,
                     ]
                     .map(|a| (g, a)),
                 );

@@ -21,7 +21,13 @@ pub const STATUS: [&str; 3] = ["guess", "estimate", "measured"];
 
 /// The variables the engine itself reads (policies, scenario priors, the
 /// economy's readings), which must be defined.
-pub const ENGINE: [&str; 14] = [
+pub const ENGINE: [&str; 20] = [
+    "policy.object_pickup",
+    "policy.precision_share",
+    "policy.weapon_element_match",
+    "policy.airborne",
+    "policy.sprint",
+    "policy.other_movement",
     "scenario.packs_per_minute",
     "policy.min_cast_interval",
     "abilities.boss_scalar",

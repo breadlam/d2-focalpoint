@@ -15,3 +15,589 @@ param = "scorch.applied_multiplier"
 mul = 1.5
 round = "up"
 note = "Some sources take a fixed amount with Ashes instead of the multiplier (Caliban's Hand x60+0, Tommy's Matchbook x15+5); they are not modelled yet."
+
+# ------------------------------------------------------------- fragments
+
+[[rule]]
+granted_by = "fragment:Ember of Singeing"
+sources = ["compendium:Solar/Fragments/Singeing", "clarity:Ember of Singeing"]
+on = { event = "apply", state = "scorch" }
+effect = { regen = "class", amount = 4.0, duration = 3 }
+note = "Scorching an enemy that is not Scorched: +400% class ability regeneration for 3 s."
+
+[[modifier]]
+granted_by = "fragment:Ember of Solace"
+sources = ["compendium:Solar/Fragments/Solace"]
+param = "radiant.duration_multiplier"
+mul = 1.5
+
+[[modifier]]
+granted_by = "fragment:Ember of Solace"
+sources = ["compendium:Solar/Fragments/Solace"]
+param = "restoration.duration_multiplier"
+mul = 1.5
+
+# Solar kills extend Radiant and Restoration by the enemy's tier, up to 15 s.
+[[rule]]
+granted_by = "fragment:Ember of Empyrean"
+sources = ["compendium:Solar/Fragments/Empyrean"]
+on = { event = "kill", element = "solar" }
+effect = [
+  { extend = "radiant", duration = { by_tier = [1.5, 2.25, 3, 6] } },
+  { extend = "restoration", duration = { by_tier = [1.5, 2.25, 3, 6] } },
+]
+
+[[rule]]
+granted_by = "fragment:Ember of Torches"
+sources = ["compendium:Solar/Fragments/Torches", "clarity:Ember of Torches"]
+on = { event = "hit", source = "melee", powered = true }
+effect = { apply = "radiant", duration = 8, target = "allies" }
+
+[[rule]]
+granted_by = "fragment:Ember of Searing"
+sources = ["compendium:Solar/Fragments/Searing", "clarity:Ember of Searing"]
+on = { event = "kill", target_has = "scorch" }
+effect = [
+  { energy = "melee", amount = { by_tier = [0.08, 0.15, 0.175, 0.25] } },
+  { spawn = "firesprite", count = 1 },
+]
+
+[[modifier]]
+granted_by = "fragment:Ember of Eruption"
+sources = ["compendium:Solar/Fragments/Eruption"]
+param = "ignition.radius"
+mul = 1.25
+
+[[rule]]
+granted_by = "fragment:Ember of Mercy"
+sources = ["compendium:Solar/Fragments/Mercy", "clarity:Ember of Mercy"]
+on = { event = "pickup", object = "firesprite" }
+effect = { apply = "restoration", stacks = 1, duration = 2, target = "self" }
+
+# Bestowing Cure, Radiant or Restoration on allies: +300% grenade, melee and
+# class regeneration for 7 s. Clarity: on allies, so mostly in a fireteam.
+[[rule]]
+granted_by = "fragment:Ember of Benevolence"
+sources = ["compendium:Solar/Fragments/Benevolence", "clarity:Ember of Benevolence"]
+on = { event = "gain", state = "cure" }
+chance = { var = "policy.allies_present" }
+effect = [
+  { regen = "grenade", amount = 3.0, duration = 7 },
+  { regen = "melee", amount = 3.0, duration = 7 },
+  { regen = "class", amount = 3.0, duration = 7 },
+]
+
+[[rule]]
+granted_by = "fragment:Ember of Benevolence"
+sources = ["compendium:Solar/Fragments/Benevolence", "clarity:Ember of Benevolence"]
+on = { event = "gain", state = "radiant" }
+chance = { var = "policy.allies_present" }
+effect = [
+  { regen = "grenade", amount = 3.0, duration = 7 },
+  { regen = "melee", amount = 3.0, duration = 7 },
+  { regen = "class", amount = 3.0, duration = 7 },
+]
+
+[[rule]]
+granted_by = "fragment:Ember of Benevolence"
+sources = ["compendium:Solar/Fragments/Benevolence", "clarity:Ember of Benevolence"]
+on = { event = "gain", state = "restoration" }
+chance = { var = "policy.allies_present" }
+effect = [
+  { regen = "grenade", amount = 3.0, duration = 7 },
+  { regen = "melee", amount = 3.0, duration = 7 },
+  { regen = "class", amount = 3.0, duration = 7 },
+]
+
+[[rule]]
+granted_by = "fragment:Ember of Combustion"
+sources = ["compendium:Solar/Fragments/Combustion"]
+on = { event = "kill", source = "super", element = "solar" }
+effect = [{ emit = "ignition", attributes = { by = "super" } }, { spawn = "firesprite", count = 1 }]
+
+[[rule]]
+granted_by = "fragment:Ember of Blistering"
+sources = ["compendium:Solar/Fragments/Blistering", "clarity:Ember of Blistering"]
+on = { event = "kill", by = "ignition" }
+effect = { energy = "grenade", amount = { by_tier = [0.08, 0.1225, 0.165, 0.25] } }
+
+[[rule]]
+granted_by = "fragment:Ember of Wonder"
+sources = ["compendium:Solar/Fragments/Wonder", "clarity:Ember of Wonder"]
+on = { event = "kill", by = "ignition" }
+effect = { spawn = "orb_of_power", count = 1 }
+chance = 0.5
+cooldown = 10
+confidence = "assumed"
+note = "Two ignition kills within a few seconds make an Orb (2.5% super energy), 10 s cooldown: one kill in two taken as the second."
+
+[[rule]]
+granted_by = "fragment:Ember of Resolve"
+sources = ["compendium:Solar/Fragments/Resolve"]
+on = { event = "kill", source = "grenade" }
+effect = { apply = "cure", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "fragment:Ember of Tempering"
+sources = ["compendium:Solar/Fragments/Tempering"]
+on = { event = "kill", source = "weapon", element = "solar" }
+effect = { spawn = "firesprite", count = 1 }
+note = "Solar weapon kills grant Tempering; while it is active they spawn Firesprites: in steady state, every Solar weapon kill."
+
+# --------------------------------------------------------------- aspects
+
+# Hellion: for 20 s after a class ability, a projectile every 1.35 s (about
+# 15): 217 Solar grenade damage and x30 Scorch over 4 m each.
+[[rule]]
+granted_by = "aspect:Hellion"
+sources = ["compendium:Solar/Aspects/Hellion", "clarity:Hellion"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { damage = 217, times = 14.8, target = "area", radius = 4, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 30, times = 14.8, target = "area", radius = 4 },
+]
+
+[[rule]]
+granted_by = "aspect:On Your Mark"
+sources = ["compendium:Solar/Aspects/On Your Mark"]
+on = { event = "kill", source = "weapon", precision = true }
+effect = { apply = "on_your_mark", stacks = 2, target = "allies" }
+
+[[rule]]
+granted_by = "aspect:On Your Mark"
+sources = ["compendium:Solar/Aspects/On Your Mark"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "on_your_mark", stacks = 1, target = "allies" }
+
+# Sol Invictus: Solar ability kills and kills of Scorched enemies leave a
+# Sunspot; standing in one grants Sol Invictus (+100% grenade and melee
+# regeneration) and Restoration x1 for 5 s.
+[[rule]]
+granted_by = "aspect:Sol Invictus"
+sources = ["compendium:Solar/Aspects/Sol Invictus", "clarity:Sol Invictus"]
+on = { event = "kill", source = "ability", element = "solar" }
+effect = { spawn = "sunspot", count = 1 }
+
+[[rule]]
+granted_by = "aspect:Sol Invictus"
+sources = ["compendium:Solar/Aspects/Sol Invictus", "clarity:Sol Invictus"]
+on = { event = "kill", by = "ignition" }
+effect = { spawn = "sunspot", count = 1 }
+
+[[rule]]
+granted_by = "aspect:Sol Invictus"
+sources = ["compendium:Solar/Aspects/Sol Invictus"]
+on = { event = "pickup", object = "sunspot" }
+effect = [
+  { apply = "sol_invictus", target = "self" },
+  { apply = "restoration", stacks = 1, duration = 5, target = "self" },
+  { regen = "grenade", amount = 1.0, duration = 5 },
+  { regen = "melee", amount = 1.0, duration = 5 },
+]
+
+[[rule]]
+granted_by = "aspect:Roaring Flames"
+sources = ["compendium:Solar/Aspects/Roaring Flames", "clarity:Roaring Flames"]
+on = { event = "kill", source = "ability", element = "solar" }
+effect = { apply = "roaring_flames", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "aspect:Roaring Flames"
+sources = ["compendium:Solar/Aspects/Roaring Flames"]
+on = { event = "kill", by = "ignition" }
+effect = { apply = "roaring_flames", stacks = 1, target = "self" }
+
+# +67% | +133% | +200% melee damage and +20% | +44% | +73% grenade and super
+# damage at 1 | 2 | 3 stacks: each stack's step as a factor.
+[[modifier]]
+granted_by = "aspect:Roaring Flames"
+sources = ["compendium:Solar/Aspects/Roaring Flames"]
+damage = "melee"
+element = "solar"
+mul = 1.67
+when = [{ stacks = "roaring_flames", min = 1 }]
+
+[[modifier]]
+granted_by = "aspect:Roaring Flames"
+sources = ["compendium:Solar/Aspects/Roaring Flames"]
+damage = "melee"
+element = "solar"
+mul = 1.3952
+when = [{ stacks = "roaring_flames", min = 2 }]
+
+[[modifier]]
+granted_by = "aspect:Roaring Flames"
+sources = ["compendium:Solar/Aspects/Roaring Flames"]
+damage = "melee"
+element = "solar"
+mul = 1.2876
+when = [{ stacks = "roaring_flames", min = 3 }]
+
+[[modifier]]
+granted_by = "aspect:Roaring Flames"
+sources = ["compendium:Solar/Aspects/Roaring Flames"]
+damage = "grenade"
+element = "solar"
+mul = 1.73
+when = [{ stacks = "roaring_flames", min = 3 }]
+
+[[rule]]
+granted_by = "aspect:Knock 'Em Down"
+sources = ["compendium:Solar/Aspects/Knock 'Em Down", "clarity:Knock 'Em Down"]
+on = { event = "kill", source = "melee", powered = true }
+when = [{ has = "radiant" }]
+effect = { energy = "melee", amount = 1.0, scaling = "fixed" }
+
+[[rule]]
+granted_by = "aspect:Heat Rises"
+sources = ["compendium:Solar/Aspects/Heat Rises", "clarity:Heat Rises"]
+on = { event = "cast", ability = "grenade" }
+effect = [{ apply = "cure", stacks = 2, target = "self" }, { apply = "heat_rises", target = "self" }]
+note = "Holding grenade consumes the charge: modelled as the grenade's cast."
+
+[[rule]]
+granted_by = "aspect:Heat Rises"
+sources = ["compendium:Solar/Aspects/Heat Rises", "clarity:Heat Rises"]
+on = "kill"
+when = [{ movement = "airborne" }]
+effect = { energy = "melee", amount = { by_tier = [0.2, 0.25, 0.35, 0.5] } }
+
+[[rule]]
+granted_by = "aspect:Consecration"
+sources = ["compendium:Solar/Aspects/Consecration"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "slide" }]
+effect = [
+  { damage = 40, target = "area", radius = { var = "consecration.wave_radius" }, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "scorch", stacks = 40, target = "area", radius = { var = "consecration.wave_radius" } },
+  { emit = "ignition", attributes = { by = "melee" }, target = "area", radius = { var = "consecration.wave_radius" } },
+]
+note = "The slam's second wave ignites every enemy the first one Scorched."
+
+[[rule]]
+granted_by = ["aspect:Touch of Flame", "grenade:Healing Grenade"]
+sources = ["compendium:Solar/Aspects/Touch of Flame", "clarity:Touch of Flame"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { apply = "cure", stacks = 1, target = "self" },
+  { apply = "restoration", stacks = 1, duration = 4, target = "self" },
+]
+note = "Healing Grenades grant Cure x2 and Restoration x2: the second stack of each."
+
+[[rule]]
+granted_by = ["aspect:Touch of Flame", "grenade:Fusion Grenade"]
+sources = ["compendium:Solar/Aspects/Touch of Flame"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 851, target = "area", radius = 8, element = "solar", source = "grenade", tags = ["grenade"] }
+note = "Fusion Grenades explode again after 0.5 s."
+
+[[rule]]
+granted_by = ["aspect:Touch of Flame", "grenade:Solar Grenade"]
+sources = ["compendium:Solar/Aspects/Touch of Flame"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 125, times = 4, target = "area", radius = 4, element = "solar", source = "grenade", tags = ["grenade"] }
+confidence = "assumed"
+note = "Solar Grenades linger 2 s longer and release Magma Orbs (125 damage each); four orbs taken."
+
+[[rule]]
+granted_by = ["aspect:Touch of Flame", "grenade:Firebolt Grenade"]
+sources = ["compendium:Solar/Aspects/Touch of Flame"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 337, times = 1, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 20, times = 1 },
+]
+note = "Firebolts seek up to 5 enemies within 12 m: the fifth bolt."
+
+# -------------------------------------------------------------- grenades
+
+[[rule]]
+granted_by = "grenade:Healing Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Healing Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { apply = "cure", stacks = 1, target = "self" },
+  { apply = "restoration", stacks = 1, duration = 4, target = "self" },
+]
+
+[[rule]]
+granted_by = "grenade:Solar Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Solar Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 63, target = "area", radius = 5, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 17, target = "area", radius = 5 },
+  { damage = 1014, target = "area", radius = 4, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 53, target = "area", radius = 4 },
+]
+
+[[rule]]
+granted_by = "grenade:Fusion Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Fusion Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 738, target = "area", radius = 6, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 40, target = "area", radius = 6 },
+]
+
+[[rule]]
+granted_by = "grenade:Thermite Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Thermite Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 452, times = 4, target = "area", radius = 3, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 10, times = 4, target = "area", radius = 3 },
+]
+note = "Four waves along a 20 m line; a 3 m half-width taken."
+
+[[rule]]
+granted_by = "grenade:Swarm Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Swarm Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 112, times = 9, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 5, times = 9 },
+]
+
+[[rule]]
+granted_by = "grenade:Incendiary Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Incendiary Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 814, target = "area", radius = 8, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 60, target = "area", radius = 8 },
+]
+
+[[rule]]
+granted_by = "grenade:Tripmine Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Tripmine Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 805, target = "area", radius = { var = "tripmine_grenade.radius" }, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 40, target = "area", radius = { var = "tripmine_grenade.radius" } },
+]
+
+[[rule]]
+granted_by = "grenade:Firebolt Grenade"
+sources = ["compendium:Solar/Grenade Abilities/Firebolt Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 337, times = 4, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 20, times = 4 },
+]
+note = "Up to four bolts at enemies within 8.5 m."
+
+# ---------------------------------------------------------------- melees
+
+[[rule]]
+granted_by = "melee:Knife Trick"
+sources = ["compendium:Solar/Melee Abilities/Knife Trick"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 257, times = 3, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "scorch", stacks = 20, times = 3 },
+]
+
+[[rule]]
+granted_by = "melee:Incinerator Snap"
+sources = ["compendium:Solar/Melee Abilities/Incinerator Snap"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 90, times = 5, target = "area", radius = { var = "incinerator_snap.radius" }, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "scorch", stacks = 20, times = 5, target = "area", radius = { var = "incinerator_snap.radius" } },
+]
+
+[[rule]]
+granted_by = "melee:Throwing Hammer"
+sources = ["compendium:Solar/Melee Abilities/Throwing Hammer"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 539, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+  { spawn = "throwing_hammer", count = 1 },
+]
+
+[[rule]]
+granted_by = "melee:Throwing Hammer"
+sources = ["compendium:Solar/Melee Abilities/Throwing Hammer"]
+on = { event = "pickup", object = "throwing_hammer" }
+effect = { apply = "cure", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "melee:Celestial Fire"
+sources = ["compendium:Solar/Melee Abilities/Celestial Fire"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 150, times = 3, target = "area", radius = { var = "celestial_fire.radius" }, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "scorch", stacks = 10, times = 3, target = "area", radius = { var = "celestial_fire.radius" } },
+]
+
+[[rule]]
+granted_by = "melee:Lightweight Knife"
+sources = ["compendium:Solar/Melee Abilities/Lightweight Knife"]
+on = { event = "cast", ability = "melee" }
+effect = { damage = 408, element = "solar", source = "melee", tags = ["melee", "powered_melee"] }
+
+[[rule]]
+granted_by = "melee:Lightweight Knife"
+sources = ["compendium:Solar/Melee Abilities/Lightweight Knife"]
+on = { event = "hit", source = "melee", precision = true }
+effect = { apply = "radiant", duration = 10, target = "self" }
+
+[[modifier]]
+granted_by = "melee:Lightweight Knife"
+sources = ["compendium:Solar/Melee Abilities/Lightweight Knife"]
+param = "melee.charges"
+add = 1
+
+[[rule]]
+granted_by = "melee:Weighted Throwing Knife"
+sources = ["compendium:Solar/Melee Abilities/Weighted Throwing Knife"]
+on = { event = "cast", ability = "melee" }
+effect = { damage = 571, element = "solar", source = "melee", tags = ["melee", "powered_melee"] }
+
+[[rule]]
+granted_by = "melee:Weighted Throwing Knife"
+sources = ["compendium:Solar/Melee Abilities/Weighted Throwing Knife"]
+on = { event = "hit", source = "melee", target_has = "scorch" }
+effect = { emit = "ignition", attributes = { by = "melee" } }
+
+[[rule]]
+granted_by = "melee:Hammer Strike"
+sources = ["compendium:Solar/Melee Abilities/Hammer Strike"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "sprint" }]
+effect = [
+  { damage = 878, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "scorch", stacks = 40 },
+  { damage = 586, target = "area", radius = 7, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+]
+
+[[rule]]
+granted_by = "melee:Hammer Strike"
+sources = ["compendium:Solar/Melee Abilities/Hammer Strike"]
+on = { event = "kill", source = "melee", powered = true }
+effect = { emit = "ignition", attributes = { by = "melee" } }
+
+[[rule]]
+granted_by = "melee:Proximity Explosive Knife"
+sources = ["compendium:Solar/Melee Abilities/Proximity Explosive Knife"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 306, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+  { damage = 405, target = "area", radius = 6, element = "solar", source = "melee", tags = ["melee", "powered_melee"] },
+]
+
+# ------------------------------------------------------- class abilities
+
+[[rule]]
+granted_by = "class_ability:Phoenix Dive"
+sources = ["compendium:Solar/Class Abilities/Phoenix Dive"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "cure", stacks = 2, target = "allies" }
+
+[[rule]]
+granted_by = ["class_ability:Phoenix Dive", "aspect:Heat Rises"]
+sources = ["compendium:Solar/Class Abilities/Phoenix Dive"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { apply = "restoration", stacks = 2, duration = 3, target = "allies" },
+  { damage = 100, target = "area", radius = 6.5, element = "solar", source = "class", tags = ["class"] },
+  { apply = "scorch", stacks = 40, target = "area", radius = 6.5 },
+]
+
+# ---------------------------------------------------------------- supers
+
+[[rule]]
+granted_by = "super:Song of Flame"
+sources = ["compendium:Solar/Super Abilities/Song of Flame"]
+on = { event = "cast", ability = "super" }
+effect = { apply = "radiant", duration = 25, target = "allies" }
+
+[[rule]]
+granted_by = "super:Song of Flame"
+sources = ["compendium:Solar/Super Abilities/Song of Flame"]
+on = "super_end"
+effect = [{ charges = "grenade", count = 1 }, { charges = "melee", count = 1 }]
+
+[[modifier]]
+granted_by = "super:Song of Flame"
+sources = ["compendium:Solar/Super Abilities/Song of Flame"]
+param = "super.duration"
+set = 25
+
+[[gap]]
+part = "super:Song of Flame"
+note = "Scorching Rounds by weapon type, the Solar Wisps (647 damage, x40 Scorch), +100 grenade, melee and class during the super, and allies' 15% ability energy a second."
+sources = ["compendium:Solar/Super Abilities/Song of Flame"]
+
+[[rule]]
+granted_by = "super:Blade Barrage"
+sources = ["compendium:Solar/Super Abilities/Blade Barrage"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 659, times = 14, target = "area", radius = 4.25, element = "solar", source = "super", tags = ["super"] },
+  { apply = "scorch", stacks = { var = "blade_barrage.scorch" }, times = 14, target = "area", radius = 4.25 },
+]
+
+[[rule]]
+granted_by = ["super:Blade Barrage", "aspect:Knock 'Em Down"]
+sources = ["compendium:Solar/Super Abilities/Blade Barrage", "compendium:Solar/Aspects/Knock 'Em Down"]
+on = { event = "cast", ability = "super" }
+effect = { damage = 659, times = 6, target = "area", radius = 4.25, element = "solar", source = "super", tags = ["super"] }
+
+[[rule]]
+granted_by = "super:Golden Gun: Marksman"
+sources = ["compendium:Solar/Super Abilities/Golden Gun: Marksman"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 1574, times = 3, element = "solar", source = "super", tags = ["super"] },
+  { apply = "scorch", stacks = 40, times = 3 },
+]
+
+[[rule]]
+granted_by = "super:Golden Gun: Marksman"
+sources = ["compendium:Solar/Super Abilities/Golden Gun: Marksman"]
+on = { event = "hit", source = "super", precision = true }
+effect = { spawn = "orb_of_power", count = 2 }
+
+[[rule]]
+granted_by = "super:Golden Gun: Deadshot"
+sources = ["compendium:Solar/Super Abilities/Golden Gun: Deadshot"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 1453, times = 6, element = "solar", source = "super", tags = ["super"] },
+  { apply = "scorch", stacks = 40, times = 6 },
+]
+
+[[rule]]
+granted_by = "super:Well of Radiance"
+sources = ["compendium:Solar/Super Abilities/Well of Radiance"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { heal = 300 },
+  { damage = 150, target = "area", radius = 8.5, element = "solar", source = "super", tags = ["super"] },
+  { apply = "scorch", stacks = 40, target = "area", radius = 8.5 },
+  { spawn = "orb_of_power", count = 3 },
+  { apply = "radiant", duration = 30, target = "allies" },
+]
+note = "The Well's aura (25% weapon damage, damage resistance, healing) for 30 s is taken as Radiant."
+
+[[rule]]
+granted_by = "super:Hammer of Sol"
+sources = ["compendium:Solar/Super Abilities/Hammer of Sol"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 445, times = { var = "hammer_of_sol.throws" }, target = "area", radius = 4, element = "solar", source = "super", tags = ["super"] },
+  { damage = 792, times = { var = "hammer_of_sol.throws" }, target = "area", radius = 6, element = "solar", source = "super", tags = ["super"] },
+]
+note = "Each hammer's impact, and its four shrapnel (396 each), half of which taken to land."
+
+[[rule]]
+granted_by = "super:Daybreak"
+sources = ["compendium:Solar/Super Abilities/Daybreak"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 426, times = { var = "daybreak.projectiles" }, element = "solar", source = "super", tags = ["super"] },
+  { damage = 598, times = { var = "daybreak.projectiles" }, target = "area", radius = 5, element = "solar", source = "super", tags = ["super"] },
+  { apply = "scorch", stacks = 50, times = { var = "daybreak.projectiles" }, target = "area", radius = 5 },
+]

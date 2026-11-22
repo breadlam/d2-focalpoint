@@ -117,8 +117,21 @@ pub fn matches(t: &Trigger, e: &Event) -> bool {
     t.event == e.name
         && t.attributes.iter().all(|(k, v)| {
             let want = value_text(v);
-            e.attrs.get(k).map_or(want == "false", |have| *have == want)
+            e.attrs
+                .get(k)
+                .map_or(want == "false", |have| attr_eq(k, &want, have))
         })
+}
+
+/// Whether an event's attribute value satisfies a trigger's: equal, or a
+/// grenade, melee, class or super source for `source = "ability"`, or
+/// anything for `any`.
+fn attr_eq(key: &str, want: &str, have: &str) -> bool {
+    want == have
+        || want == "any"
+        || (key == "source"
+            && want == "ability"
+            && matches!(have, "grenade" | "melee" | "class" | "super" | "ability"))
 }
 
 /// What a generation yields, per root event.
@@ -135,14 +148,20 @@ pub struct Yield {
     pub buffs: BTreeMap<String, f64>,
     /// The same, times each application's duration: stack-seconds.
     pub buff_seconds: BTreeMap<String, f64>,
-    /// Regeneration bonuses by ability (`grenade`, ...): the documented
-    /// bonus times its duration (bonus-seconds).
-    pub regen: BTreeMap<String, f64>,
+    /// Regeneration bonuses by ability (`grenade`, ...) and bonus (in
+    /// thousandths): the bonus times its duration (bonus-seconds). A bonus
+    /// refreshes rather than stacks, so the rates take its uptime.
+    pub regen: BTreeMap<(String, u32), f64>,
     pub frozen: f64,
     pub pickups: f64,
     /// Damage dealt over an area of the pack, summed over the enemies hit;
     /// the generation turns it into kills.
     pub pack_damage: f64,
+    /// The same by `(source, element)`, which the kills are shared by.
+    pub pack_damage_by: BTreeMap<(String, String), f64>,
+    /// Stacks of threshold states (Scorch, Slow) put on enemies outside a
+    /// burst, and the applications: `(stacks, applications)`.
+    pub accumulated: BTreeMap<String, (f64, f64)>,
     progress: BTreeMap<String, f64>,
     /// Firings of the event of a rule that spends a counter.
     spent_at: BTreeMap<String, f64>,
@@ -281,8 +300,14 @@ impl<'a> Engine<'a> {
             }
             return f64::from(u8::from(self.applies(name)));
         }
-        if c.movement.is_some() {
-            return self.var("policy.slide_form");
+        if let Some(m) = &c.movement {
+            let policy = match m.as_str() {
+                "slide" => "policy.slide_form",
+                "airborne" | "glide" => "policy.airborne",
+                "sprint" => "policy.sprint",
+                _ => "policy.other_movement",
+            };
+            return self.var(policy);
         }
         if let Some(v) = c.in_super {
             return if v { 0.0 } else { 1.0 };
@@ -437,20 +462,46 @@ impl<'a> Engine<'a> {
     ) -> Vec<(Event, f64)> {
         let mut out = Vec::new();
         let n = self.targets(eff);
+        let p = p * eff.times.as_ref().map_or(1.0, |a| self.amount(a));
+        if let Some(state) = &eff.extend {
+            // An extension counts only while the buff is up: held whenever
+            // the build applies it.
+            if self.applies(state) {
+                let d = eff.duration.as_ref().map_or(0.0, |a| self.amount(a));
+                *y.buff_seconds.entry(state.clone()).or_default() += w * p * d;
+            }
+        }
         if let Some(state) = &eff.apply {
+            let on_player = matches!(eff.target.as_deref(), Some("self" | "allies" | "fireteam"));
             if state == "frozen" {
                 out.push((Event::new("freeze"), p * n));
-            } else if self.thresholds.contains_key(state) {
+            } else if self.thresholds.contains_key(state) && !on_player {
+                // Outside a burst, stacks add up across applications over
+                // time: the rates turn them into the state's event.
                 if parent.name != "ignition_hit" {
-                    self.note(format!(
-                        "{state} from separate applications adds up over time; not modelled"
-                    ));
+                    let stacks = eff.stacks.as_ref().map_or(0.0, |a| self.amount(a));
+                    let applied = self.c.applied_stacks(self.o, state, stacks);
+                    let acc = y.accumulated.entry(state.clone()).or_default();
+                    acc.0 += w * p * n * applied;
+                    acc.1 += w * p * n;
                 }
-            } else if matches!(eff.target.as_deref(), Some("self" | "allies" | "fireteam")) {
+            } else if on_player && self.o.states.get(state).is_some_and(|s| s.kind == "verb") {
+                // An instant verb on the player: Cure heals by its stacks.
+                let stacks = eff.stacks.as_ref().map_or(1.0, |a| self.amount(a));
+                let tier = format!("{state}.heal_x{}", stacks.round().clamp(1.0, 3.0));
+                let heal = self.param(&tier).unwrap_or(0.0);
+                y.heal += w * p * heal;
+            } else if on_player {
                 let stacks = eff.stacks.as_ref().map_or(1.0, |a| self.amount(a));
                 *y.buffs.entry(state.clone()).or_default() += w * p * stacks;
                 let duration = self.duration(state, eff);
                 *y.buff_seconds.entry(state.clone()).or_default() += w * p * stacks * duration;
+            }
+            // Rules on applying a state, or on gaining one.
+            if on_player {
+                out.push((Event::new("gain").with("state", state), p));
+            } else if parent.name != "ignition_hit" || !self.thresholds.contains_key(state) {
+                out.push((Event::new("apply").with("state", state), p * n));
             }
         }
         if let (Some(a), None) = (&eff.damage, &eff.emit) {
@@ -466,9 +517,17 @@ impl<'a> Engine<'a> {
             if let Some(el) = &eff.element {
                 hit = hit.with("element", el);
             }
+            if eff.tags.iter().any(|t| t == "powered_melee") {
+                hit = hit.with("powered", "true");
+            }
             out.push((hit.clone(), p * n));
             if n > 1.0 {
                 y.pack_damage += w * p * n * dmg;
+                let key = (
+                    eff.source.clone().unwrap_or_else(|| "ability".into()),
+                    eff.element.clone().unwrap_or_default(),
+                );
+                *y.pack_damage_by.entry(key).or_default() += w * p * n * dmg;
             } else {
                 let kills = p * n * (1.0 - self.s.survives_mixed(dmg));
                 y.kills += w * kills;
@@ -504,7 +563,9 @@ impl<'a> Engine<'a> {
                     "a regeneration bonus for {ability} has no duration"
                 ));
             }
-            *y.regen.entry(ability.clone()).or_default() += w * p * bonus * duration;
+            #[allow(clippy::cast_sign_loss)]
+            let level = (bonus * 1000.0).round().max(0.0) as u32;
+            *y.regen.entry((ability.clone(), level)).or_default() += w * p * bonus * duration;
         }
         if let Some(obj) = &eff.spawn {
             let sizes: Vec<(String, f64)> = if let Some(s) = &eff.sizes {
@@ -517,7 +578,11 @@ impl<'a> Engine<'a> {
                 if obj == "stasis_crystal" {
                     out.push((Event::new("crystal_created").with("size", &size), p * count));
                 } else {
-                    let chance = self.pickup_chance();
+                    let chance = if obj == "stasis_shard" {
+                        self.pickup_chance()
+                    } else {
+                        self.var("policy.object_pickup")
+                    };
                     let pickup = Event::new("pickup").with("object", obj).with("size", &size);
                     out.push((pickup, p * count * chance));
                 }
@@ -536,7 +601,13 @@ impl<'a> Engine<'a> {
             child.tags.clone_from(&eff.tags);
             child.element.clone_from(&eff.element);
             child.member = *ev == parent.name;
-            out.push((child, p));
+            // Emitted at each enemy an area effect reaches.
+            let count = if eff.target.as_deref() == Some("area") {
+                n
+            } else {
+                1.0
+            };
+            out.push((child, p * count));
         }
         if let Some(c) = &eff.progress {
             let amount = eff.amount.as_ref().map_or(1.0, |a| self.amount(a));
@@ -553,12 +624,16 @@ impl<'a> Engine<'a> {
     /// How long one application of a buff lasts: the effect's duration,
     /// or the state's `duration` or `stack_duration`.
     fn duration(&mut self, state: &str, eff: &Effect) -> f64 {
+        // Ember of Solace: Radiant and Restoration last 50% longer.
+        let scale = self
+            .param(&format!("{state}.duration_multiplier"))
+            .unwrap_or(1.0);
         if let Some(a) = eff.duration.as_ref().or(eff.max_duration.as_ref()) {
-            return self.amount(a);
+            return scale * self.amount(a);
         }
         for p in ["duration", "stack_duration"] {
             if let Some(d) = self.param(&format!("{state}.{p}")) {
-                return d;
+                return scale * d;
             }
         }
         self.note(format!(
@@ -583,12 +658,16 @@ impl<'a> Engine<'a> {
             .rules
             .iter()
             .copied()
-            .filter(|r| matches(&r.on, e))
+            .filter(|r| r.on.event == e.name)
             .collect();
         let mut out = Vec::new();
         for r in rules {
+            let matched = self.match_p(&r.on, e);
+            if matched <= 0.0 {
+                continue;
+            }
             let chance = r.chance.as_ref().map_or(1.0, |a| self.amount(a));
-            let p = self.holds_all(&r.when) * chance;
+            let p = matched * self.holds_all(&r.when) * chance;
             if r.cooldown.is_some() {
                 self.note(format!(
                     "{}: its cooldown limits its rate (`rates`), not its gains",
@@ -600,6 +679,45 @@ impl<'a> Engine<'a> {
             }
         }
         out
+    }
+
+    /// The probability a trigger matches an event. An attribute the event
+    /// lacks is weighed: the target's state by whether the build applies
+    /// it, a rank by the pack's mix, precision and a weapon's element by the
+    /// player's policy; any other reads as `false`.
+    fn match_p(&mut self, t: &Trigger, e: &Event) -> f64 {
+        if t.event != e.name {
+            return 0.0;
+        }
+        let mut p = 1.0;
+        for (k, v) in &t.attributes {
+            let want = value_text(v);
+            match e.attrs.get(k) {
+                Some(have) => {
+                    if !attr_eq(k, &want, have) {
+                        return 0.0;
+                    }
+                }
+                None => {
+                    p *= match k.as_str() {
+                        "target_has" => {
+                            self.note(format!(
+                                "`target_has {want}`: held whenever the build applies it"
+                            ));
+                            f64::from(u8::from(self.applies(&want)))
+                        }
+                        "rank" => self.rank_share(std::slice::from_ref(&want)),
+                        "precision" => {
+                            let s = self.var("policy.precision_share");
+                            if want == "true" { s } else { 1.0 - s }
+                        }
+                        "element" => self.var("policy.weapon_element_match"),
+                        _ => f64::from(u8::from(want == "false")),
+                    };
+                }
+            }
+        }
+        p
     }
 
     /// The Scorch (and other threshold states) one hit puts on an enemy
@@ -721,6 +839,7 @@ impl<'a> Engine<'a> {
             out.push((
                 Event::new("kill")
                     .with("source", "verb")
+                    .with("by", "ignition")
                     .with("element", "solar"),
                 killed,
             ));
@@ -768,6 +887,9 @@ impl<'a> Engine<'a> {
                 let dealt = damage * mult * falloff * reach;
                 y.damage += w * dealt;
                 y.pack_damage += w * dealt;
+                *y.pack_damage_by
+                    .entry(("verb".into(), "stasis".into()))
+                    .or_default() += w * dealt;
                 let chance = self.pickup_chance();
                 let shard = |size: &str| {
                     Event::new("pickup")
@@ -783,7 +905,34 @@ impl<'a> Engine<'a> {
             }
             "pickup" => {
                 y.pickups += w;
-                if e.attrs.get("object").map(String::as_str) == Some("stasis_shard") {
+                let object = e.attrs.get("object").cloned().unwrap_or_default();
+                // An elemental pickup's energy: `<ability>_energy` params.
+                let gains: Vec<(String, f64)> = self
+                    .o
+                    .states
+                    .get(&object)
+                    .map(|st| {
+                        st.params
+                            .iter()
+                            .filter_map(|p| {
+                                let ability = p.name.strip_suffix("_energy")?;
+                                Some((ability.to_string(), p.name.clone()))
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default()
+                    .into_iter()
+                    .filter_map(|(a, param)| {
+                        self.param(&format!("{object}.{param}")).map(|v| (a, v))
+                    })
+                    .collect();
+                for (ability, amount) in gains {
+                    if let Some((cast, charges)) = self.energy(&ability, amount, Scaling::Chunk) {
+                        *y.energy.entry(ability.clone()).or_default() += w * charges;
+                        out.push((cast, charges));
+                    }
+                }
+                if object == "stasis_shard" {
                     let size = e.attrs.get("size").map_or("small", String::as_str);
                     let amount = self
                         .param(&format!("stasis_shard.melee_energy_{size}"))
@@ -871,8 +1020,22 @@ impl<'a> Engine<'a> {
                     let killed = pack * (1.0 - self.s.survives_mixed(per_enemy));
                     y.kills += killed;
                     if killed > 0.0 {
-                        let kill = Event::new("kill").with("source", "ability");
-                        stack.push((kill, killed, 1));
+                        let total: f64 = y.pack_damage_by.values().sum();
+                        let shares: Vec<((String, String), f64)> = if total > 0.0 {
+                            y.pack_damage_by
+                                .iter()
+                                .map(|(k, v)| (k.clone(), v / total))
+                                .collect()
+                        } else {
+                            vec![(("ability".into(), String::new()), 1.0)]
+                        };
+                        for ((source, element), share) in shares {
+                            let mut kill = Event::new("kill").with("source", &source);
+                            if !element.is_empty() {
+                                kill = kill.with("element", &element);
+                            }
+                            stack.push((kill, killed * share, 1));
+                        }
                         // Killing a frozen enemy that was not shattered
                         // leaves a shard.
                         let unshattered = y.frozen * (1.0 - self.var("policy.shatter_frozen"));

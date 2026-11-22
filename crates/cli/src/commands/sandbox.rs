@@ -362,7 +362,7 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
         .collect();
     let compiled = compile(&ontology, &base, &build, &vars);
     let s = scenario(a, &db, &vars)?;
-    let mut seeds = focalpoint_sandbox::rates::seeds(&compiled);
+    let mut seeds = focalpoint_sandbox::rates::seeds_with(&ontology, &compiled);
     seeds.extend(a.seeds.iter().map(|e| Event::new(e)));
     println!(
         "{}: durability ×{:.2}, packs of {} within {} m, {:.0}% elites",

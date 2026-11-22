@@ -85,6 +85,30 @@ pub fn weapon_kill() -> Event {
     Event::new("kill").with("source", "weapon")
 }
 
+/// The seeds of a build: each equipped ability's cast, weapon kills, and
+/// the event of each threshold state the build applies (an ignition from
+/// Scorch adding up).
+#[must_use]
+pub fn seeds_with(o: &Ontology, c: &Compiled<'_>) -> Vec<Event> {
+    let mut out = seeds(c);
+    for st in o.states.values() {
+        let Some(at_max) = &st.at_max else { continue };
+        let applied = c
+            .rules
+            .iter()
+            .flat_map(|r| r.effect.iter())
+            .any(|e| e.apply.as_deref() == Some(st.name.as_str()));
+        if applied {
+            let mut ev = Event::new(at_max);
+            ev.chained = true;
+            if !out.contains(&ev) {
+                out.push(ev);
+            }
+        }
+    }
+    out
+}
+
 /// The seeds of a build: each equipped ability's cast, and weapon kills.
 #[must_use]
 pub fn seeds(c: &Compiled<'_>) -> Vec<Event> {
@@ -139,11 +163,20 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
     let mut x = base.clone();
     let mut capped = Vec::new();
     for _ in 0..500 {
-        // Regeneration bonuses, by their uptime: bonus-seconds a second.
-        let mut bonus: BTreeMap<&str, f64> = BTreeMap::new();
+        // Regeneration bonuses refresh rather than stack: a bonus `b`
+        // applied for `B` bonus-seconds a second is up `1 - exp(-B / b)` of
+        // the time.
+        let mut seconds: BTreeMap<(&str, u32), f64> = BTreeMap::new();
         for (i, g) in gens.iter().enumerate() {
-            for (a, b) in &g.yields.regen {
-                *bonus.entry(a.as_str()).or_default() += x[i] * b;
+            for ((a, level), b) in &g.yields.regen {
+                *seconds.entry((a.as_str(), *level)).or_default() += x[i] * b;
+            }
+        }
+        let mut bonus: BTreeMap<&str, f64> = BTreeMap::new();
+        for ((a, level), b) in seconds {
+            let amount = f64::from(level) / 1000.0;
+            if amount > 0.0 {
+                *bonus.entry(a).or_default() += amount * (1.0 - (-b / amount).exp());
             }
         }
         let ability_kills: f64 = gens
@@ -173,6 +206,35 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
         for (i, row) in report.gains.iter().enumerate() {
             for (j, g) in row.iter().enumerate() {
                 next[j] += x[i] * g;
+            }
+        }
+        // Stacks put on enemies outside bursts add up to their threshold,
+        // less what decays: applications closer together than the state's
+        // linger lose nothing.
+        let mut accumulated: BTreeMap<&str, (f64, f64)> = BTreeMap::new();
+        for (i, g) in gens.iter().enumerate() {
+            for (st, (stacks, apps)) in &g.yields.accumulated {
+                let a = accumulated.entry(st.as_str()).or_default();
+                a.0 += x[i] * stacks;
+                a.1 += x[i] * apps;
+            }
+        }
+        for (st, (stacks, apps)) in accumulated {
+            let Some(def) = o.states.get(st) else {
+                continue;
+            };
+            let (Some(max), Some(at_max)) = (def.max_stacks, &def.at_max) else {
+                continue;
+            };
+            let linger = c.param(o, &format!("{st}.linger")).unwrap_or(2.3);
+            let per_enemy = apps / s.pack.size.max(1.0);
+            let efficiency = (per_enemy * linger).min(1.0);
+            let rate = stacks / f64::from(max) * efficiency;
+            if let Some(j) = gens
+                .iter()
+                .position(|g| g.root.chained && g.root.name == *at_max)
+            {
+                next[j] += rate;
             }
         }
         for (i, g) in gens.iter().enumerate() {
@@ -249,13 +311,17 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             .and_then(|st| st.max_stacks)
             .map_or(1.0, f64::from);
         let max = c.param(o, &format!("{b}.max_stacks")).unwrap_or(max);
-        r.buffs.insert(
-            b,
-            Uptime {
-                uptime: 1.0 - (-ss).exp(),
-                mean_stacks: ss.min(max),
-            },
-        );
+        let u = Uptime {
+            uptime: 1.0 - (-ss).exp(),
+            mean_stacks: ss.min(max),
+        };
+        // Healing buffs (Restoration) heal by their uptime and stacks.
+        if let Some(x1) = c.param(o, &format!("{b}.heal_x1")) {
+            let x2 = c.param(o, &format!("{b}.heal_x2")).unwrap_or(x1);
+            let extra = (u.mean_stacks.min(2.0) - 1.0).max(0.0);
+            r.heal_per_s += u.uptime * x1 + extra * (x2 - x1);
+        }
+        r.buffs.insert(b, u);
     }
     r
 }

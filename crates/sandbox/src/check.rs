@@ -150,7 +150,21 @@ impl<'a> Checker<'a> {
         let v = &self.o.vocabulary;
         let text = value.as_str();
         let list: Option<Vec<String>> = match name {
-            "source" | "by" => Some(v.sources.clone()),
+            "source" => Some(v.sources.clone()),
+            // What dealt it: a source, or a verb (`ignition`, `shatter`).
+            "by" => Some(
+                v.sources
+                    .iter()
+                    .cloned()
+                    .chain(
+                        self.o
+                            .states
+                            .values()
+                            .filter(|s| s.kind == "verb")
+                            .map(|s| s.name.clone()),
+                    )
+                    .collect(),
+            ),
             "element" => Some(
                 v.elements
                     .iter()
@@ -321,13 +335,20 @@ impl<'a> Checker<'a> {
         }
         let v = self.o.vocabulary.clone();
         if let Some(s) = &e.apply {
-            self.state("apply", s, &["buff", "debuff"]);
+            // A buff or debuff, or an instant verb such as Cure.
+            self.state("apply", s, &["buff", "debuff", "verb"]);
         }
         for a in [&e.energy, &e.regen, &e.charges].into_iter().flatten() {
             self.in_list("ability", a, &v.abilities);
         }
         if let Some(s) = &e.spawn {
             self.state("spawn", s, &["object"]);
+        }
+        if let Some(s) = &e.extend {
+            self.state("extend", s, &["buff"]);
+            if e.duration.is_none() {
+                self.problem("`extend` needs a `duration`");
+            }
         }
         if let Some(ev) = &e.emit {
             let t = Trigger {
@@ -357,6 +378,7 @@ impl<'a> Checker<'a> {
             ("radius", &e.radius),
             ("duration", &e.duration),
             ("max_duration", &e.max_duration),
+            ("times", &e.times),
         ] {
             if let Some(a) = a {
                 self.amount(name, a);

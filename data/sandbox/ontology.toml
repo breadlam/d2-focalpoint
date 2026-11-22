@@ -56,12 +56,12 @@ source_families = ["compendium", "court", "cooldowns", "mossymax", "endgame", "b
 
 [[event]]
 name = "kill"
-attributes = ["source", "element", "precision", "rank", "tier", "target_has", "ammo", "powered", "multikill"]
+attributes = ["source", "element", "precision", "rank", "tier", "target_has", "ammo", "powered", "multikill", "by"]
 description = "The player (or a summon of theirs) kills an enemy."
 
 [[event]]
 name = "hit"
-attributes = ["source", "element", "precision", "rank", "tier", "target_has", "ammo", "powered"]
+attributes = ["source", "element", "precision", "rank", "tier", "target_has", "ammo", "powered", "by"]
 description = "The player deals a damage instance."
 
 [[event]]
@@ -333,6 +333,7 @@ params = [
   { name = "champion_damage", value = 0.30, unit = "fraction" },
   { name = "duration", value = 10.0, unit = "s" },
   { name = "max_duration", value = 15.0, unit = "s" },
+  { name = "duration_multiplier", value = 1.0, unit = "fraction", note = "Ember of Solace x1.5" },
 ]
 
 [[state]]
@@ -346,6 +347,7 @@ params = [
   { name = "heal_x1", value = 35.0, unit = "hp_per_s" },
   { name = "heal_x2", value = 50.0, unit = "hp_per_s" },
   { name = "max_duration", value = 15.0, unit = "s" },
+  { name = "duration_multiplier", value = 1.0, unit = "fraction", note = "Ember of Solace x1.5" },
 ]
 
 [[state]]
@@ -679,4 +681,71 @@ sources = ["compendium:Strand/Glossary/Woven Mail"]
 params = [
   { name = "damage_resist", value = 0.45, unit = "fraction" },
   { name = "duration", value = 10.0, unit = "s" },
+]
+
+# ---------------------------------------------------------- Solar, more
+
+[[state]]
+name = "sunspot"
+kind = "object"
+element = "solar"
+description = "A Solar pool Sol Invictus creates; standing in it grants Sol Invictus and Restoration and refreshes it."
+sources = ["compendium:Solar/Aspects/Sol Invictus", "clarity:Sol Invictus"]
+params = [
+  { name = "lifetime", value = 5.0, unit = "s", note = "Clarity; standing in it refreshes it, up to 12 s" },
+  { name = "damage", value = 60.0, unit = "damage" },
+  { name = "interval", value = 0.167, unit = "s" },
+  { name = "scorch", value = 5.0, unit = "stacks" },
+]
+
+[[state]]
+name = "sol_invictus"
+kind = "buff"
+element = "solar"
+description = "From a Sunspot: grenade and melee regeneration and less passive super drain."
+sources = ["compendium:Solar/Aspects/Sol Invictus"]
+params = [
+  { name = "duration", value = 5.0, unit = "s" },
+]
+
+[[state]]
+name = "throwing_hammer"
+kind = "object"
+element = "solar"
+description = "A thrown Throwing Hammer on the ground; picking it up returns melee energy."
+sources = ["compendium:Solar/Melee Abilities/Throwing Hammer"]
+params = [
+  { name = "melee_energy", value = 1.215, unit = "fraction" },
+]
+
+[[state]]
+name = "roaring_flames"
+kind = "buff"
+element = "solar"
+max_stacks = 3
+description = "Solar ability and ignition kills: increased Solar ability damage, by stacks."
+sources = ["compendium:Solar/Aspects/Roaring Flames"]
+params = [
+  { name = "duration", value = 20.0, unit = "s" },
+]
+
+[[state]]
+name = "on_your_mark"
+kind = "buff"
+element = "solar"
+max_stacks = 10
+description = "Precision hits and kills and class ability use: weapon stats for the user and allies, by stacks."
+sources = ["compendium:Solar/Aspects/On Your Mark"]
+params = [
+  { name = "duration", value = 12.0, unit = "s" },
+]
+
+[[state]]
+name = "heat_rises"
+kind = "buff"
+element = "solar"
+description = "From consuming a grenade: a modified glide; airborne kills extend it."
+sources = ["compendium:Solar/Aspects/Heat Rises"]
+params = [
+  { name = "duration", value = 15.0, unit = "s" },
 ]

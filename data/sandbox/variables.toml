@@ -124,6 +124,16 @@ basis = "Shards land where enemies stood; a player picks up most, not all, witho
 measure = "From recordings of Stasis play without Conduction: shards picked up over shards created."
 
 [[variable]]
+name = "policy.object_pickup"
+guess = 0.75
+low = 0.4
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "The share of other pickups (Firesprites, Orbs, Ionic Traces, a Throwing Hammer, standing in a Sunspot) the player collects."
+measure = "From recordings: pickups collected over pickups created, per kind."
+
+[[variable]]
 name = "policy.shatter_frozen"
 guess = 1.0
 low = 0.5
@@ -152,6 +162,56 @@ unit = "fraction"
 status = "guess"
 basis = "When a melee has a sliding form a build is made around (Howl of the Storm), the player slides into it."
 measure = "From recordings: sliding casts over casts."
+
+[[variable]]
+name = "policy.airborne"
+guess = 0.25
+low = 0.05
+high = 0.6
+unit = "fraction"
+status = "guess"
+basis = "The share of kills and casts made airborne or gliding: low for most builds, high for builds made around it (Heat Rises, Icarus Dash)."
+measure = "From recordings: kills made in the air over kills."
+
+[[variable]]
+name = "policy.sprint"
+guess = 0.3
+low = 0.1
+high = 0.6
+unit = "fraction"
+status = "guess"
+basis = "The share of the time a rule's sprinting condition holds when its event fires."
+measure = "From recordings: time sprinting before melee casts and kills."
+
+[[variable]]
+name = "policy.other_movement"
+guess = 0.2
+low = 0.0
+high = 0.5
+unit = "fraction"
+status = "guess"
+basis = "Any other movement a rule asks for (crouching, jumping, grappling) at the moment its event fires."
+measure = "From recordings, per movement."
+
+[[variable]]
+name = "policy.precision_share"
+guess = 0.5
+low = 0.2
+high = 0.8
+unit = "fraction"
+status = "guess"
+basis = "The share of weapon hits and kills that are precision: high for precision weapons (hand cannons, scouts, snipers) on headshot-able enemies, low for area weapons."
+measure = "From recordings, or the recorded clears' precision-kill share per weapon archetype."
+
+[[variable]]
+name = "policy.weapon_element_match"
+guess = 0.5
+low = 0.0
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "The share of weapon kills dealt with a weapon of the element a rule asks for (Solar weapon kills on a Solar build) when the build's weapons are not given."
+measure = "From the build's weapons: the recorded builds carry them; their elements and kill shares per slot."
 
 [[variable]]
 name = "policy.critical_health"
@@ -246,3 +306,92 @@ unit = "flag"
 status = "guess"
 basis = "The workbook gives regeneration bonuses relative to the 0-stat cooldown (0: a bonus adds charges a second in units of the 0-stat rate). 1: a bonus multiplies the current rate."
 measure = "Time a grenade's cooldown with Spark of Recharge active at 0 and at 100 grenade stat, against without it."
+
+# ----------------------------------------------------------------- Solar
+
+[[variable]]
+name = "incinerator_snap.radius"
+guess = 3.0
+low = 2.0
+high = 5.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for the sparks' explosion radius; small bursts of this kind are 2-4 m."
+measure = "Snap at a line of enemies and note how far beside the sparks' path enemies are damaged."
+sources = ["compendium:Solar/Melee Abilities/Incinerator Snap"]
+
+[[variable]]
+name = "celestial_fire.radius"
+guess = 3.0
+low = 2.0
+high = 5.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for the blasts' radius."
+measure = "Fire it at a pack and note the farthest enemy damaged from each blast's impact."
+sources = ["compendium:Solar/Melee Abilities/Celestial Fire"]
+
+[[variable]]
+name = "tripmine_grenade.radius"
+guess = 6.0
+low = 4.0
+high = 8.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for the explosion radius; most Solar grenade explosions are 6-8 m."
+measure = "Trigger a Tripmine beside enemies at known distances."
+sources = ["compendium:Solar/Grenade Abilities/Tripmine Grenade"]
+
+[[variable]]
+name = "hammer_of_sol.throws"
+guess = 5.0
+low = 3.0
+high = 8.0
+unit = "count"
+status = "estimate"
+basis = "Each throw drains 12% super energy, at most one every 1.5 s, against 4.75% a second passive drain: about five throws a cast."
+measure = "Count hammers thrown in one Hammer of Sol thrown as fast as it allows."
+sources = ["compendium:Solar/Super Abilities/Hammer of Sol"]
+
+[[variable]]
+name = "daybreak.projectiles"
+guess = 10.0
+low = 6.0
+high = 16.0
+unit = "count"
+status = "estimate"
+basis = "Each projectile drains 6.5% super energy against 4.167% a second passive drain, with dashes taking more."
+measure = "Count projectiles fired in one Daybreak fired as fast as it allows."
+sources = ["compendium:Solar/Super Abilities/Daybreak"]
+
+[[variable]]
+name = "blade_barrage.scorch"
+guess = 20.0
+low = 10.0
+high = 40.0
+unit = "stacks"
+status = "guess"
+basis = "The Compendium gives \"x?+?\" Scorch per knife explosion; Solar knives inflict x20+10."
+measure = "Hit one enemy with a single Blade Barrage knife and read its Scorch stacks."
+sources = ["compendium:Solar/Super Abilities/Blade Barrage"]
+
+[[variable]]
+name = "consecration.wave_radius"
+guess = 4.0
+low = 2.5
+high = 6.0
+unit = "m"
+status = "guess"
+basis = "Consecration's waves travel 20 m forward; their half-width decides how many enemies of a pack they reach."
+measure = "Send a wave past enemies at known distances to its side."
+sources = ["compendium:Solar/Aspects/Consecration"]
+
+[[variable]]
+name = "policy.allies_present"
+guess = 0.5
+low = 0.0
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "The share of buffs a player gives (Cure, Radiant, Restoration) that reach an ally, which Ember of Benevolence needs: 0 solo, high in a close fireteam."
+measure = "Solo content: 0. Fireteam content: from recordings."
