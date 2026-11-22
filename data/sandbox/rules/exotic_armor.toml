@@ -219,3 +219,17 @@ sources = ["compendium:Exotic Armors/Armor/St0mp-EE5"]
 param = "guardian.damage_resist"
 add = 0.3
 when = [{ movement = "airborne" }]
+
+# Bleak Domain: the turret makes four medium crystals (again after 15 s)
+# and a 6 m storm; standing in it grants an Icicle a second (x5 at most),
+# which shooting fires for 50 damage and x50 Slow.
+[[rule]]
+granted_by = ["armor:Rime-coat Raiment", "aspect:Bleak Watcher"]
+sources = ["compendium:Exotic Armors/Armor/Rime-Coat Raiment (live sheet)"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { spawn = "stasis_crystal", count = 6, size = "medium" },
+  { damage = 50, times = { var = "rime_coat_raiment.icicles" }, element = "stasis", source = "grenade", tags = ["grenade"] },
+  { apply = "slow", stacks = 50, times = { var = "rime_coat_raiment.icicles" } },
+]
+note = "Four crystals, and four more for those shattered before the turret's 25 s end: six taken."

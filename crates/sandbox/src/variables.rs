@@ -21,9 +21,11 @@ pub const STATUS: [&str; 3] = ["guess", "estimate", "measured"];
 
 /// The variables the engine itself reads (policies, scenario priors, the
 /// economy's readings), which must be defined.
-pub const ENGINE: [&str; 28] = [
+pub const ENGINE: [&str; 31] = [
     "scenario.ability_efficiency",
     "scenario.damage_spread",
+    "scenario.chip_kill_credit",
+    "scenario.engagements_per_enemy",
     "policy.tangle_use",
     "policy.unravel_releases_per_enemy",
     "policy.volatile_explosions_per_enemy",
@@ -49,6 +51,7 @@ pub const ENGINE: [&str; 28] = [
     "scenario.elite_share",
     "build.default_stat",
     "economy.documented_chunk_scale",
+    "economy.unknown_chunk_scalar",
     "economy.regen_relative_to_current",
 ];
 

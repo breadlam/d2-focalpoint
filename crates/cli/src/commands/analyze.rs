@@ -340,7 +340,7 @@ fn list_kits(
     format: Format,
 ) -> Result<()> {
     use focalpoint_sandbox::{economy::Economy, scenario::Scenario, validate};
-    let e = Economy::load(db)?;
+    let e = Economy::load(db, vars)?;
     let modelled: Vec<String> = base
         .modelled()
         .iter()

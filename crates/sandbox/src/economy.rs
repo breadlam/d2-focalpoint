@@ -23,6 +23,8 @@ use std::collections::BTreeMap;
 use anyhow::Result;
 use focalpoint_db::Database;
 
+use crate::variables::Variables;
+
 /// The stat that drives an ability slot.
 #[must_use]
 pub fn stat_of(slot: &str) -> &'static str {
@@ -80,8 +82,10 @@ pub struct Economy {
 }
 
 impl Economy {
-    /// Read `ability_cooldown` and `stat_curve`.
-    pub fn load(db: &Database) -> Result<Self> {
+    /// Read `ability_cooldown` and `stat_curve`. Abilities the cooldown
+    /// workbook lacks take the Compendium's base cooldown and chunk scalar;
+    /// a chunk scalar it leaves unknown is `economy.unknown_chunk_scalar`.
+    pub fn load(db: &Database, vars: &Variables) -> Result<Self> {
         let mut economy = Self::default();
         let mut query = db.conn().prepare(
             "SELECT slot, name, cooldown_s, coalesce(flat_gain_factor, 1.0)
@@ -104,6 +108,38 @@ impl Economy {
                     flat_gain_factor,
                 },
             );
+        }
+        let mut query = db.conn().prepare(
+            "SELECT CASE WHEN section LIKE '%Grenade Abilities' THEN 'grenade'
+                         WHEN section LIKE '%Melee Abilities' THEN 'melee'
+                         ELSE 'class_ability' END AS slot,
+                    name,
+                    try_cast(regexp_extract(text, 'Base Cooldown: ([0-9.]+)', 1) AS DOUBLE),
+                    try_cast(regexp_extract(text, 'Chunk Scalar: ([0-9.]+)x', 1) AS DOUBLE)
+             FROM mechanic_entry
+             WHERE source = 'compendium'
+               AND (section LIKE '%Grenade Abilities' OR section LIKE '%Melee Abilities'
+                    OR section LIKE '%Class Abilities')
+               AND text LIKE '%Base Cooldown:%'",
+        )?;
+        let rows = query.query_map([], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, Option<f64>>(2)?,
+                r.get::<_, Option<f64>>(3)?,
+            ))
+        })?;
+        let unknown_chunk = vars.engine("economy.unknown_chunk_scalar", 0.8);
+        for row in rows {
+            let (slot, name, cooldown_s, chunk) = row?;
+            let Some(cooldown_s) = cooldown_s else {
+                continue;
+            };
+            economy.abilities.entry((slot, name)).or_insert(Ability {
+                cooldown_s,
+                flat_gain_factor: chunk.unwrap_or(unknown_chunk),
+            });
         }
         let mut query = db
             .conn()

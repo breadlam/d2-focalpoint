@@ -47,6 +47,10 @@ pub struct Rates {
     /// and verbs; weapons' own damage is not modelled), before durability.
     pub damage_per_s: f64,
     pub ability_kills_per_min: f64,
+    /// Of those, kills credited to ability damage that kills nothing
+    /// outright: weapons and abilities wear enemies down together, and the
+    /// final blow falls by damage share.
+    pub chip_kills_per_min: f64,
     /// The same before the cap at the enemies supplied: what the build's
     /// abilities could kill.
     pub ability_kill_capacity_per_min: f64,
@@ -58,6 +62,9 @@ pub struct Rates {
     /// combined multiplicatively.
     pub damage_resist: f64,
     pub buffs: BTreeMap<String, Uptime>,
+    /// The share of what the build's casts would do to enemies that the
+    /// enemies supplied allow (1 when there are enough).
+    pub availability: f64,
     /// What hit a cap.
     pub capped: Vec<String>,
 }
@@ -144,6 +151,10 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
         |kpm| kpm / 60.0,
     );
     let min_interval = vars.engine("policy.min_cast_interval", 1.5).max(0.1);
+    let efficiency = vars.engine("scenario.ability_efficiency", 1.0);
+    let chip_credit = vars.engine("scenario.chip_kill_credit", 0.5);
+    // Documented damage an enemy takes to die, ranks mixed.
+    let to_kill = s.mean_health() / efficiency.max(1e-9);
     let regen_mode = vars.engine("economy.regen_relative_to_current", 0.0);
     // Passive regeneration per cast boundary, and the 0-stat rate bonuses
     // scale from.
@@ -170,9 +181,40 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             zero_stat[i] = e.charges_per_second(sl, name, 0.0).unwrap_or(0.0);
         }
     }
+    // Enemies each generation engages, and how many engagements the
+    // enemies supplied allow: a cast that finds no fresh enemies does
+    // nothing to them.
+    let engagements = vars.engine("scenario.engagements_per_enemy", 3.0);
+    let touched: Vec<f64> = gens
+        .iter()
+        .enumerate()
+        .map(|(i, g)| {
+            if Some(i) == weapon || g.root == weapon_kill() {
+                return 0.0;
+            }
+            let y = &g.yields;
+            let afflicted = y.afflicted.values().copied().fold(0.0, f64::max);
+            afflicted
+                .max(y.kills)
+                .max(y.hits.min(s.pack.size))
+                .min(s.pack.size)
+        })
+        .collect();
+    let availability = |x: &[f64]| -> f64 {
+        let demand: f64 = x.iter().zip(&touched).map(|(r, t)| r * t).sum();
+        let budget = supply * engagements;
+        if demand > budget && demand > 0.0 {
+            budget / demand
+        } else {
+            1.0
+        }
+    };
+    // A generation's outcomes scale by availability if it engages enemies.
+    let scale = |a: f64, i: usize| if touched[i] > 0.0 { a } else { 1.0 };
     let mut x = base.clone();
     let mut capped = Vec::new();
     for _ in 0..500 {
+        let a = availability(&x);
         // Regeneration bonuses refresh rather than stack: a bonus `b`
         // applied for `B` bonus-seconds a second is up `1 - exp(-B / b)` of
         // the time.
@@ -197,7 +239,7 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             .iter()
             .enumerate()
             .filter(|(i, _)| Some(*i) != weapon)
-            .map(|(i, g)| x[i] * g.yields.kills)
+            .map(|(i, g)| x[i] * scale(a, i) * g.yields.kills)
             .sum();
         let mut next = vec![0.0; n];
         for i in 0..n {
@@ -221,7 +263,7 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
         }
         for (i, row) in report.gains.iter().enumerate() {
             for (j, g) in row.iter().enumerate() {
-                next[j] += x[i] * g;
+                next[j] += x[i] * scale(a, i) * g;
             }
         }
         // Stacks put on enemies outside bursts add up to their threshold,
@@ -229,10 +271,11 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
         // linger lose nothing.
         let mut accumulated: BTreeMap<&str, (f64, f64)> = BTreeMap::new();
         for (i, g) in gens.iter().enumerate() {
+            let k = scale(a, i);
             for (st, (stacks, apps)) in &g.yields.accumulated {
-                let a = accumulated.entry(st.as_str()).or_default();
-                a.0 += x[i] * stacks;
-                a.1 += x[i] * apps;
+                let acc = accumulated.entry(st.as_str()).or_default();
+                acc.0 += x[i] * k * stacks;
+                acc.1 += x[i] * k * apps;
             }
         }
         for (st, (stacks, apps)) in accumulated {
@@ -284,8 +327,17 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             capped.push(format!("{}: every enemy supplied", g.root));
         }
     }
+    let a = availability(&x);
+    if a < 1.0 {
+        capped.push(format!(
+            "enemies: the casts would engage {:.1} a minute, {:.1} supplied (x{engagements} engagements each)",
+            60.0 * supply * engagements / a,
+            60.0 * supply
+        ));
+    }
     let mut r = Rates {
         supply_per_min: supply * 60.0,
+        availability: a,
         capped,
         ..Rates::default()
     };
@@ -297,12 +349,17 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             *r.casts_per_min.entry(a.clone()).or_default() += 60.0 * x[i];
             *r.regen_per_min.entry(a.clone()).or_default() += 60.0 * base[i];
         }
-        r.damage_per_s += x[i] * y.damage;
+        let k = scale(a, i);
+        r.damage_per_s += x[i] * k * y.damage;
         r.heal_per_s += x[i] * y.heal;
         if Some(i) == weapon {
             r.weapon_kills_per_min += 60.0 * x[i];
         } else {
-            r.ability_kills_per_min += 60.0 * x[i] * y.kills;
+            r.ability_kills_per_min += 60.0 * x[i] * k * y.kills;
+            if to_kill > 0.0 {
+                let chip = (y.damage - y.kills * to_kill).max(0.0);
+                r.chip_kills_per_min += 60.0 * x[i] * k * chip_credit * chip / to_kill;
+            }
         }
         for (a, v) in &y.energy {
             *r.returned_per_min.entry(a.clone()).or_default() += 60.0 * x[i] * v;
@@ -311,6 +368,7 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             *stack_seconds.entry(b.clone()).or_default() += x[i] * v;
         }
     }
+    r.ability_kills_per_min += r.chip_kills_per_min;
     r.ability_kill_capacity_per_min = r.ability_kills_per_min;
     // Abilities cannot kill more than the scenario supplies.
     if r.ability_kills_per_min > r.supply_per_min {

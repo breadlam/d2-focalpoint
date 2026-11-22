@@ -394,7 +394,7 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
         vars.set(&k, v)?;
     }
     let db = Database::open_read_only(db)?;
-    let economy = Economy::load(&db)?;
+    let economy = Economy::load(&db, &vars)?;
     let build = Build::parse(a.parts.iter().map(String::as_str))?;
     let unknown: Vec<String> = build
         .parts
@@ -493,10 +493,11 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
         vec![
             "kills by abilities and verbs".into(),
             format!(
-                "{:.1} of {:.1} ({:.0}%)",
+                "{:.1} of {:.1} ({:.0}%; {:.1} by damage that kills nothing outright)",
                 r.ability_kills_per_min,
                 r.supply_per_min,
-                100.0 * r.ability_kill_share()
+                100.0 * r.ability_kill_share(),
+                r.chip_kills_per_min
             ),
         ],
         vec![
@@ -641,7 +642,7 @@ fn synthesize(a: &SynthArgs, db: &Path, format: Format) -> Result<()> {
     use focalpoint_sandbox::{synth, validate};
     let (ontology, base, vars) = load(None)?;
     let db = Database::open_read_only(db)?;
-    let economy = Economy::load(&db)?;
+    let economy = Economy::load(&db, &vars)?;
     let model = validate::calibrate(&db, &ontology, &base, &vars, &economy, &a.context, 30.0, 8)?;
     let modelled: std::collections::BTreeSet<String> =
         base.modelled().iter().map(ToString::to_string).collect();

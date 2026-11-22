@@ -298,7 +298,7 @@ pub fn validate(
     min_players: i64,
     fit: bool,
 ) -> Result<Vec<ContextReport>> {
-    let e = Economy::load(db)?;
+    let e = Economy::load(db, vars)?;
     let modelled: BTreeSet<String> = base.modelled().iter().map(ToString::to_string).collect();
     let all = kits(db, min_clears, min_players, &accessories(base))?;
     let mut out = Vec::new();
@@ -476,7 +476,7 @@ pub fn part_checks(
     min_players: i64,
     max_kits: usize,
 ) -> Result<Vec<PartCheck>> {
-    let e = Economy::load(db)?;
+    let e = Economy::load(db, vars)?;
     let scenarios: Vec<Scenario> = SCENARIOS
         .iter()
         .map(|(_, name)| Scenario::from_context(db, name, vars))

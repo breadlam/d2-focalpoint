@@ -307,6 +307,26 @@ impl Scenario {
             .sum()
     }
 
+    /// The mean health an enemy has (durability applied), ranks mixed.
+    #[must_use]
+    pub fn mean_health(&self) -> f64 {
+        Rank::ALL
+            .iter()
+            .map(|r| {
+                let health = match r {
+                    Rank::Minor => &self.minor_health,
+                    Rank::Elite => &self.elite_health,
+                };
+                if health.is_empty() {
+                    return 0.0;
+                }
+                #[allow(clippy::cast_precision_loss)]
+                let mean = health.iter().sum::<f64>() / health.len() as f64;
+                self.share(*r) * mean * self.durability
+            })
+            .sum()
+    }
+
     /// The share of a pack that survives `damage`, ranks mixed.
     #[must_use]
     pub fn survives_mixed(&self, damage: f64) -> f64 {

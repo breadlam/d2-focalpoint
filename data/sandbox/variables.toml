@@ -727,3 +727,45 @@ unit = "log sigma"
 status = "guess"
 basis = "Damage an enemy actually takes varies around the documented number (falloff, partial hits, where it stands): a log-normal spread whose sigma this is. 0.4 puts a third of enemies outside x0.67-x1.5 of the documented damage."
 measure = "From recordings: the share of one enemy type an ability of known damage kills in one hit, against the share its documented health predicts."
+
+[[variable]]
+name = "economy.unknown_chunk_scalar"
+guess = 0.8
+low = 0.6
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "The share of a chunk of energy an ability receives where neither the cooldown workbook nor the Compendium gives it (Shatter Grenade's is '0.?x'): grenades and melees run 0.6-1.0, most near 0.8."
+measure = "Equip the ability, pick up an Orb with Innervation or Invigoration (a documented chunk) at a known stat, and time the energy gained against a known ability's."
+sources = ["compendium:Stasis/Grenade Abilities/Shatter Grenade"]
+
+[[variable]]
+name = "rime_coat_raiment.icicles"
+guess = 12
+low = 4
+high = 25
+unit = "count"
+status = "guess"
+basis = "Icicles fired a Bleak Watcher turret: one a second while in its 6 m storm, fired by shooting, over the turret's 25 s; about half that time in the storm."
+measure = "From a recording: Icicle projectiles a turret's life."
+sources = ["compendium:Exotic Armors/Armor/Rime-Coat Raiment (live sheet)"]
+
+[[variable]]
+name = "scenario.chip_kill_credit"
+guess = 0.5
+low = 0.2
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "Ability damage that kills nothing outright still wears enemies down, and the final blow falls by damage share: at 1 every such enemy-worth of damage is a credited kill. Weapons land many final blows (precision shots finish), so half is taken."
+measure = "From recordings: kills credited to abilities in a build whose abilities rarely one-shot (shatter or DoT builds) against their damage dealt."
+
+[[variable]]
+name = "scenario.engagements_per_enemy"
+guess = 20.0
+low = 6.0
+high = 1000.0
+unit = "count"
+status = "estimate"
+basis = "Ability bursts (a cast and what follows it) that reach one enemy before it dies, any hit counting: casts beyond what the enemies supplied allow find no one fresh, so what they would do to enemies scales down. Against the recorded kits' ability kill shares (`analyze model --fit`, 2026-11-22): 3 gives Pearson 0.32 hard / 0.10 easy, 10 gives 0.89 / 0.89, 20 gives 0.92 / 0.97, no limit 0.88 / 0.93."
+measure = "From recordings of a loop build (Stasis shard loop): its casts a minute against the kills a minute, where casts stop rising."

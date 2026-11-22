@@ -174,7 +174,7 @@ pub struct Yield {
     limited: BTreeMap<usize, f64>,
     /// Enemies a state has been applied to this generation, by state: a
     /// pack has only so many to Jolt, freeze or make Volatile.
-    afflicted: BTreeMap<String, f64>,
+    pub afflicted: BTreeMap<String, f64>,
 }
 
 /// One generation: what a boundary event leads to before the next ones.
