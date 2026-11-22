@@ -188,6 +188,23 @@ fn import(a: &ImportArgs, db: &Path, format: Format) -> Result<()> {
             d.unmatched.join(", ")
         );
     }
+    let c = &imported.cooldowns;
+    println!(
+        "Energy economy: {} abilities, {} super damage rows, {} stat curve points, {} regen effects, {} flat gains",
+        c.abilities, c.supers, c.stat_points, c.regen, c.flat_gains
+    );
+    if !c.conflicts.is_empty() {
+        println!(
+            "Supers whose rows disagree (the most common kept): {}",
+            c.conflicts.join("; ")
+        );
+    }
+    if !c.unmatched.is_empty() {
+        println!(
+            "Cooldown workbook names matching no manifest item: {}",
+            c.unmatched.join(", ")
+        );
+    }
     if !imported.unplaced.is_empty() {
         println!(
             "Encounters of activities without scored clears (no parent): {}",

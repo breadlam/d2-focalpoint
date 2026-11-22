@@ -27,7 +27,7 @@ pub const SCHEMA_VERSION: u32 = 8;
 pub const SCHEMA_SQL: &str = include_str!("schema.sql");
 
 /// Version of [`MECHANICS_SQL`], the community-mechanics layer.
-pub const MECHANICS_VERSION: u32 = 8;
+pub const MECHANICS_VERSION: u32 = 9;
 
 /// DDL of the community-mechanics layer (`focalpoint mechanics import`):
 /// replaces its tables.

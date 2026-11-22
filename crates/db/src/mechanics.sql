@@ -319,3 +319,76 @@ FROM context c
 JOIN context_feature t ON t.context_id = c.context_id AND t.feature = 'health_tier'
 JOIN context_feature d ON d.context_id = c.context_id AND d.feature = 'durability'
 JOIN enemy_health e ON e.health_tier = t.value;
+
+-- The ability cooldown workbook (focalpoint_mechanics::cooldowns): the
+-- build model's energy economy. Fractions for percentages.
+
+-- Each ability's cooldown and factors.
+CREATE OR REPLACE TABLE ability_cooldown (
+    slot                  VARCHAR NOT NULL,  -- grenade | melee | class_ability | super
+    name                  VARCHAR NOT NULL,
+    element               VARCHAR NOT NULL,  -- as the sheet gives it: an element, Neutral, Exotic, Stasis Aspect
+    cooldown_s            DOUBLE,            -- at 0 stat (T0); a super's base cooldown
+    pre_eof_base_s        DOUBLE,            -- the "T3 Cooldown" column: the base before Edge of Fate
+    flat_gain_factor      DOUBLE,            -- the share of a chunk of energy the ability receives
+    class_mod_multiplier  DOUBLE,            -- class abilities: the share of a class mod's energy
+    super_tier            VARCHAR
+);
+
+-- The Supers tab: each super, often with an exotic, at its best.
+CREATE OR REPLACE TABLE super_damage (
+    element            VARCHAR NOT NULL,
+    class              VARCHAR NOT NULL,
+    name               VARCHAR NOT NULL,  -- as written: "Golden Gun (Nighthawk, pre-popped)"
+    super_name         VARCHAR,           -- the manifest super, where the name resolves
+    usage              VARCHAR,           -- Single-target | Add-Clear | Mix | Support
+    exotic             VARCHAR,
+    damage             DOUBLE,            -- per cast
+    cast_s             DOUBLE,
+    dps                DOUBLE,
+    tier               VARCHAR,
+    cooldown_s         DOUBLE,
+    active_multiplier  DOUBLE             -- the sheet's "Active Multiplier"; what it multiplies is not stated
+);
+
+-- What each stat gives, every 10 points from 0 to 200 (Armor 3.0); 0 where
+-- it gives nothing.
+CREATE OR REPLACE TABLE stat_curve (
+    stat        VARCHAR NOT NULL,   -- health | melee | grenade | super | class | weapons
+    effect      VARCHAR NOT NULL,   -- cooldown_scalar, energy_gained, damage_increase, ...
+    stat_value  USMALLINT NOT NULL,
+    value       DOUBLE NOT NULL
+);
+
+-- Parts that speed an ability's regeneration: extra regeneration over the
+-- 0-stat rate (1.6: +160%).
+CREATE OR REPLACE TABLE regen_effect (
+    name          VARCHAR NOT NULL,   -- the part
+    written       VARCHAR NOT NULL,   -- as the sheet writes it: "Arc Soul x2"
+    stacks        UTINYINT,
+    variant       VARCHAR,
+    source_kind   VARCHAR NOT NULL,   -- "Arc Aspect", "Hunter Exotic", ...
+    ability       VARCHAR NOT NULL,   -- grenade | melee | class_ability
+    bonus_at_0    DOUBLE,
+    bonus_at_100  DOUBLE,
+    pre_eof       DOUBLE              -- before Edge of Fate, over the 30-stat base
+);
+
+-- Parts that grant a chunk of ability energy: a fraction of a charge,
+-- before the ability's flat-gain factor.
+CREATE OR REPLACE TABLE flat_gain (
+    name         VARCHAR NOT NULL,
+    written      VARCHAR NOT NULL,
+    variant      VARCHAR,
+    source_kind  VARCHAR NOT NULL,
+    ability      VARCHAR NOT NULL,
+    amount       DOUBLE NOT NULL,
+    note         VARCHAR
+);
+
+-- The manifest items each part named in these tables is.
+CREATE OR REPLACE TABLE cooldown_subject (
+    name  VARCHAR NOT NULL,
+    hash  UINTEGER NOT NULL,
+    PRIMARY KEY (name, hash)
+);

@@ -25,13 +25,17 @@ each source's provenance, currency and terms.
 | `compendium/` | Destiny Data Compendium, 22 tabs | yes (15 current tabs) | name |
 | `court/` | Court's damage buffs/debuffs stacking guide | not yet | name |
 | `aegis/` | TheAegisRelic's boss damage workbook (xlsx), and the 205 DIM loadouts it links (`dim/<share id>.json`) | the ranked rotations and their loadouts | hash (loadouts) |
-| `cooldowns/` | Ability cooldowns and energy factors | not yet | name |
+| `cooldowns/` | Ability cooldowns and energy factors | the energy economy (below) | name |
 | `endgame/` | Endgame Analysis expert ratings | not yet | name |
 | `scaling/` | MossyMax's damage scaling (pre-MoT) | enemy health, measured bosses, the Power delta curve ([durability.md](durability.md)) | name |
 
 Google Sheets tabs are saved as their static HTML (`htmlview/sheet`), which
 holds exactly what the sheet shows; the CSV export infers a type per column
-and drops cells that do not fit it (198 of Game Mechanics' 734).
+and drops cells that do not fit it (198 of Game Mechanics' 734). The HTML
+leaves out the columns a sheet hides, so a tab whose hidden columns are
+needed is read from its CSV (the cooldown workbook's Supers tab). A frozen
+column puts a handle cell in every row of the HTML; it is not a column of
+the sheet.
 
 **Clarity.** Clarity asks apps that use or display its data to arrange a
 partnership (d2clarity.com/partnerships). This project does not: the terms
@@ -150,10 +154,60 @@ bosses, the Power delta curve and Champion stats, with each activity
 group's Power delta and health tier from `data/difficulty.toml`. See
 [durability.md](durability.md).
 
+## Energy economy
+
+The ability cooldown workbook (`cooldowns/`) gives the build model's energy
+economy ([build-model.md](build-model.md)). Percentages are stored as
+fractions.
+
+| Table | What |
+|---|---|
+| `ability_cooldown` | each grenade, melee, class ability and super: `cooldown_s` at 0 stat, the flat-gain factor (the share of a chunk of energy it receives), class abilities' class-mod multiplier, supers' tier |
+| `super_damage` | the Supers tab: each super, often with an exotic, at its best: damage per cast, cast time, DPS, tier, cooldown |
+| `stat_curve` | what each stat gives every 10 points from 0 to 200 (Armor 3.0): `cooldown_scalar`, `energy_gained`, `damage_increase`, `health_per_orb`, … |
+| `regen_effect` | parts that speed an ability's regeneration: the bonus over the 0-stat rate at 0 and 100 stat (Spark of Recharge: +160%, +360%) |
+| `flat_gain` | parts that grant a chunk of energy, by ability (Impact Induction: 12% of a grenade) |
+| `cooldown_subject` | the manifest items each part named in these tables is |
+
+How the numbers combine, from the workbook's notes and its own figures:
+
+- **Cooldown** at stat *s* is `cooldown_s / cooldown_scalar(s)`. The
+  scalar is 1.00 at 0, 1.38 at 30, 2.56 at 70 and 2.75 at 100 for grenades
+  and melees (2.42 for class abilities). Above 100 a stat adds damage,
+  not cooldown.
+- **Chunks of energy and regen effects** scale by
+  `1 + energy_gained(s)`: ×2.25 at 100. So Spark of Recharge's +160% at 0
+  is +360% at 100. 70 stat matches the old (pre-Edge of Fate) benefit.
+- **Supers' base cooldowns** are 455 s (tier T4), 500 s (T3) and 556 s
+  (T2). The Super stat scales the energy gained, not the base cooldown.
+
+What to know about the sheet:
+
+- The ability tabs' "T3 Cooldown" is the base before Edge of Fate. It is
+  the T0 cooldown over 1.45 for every ability, where the Armor 3.0 curve
+  gives 1.38 at 30 stat. It is kept as `pre_eof_base_s`.
+- Above 100 the grenade cooldown scalar reads 2.17 (the melee one from 120
+  up), while the cooldown reduction stays −63.6%, which is a scalar of 2.75.
+  The 2.17s are inconsistent with the rest of the sheet. The table keeps
+  what the sheet says; the model uses 2.75.
+- The Supers tab lists super and exotic pairs. A super's cooldown is the
+  most common among its rows; the import reports rows that disagree
+  (Winter's Wrath is listed as both T2 and T3, both at 556 s).
+- A few names match no manifest item: Ionic Traces (a pickup, not a part)
+  and Rally and Towering Bastion (Barricades changed by the Bastion
+  aspect). The sheet's spellings "Heartof Inmost Light", "Sunbracer's" and
+  "Contraverse" are read as the manifest's names.
+
+Every grenade, melee, class ability and super recorded builds use has a
+cooldown, except Shatter Grenade, Slicewire Grenade and Phantom Surge, which
+the workbook does not list. Uses covered: class abilities and supers 100%,
+melees 97.8%, grenades 92.8%.
+
 ## Next
 
 - **Damage-modifier categories** from Court's stacking guide: global
   debuffs, empowering buffs and weapon surges do not stack within their
   category.
-- The boss-damage workbook's base values and per-source DPS, ability
-  cooldowns, and expert ratings (a yardstick for the evaluator).
+- MossyMax's combatant damage scalars by weapon archetype.
+- The boss-damage workbook's base values and per-source DPS, and expert
+  ratings (a yardstick for the evaluator).

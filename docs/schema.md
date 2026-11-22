@@ -195,7 +195,9 @@ take to kill, with the view `context_enemy_health` per context; and
 `difficulty` and `difficulty_modifier` the Power cap and combatant Power by
 context, step and Feat, with the view `run_difficulty` per run; and
 `enemy_observed` (view `enemy_observed_tier`) health measured in-game
-([durability.md](durability.md)). They are not written by the import: `focalpoint
+([durability.md](durability.md)); `ability_cooldown`, `super_damage`,
+`stat_curve`, `regen_effect`, `flat_gain` and `cooldown_subject` the energy
+economy, from the ability cooldown workbook. They are not written by the import: `focalpoint
 mechanics import` adds and replaces them in an existing database
 (`meta.mechanics_version`). See [mechanics.md](mechanics.md).
 

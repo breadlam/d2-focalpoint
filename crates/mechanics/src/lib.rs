@@ -13,7 +13,9 @@
 //! * [`compendium`] — the Destiny Data Compendium's tabs, keyed by name,
 //!   matched to the manifest by [`names`];
 //! * [`aegis`] — `TheAegisRelic`'s boss damage workbook: measured damage
-//!   rotations and the DIM loadouts they were run with.
+//!   rotations and the DIM loadouts they were run with;
+//! * [`cooldowns`] — the ability cooldown workbook: cooldowns, flat-gain
+//!   factors, the Armor 3.0 stat curves, regen effects and flat gains.
 //!
 //! With them it builds the profiles of the [`context`]s builds are evaluated
 //! in: activity groups, activities and boss encounters.
@@ -28,6 +30,7 @@ pub mod aegis;
 pub mod clarity;
 pub mod compendium;
 pub mod context;
+pub mod cooldowns;
 pub mod durability;
 pub mod effects;
 pub mod names;
@@ -136,6 +139,21 @@ pub struct Imported {
     /// Encounters whose activity has no scored clears: no parent.
     pub unplaced: Vec<String>,
     pub durability: DurabilitySummary,
+    pub cooldowns: CooldownSummary,
+}
+
+/// What the import read from the ability cooldown workbook.
+#[derive(Debug, Clone, Default)]
+pub struct CooldownSummary {
+    pub abilities: usize,
+    pub supers: usize,
+    pub stat_points: usize,
+    pub regen: usize,
+    pub flat_gains: usize,
+    /// Names resolving to no manifest item.
+    pub unmatched: Vec<String>,
+    /// Supers whose rows disagree on the cooldown.
+    pub conflicts: Vec<String>,
 }
 
 /// Hand-maintained files to read instead of the built-in ones.
@@ -249,9 +267,13 @@ pub fn import(
         None => durability::observations(durability::ENEMY_HEALTH)?,
     };
 
+    progress("cooldowns");
+    let workbook = cooldowns::read(&dir.join("cooldowns"), &names)?;
+
     progress("writing");
     write(db, &read, &contexts)?;
     write_durability(db, &tables, &applied, &observed)?;
+    write_cooldowns(db, &workbook)?;
     db.set_meta(meta_key::MECHANICS_VERSION, &MECHANICS_VERSION.to_string())?;
     db.set_meta(meta_key::MECHANICS_SOURCES, &dir.display().to_string())?;
     let now: String =
@@ -292,7 +314,93 @@ pub fn import(
             observed: observed.len(),
             unmatched: applied.unmatched,
         },
+        cooldowns: CooldownSummary {
+            abilities: workbook.abilities.len(),
+            supers: workbook.supers.len(),
+            stat_points: workbook.stat_curve.len(),
+            regen: workbook.regen.len(),
+            flat_gains: workbook.flat_gain.len(),
+            unmatched: workbook.unmatched(),
+            conflicts: workbook.conflicts.clone(),
+        },
     })
+}
+
+fn write_cooldowns(db: &Database, w: &cooldowns::Workbook) -> Result<()> {
+    let conn = db.conn();
+    conn.execute_batch("BEGIN TRANSACTION")?;
+    {
+        let mut subjects = std::collections::BTreeSet::new();
+        let mut abilities = conn.appender("ability_cooldown")?;
+        for a in &w.abilities {
+            abilities.append_row(params![
+                a.slot,
+                a.name,
+                a.element,
+                a.cooldown_s,
+                a.pre_eof_base_s,
+                a.flat_gain_factor,
+                a.class_mod_multiplier,
+                a.super_tier
+            ])?;
+            subjects.extend(a.hashes.iter().map(|h| (a.name.clone(), *h)));
+        }
+        let mut supers = conn.appender("super_damage")?;
+        for s in &w.supers {
+            supers.append_row(params![
+                s.element,
+                s.class,
+                s.name,
+                s.super_name,
+                s.usage,
+                s.exotic,
+                s.damage,
+                s.cast_s,
+                s.dps,
+                s.tier,
+                s.cooldown_s,
+                s.active_multiplier
+            ])?;
+        }
+        let mut curve = conn.appender("stat_curve")?;
+        for p in &w.stat_curve {
+            curve.append_row(params![p.stat, p.effect, p.stat_value, p.value])?;
+        }
+        let mut regen = conn.appender("regen_effect")?;
+        for r in &w.regen {
+            regen.append_row(params![
+                r.name,
+                r.written,
+                r.stacks,
+                r.variant,
+                r.source_kind,
+                r.ability,
+                r.bonus_at_0,
+                r.bonus_at_100,
+                r.pre_eof
+            ])?;
+            subjects.extend(r.hashes.iter().map(|h| (r.name.clone(), *h)));
+        }
+        let mut flat = conn.appender("flat_gain")?;
+        for f in &w.flat_gain {
+            flat.append_row(params![
+                f.name,
+                f.written,
+                f.variant,
+                f.source_kind,
+                f.ability,
+                f.amount,
+                f.note
+            ])?;
+            subjects.extend(f.hashes.iter().map(|h| (f.name.clone(), *h)));
+        }
+        let mut subject = conn.appender("cooldown_subject")?;
+        for (name, hash) in subjects {
+            subject.append_row(params![name, hash])?;
+        }
+    }
+    conn.execute_batch("COMMIT")?;
+    Ok(())
 }
 
 fn count(n: usize) -> i32 {
