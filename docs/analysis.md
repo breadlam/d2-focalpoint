@@ -488,6 +488,11 @@ Validates the build model ([build-model.md](build-model.md),
 - **`--kits`** lists each kit with its accessories, its recorded and
   modelled shares, loop gain and casts a minute. **`--set`** changes a
   variable, as `sandbox analyze --set` does.
+- **`--sim`** simulates every kit instead (`sandbox simulate`, 8 runs of
+  5 minutes each by default) and compares its share of kills by abilities
+  with the recorded one, beside the analysis's at the same variables;
+  with `--fit`, the simulator's own `scenario.ability_efficiency` is
+  fitted first. `--kits --sim` lists the three shares by kit.
 - **`--parts`** checks parts instead. For each modelled part with a
   measured lift, the model removes the part from up to 20 kits that run
   it. It compares the mean change in each metric with the measured lift,
@@ -522,6 +527,14 @@ What the results show:
   `scenario.engagements_per_enemy` and `scenario.direct_hit_efficiency`
   are estimates from this fit; their entries in `variables.toml` record
   the scans.
+- **The simulator** orders the kits less well than the analysis, at the
+  analysis's variables: Pearson 0.62, Spearman 0.69 in hard content and
+  0.56, 0.55 in easy content, against the analysis's 0.88 and 0.63. The
+  analysis's own estimates (`scenario.engagements_per_enemy`,
+  `scenario.direct_hit_efficiency`) were fitted on these kits, so part of
+  its lead is in-sample. The simulator's own efficiency fit
+  (`--sim --fit`, with `scenario.direct_hit_efficiency` at 0.25, 0.5 and
+  1) has not been run to the end yet.
 - **Effect.** Loop gain predicts kits' effects in hard content and not in
   easy content, as the escalation hypothesis expects: loops pay where
   enemies survive long enough to feed them.
