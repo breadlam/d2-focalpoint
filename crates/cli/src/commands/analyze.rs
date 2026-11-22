@@ -341,13 +341,12 @@ fn list_kits(
 ) -> Result<()> {
     use focalpoint_sandbox::{economy::Economy, scenario::Scenario, validate};
     let e = Economy::load(db, vars)?;
-    let modelled: Vec<String> = base
-        .modelled()
-        .iter()
-        .filter(|p| p.kind == "artifact_perk" || p.kind == "armor_mod")
-        .map(ToString::to_string)
-        .collect();
-    let all = validate::kits(db, a.min_clears, a.min_players, &modelled)?;
+    let all = validate::kits(
+        db,
+        a.min_clears,
+        a.min_players,
+        &validate::accessories(base),
+    )?;
     for (context, name) in validate::SCENARIOS {
         let s = Scenario::from_context(db, name, vars)?;
         println!("## {context} content, in {name}");

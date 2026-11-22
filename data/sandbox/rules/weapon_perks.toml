@@ -1,0 +1,209 @@
+# Weapon perks and origin traits that act on abilities and verbs
+# (docs/sandbox.md). Weapons' own damage is not modelled: weapon kills are
+# the enemies abilities leave (`rates`). A perk sits on one weapon, so it
+# fires on the share of weapon kills that weapon makes,
+# `policy.perk_weapon_share`. Perks that fire on hits are taken once a
+# weapon kill.
+
+# ------------------------------------------------------------------ verbs
+
+[[rule]]
+granted_by = "weapon_perk:Incandescent"
+sources = ["compendium:Weapon Perks/Incandescent"]
+on = { event = "kill", source = "weapon" }
+effect = [
+  { damage = 30, target = "area", radius = 4, element = "solar", source = "weapon" },
+  { apply = "scorch", stacks = 40, target = "area", radius = 4 },
+]
+chance = { var = "policy.perk_weapon_share" }
+note = "Elites explode bigger (x55 over 8 m): the minor's taken."
+
+[[rule]]
+granted_by = "weapon_perk:Destabilizing Rounds"
+sources = ["compendium:Weapon Perks/Destabilizing Rounds"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "volatile", target = "area", radius = 7 }
+chance = { var = "policy.perk_weapon_share" }
+
+[[rule]]
+granted_by = "weapon_perk:Voltshot"
+sources = ["compendium:Weapon Perks/Voltshot"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "jolt" }
+chance = { var = "policy.perk_weapon_share" }
+note = "Reloading after a kill jolts the next hit's target."
+
+[[rule]]
+granted_by = "weapon_perk:Jolting Feedback"
+sources = ["compendium:Weapon Perks/Jolting Feedback"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "jolt" }
+chance = { var = "policy.perk_weapon_share" }
+note = "Every few direct hits jolt: once a kill taken."
+
+[[rule]]
+granted_by = "weapon_perk:Burning Ambition"
+sources = ["compendium:Weapon Perks/Burning Ambition"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "scorch", stacks = 30 }
+chance = { var = "policy.perk_weapon_share" }
+note = "A magazine-based run of hits scorches the next one; its stacks are not stated: x30 taken."
+confidence = "assumed"
+
+[[rule]]
+granted_by = "weapon_perk:Chill Clip"
+sources = ["compendium:Weapon Perks/Chill Clip"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "slow", stacks = 60, target = "area", radius = 6 }
+chance = { var = "policy.perk_weapon_share" }
+note = "Direct hits above half a magazine burst for x60 Slow over 6 m: once a kill taken."
+
+[[rule]]
+granted_by = "weapon_perk:Slice"
+sources = ["compendium:Weapon Perks/Slice"]
+on = { event = "cast", ability = "class" }
+effect = { apply = "sever", times = 5 }
+note = "The next five hits on non-Severed enemies sever."
+
+[[rule]]
+granted_by = "weapon_perk:Hatchling"
+sources = ["compendium:Weapon Perks/Hatchling"]
+on = { event = "kill", source = "weapon", precision = true }
+effect = { spawn = "threadling", count = 1 }
+chance = { var = "policy.perk_weapon_share" }
+note = "Three kills in quick succession spawn one too."
+
+[[rule]]
+granted_by = "weapon_perk:Headstone"
+sources = ["compendium:Weapon Perks/Headstone"]
+on = { event = "kill", source = "weapon", precision = true }
+effect = { spawn = "stasis_crystal", count = 1, size = "medium" }
+chance = { var = "policy.perk_weapon_share" }
+cooldown = 4.5
+
+[[rule]]
+granted_by = "weapon_perk:Rimestealer"
+sources = ["compendium:Weapon Perks/Rimestealer"]
+on = { event = "kill", target_has = "frozen" }
+effect = { apply = "frost_armor", stacks = 1, target = "self" }
+chance = { var = "policy.perk_weapon_share" }
+
+[[rule]]
+granted_by = "weapon_perk:Rolling Storm"
+sources = ["compendium:Weapon Perks/Rolling Storm"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "bolt_charge", stacks = 1, target = "self" }
+chance = { var = "policy.perk_weapon_share" }
+
+[[rule]]
+granted_by = "weapon_perk:Repulsor Brace"
+sources = ["compendium:Weapon Perks/Repulsor Brace"]
+on = { event = "kill", source = "weapon", target_has = "volatile" }
+effect = { apply = "void_overshield", target = "self" }
+chance = { var = "policy.perk_weapon_share" }
+note = "Any Void debuff qualifies; Volatile stands in for them."
+
+[[rule]]
+granted_by = "weapon_perk:Cold Steel"
+sources = ["compendium:Weapon Perks/Cold Steel"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "slow", stacks = 40 }
+chance = { var = "policy.perk_weapon_share" }
+note = "Powered sword hits slow (x40 light, x60 heavy)."
+
+[[rule]]
+granted_by = "weapon_perk:Firefly"
+sources = ["compendium:Weapon Perks/Firefly"]
+on = { event = "kill", source = "weapon", precision = true }
+effect = { damage = 104, target = "area", radius = 4, element = "solar", source = "weapon" }
+chance = { var = "policy.perk_weapon_share" }
+
+# ------------------------------------------------------- Orbs and healing
+
+[[rule]]
+granted_by = "weapon_perk:Attrition Orbs"
+sources = ["compendium:Weapon Perks/Attrition Orbs"]
+on = { event = "kill", source = "weapon" }
+effect = { spawn = "orb_of_power", count = 1, size = "small" }
+chance = { var = "policy.attrition_orbs_per_kill" }
+
+[[rule]]
+granted_by = "weapon_perk:Heal Clip"
+sources = ["compendium:Weapon Perks/Heal Clip"]
+on = { event = "kill", source = "weapon" }
+effect = { apply = "cure", stacks = 2, target = "self" }
+chance = { var = "policy.perk_weapon_share" }
+note = "Reloading soon after a kill: about every kill with the weapon taken."
+
+# ----------------------------------------------------------- ability energy
+
+[[rule]]
+granted_by = "weapon_perk:Demolitionist"
+sources = ["compendium:Weapon Perks/Demolitionist"]
+on = { event = "kill", source = "weapon" }
+effect = { energy = "grenade", amount = 0.09 }
+chance = { var = "policy.perk_weapon_share" }
+cooldown = 3
+note = "Fusion rifles, glaives, shotguns and sniper rifles grant 18%."
+
+[[rule]]
+granted_by = "weapon_perk:Pugilist"
+sources = ["compendium:Weapon Perks/Pugilist"]
+on = { event = "kill", source = "weapon" }
+effect = { energy = "melee", amount = 0.1 }
+chance = { var = "policy.perk_weapon_share" }
+note = "Fusion rifles, glaives, shotguns and sniper rifles grant 20%."
+
+[[rule]]
+granted_by = "weapon_perk:Wellspring"
+sources = ["compendium:Weapon Perks/Wellspring", "clarity:Wellspring"]
+on = { event = "kill", source = "weapon" }
+effect = [
+  { energy = "grenade", amount = 0.03 },
+  { energy = "melee", amount = 0.03 },
+  { energy = "class", amount = 0.03 },
+]
+chance = { var = "policy.perk_weapon_share" }
+note = "9% split among the uncharged abilities: a third each taken."
+
+[[rule]]
+granted_by = "origin_trait:Indomitability"
+sources = ["compendium:Origin Traits/Indomitability"]
+on = { event = "kill", source = "weapon" }
+effect = { energy = "grenade", amount = 0.05 }
+chance = { var = "policy.perk_weapon_share" }
+note = "Melee energy instead with a Darkness super; the grenade's taken."
+
+[[rule]]
+granted_by = "origin_trait:Classy Contender"
+sources = ["compendium:Origin Traits/Classy Contender"]
+on = { event = "kill", source = "weapon" }
+effect = { energy = "class", amount = 0.04 }
+chance = { var = "policy.perk_weapon_share" }
+
+[[rule]]
+granted_by = "origin_trait:Timelost Magazine"
+sources = ["compendium:Origin Traits/Timelost Magazine"]
+on = { event = "kill", source = "weapon" }
+effect = { energy = "super", amount = 0.005 }
+chance = { var = "policy.perk_weapon_share" }
+
+[[rule]]
+granted_by = "origin_trait:Dealer's Choice"
+sources = ["compendium:Origin Traits/Dealer's Choice", "clarity:Dealer's Choice"]
+on = { event = "kill", source = "weapon" }
+effect = { energy = "super", amount = 0.003 }
+chance = { var = "policy.perk_weapon_share" }
+note = "More with more Pale Heart weapons (1.6% with two, 3% with three)."
+
+[[rule]]
+granted_by = "origin_trait:Bray Inheritance"
+sources = ["compendium:Origin Traits/Bray Inheritance", "clarity:Bray Inheritance"]
+on = { event = "kill", source = "weapon" }
+effect = [
+  { energy = "grenade", amount = { var = "bray_inheritance.energy_per_kill" } },
+  { energy = "melee", amount = { var = "bray_inheritance.energy_per_kill" } },
+  { energy = "class", amount = { var = "bray_inheritance.energy_per_kill" } },
+]
+chance = { var = "policy.perk_weapon_share" }
+note = "Energy on every weapon hit, by the weapon's magazine: a kill's hits taken."

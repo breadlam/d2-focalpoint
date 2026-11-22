@@ -904,3 +904,35 @@ status = "guess"
 basis = "Twin shard pairs a Winter's Wrath fires: each drains 4.5% of the super against 4.08% a second of decay."
 measure = "Count the pairs fired over one super."
 sources = ["compendium:Stasis/Super Abilities/Winter's Wrath"]
+
+# ------------------------------------------------------------ weapons
+
+[[variable]]
+name = "policy.perk_weapon_share"
+guess = 0.45
+low = 0.2
+high = 0.8
+unit = "fraction"
+status = "guess"
+basis = "The share of weapon kills the weapon carrying a perk makes: ad-clear perks sit on the primary or special that kills most, of three weapons."
+measure = "From the activity reports: kills by weapon (run_player_weapon), for players running the perk."
+
+[[variable]]
+name = "policy.attrition_orbs_per_kill"
+guess = 0.3
+low = 0.1
+high = 0.6
+unit = "fraction"
+status = "guess"
+basis = "Attrition Orbs makes an Orb after a magazine-based run of hits within 5 s of each: on the perk's weapon, about one weapon kill in three of all."
+measure = "From recordings: Attrition Orbs per weapon kill."
+
+[[variable]]
+name = "bray_inheritance.energy_per_kill"
+guess = 0.03
+low = 0.01
+high = 0.08
+unit = "fraction"
+status = "guess"
+basis = "Bray Inheritance grants 0.3-2% grenade, melee and class energy per weapon hit, by magazine: about 3% a kill's worth of hits."
+measure = "Empty an ability bar, kill minors with a Bray weapon and read the energy gained a kill."

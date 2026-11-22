@@ -108,7 +108,7 @@ pub fn kits(
          acc AS (
              SELECT DISTINCT bc.build_id, bc.kind || ':' || i.name AS part
              FROM build_component bc JOIN item i ON i.item_hash = bc.component_hash
-             WHERE bc.kind IN ('artifact_perk', 'armor_mod')
+             WHERE bc.kind IN ('artifact_perk', 'armor_mod', 'weapon_perk', 'origin_trait')
                AND bc.kind || ':' || i.name IN ({listed})),
          runs AS (
              SELECT k.kit, c.ctx, c.build_id, c.share, c.resid, c.instance_id, c.membership_id
@@ -155,12 +155,16 @@ pub fn kits(
     Ok(rows.collect::<duckdb::Result<_>>()?)
 }
 
-/// The modelled parts evaluated with a kit rather than keying it: artifact
-/// perks and armor mods.
-fn accessories(base: &RuleBase) -> Vec<String> {
+/// The kinds of part evaluated with a kit rather than keying it.
+pub const ACCESSORY_KINDS: [&str; 4] =
+    ["artifact_perk", "armor_mod", "weapon_perk", "origin_trait"];
+
+/// The modelled parts evaluated with a kit rather than keying it.
+#[must_use]
+pub fn accessories(base: &RuleBase) -> Vec<String> {
     base.modelled()
         .iter()
-        .filter(|p| p.kind == "artifact_perk" || p.kind == "armor_mod")
+        .filter(|p| ACCESSORY_KINDS.contains(&p.kind.as_str()))
         .map(ToString::to_string)
         .collect()
 }
