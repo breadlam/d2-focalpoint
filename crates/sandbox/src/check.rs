@@ -169,7 +169,7 @@ impl<'a> Checker<'a> {
                 v.elements
                     .iter()
                     .cloned()
-                    .chain(["prismatic".to_string()])
+                    .chain(["prismatic".to_string(), "any".to_string()])
                     .collect(),
             ),
             "rank" => Some(v.ranks.clone()),

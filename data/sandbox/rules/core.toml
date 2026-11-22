@@ -30,8 +30,23 @@ mul = 2.2
 when = [{ target_has = "frozen" }]
 note = "Frozen enemies take 120% more melee damage."
 
+# Orbs from abilities (large) grant 2.5-7% super energy; armor mods make
+# small ones (0.8-1.5%). Every Orb grants Armor Charge.
 [[rule]]
 granted_by = "core:Orb of Power"
 sources = ["compendium:Game Mechanics/Orbs of Power"]
-on = { event = "pickup", object = "orb_of_power" }
+on = { event = "pickup", object = "orb_of_power", size = "large" }
 effect = { energy = "super", amount = { var = "orb_of_power.super_energy" } }
+
+[[rule]]
+granted_by = "core:Orb of Power"
+sources = ["compendium:Armor Mods/Firepower", "compendium:Armor Mods/Reaper"]
+on = { event = "pickup", object = "orb_of_power", size = "small" }
+effect = { energy = "super", amount = 0.0125 }
+note = "0.8% | 1.1% | 1.25% | 1.5% with 1-4 mods: 1.25% taken."
+
+[[rule]]
+granted_by = "core:Armor Charge"
+sources = ["compendium:Armor Mods/Time Dilation"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { apply = "armor_charge", stacks = 1, target = "self" }

@@ -1,0 +1,244 @@
+# Armor mods (docs/sandbox.md). Amounts for one copy; the loadout's copies
+# are not counted yet. Orbs and Armor Charge are core (core.toml).
+
+# ---------------------------------------------------------- Orbs of Power
+
+[[modifier]]
+granted_by = "armor_mod:Powerful Attraction"
+sources = ["compendium:Armor Mods/Powerful Attraction"]
+param = "orb_of_power.pickup_radius"
+set = 10
+note = "Class ability use collects Orbs within 10 m (16 and 20 with more copies)."
+
+[[rule]]
+granted_by = "armor_mod:Harmonic Siphon"
+sources = ["clarity:Harmonic Siphon"]
+on = { event = "kill", source = "weapon", element = "any" }
+effect = { spawn = "orb_of_power", count = 1, size = "large" }
+chance = { var = "policy.rapid_kills" }
+note = "Two quick kills with a weapon of the subclass's element make an Orb (2.5% super energy)."
+
+[[rule]]
+granted_by = "armor_mod:Kinetic Siphon"
+sources = ["clarity:Kinetic Siphon"]
+on = { event = "kill", source = "weapon", element = "kinetic" }
+effect = { spawn = "orb_of_power", count = 1, size = "large" }
+chance = { var = "policy.rapid_kills" }
+
+[[rule]]
+granted_by = "armor_mod:Reaper"
+sources = ["compendium:Armor Mods/Reaper"]
+on = { event = "cast", ability = "class" }
+effect = { spawn = "orb_of_power", count = 1, size = "small" }
+cooldown = 10
+note = "The next weapon kill within 10 s of a class ability makes an Orb: one a class cast."
+
+[[rule]]
+granted_by = "armor_mod:Firepower"
+sources = ["compendium:Armor Mods/Firepower"]
+on = { event = "kill", source = "grenade" }
+effect = { spawn = "orb_of_power", count = 1, size = "small" }
+limit = 1
+cooldown = 10
+
+[[rule]]
+granted_by = "armor_mod:Heavy Handed"
+sources = ["compendium:Armor Mods/Heavy Handed"]
+on = { event = "kill", source = "melee", powered = true }
+effect = { spawn = "orb_of_power", count = 1, size = "small" }
+limit = 1
+cooldown = 10
+
+[[rule]]
+granted_by = "armor_mod:Recuperation"
+sources = ["compendium:Armor Mods/Recuperation"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { heal = 16 }
+
+[[rule]]
+granted_by = "armor_mod:Absolution"
+sources = ["compendium:Armor Mods/Absolution"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = [
+  { energy = "grenade", amount = 0.05 },
+  { energy = "melee", amount = 0.05 },
+  { energy = "class", amount = 0.05 },
+]
+
+[[rule]]
+granted_by = "armor_mod:Innervation"
+sources = ["compendium:Armor Mods/Innervation"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { energy = "grenade", amount = 0.1 }
+
+[[rule]]
+granted_by = "armor_mod:Invigoration"
+sources = ["compendium:Armor Mods/Invigoration"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { energy = "melee", amount = 0.1 }
+
+[[rule]]
+granted_by = "armor_mod:Insulation"
+sources = ["compendium:Armor Mods/Insulation"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { energy = "class", amount = 0.04 }
+
+[[rule]]
+granted_by = "armor_mod:Orbs of Restoration"
+sources = ["compendium:Armor Mods/Orbs of Restoration"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { energy = "grenade", amount = 0.1 }
+note = "To the least-charged ability: the grenade taken."
+
+# ------------------------------------------------------------ Armor Charge
+
+[[modifier]]
+granted_by = "armor_mod:Time Dilation"
+sources = ["compendium:Armor Mods/Time Dilation"]
+param = "armor_charge.stack_duration"
+set = 15
+
+[[modifier]]
+granted_by = "armor_mod:Charged Up"
+sources = ["compendium:Armor Mods/Charged Up"]
+param = "armor_charge.max_stacks"
+add = 1
+
+[[rule]]
+granted_by = "armor_mod:Stacks on Stacks"
+sources = ["compendium:Armor Mods/Stacks on Stacks"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { apply = "armor_charge", stacks = 1, target = "self" }
+
+[[modifier]]
+granted_by = "armor_mod:Grenade Font"
+sources = ["compendium:Armor Mods/Grenade Font"]
+stat = "grenade"
+add = 20
+when = [{ has = "armor_charge" }]
+
+[[modifier]]
+granted_by = "armor_mod:Melee Font"
+sources = ["compendium:Armor Mods/Melee Font"]
+stat = "melee"
+add = 20
+when = [{ has = "armor_charge" }]
+
+[[modifier]]
+granted_by = "armor_mod:Class Font"
+sources = ["compendium:Armor Mods/Class Font"]
+stat = "class"
+add = 20
+when = [{ has = "armor_charge" }]
+
+[[modifier]]
+granted_by = "armor_mod:Super Font"
+sources = ["compendium:Armor Mods/Super Font"]
+stat = "super"
+add = 20
+when = [{ has = "armor_charge" }]
+
+[[modifier]]
+granted_by = "armor_mod:Weapons Font"
+sources = ["compendium:Armor Mods/Weapons Font"]
+stat = "weapons"
+add = 20
+when = [{ has = "armor_charge" }]
+
+# ------------------------------------------------------------ ability energy
+
+[[rule]]
+granted_by = "armor_mod:Impact Induction"
+sources = ["compendium:Armor Mods/Impact Induction", "cooldowns:Flat Gain Sources/Impact Induction"]
+on = { event = "hit", source = "melee", powered = true }
+effect = { energy = "grenade", amount = 0.12 }
+cooldown = 6
+
+[[rule]]
+granted_by = "armor_mod:Bolstering Detonation"
+sources = ["compendium:Armor Mods/Bolstering Detonation", "cooldowns:Flat Gain Sources/Bolstering Detonation"]
+on = { event = "hit", source = "grenade" }
+effect = { energy = "class", amount = 0.12 }
+cooldown = 6
+
+[[rule]]
+granted_by = "armor_mod:Focusing Strike"
+sources = ["compendium:Armor Mods/Focusing Strike", "cooldowns:Flat Gain Sources/Focusing Strike"]
+on = { event = "hit", source = "melee", powered = true }
+effect = { energy = "class", amount = 0.12 }
+cooldown = 6
+
+[[rule]]
+granted_by = "armor_mod:Momentum Transfer"
+sources = ["compendium:Armor Mods/Momentum Transfer", "cooldowns:Flat Gain Sources/Momentum Transfer"]
+on = { event = "hit", source = "grenade" }
+effect = { energy = "melee", amount = 0.12 }
+cooldown = 6
+
+[[rule]]
+granted_by = "armor_mod:Bomber"
+sources = ["compendium:Armor Mods/Bomber", "cooldowns:Flat Gain Sources/Bomber"]
+on = { event = "cast", ability = "class" }
+effect = { energy = "grenade", amount = 0.12 }
+
+[[rule]]
+granted_by = "armor_mod:Outreach"
+sources = ["compendium:Armor Mods/Outreach", "cooldowns:Flat Gain Sources/Outreach"]
+on = { event = "cast", ability = "class" }
+effect = { energy = "melee", amount = 0.12 }
+
+[[rule]]
+granted_by = "armor_mod:Distribution"
+sources = ["compendium:Armor Mods/Distribution", "cooldowns:Flat Gain Sources/Distribution"]
+on = { event = "cast", ability = "class" }
+when = [{ enemies_within = 15, min = 1 }]
+effect = [
+  { energy = "grenade", amount = 0.04 },
+  { energy = "melee", amount = 0.04 },
+  { energy = "class", amount = 0.04 },
+  { energy = "super", amount = 0.02 },
+]
+note = "x1.2 for Titans and x2 for Warlocks; the class is not modelled, x1 taken."
+
+[[rule]]
+granted_by = "armor_mod:Dynamo"
+sources = ["compendium:Armor Mods/Dynamo"]
+on = { event = "cast", ability = "class" }
+when = [{ enemies_within = 15, min = 1 }]
+effect = { energy = "super", amount = 0.025 }
+
+[[rule]]
+granted_by = "armor_mod:Hands-On"
+sources = ["compendium:Armor Mods/Hands-On"]
+on = { event = "kill", source = "melee", powered = true }
+effect = { energy = "super", amount = { by_tier = [0.01, 0.01, 0.03, 0.05] } }
+
+# -------------------------------------------------------------- resistance
+
+[[modifier]]
+granted_by = "armor_mod:Concussive Dampener"
+sources = ["clarity:Concussive Dampener"]
+param = "guardian.damage_resist"
+add = { var = "scenario.incoming_share.area", scale = 0.15 }
+note = "15% less area damage."
+
+[[modifier]]
+granted_by = "armor_mod:Arc Resistance"
+sources = ["clarity:Arc Resistance"]
+param = "guardian.damage_resist"
+add = { var = "scenario.incoming_share.arc", scale = 0.15 }
+note = "15% less Arc damage."
+
+[[modifier]]
+granted_by = "armor_mod:Solar Resistance"
+sources = ["clarity:Solar Resistance"]
+param = "guardian.damage_resist"
+add = { var = "scenario.incoming_share.solar", scale = 0.15 }
+note = "15% less Solar damage."
+
+[[modifier]]
+granted_by = "armor_mod:Void Resistance"
+sources = ["clarity:Void Resistance"]
+param = "guardian.damage_resist"
+add = { var = "scenario.incoming_share.void", scale = 0.15 }
+note = "15% less Void damage."

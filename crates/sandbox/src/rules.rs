@@ -280,6 +280,9 @@ pub struct AmountTable {
     pub by_count: Option<Vec<f64>>,
     /// A variable's value.
     pub var: Option<String>,
+    /// A factor on the variable's value (with `var`): 15% of an incoming
+    /// damage share.
+    pub scale: Option<f64>,
 }
 
 impl Amount {
@@ -306,7 +309,11 @@ impl Amount {
     pub fn fixed(&self, vars: &crate::variables::Variables) -> Option<f64> {
         match self {
             Amount::Number(x) => Some(*x),
-            Amount::Table(t) => t.var.as_deref().and_then(|v| vars.value(v)),
+            Amount::Table(t) => t
+                .var
+                .as_deref()
+                .and_then(|v| vars.value(v))
+                .map(|v| v * t.scale.unwrap_or(1.0)),
         }
     }
 }

@@ -247,8 +247,14 @@ description = "Health and shields."
 
 [[state]]
 name = "armor_charge"
-kind = "resource"
-description = "Armor Charge stacks, from Orbs of Power and other sources; consumed by armor mods."
+kind = "buff"
+max_stacks = 3
+description = "Armor Charge stacks, from Orbs of Power and other sources; held by Font mods, consumed by others. A stack decays every 10 s while a passive mod is equipped."
+sources = ["compendium:Armor Mods/Time Dilation"]
+params = [
+  { name = "stack_duration", value = 10.0, unit = "s" },
+  { name = "max_stacks", value = 3.0, unit = "count" },
+]
 
 [[state]]
 name = "transcendence_light"
@@ -271,6 +277,7 @@ description = "Grants super energy and Armor Charge on pickup; restores health b
 sources = ["compendium:Game Mechanics/Health"]
 params = [
   { name = "health_per_stat_point", value = 0.7, unit = "hp" },
+  { name = "pickup_radius", value = 2.0, unit = "m", note = "Walked over; Powerful Attraction collects them from 10-20 m" },
 ]
 
 [[state]]

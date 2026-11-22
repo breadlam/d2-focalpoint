@@ -206,6 +206,9 @@ pub struct Report {
     /// Passive damage resistance held while conditions hold
     /// (`guardian.damage_resist` modifiers), by the probability they hold.
     pub passive_damage_resist: f64,
+    /// The build's stat bonuses (`stat` modifiers) by the probability
+    /// their conditions hold.
+    pub stat_bonus: BTreeMap<String, f64>,
     pub notes: BTreeSet<String>,
 }
 
@@ -249,6 +252,29 @@ impl<'a> Engine<'a> {
 
     fn param(&self, path: &str) -> Option<f64> {
         self.c.param(self.o, path)
+    }
+
+    /// A stat's value: the scenario's, plus the build's stat modifiers by
+    /// the probability their conditions hold (Fonts while Armor Charge is
+    /// up).
+    fn stat(&mut self, name: &str) -> f64 {
+        self.s.stat(name) + self.stat_bonus(name)
+    }
+
+    fn stat_bonus(&mut self, name: &str) -> f64 {
+        let mods: Vec<&Modifier> = self
+            .c
+            .modifiers
+            .iter()
+            .copied()
+            .filter(|m| m.stat.as_deref() == Some(name))
+            .collect();
+        let mut total = 0.0;
+        for m in mods {
+            let add = m.add.as_ref().map_or(0.0, |a| self.amount(a));
+            total += add * self.holds_all(&m.when);
+        }
+        total
     }
 
     /// A variable's value (`data/sandbox/variables.toml`).
@@ -351,7 +377,7 @@ impl<'a> Engine<'a> {
             Amount::Number(x) => *x,
             Amount::Table(t) => {
                 if let Some(v) = &t.var {
-                    return self.var(v);
+                    return self.var(v) * t.scale.unwrap_or(1.0);
                 }
                 if let Some(rows) = &t.by_counter {
                     let at = t
@@ -437,7 +463,7 @@ impl<'a> Engine<'a> {
                 "{name}: no chunk scalar in the economy tables; 1 taken"
             ));
         }
-        let stat = self.s.stat(stat_of(slot));
+        let stat = self.stat(stat_of(slot));
         let documented = if scaling == Scaling::Fixed {
             1.0
         } else {
@@ -605,7 +631,17 @@ impl<'a> Engine<'a> {
                 s.iter().map(|(k, v)| (k.clone(), *v)).collect()
             } else {
                 let count = eff.count.as_ref().map_or(1.0, |a| self.amount(a));
-                vec![(eff.size.clone().unwrap_or_else(|| "small".into()), count)]
+                // Orbs from abilities are large (2.5-7% super energy); mods
+                // make small ones (about 1%).
+                let size = eff.size.clone().unwrap_or_else(|| {
+                    if obj == "orb_of_power" {
+                        "large"
+                    } else {
+                        "small"
+                    }
+                    .to_string()
+                });
+                vec![(size, count)]
             };
             for (size, count) in sizes {
                 if obj == "stasis_crystal" {
@@ -620,6 +656,9 @@ impl<'a> Engine<'a> {
                 } else {
                     let chance = if obj == "stasis_shard" {
                         self.pickup_chance()
+                    } else if self.c.modifies(&format!("{obj}.pickup_radius")) {
+                        // Powerful Attraction collects them.
+                        1.0
                     } else {
                         self.var("policy.object_pickup")
                     };
@@ -1240,6 +1279,11 @@ impl<'a> Engine<'a> {
             gain,
             passive_regen,
             passive_damage_resist,
+            stat_bonus: ["grenade", "melee", "class", "super", "weapons", "health"]
+                .iter()
+                .map(|s| ((*s).to_string(), self.stat_bonus(s)))
+                .filter(|(_, v)| *v != 0.0)
+                .collect(),
             counters: self.counters.clone(),
             variables: self
                 .c

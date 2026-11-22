@@ -164,7 +164,8 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
         ability[i] = Some(a.clone());
         let sl = slot(a);
         if let Some(name) = c.build.equipped(sl) {
-            let stat = s.stat(stat_of(sl));
+            let stat =
+                s.stat(stat_of(sl)) + report.stat_bonus.get(stat_of(sl)).copied().unwrap_or(0.0);
             base[i] = e.charges_per_second(sl, name, stat).unwrap_or(0.0);
             zero_stat[i] = e.charges_per_second(sl, name, 0.0).unwrap_or(0.0);
         }
@@ -205,7 +206,9 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
             } else if let Some(a) = &ability[i] {
                 let b = bonus.get(a.as_str()).copied().unwrap_or(0.0);
                 let sl = slot(a);
-                let scale = e.stat_scale(stat_of(sl), s.stat(stat_of(sl)));
+                let stat = s.stat(stat_of(sl))
+                    + report.stat_bonus.get(stat_of(sl)).copied().unwrap_or(0.0);
+                let scale = e.stat_scale(stat_of(sl), stat);
                 let unit = if regen_mode >= 0.5 {
                     base[i]
                 } else {

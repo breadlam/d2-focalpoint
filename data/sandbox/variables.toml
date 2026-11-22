@@ -665,3 +665,55 @@ unit = "fraction"
 status = "guess"
 basis = "The share of a Rift's 15 s the player (and allies) stand in it."
 measure = "From recordings: time inside the Rift over its duration."
+
+# ----------------------------------------------------- incoming damage
+
+[[variable]]
+name = "scenario.incoming_share.arc"
+guess = 0.2
+low = 0.05
+high = 0.5
+unit = "fraction"
+status = "guess"
+basis = "The share of combatant damage taken that is Arc (Fallen, Vex, Cabal weapons vary)."
+measure = "From recordings: damage taken by element."
+
+[[variable]]
+name = "scenario.incoming_share.solar"
+guess = 0.2
+low = 0.05
+high = 0.5
+unit = "fraction"
+status = "guess"
+basis = "The share of combatant damage taken that is Solar."
+measure = "From recordings: damage taken by element."
+
+[[variable]]
+name = "scenario.incoming_share.void"
+guess = 0.2
+low = 0.05
+high = 0.5
+unit = "fraction"
+status = "guess"
+basis = "The share of combatant damage taken that is Void."
+measure = "From recordings: damage taken by element."
+
+[[variable]]
+name = "scenario.incoming_share.area"
+guess = 0.3
+low = 0.1
+high = 0.6
+unit = "fraction"
+status = "guess"
+basis = "The share of combatant damage taken from area attacks (grenades, rockets, explosions), which Concussive Dampener resists."
+measure = "From recordings: damage taken from explosions."
+
+[[variable]]
+name = "policy.rapid_kills"
+guess = 0.5
+low = 0.2
+high = 0.8
+unit = "fraction"
+status = "guess"
+basis = "Siphons spawn an Orb for two kills within a few seconds: about one weapon kill in two completes such a pair in ad-clear."
+measure = "From recordings: Siphon Orbs per weapon kill."
