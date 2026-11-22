@@ -1,0 +1,398 @@
+# Prismatic and the class abilities (docs/sandbox.md).
+
+# ---------------------------------------------------------- Transcendence
+
+# Kills fill the Light and Darkness bars; full, Transcendence grants its buff
+# and a Prismatic grenade.
+[[counter]]
+name = "transcendence_progress"
+threshold = 1
+note = "Transcendence's two bars, filled by damage and elemental effects: kills stand in for them."
+
+[[rule]]
+granted_by = "transcendence:Transcendence"
+sources = ["compendium:Prismatic/Glossary/Transcendence"]
+on = "kill"
+effect = { progress = "transcendence_progress", amount = { var = "transcendence.progress_per_kill" } }
+
+[[rule]]
+granted_by = "transcendence:Transcendence"
+sources = ["compendium:Prismatic/Glossary/Transcendence"]
+on = { event = "counter_full", counter = "transcendence_progress" }
+effect = [
+  { emit = "transcendence" },
+  { consume = "transcendence_progress" },
+  { apply = "transcendence_buff", target = "self" },
+]
+
+[[rule]]
+granted_by = "transcendence:Hailfire Spike"
+sources = ["compendium:Prismatic/Hunter/Hailfire Spike"]
+on = "transcendence"
+effect = [
+  { damage = 78, target = "area", radius = 5, element = "stasis", source = "grenade", tags = ["grenade"] },
+  { damage = 15.6, times = 14, target = "area", radius = 5, element = "stasis", source = "grenade", tags = ["grenade"] },
+  { apply = "slow", stacks = 13, times = 14, target = "area", radius = 5 },
+  { damage = 39, times = 8, target = "area", radius = 5, element = "solar", source = "grenade", tags = ["grenade"] },
+  { apply = "scorch", stacks = 10, times = 8, target = "area", radius = 5 },
+]
+confidence = "assumed"
+note = "A slowing storm for 3.45 s, then a scorching cyclone; the cone's reach and the cyclone's ticks are not stated."
+
+[[rule]]
+granted_by = "transcendence:Freezing Singularity"
+sources = ["compendium:Prismatic/Warlocks/Freezing Singularity"]
+on = "transcendence"
+effect = [
+  { damage = 70, target = "area", radius = 6, element = "void", source = "grenade", tags = ["grenade"] },
+  { damage = 18, times = 14, target = "area", radius = 6, element = "stasis", source = "grenade", tags = ["grenade"] },
+  { apply = "slow", stacks = 13, times = 14, target = "area", radius = 6 },
+  { apply = "suppression", target = "area", radius = 6 },
+]
+
+[[rule]]
+granted_by = "transcendence:Electrified Snare"
+sources = ["compendium:Prismatic/Titan/Electrified Snare"]
+on = "transcendence"
+effect = [
+  { damage = 105, target = "area", radius = 6, element = "arc", source = "grenade", tags = ["grenade"] },
+  { apply = "suspend", target = "area", radius = 6 },
+  { apply = "jolt", target = "area", radius = 6 },
+]
+confidence = "assumed"
+note = "The burst's radius and the suspended enemies' damage ticks are not stated: 6 m taken."
+
+# ------------------------------------------------------------- fragments
+
+[[modifier]]
+granted_by = "fragment:Facet of Protection"
+sources = ["compendium:Prismatic/Fragments/Facet of Protection"]
+param = "guardian.damage_resist"
+add = 0.15
+when = [{ enemies_within = 15, min = 3 }]
+
+[[modifier]]
+granted_by = "fragment:Facet of Courage"
+sources = ["compendium:Prismatic/Fragments/Facet of Courage"]
+damage = "powered_melee"
+mul = 1.5
+when = [{ target_has = "slow" }]
+note = "Against Stasis- or Strand-debuffed enemies; Slow stands in for them all."
+
+[[modifier]]
+granted_by = "fragment:Facet of Courage"
+sources = ["compendium:Prismatic/Fragments/Facet of Courage"]
+damage = "ability"
+mul = 1.1
+when = [{ target_has = "slow" }]
+
+[[modifier]]
+granted_by = "fragment:Facet of Hope"
+sources = ["compendium:Prismatic/Fragments/Facet of Hope"]
+param = "class.regen"
+add = 0.4
+confidence = "assumed"
+note = "+40% class regeneration with one elemental buff active, +60% with two: one taken as always held."
+
+[[rule]]
+granted_by = "fragment:Facet of Dawn"
+sources = ["compendium:Prismatic/Fragments/Facet of Dawn"]
+on = { event = "hit", source = "melee", powered = true }
+effect = { apply = "radiant", duration = 5, target = "self" }
+
+[[rule]]
+granted_by = "fragment:Facet of Dominance"
+sources = ["compendium:Prismatic/Fragments/Facet of Dominance"]
+on = { event = "hit", source = "grenade", element = "void" }
+effect = { apply = "weaken" }
+
+[[rule]]
+granted_by = "fragment:Facet of Dominance"
+sources = ["compendium:Prismatic/Fragments/Facet of Dominance"]
+on = { event = "hit", source = "grenade", element = "arc" }
+effect = { apply = "jolt" }
+
+[[rule]]
+granted_by = "fragment:Facet of Ruin"
+sources = ["compendium:Prismatic/Fragments/Facet of Ruin"]
+on = "shatter"
+effect = { damage = 21, target = "area", radius = 10, element = "stasis", source = "ability", tags = ["shatter"] }
+
+[[modifier]]
+granted_by = "fragment:Facet of Ruin"
+sources = ["compendium:Prismatic/Fragments/Facet of Ruin"]
+param = "ignition.radius"
+mul = 1.25
+
+[[rule]]
+granted_by = "fragment:Facet of Mending"
+sources = ["compendium:Prismatic/Fragments/Facet of Mending"]
+on = { event = "kill", source = "grenade" }
+effect = { apply = "cure", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "fragment:Facet of Blessing"
+sources = ["compendium:Prismatic/Fragments/Facet of Blessing"]
+on = { event = "kill", source = "melee" }
+effect = { apply = "restoration", stacks = 1, duration = 4, target = "self" }
+confidence = "assumed"
+note = "Melee kills start health regeneration; taken as Restoration x1 for 4 s."
+
+[[rule]]
+granted_by = "fragment:Facet of Justice"
+sources = ["compendium:Prismatic/Fragments/Facet of Justice"]
+on = { event = "kill", source = "ability" }
+when = [{ has = "transcendence_buff" }]
+effect = { damage = 130, target = "area", radius = 5, source = "ability", tags = ["ability", "explosion"] }
+
+[[rule]]
+granted_by = "fragment:Facet of Command"
+sources = ["compendium:Prismatic/Fragments/Facet of Command"]
+on = { event = "kill", target_has = "frozen" }
+effect = { spawn = "stasis_shard", count = 1, size = "small" }
+
+[[rule]]
+granted_by = "fragment:Facet of Command"
+sources = ["compendium:Prismatic/Fragments/Facet of Command"]
+on = { event = "kill", target_has = "suppression" }
+effect = { spawn = "void_breach", count = 1 }
+
+[[rule]]
+granted_by = "fragment:Facet of Defiance"
+sources = ["compendium:Prismatic/Fragments/Facet of Defiance"]
+on = "finisher"
+effect = { damage = 135, target = "area", radius = 7, source = "ability", tags = ["ability", "explosion"] }
+
+[[rule]]
+granted_by = "fragment:Facet of Bravery"
+sources = ["compendium:Prismatic/Fragments/Facet of Bravery"]
+on = { event = "kill", source = "grenade" }
+effect = { apply = "volatile_rounds", target = "self" }
+
+[[rule]]
+granted_by = "fragment:Facet of Bravery"
+sources = ["compendium:Prismatic/Fragments/Facet of Bravery"]
+on = { event = "kill", source = "melee", powered = true }
+effect = { apply = "unraveling_rounds", target = "self" }
+
+[[rule]]
+granted_by = "fragment:Facet of Sacrifice"
+sources = ["compendium:Prismatic/Fragments/Facet of Sacrifice"]
+on = { event = "kill", source = "ability" }
+effect = { progress = "transcendence_progress", amount = 0.005 }
+note = "+1% Darkness energy (half a bar) on ability kills while an Arc, Solar or Void buff is active."
+
+[[rule]]
+granted_by = "fragment:Facet of Grace"
+sources = ["compendium:Prismatic/Fragments/Facet of Grace"]
+on = { event = "kill", source = "weapon" }
+effect = { progress = "transcendence_progress", amount = 0.01 }
+note = "+2% Transcendence energy on Kinetic weapon kills: one bar's 2% is the pair's 1%."
+
+[[rule]]
+granted_by = "fragment:Facet of Devotion"
+sources = ["compendium:Prismatic/Fragments/Facet of Devotion"]
+on = { event = "kill", target_has = "slow" }
+effect = { progress = "transcendence_progress", amount = { by_rank = { minor = 0.005, elite = 0.015 } } }
+
+[[rule]]
+granted_by = "fragment:Facet of Honor"
+sources = ["compendium:Prismatic/Fragments/Facet of Honor"]
+on = { event = "pickup", object = "stasis_shard" }
+effect = { progress = "transcendence_progress", amount = 0.025 }
+
+[[rule]]
+granted_by = "fragment:Facet of Honor"
+sources = ["compendium:Prismatic/Fragments/Facet of Honor"]
+on = { event = "pickup", object = "firesprite" }
+effect = { progress = "transcendence_progress", amount = 0.0375 }
+
+[[rule]]
+granted_by = "fragment:Facet of Generosity"
+sources = ["compendium:Prismatic/Fragments/Facet of Generosity"]
+on = "kill"
+when = [{ has = "transcendence_buff" }]
+effect = { spawn = "orb_of_power", count = { by_tier = [0.1, 0.15, 0.2, 0.34] } }
+note = "Kills while Transcendent progress up to four Orbs (7.15% super energy each): a kill's progress taken as a share of an Orb."
+
+[[gap]]
+part = "fragment:Facet of Purpose"
+note = "Orbs of Power grant the equipped super's element buff (Bolt Charge, Restoration, Overshield, Frost Armor, Woven Mail); the buff by super is not modelled."
+sources = ["compendium:Prismatic/Fragments/Facet of Purpose"]
+
+# --------------------------------------------------------------- aspects
+
+[[rule]]
+granted_by = "aspect:Feed the Void"
+sources = ["compendium:Prismatic/Aspects/Feed the Void"]
+on = { event = "kill", source = "ability" }
+effect = [{ apply = "devour", target = "self" }, { apply = "enhanced_devour", target = "self" }, { heal = 140 }]
+
+[[rule]]
+granted_by = "aspect:Feed the Void"
+sources = ["compendium:Prismatic/Aspects/Feed the Void"]
+on = "kill"
+when = [{ has = "enhanced_devour" }]
+effect = [{ heal = 70 }, { energy = "grenade", amount = { by_tier = [0.075, 0.116, 0.1375, 0.2] } }]
+note = "Enhanced Devour heals 140 (not 70) and doubles the grenade energy: the core Devour's other half."
+
+[[rule]]
+granted_by = "aspect:Stylish Executioner"
+sources = ["compendium:Prismatic/Aspects/Stylish Executioner"]
+on = { event = "kill", target_has = "weaken" }
+effect = { apply = "invisibility", duration = 8, target = "self" }
+
+[[rule]]
+granted_by = "aspect:Stylish Executioner"
+sources = ["compendium:Prismatic/Aspects/Stylish Executioner"]
+on = { event = "kill", target_has = "jolt" }
+effect = { apply = "invisibility", duration = 8, target = "self" }
+
+[[modifier]]
+granted_by = "aspect:Stylish Executioner"
+sources = ["compendium:Prismatic/Aspects/Stylish Executioner"]
+damage = "melee"
+mul = 4.0
+when = [{ has = "invisibility" }]
+
+[[rule]]
+granted_by = "aspect:Threaded Specter"
+sources = ["compendium:Prismatic/Aspects/Threaded Specter"]
+on = { event = "cast", ability = "class" }
+effect = { spawn = "threadling", count = { var = "threaded_specter.threadlings" } }
+
+[[rule]]
+granted_by = "aspect:Bleak Watcher"
+sources = ["compendium:Prismatic/Aspects/Bleak Watcher"]
+on = { event = "cast", ability = "grenade" }
+effect = { apply = "slow", stacks = 20, times = 60, target = "area", radius = 3 }
+note = "The turret fires five seeking projectiles every 2 s for 25 s (x20 Slow each): sixty landing taken."
+
+[[rule]]
+granted_by = "aspect:Knockout"
+sources = ["compendium:Prismatic/Aspects/Knockout"]
+on = { event = "kill", source = "melee" }
+effect = [{ heal = { by_rank = { minor = 50, elite = 75 } } }, { apply = "amplified", target = "self" }]
+
+[[rule]]
+granted_by = "aspect:Knockout"
+sources = ["compendium:Prismatic/Aspects/Knockout"]
+on = { event = "hit", source = "melee" }
+effect = { apply = "knockout", target = "self" }
+
+[[modifier]]
+granted_by = "aspect:Knockout"
+sources = ["compendium:Prismatic/Aspects/Knockout"]
+damage = "melee"
+mul = 2.6
+when = [{ has = "knockout" }]
+
+[[rule]]
+granted_by = "aspect:Weaver's Call"
+sources = ["compendium:Prismatic/Aspects/Weaver's Call"]
+on = { event = "cast", ability = "class" }
+effect = { spawn = "threadling", count = 3 }
+
+[[rule]]
+granted_by = "aspect:Weaver's Call"
+sources = ["compendium:Prismatic/Aspects/Weaver's Call"]
+on = "threadling_hit"
+effect = { energy = "class", amount = 0.1 }
+
+[[rule]]
+granted_by = "aspect:Gunpowder Gamble"
+sources = ["compendium:Prismatic/Aspects/Gunpowder Gamble"]
+on = { event = "cast", ability = "grenade" }
+effect = { emit = "ignition", attributes = { by = "grenade" }, damage = 1014 }
+note = "The thrown explosive ignites for 50% more (676 x 1.5); its charge from kills is taken as the grenade's own."
+
+[[rule]]
+granted_by = "aspect:Lightning Surge"
+sources = ["compendium:Prismatic/Aspects/Lightning Surge"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "slide" }]
+effect = [
+  { damage = 300, times = 5, target = "area", radius = 3, element = "arc", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "amplified", target = "self" },
+  { apply = "bolt_charge", stacks = 3, target = "self" },
+]
+confidence = "assumed"
+note = "Five lightning bolts in a ring 7 m out; their damage is cut off in the Compendium's text."
+
+[[rule]]
+granted_by = "aspect:Drengr's Lash"
+sources = ["compendium:Prismatic/Aspects/Drengr's Lash"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { damage = 60, target = "area", radius = 3, element = "strand", source = "class", tags = ["class"] },
+  { apply = "suspend", target = "area", radius = 3 },
+]
+note = "A lash 30 m along the ground: a 3 m half-width taken."
+
+[[rule]]
+granted_by = "aspect:Diamond Lance"
+sources = ["compendium:Prismatic/Aspects/Diamond Lance"]
+on = { event = "kill", source = "ability" }
+effect = { apply = "frozen", target = "area", radius = 5 }
+chance = { var = "policy.object_pickup" }
+note = "Ability and shatter kills make a Lance; picked up and thrown, it freezes enemies within 5 m."
+
+# ------------------------------------------------------- class abilities
+
+[[rule]]
+granted_by = "class_ability:Gambler's Dodge"
+sources = ["compendium:Class Abilities/Hunter/Gambler's Dodge"]
+on = { event = "cast", ability = "class" }
+effect = { energy = "melee", amount = 1.0, scaling = "fixed" }
+note = "1% melee energy per Melee stat point, doubled within 15 m of an enemy, with no chunk or stat scalar: one charge taken."
+
+[[rule]]
+granted_by = "class_ability:Healing Rift"
+sources = ["compendium:Class Abilities/Warlocks/Healing Rift"]
+on = { event = "cast", ability = "class" }
+effect = { heal = 600, times = { var = "policy.in_rift" } }
+note = "40 HP a second for 15 s, while standing in it."
+
+[[rule]]
+granted_by = "class_ability:Acrobat's Dodge"
+sources = ["compendium:Class Abilities/Hunter/Acrobat's Dodge"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { apply = "radiant", duration = 10, target = "allies" },
+  { damage = 40, target = "area", radius = 6.5, element = "solar", source = "class", tags = ["class"] },
+]
+
+[[rule]]
+granted_by = "class_ability:Empowering Rift"
+sources = ["compendium:Class Abilities/Warlocks/Empowering Rift"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { regen = "grenade", amount = 2.6, duration = 15, times = { var = "policy.in_rift" } },
+  { regen = "melee", amount = 2.6, duration = 15, times = { var = "policy.in_rift" } },
+  { regen = "class", amount = 2.3, duration = 15, times = { var = "policy.in_rift" } },
+]
+
+[[modifier]]
+granted_by = "class_ability:Empowering Rift"
+sources = ["compendium:Class Abilities/Warlocks/Empowering Rift", "court:Empowering Buffs/Empowering Rift"]
+damage = "any"
+mul = 1.2
+category = "empowering"
+confidence = "assumed"
+note = "+20% damage while standing in the Rift: always held here, which overstates it."
+
+[[modifier]]
+granted_by = "class_ability:Towering Barricade"
+sources = ["compendium:Class Abilities/Titans/Towering Barricade"]
+param = "guardian.damage_resist"
+add = 0.2
+confidence = "assumed"
+note = "The Barricade blocks all damage through it for 20 s; taken as 20% resistance held."
+
+[[modifier]]
+granted_by = "class_ability:Rally Barricade"
+sources = ["compendium:Class Abilities/Titans/Rally Barricade"]
+param = "guardian.damage_resist"
+add = 0.1
+confidence = "assumed"
+note = "The short Barricade blocks damage for 20 s and reloads weapons; taken as 10% resistance held."

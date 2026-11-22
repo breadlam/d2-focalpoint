@@ -3,6 +3,13 @@
 
 # ------------------------------------------------------------- fragments
 
+[[modifier]]
+granted_by = "fragment:Spark of Resistance"
+sources = ["compendium:Arc/Fragments/Spark of Resistance"]
+param = "guardian.damage_resist"
+add = 0.25
+when = [{ enemies_within = 15, min = 3 }]
+
 [[rule]]
 granted_by = "fragment:Spark of Shock"
 sources = ["compendium:Arc/Fragments/Spark of Shock"]

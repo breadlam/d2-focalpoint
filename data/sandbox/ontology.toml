@@ -806,3 +806,34 @@ sources = ["compendium:Strand/Fragments/Thread of Propagation"]
 params = [
   { name = "duration", value = 8.0, unit = "s" },
 ]
+
+# --------------------------------------------------------- the guardian
+
+[[state]]
+name = "guardian"
+kind = "resource"
+description = "The player: passive values modifiers change (damage resistance held while conditions hold)."
+params = [
+  { name = "damage_resist", value = 0.0, unit = "fraction", note = "Passive damage resistance; buffs' own are their `damage_resist` params by uptime" },
+]
+
+# ------------------------------------------------------- Prismatic, more
+
+[[state]]
+name = "knockout"
+kind = "buff"
+description = "Breaking a shield or damaging an enemy below 30% health: increased melee damage."
+sources = ["compendium:Prismatic/Aspects/Knockout"]
+params = [
+  { name = "duration", value = 6.0, unit = "s" },
+]
+
+[[state]]
+name = "enhanced_devour"
+kind = "buff"
+element = "void"
+description = "Feed the Void's Devour: more healing and doubled grenade energy on kills."
+sources = ["compendium:Prismatic/Aspects/Feed the Void"]
+params = [
+  { name = "duration", value = 10.0, unit = "s" },
+]

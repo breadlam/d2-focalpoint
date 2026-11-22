@@ -203,6 +203,9 @@ pub struct Report {
     /// while sprinting): modifiers of `<ability>.regen`, by ability, as the
     /// documented bonus times the probability they hold.
     pub passive_regen: BTreeMap<String, f64>,
+    /// Passive damage resistance held while conditions hold
+    /// (`guardian.damage_resist` modifiers), by the probability they hold.
+    pub passive_damage_resist: f64,
     pub notes: BTreeSet<String>,
 }
 
@@ -1204,7 +1207,15 @@ impl<'a> Engine<'a> {
         let loops = loops(&keys, &gains);
         let gain = spectral_radius(&gains);
         let mut passive_regen = BTreeMap::new();
+        let mut kept = 1.0;
         let mods: Vec<&Modifier> = self.c.modifiers.clone();
+        for m in &mods {
+            if m.param.as_deref() == Some("guardian.damage_resist") {
+                let add = m.add.as_ref().map_or(0.0, |a| self.amount(a));
+                kept *= 1.0 - add * self.holds_all(&m.when);
+            }
+        }
+        let passive_damage_resist = 1.0 - kept;
         for m in mods {
             let Some(ability) = m.param.as_deref().and_then(|p| p.strip_suffix(".regen")) else {
                 continue;
@@ -1225,6 +1236,7 @@ impl<'a> Engine<'a> {
             loops,
             gain,
             passive_regen,
+            passive_damage_resist,
             counters: self.counters.clone(),
             variables: self
                 .c

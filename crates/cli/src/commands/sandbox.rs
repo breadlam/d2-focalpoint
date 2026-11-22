@@ -462,6 +462,10 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
             format!("{:.0}", r.damage_per_s),
         ],
         vec!["healing a second".into(), format!("{:.1}", r.heal_per_s)],
+        vec![
+            "damage resistance (mean)".into(),
+            format!("{:.0}%", 100.0 * r.damage_resist),
+        ],
     ]);
     for (b, u) in &r.buffs {
         rows.push(vec![

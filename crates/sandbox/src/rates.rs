@@ -51,6 +51,9 @@ pub struct Rates {
     /// Enemies the scenario supplies a minute.
     pub supply_per_min: f64,
     pub heal_per_s: f64,
+    /// Mean damage resistance: passive resistance and buffs' by uptime,
+    /// combined multiplicatively.
+    pub damage_resist: f64,
     pub buffs: BTreeMap<String, Uptime>,
     /// What hit a cap.
     pub capped: Vec<String>,
@@ -332,6 +335,23 @@ pub fn rates(o: &Ontology, c: &Compiled<'_>, e: &Economy, s: &Scenario, report: 
         }
         r.buffs.insert(b, u);
     }
+    // Damage resistance: passive, and each buff's by its uptime (Frost
+    // Armor's per stack, up to its maximum).
+    let mut kept = 1.0 - report.passive_damage_resist;
+    for (b, u) in &r.buffs {
+        let per_stack = c.param(o, &format!("{b}.damage_resist_per_stack"));
+        let flat = c.param(o, &format!("{b}.damage_resist"));
+        let dr = match (per_stack, flat) {
+            (Some(ps), _) => {
+                let max = c.param(o, &format!("{b}.damage_resist_max")).unwrap_or(1.0);
+                (ps * u.mean_stacks).min(max)
+            }
+            (None, Some(f)) => f * u.uptime,
+            (None, None) => 0.0,
+        };
+        kept *= 1.0 - dr;
+    }
+    r.damage_resist = 1.0 - kept;
     r
 }
 

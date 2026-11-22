@@ -621,3 +621,37 @@ status = "guess"
 basis = "The sources give \"?%\" class energy on taking damage with Frost Armor, at most once a second, as for Tectonic Harvest's melee energy."
 measure = "With Frost Armor active and no class energy, take a hit a second for ten seconds; the class bar's gain over ten."
 sources = ["compendium:Stasis/Aspects/Grim Harvest"]
+
+# -------------------------------------------------------------- Prismatic
+
+[[variable]]
+name = "transcendence.progress_per_kill"
+guess = 0.04
+low = 0.02
+high = 0.1
+unit = "fraction"
+status = "guess"
+basis = "Light and Darkness damage and elemental effects fill Transcendence's two bars; about 25 kills of mixed damage fill both."
+measure = "From recordings: kills between Transcendence activations for a typical Prismatic build."
+sources = ["compendium:Prismatic/Glossary/Transcendence"]
+
+[[variable]]
+name = "threaded_specter.threadlings"
+guess = 4.0
+low = 2.0
+high = 6.0
+unit = "count"
+status = "guess"
+basis = "The decoy bursts into Threadlings when destroyed or expired; the Compendium's text is cut before the number."
+measure = "Count the Threadlings a Threaded Specter decoy releases."
+sources = ["compendium:Prismatic/Aspects/Threaded Specter"]
+
+[[variable]]
+name = "policy.in_rift"
+guess = 0.6
+low = 0.3
+high = 0.9
+unit = "fraction"
+status = "guess"
+basis = "The share of a Rift's 15 s the player (and allies) stand in it."
+measure = "From recordings: time inside the Rift over its duration."
