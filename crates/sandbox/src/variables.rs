@@ -21,7 +21,9 @@ pub const STATUS: [&str; 3] = ["guess", "estimate", "measured"];
 
 /// The variables the engine itself reads (policies, scenario priors, the
 /// economy's readings), which must be defined.
-pub const ENGINE: [&str; 24] = [
+pub const ENGINE: [&str; 26] = [
+    "policy.tangle_use",
+    "policy.unravel_releases_per_enemy",
     "policy.volatile_explosions_per_enemy",
     "policy.jolt_chains_per_enemy",
     "jolt.chain_targets",

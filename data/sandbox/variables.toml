@@ -107,6 +107,26 @@ status = "guess"
 basis = "A Volatile enemy explodes when damaged again, once per application (with a 1 s lockout before it can be reapplied); most are damaged again before they die or it expires."
 measure = "From recordings: Volatile explosions per Volatile enemy."
 
+[[variable]]
+name = "policy.tangle_use"
+guess = 0.7
+low = 0.3
+high = 1.0
+unit = "fraction"
+status = "guess"
+basis = "The share of Tangles the player shoots or grapples to detonate; the rest expire or are left behind."
+measure = "From recordings: Tangles detonated over Tangles created."
+
+[[variable]]
+name = "policy.unravel_releases_per_enemy"
+guess = 2.0
+low = 1.0
+high = 4.0
+unit = "count"
+status = "guess"
+basis = "An Unraveled enemy releases threads each time it takes 40 damage, at most every 1.2 s, for its 7-10 s: a few times before it dies."
+measure = "From recordings: thread releases per Unraveled enemy."
+
 # ------------------------------------------------------ parts' numbers
 
 [[variable]]
@@ -531,3 +551,38 @@ status = "guess"
 basis = "The Compendium gives \"?\" for Quickfall's slam radius."
 measure = "Quickfall into a pack and note the farthest enemy damaged."
 sources = ["compendium:Void/Aspects/Trapper's Ambush"]
+
+# ----------------------------------------------------------------- Strand
+
+[[variable]]
+name = "threaded_spike.bounces"
+guess = 3.0
+low = 1.0
+high = 9.0
+unit = "count"
+status = "guess"
+basis = "The spike bounces towards up to 9 enemies within \"?\" m, losing damage on each bounce; about three hits in a pack."
+measure = "Throw it into a pack and count the enemies hit."
+sources = ["compendium:Strand/Melee Abilities/Threaded Spike"]
+
+[[variable]]
+name = "shackle_grenade.radius"
+guess = 4.0
+low = 2.0
+high = 6.0
+unit = "m"
+status = "guess"
+basis = "The Compendium gives \"?\" for the bola's suspending explosion."
+measure = "Throw it at a pack and note the farthest enemy suspended by the first explosion."
+sources = ["compendium:Strand/Grenade Abilities/Shackle Grenade"]
+
+[[variable]]
+name = "thread_of_generation.energy"
+guess = 0.02
+low = 0.005
+high = 0.05
+unit = "fraction"
+status = "guess"
+basis = "Damage grants grenade energy that varies with the source and the damage; a small amount per damage instance."
+measure = "With no grenade energy, deal one damage instance of a known kind and read the bar."
+sources = ["compendium:Strand/Fragments/Thread of Generation"]

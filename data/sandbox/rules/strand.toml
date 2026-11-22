@@ -1,0 +1,327 @@
+# Strand (docs/sandbox.md). Threadlings, Tangles and Unravel's threads are
+# core verbs.
+
+# ------------------------------------------------------------- fragments
+
+[[rule]]
+granted_by = "fragment:Thread of Generation"
+sources = ["compendium:Strand/Fragments/Thread of Generation"]
+on = { event = "hit", source = "any" }
+effect = { energy = "grenade", amount = { var = "thread_of_generation.energy" } }
+
+[[rule]]
+granted_by = "fragment:Thread of Warding"
+sources = ["compendium:Strand/Fragments/Thread of Warding"]
+on = { event = "pickup", object = "orb_of_power" }
+effect = { apply = "woven_mail", duration = 5, target = "self" }
+
+[[modifier]]
+granted_by = "fragment:Thread of Continuity"
+sources = ["compendium:Strand/Fragments/Thread of Continuity"]
+param = "suspend.duration"
+mul = 1.5
+
+[[modifier]]
+granted_by = "fragment:Thread of Continuity"
+sources = ["compendium:Strand/Fragments/Thread of Continuity"]
+param = "sever.duration"
+mul = 1.5
+
+[[modifier]]
+granted_by = "fragment:Thread of Evolution"
+sources = ["compendium:Strand/Fragments/Thread of Evolution"]
+damage = "threadling"
+mul = 1.33
+
+[[rule]]
+granted_by = "fragment:Thread of Transmutation"
+sources = ["compendium:Strand/Fragments/Thread of Transmutation"]
+on = { event = "kill", source = "weapon" }
+when = [{ has = "woven_mail" }]
+effect = { spawn = "tangle", count = 1 }
+
+[[rule]]
+granted_by = "fragment:Thread of Fury"
+sources = ["compendium:Strand/Fragments/Thread of Fury"]
+on = "tangle_detonated"
+effect = { energy = "melee", amount = { by_tier = [0.1, 0.18, 0.2, 0.3] } }
+cooldown = 1
+
+[[rule]]
+granted_by = "fragment:Thread of Mind"
+sources = ["compendium:Strand/Fragments/Thread of Mind"]
+on = { event = "kill", target_has = "suspend" }
+effect = { energy = "class", amount = { by_tier = [0.1, 0.12, 0.15, 0.3] } }
+cooldown = 1
+
+[[counter]]
+name = "rebirth_progress"
+threshold = 1
+note = "Thread of Rebirth: Strand weapon kills towards Threadlings."
+
+[[rule]]
+granted_by = "fragment:Thread of Rebirth"
+sources = ["compendium:Strand/Fragments/Thread of Rebirth"]
+on = { event = "kill", source = "weapon", element = "strand" }
+effect = { progress = "rebirth_progress", amount = { by_rank = { minor = 0.34, elite = 0.67 } } }
+
+[[rule]]
+granted_by = "fragment:Thread of Rebirth"
+sources = ["compendium:Strand/Fragments/Thread of Rebirth"]
+on = { event = "counter_full", counter = "rebirth_progress" }
+effect = [{ spawn = "threadling", count = 1.5 }, { consume = "rebirth_progress" }]
+note = "One Threadling for a minor's progress, two for an elite's: 1.5 taken."
+
+[[rule]]
+granted_by = "fragment:Thread of Wisdom"
+sources = ["compendium:Strand/Fragments/Thread of Wisdom"]
+on = { event = "kill", target_has = "suspend" }
+effect = { spawn = "orb_of_power", count = 1 }
+cooldown = 10
+
+[[rule]]
+granted_by = "fragment:Thread of Propagation"
+sources = ["compendium:Strand/Fragments/Thread of Propagation"]
+on = { event = "kill", source = "melee", powered = true }
+effect = { apply = "unraveling_rounds", target = "self" }
+
+[[rule]]
+granted_by = "fragment:Thread of Propagation"
+sources = ["compendium:Strand/Fragments/Thread of Propagation"]
+on = { event = "kill", source = "weapon", element = "strand" }
+when = [{ has = "unraveling_rounds" }]
+effect = { apply = "unravel", target = "area", radius = 4 }
+note = "Unraveling Rounds' hits are not followed one by one; weapon kills unravel the enemies around."
+
+[[rule]]
+granted_by = "fragment:Thread of Isolation"
+sources = ["compendium:Strand/Fragments/Thread of Isolation"]
+on = { event = "kill", source = "weapon", precision = true }
+effect = { apply = "sever", target = "area", radius = 3 }
+cooldown = 4
+note = "Multiple precision hits within 2 s: precision kills stand in for them."
+
+[[rule]]
+granted_by = "fragment:Thread of Finality"
+sources = ["compendium:Strand/Fragments/Thread of Finality"]
+on = "finisher"
+effect = { spawn = "threadling", count = { by_rank = { minor = 1, elite = 2 } } }
+
+[[rule]]
+granted_by = "fragment:Thread of Binding"
+sources = ["compendium:Strand/Fragments/Thread of Binding"]
+on = { event = "kill", source = "super" }
+effect = [
+  { damage = 108, target = "area", radius = 6, element = "strand", source = "super", tags = ["super"] },
+  { apply = "suspend", target = "area", radius = 6 },
+]
+
+# --------------------------------------------------------------- aspects
+
+[[rule]]
+granted_by = "aspect:Banner of War"
+sources = ["compendium:Strand/Aspects/Banner of War"]
+on = { event = "kill", source = "melee" }
+effect = { apply = "banner_of_war", target = "allies" }
+
+[[rule]]
+granted_by = "aspect:Banner of War"
+sources = ["compendium:Strand/Aspects/Banner of War"]
+on = "finisher"
+effect = { apply = "banner_of_war", target = "allies" }
+
+[[modifier]]
+granted_by = "aspect:Banner of War"
+sources = ["compendium:Strand/Aspects/Banner of War"]
+damage = "melee"
+mul = 1.5
+when = [{ has = "banner_of_war" }]
+confidence = "assumed"
+note = "Banner of War's melee and sword damage bonus rises with its stacks; +50% taken."
+
+[[rule]]
+granted_by = "aspect:Into the Fray"
+sources = ["compendium:Strand/Aspects/Into the Fray"]
+on = "tangle_detonated"
+effect = [{ apply = "woven_mail", target = "allies" }, { heal = 45 }]
+
+[[rule]]
+granted_by = "aspect:Into the Fray"
+sources = ["compendium:Strand/Aspects/Into the Fray"]
+on = { event = "gain", state = "woven_mail" }
+effect = { regen = "melee", amount = 3.0, duration = 10 }
+note = "+300% melee regeneration while Woven Mail is active."
+
+[[rule]]
+granted_by = "aspect:Whirling Maelstrom"
+sources = ["compendium:Strand/Aspects/Whirling Maelstrom"]
+on = "tangle_detonated"
+effect = { damage = 29, times = 60, target = "area", radius = 2, element = "strand", source = "grenade", tags = ["tangle"] }
+confidence = "assumed"
+note = "A seeking Tangle deals 29 every 0.1 s over 2 m for 12 s; six seconds on enemies taken."
+
+[[rule]]
+granted_by = "aspect:Mindspun Invocation"
+sources = ["compendium:Strand/Aspects/Mindspun Invocation"]
+on = { event = "cast", ability = "grenade" }
+effect = { spawn = "threadling", count = 3 }
+note = "Grapple melees and Threadling nests make Threadlings: three per grenade taken."
+
+[[rule]]
+granted_by = "aspect:Flechette Storm"
+sources = ["compendium:Strand/Aspects/Flechette Storm"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "slide" }]
+effect = [
+  { damage = 135, target = "area", radius = 4, element = "strand", source = "melee", tags = ["melee"] },
+  { damage = 171, times = 4, target = "area", radius = 3, element = "strand", source = "melee", tags = ["melee"] },
+  { apply = "unravel", times = 4, target = "area", radius = 3 },
+]
+
+[[modifier]]
+granted_by = "aspect:Widow's Silk"
+sources = ["compendium:Strand/Aspects/Widow's Silk"]
+param = "grenade.charges"
+add = 1
+
+[[rule]]
+granted_by = "aspect:Widow's Silk"
+sources = ["compendium:Strand/Aspects/Widow's Silk"]
+on = { event = "cast", ability = "grenade" }
+effect = { spawn = "tangle", count = 1 }
+
+[[rule]]
+granted_by = "aspect:Weavewalk"
+sources = ["compendium:Strand/Aspects/Weavewalk"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "airborne" }]
+effect = { spawn = "threadling", count = 4 }
+confidence = "assumed"
+note = "A perched Threadling every 0.5 s while weavewalking (draining 25% melee energy a second): four per melee charge."
+
+[[rule]]
+granted_by = "aspect:Ensnaring Slam"
+sources = ["compendium:Strand/Aspects/Ensnaring Slam"]
+on = { event = "cast", ability = "class" }
+effect = [
+  { damage = 61, target = "area", radius = 8, element = "strand", source = "class", tags = ["class"] },
+  { apply = "suspend", target = "area", radius = 8 },
+  { apply = "woven_mail", duration = 12, target = "self" },
+]
+note = "Woven Mail for 4 s per enemy suspended, up to 20 s: three taken."
+
+[[rule]]
+granted_by = "aspect:The Wanderer"
+sources = ["compendium:Strand/Aspects/The Wanderer"]
+on = "tangle_detonated"
+effect = [
+  { damage = 324, target = "area", radius = 6, element = "strand", source = "grenade", tags = ["tangle"] },
+  { apply = "suspend", target = "area", radius = 6 },
+]
+
+[[rule]]
+granted_by = "aspect:The Wanderer"
+sources = ["compendium:Strand/Aspects/The Wanderer"]
+on = "threadling_hit"
+effect = { spawn = "tangle", count = 0.5 }
+note = "Threadling kills spawn a Tangle: about one hit in two kills."
+
+# -------------------------------------------------------------- grenades
+
+[[rule]]
+granted_by = "grenade:Grapple"
+sources = ["compendium:Strand/Grenade Abilities/Grapple"]
+on = { event = "cast", ability = "grenade" }
+effect = { damage = 38, element = "strand", source = "grenade", tags = ["grenade"] }
+
+[[rule]]
+granted_by = "grenade:Shackle Grenade"
+sources = ["compendium:Strand/Grenade Abilities/Shackle Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { damage = 190, target = "area", radius = { var = "shackle_grenade.radius" }, element = "strand", source = "grenade", tags = ["grenade"] },
+  { apply = "suspend", target = "area", radius = { var = "shackle_grenade.radius" } },
+  { damage = 81, times = 2, element = "strand", source = "grenade", tags = ["grenade"] },
+  { apply = "suspend", times = 2 },
+]
+
+[[rule]]
+granted_by = "grenade:Threadling Grenade"
+sources = ["compendium:Strand/Grenade Abilities/Threadling Grenade"]
+on = { event = "cast", ability = "grenade" }
+effect = { spawn = "threadling", count = 3 }
+
+# ---------------------------------------------------------------- melees
+
+[[rule]]
+granted_by = "melee:Arcane Needle"
+sources = ["compendium:Strand/Melee Abilities/Arcane Needle"]
+on = { event = "cast", ability = "melee" }
+effect = [{ damage = 505, element = "strand", source = "melee", tags = ["melee", "powered_melee"] }, { apply = "unravel" }]
+
+[[modifier]]
+granted_by = "melee:Arcane Needle"
+sources = ["compendium:Strand/Melee Abilities/Arcane Needle"]
+param = "melee.charges"
+add = 2
+
+[[rule]]
+granted_by = "melee:Threaded Spike"
+sources = ["compendium:Strand/Melee Abilities/Threaded Spike"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { damage = 300, times = { var = "threaded_spike.bounces" }, element = "strand", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "sever", times = { var = "threaded_spike.bounces" } },
+]
+note = "427 on the first hit, less on each bounce: 300 a hit taken."
+
+[[rule]]
+granted_by = "melee:Frenzied Blade"
+sources = ["compendium:Strand/Melee Abilities/Frenzied Blade"]
+on = { event = "cast", ability = "melee" }
+effect = [{ damage = 569, element = "strand", source = "melee", tags = ["melee", "powered_melee"] }, { apply = "sever" }]
+
+[[modifier]]
+granted_by = "melee:Frenzied Blade"
+sources = ["compendium:Strand/Melee Abilities/Frenzied Blade"]
+param = "melee.charges"
+add = 2
+
+# ---------------------------------------------------------------- supers
+
+[[rule]]
+granted_by = "super:Needlestorm"
+sources = ["compendium:Strand/Super Abilities/Needlestorm"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 783, times = 9, element = "strand", source = "super", tags = ["super"] },
+  { spawn = "threadling", count = 9 },
+]
+
+[[rule]]
+granted_by = "super:Bladefury"
+sources = ["compendium:Strand/Super Abilities/Bladefury"]
+on = { event = "cast", ability = "super" }
+effect = { damage = 851, times = 25, target = "area", radius = 3, element = "strand", source = "super", tags = ["super"] }
+confidence = "assumed"
+note = "Light attacks drain 3% against 4.167% a second: about 25 a cast."
+
+[[rule]]
+granted_by = "super:Bladefury"
+sources = ["compendium:Strand/Super Abilities/Bladefury"]
+on = "super_end"
+effect = { charges = "melee", count = 3 }
+
+[[rule]]
+granted_by = "super:Silkstrike"
+sources = ["compendium:Strand/Super Abilities/Silkstrike"]
+on = { event = "cast", ability = "super" }
+effect = { damage = 1638, times = 12, element = "strand", source = "super", tags = ["super"] }
+confidence = "assumed"
+note = "Light attacks drain 4% against 4% a second: about twelve a cast."
+
+[[rule]]
+granted_by = "super:Silkstrike"
+sources = ["compendium:Strand/Super Abilities/Silkstrike"]
+on = { event = "kill", source = "super" }
+effect = { damage = 1293, target = "area", radius = 5, element = "strand", source = "super", tags = ["super"] }

@@ -482,6 +482,12 @@ impl<'a> Engine<'a> {
                 let explosions = self.var("policy.volatile_explosions_per_enemy");
                 out.push((Event::new("volatile_explosion"), p * n * explosions));
             }
+            if state == "unravel" && !on_player {
+                // An Unraveled enemy releases seeking threads when damaged,
+                // at most every `unravel.cooldown`.
+                let releases = self.var("policy.unravel_releases_per_enemy");
+                out.push((Event::new("unravel_thread"), p * n * releases));
+            }
             if state == "jolt" && !on_player {
                 // A Jolted enemy chains lightning each time it is damaged
                 // again, at most once per `jolt.chain_cooldown`.
@@ -600,6 +606,13 @@ impl<'a> Engine<'a> {
             for (size, count) in sizes {
                 if obj == "stasis_crystal" {
                     out.push((Event::new("crystal_created").with("size", &size), p * count));
+                } else if obj == "threadling" {
+                    // A Threadling seeks an enemy and strikes it.
+                    out.push((Event::new("threadling_hit"), p * count));
+                } else if obj == "tangle" {
+                    // The player shoots (or grapples) a share of Tangles.
+                    let used = self.var("policy.tangle_use");
+                    out.push((Event::new("tangle_detonated"), p * count * used));
                 } else {
                     let chance = if obj == "stasis_shard" {
                         self.pickup_chance()
@@ -891,6 +904,38 @@ impl<'a> Engine<'a> {
                 y.pack_damage += w * targets * dmg;
                 *y.pack_damage_by
                     .entry(("verb".into(), "arc".into()))
+                    .or_default() += w * targets * dmg;
+            }
+            "threadling_hit" => {
+                let dmg = self.param("threadling.damage").unwrap_or(0.0)
+                    * self.damage_multiplier(&["threadling".to_string()], Some("strand"));
+                y.damage += w * dmg;
+                y.pack_damage += w * dmg;
+                *y.pack_damage_by
+                    .entry(("verb".into(), "strand".into()))
+                    .or_default() += w * dmg;
+            }
+            "tangle_detonated" => {
+                let r = self.param("tangle.radius").unwrap_or(8.0);
+                let targets = self.s.around(r);
+                let dmg = self.param("tangle.damage").unwrap_or(0.0)
+                    * self.damage_multiplier(&["tangle".to_string()], Some("strand"));
+                y.damage += w * targets * dmg;
+                y.pack_damage += w * targets * dmg;
+                *y.pack_damage_by
+                    .entry(("verb".into(), "strand".into()))
+                    .or_default() += w * targets * dmg;
+            }
+            "unravel_thread" => {
+                let r = self.param("unravel.radius").unwrap_or(10.0);
+                let threads = self.param("unravel.threads").unwrap_or(3.0);
+                let targets = self.s.neighbours(r).min(threads);
+                let dmg = self.param("unravel.thread_damage").unwrap_or(0.0)
+                    * self.damage_multiplier(&["unravel".to_string()], Some("strand"));
+                y.damage += w * targets * dmg;
+                y.pack_damage += w * targets * dmg;
+                *y.pack_damage_by
+                    .entry(("verb".into(), "strand".into()))
                     .or_default() += w * targets * dmg;
             }
             "volatile_explosion" => {

@@ -784,3 +784,25 @@ sources = ["compendium:Void/Fragments/Echo of Instability"]
 params = [
   { name = "duration", value = 11.25, unit = "s" },
 ]
+
+# ---------------------------------------------------------- Strand, more
+
+[[state]]
+name = "banner_of_war"
+kind = "buff"
+element = "strand"
+description = "A Banner raised by melee, sword and glaive kills and finishers: healing and melee and sword damage for the user and allies."
+sources = ["compendium:Strand/Aspects/Banner of War"]
+params = [
+  { name = "duration", value = 15.0, unit = "s" },
+]
+
+[[state]]
+name = "unraveling_rounds"
+kind = "buff"
+element = "strand"
+description = "Strand weapons inflict Unravel."
+sources = ["compendium:Strand/Fragments/Thread of Propagation"]
+params = [
+  { name = "duration", value = 8.0, unit = "s" },
+]
