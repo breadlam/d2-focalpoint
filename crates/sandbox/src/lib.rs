@@ -14,6 +14,8 @@
 //! * [`compile`]: a loadout's records and parameters;
 //! * [`fluid`]: the mean-field analysis: generations, loop gains and
 //!   thresholds;
+//! * [`rates`]: a build's steady state in a scenario: casts, damage,
+//!   kills, healing and buff uptimes per minute;
 //! * [`variables`]: the values no source gives, as variables with guesses
 //!   (`data/sandbox/variables.toml`).
 
@@ -22,6 +24,7 @@ pub mod compile;
 pub mod economy;
 pub mod fluid;
 pub mod ontology;
+pub mod rates;
 pub mod rules;
 pub mod scenario;
 pub mod variables;

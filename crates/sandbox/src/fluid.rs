@@ -133,11 +133,21 @@ pub struct Yield {
     pub energy: BTreeMap<String, f64>,
     /// Applications of buffs to the player, in stacks.
     pub buffs: BTreeMap<String, f64>,
+    /// The same, times each application's duration: stack-seconds.
+    pub buff_seconds: BTreeMap<String, f64>,
+    /// Regeneration bonuses by ability (`grenade`, ...): the documented
+    /// bonus times its duration (bonus-seconds).
+    pub regen: BTreeMap<String, f64>,
     pub frozen: f64,
     pub pickups: f64,
+    /// Damage dealt over an area of the pack, summed over the enemies hit;
+    /// the generation turns it into kills.
+    pub pack_damage: f64,
     progress: BTreeMap<String, f64>,
     /// Firings of the event of a rule that spends a counter.
     spent_at: BTreeMap<String, f64>,
+    /// Firings of rules with a per-activation limit, by rule.
+    limited: BTreeMap<usize, f64>,
 }
 
 /// One generation: what a boundary event leads to before the next ones.
@@ -439,6 +449,8 @@ impl<'a> Engine<'a> {
             } else if matches!(eff.target.as_deref(), Some("self" | "allies" | "fireteam")) {
                 let stacks = eff.stacks.as_ref().map_or(1.0, |a| self.amount(a));
                 *y.buffs.entry(state.clone()).or_default() += w * p * stacks;
+                let duration = self.duration(state, eff);
+                *y.buff_seconds.entry(state.clone()).or_default() += w * p * stacks * duration;
             }
         }
         if let (Some(a), None) = (&eff.damage, &eff.emit) {
@@ -455,12 +467,16 @@ impl<'a> Engine<'a> {
                 hit = hit.with("element", el);
             }
             out.push((hit.clone(), p * n));
-            let kills = p * n * (1.0 - self.s.survives_mixed(dmg));
-            y.kills += w * kills;
-            if kills > 0.0 {
-                let mut kill = hit;
-                kill.name = "kill".into();
-                out.push((kill, kills));
+            if n > 1.0 {
+                y.pack_damage += w * p * n * dmg;
+            } else {
+                let kills = p * n * (1.0 - self.s.survives_mixed(dmg));
+                y.kills += w * kills;
+                if kills > 0.0 {
+                    let mut kill = hit;
+                    kill.name = "kill".into();
+                    out.push((kill, kills));
+                }
             }
         }
         if let Some(ability) = &eff.energy {
@@ -476,8 +492,19 @@ impl<'a> Engine<'a> {
             *y.energy.entry(ability.clone()).or_default() += w * p * count;
             out.push((Event::cast(ability), p * count));
         }
-        if eff.regen.is_some() {
-            self.note("regeneration bonuses change rates, not generations; not in the gains");
+        if let Some(ability) = &eff.regen {
+            let bonus = eff.amount.as_ref().map_or(0.0, |a| self.amount(a));
+            let duration = eff
+                .duration
+                .as_ref()
+                .or(eff.max_duration.as_ref())
+                .map_or(0.0, |a| self.amount(a));
+            if duration <= 0.0 {
+                self.note(format!(
+                    "a regeneration bonus for {ability} has no duration"
+                ));
+            }
+            *y.regen.entry(ability.clone()).or_default() += w * p * bonus * duration;
         }
         if let Some(obj) = &eff.spawn {
             let sizes: Vec<(String, f64)> = if let Some(s) = &eff.sizes {
@@ -523,6 +550,23 @@ impl<'a> Engine<'a> {
         out
     }
 
+    /// How long one application of a buff lasts: the effect's duration,
+    /// or the state's `duration` or `stack_duration`.
+    fn duration(&mut self, state: &str, eff: &Effect) -> f64 {
+        if let Some(a) = eff.duration.as_ref().or(eff.max_duration.as_ref()) {
+            return self.amount(a);
+        }
+        for p in ["duration", "stack_duration"] {
+            if let Some(d) = self.param(&format!("{state}.{p}")) {
+                return d;
+            }
+        }
+        self.note(format!(
+            "{state}: no duration known; its uptime is not modelled"
+        ));
+        0.0
+    }
+
     fn threshold(&self, counter: &str) -> f64 {
         self.c
             .counters
@@ -545,9 +589,9 @@ impl<'a> Engine<'a> {
         for r in rules {
             let chance = r.chance.as_ref().map_or(1.0, |a| self.amount(a));
             let p = self.holds_all(&r.when) * chance;
-            if r.cooldown.is_some() || r.limit.is_some() {
+            if r.cooldown.is_some() {
                 self.note(format!(
-                    "{}: its cooldown or limit is not modelled in the gains",
+                    "{}: its cooldown limits its rate (`rates`), not its gains",
                     r.granted_by
                 ));
             }
@@ -702,13 +746,35 @@ impl<'a> Engine<'a> {
                 out.push((Event::new("shatter").with("of", "crystal"), 1.0));
             }
             "shatter" => {
+                // A shattered crystal damages enemies around it, down to 45%
+                // at the edge (0.63 on average over its area); a shattered
+                // enemy damages itself and its neighbours.
+                let of_enemy = e.attrs.get("of").map(String::as_str) == Some("enemy");
+                let (damage, reach, falloff) = if of_enemy {
+                    let r = self.param("shatter.radius").unwrap_or(5.0);
+                    (
+                        self.param("shatter.damage").unwrap_or(0.0),
+                        1.0 + self.s.neighbours(r),
+                        1.0,
+                    )
+                } else {
+                    let r = self.param("stasis_crystal.shatter_radius").unwrap_or(8.0);
+                    let in_pack = self.var("policy.crystals_in_pack");
+                    let dmg = self.param("stasis_crystal.shatter_damage").unwrap_or(0.0);
+                    (dmg, in_pack * self.s.around(r), 1.0 - 0.55 * 2.0 / 3.0)
+                };
+                let tags = vec!["shatter".to_string(), "crystal".to_string()];
+                let mult = self.damage_multiplier(&tags, Some("stasis"));
+                let dealt = damage * mult * falloff * reach;
+                y.damage += w * dealt;
+                y.pack_damage += w * dealt;
                 let chance = self.pickup_chance();
                 let shard = |size: &str| {
                     Event::new("pickup")
                         .with("object", "stasis_shard")
                         .with("size", size)
                 };
-                if e.attrs.get("of").map(String::as_str) == Some("enemy") {
+                if of_enemy {
                     out.push((shard("small"), chance * self.s.share(Rank::Minor)));
                     out.push((shard("large"), chance * self.s.share(Rank::Elite)));
                 } else {
@@ -739,7 +805,18 @@ impl<'a> Engine<'a> {
                 }
             }
         }
-        for (r, p) in self.fired(e) {
+        for (r, mut p) in self.fired(e) {
+            // A per-activation limit (Glacial Quake's seven Orbs a super):
+            // at most `limit` firings a generation.
+            if let Some(limit) = r.limit {
+                let key = std::ptr::from_ref(r) as usize;
+                let done = y.limited.get(&key).copied().unwrap_or(0.0);
+                let left = (f64::from(limit) - done).max(0.0);
+                if w * p > left {
+                    p = left / w;
+                }
+                *y.limited.entry(key).or_default() += w * p;
+            }
             for eff in &r.effect {
                 let kids = self.effect(eff, e, p, y, w);
                 out.extend(kids);
@@ -754,7 +831,10 @@ impl<'a> Engine<'a> {
         let mut next: Vec<(Event, f64)> = Vec::new();
         let mut freezes = 0.0;
         let mut stack = vec![(root.clone(), 1.0, 0usize)];
-        for phase in 0..2 {
+        let pack = self.s.pack.size.max(1.0);
+        // Phase 0: what the root sets off; 1: the frozen enemies shattered;
+        // 2: the enemies the generation's area damage kills.
+        for phase in 0..3 {
             while let Some((e, w, depth)) = stack.pop() {
                 if depth > 0 && Self::is_boundary(&e) {
                     match next.iter_mut().find(|(n, _)| *n == e) {
@@ -763,7 +843,7 @@ impl<'a> Engine<'a> {
                     }
                     continue;
                 }
-                if e.name == "freeze" && phase == 0 {
+                if e.name == "freeze" {
                     freezes += w;
                     continue;
                 }
@@ -777,13 +857,38 @@ impl<'a> Engine<'a> {
                     }
                 }
             }
-            // Freezes overlap: the enemies frozen are a share of the pack.
-            if phase == 0 && freezes > 0.0 {
-                let pack = self.s.pack.size.max(1.0);
-                let frozen = pack * (1.0 - (-freezes / pack).exp());
-                y.frozen = frozen;
-                let shattered = frozen * self.var("policy.shatter_frozen");
-                stack.push((Event::new("shatter").with("of", "enemy"), shattered, 1));
+            match phase {
+                // Freezes overlap: the enemies frozen are a share of the pack.
+                0 if freezes > 0.0 => {
+                    let frozen = pack * (1.0 - (-freezes / pack).exp());
+                    y.frozen = frozen;
+                    let shattered = frozen * self.var("policy.shatter_frozen");
+                    stack.push((Event::new("shatter").with("of", "enemy"), shattered, 1));
+                }
+                // Area damage spreads over the pack: each enemy takes its share.
+                1 if y.pack_damage > 0.0 => {
+                    let per_enemy = y.pack_damage / pack;
+                    let killed = pack * (1.0 - self.s.survives_mixed(per_enemy));
+                    y.kills += killed;
+                    if killed > 0.0 {
+                        let kill = Event::new("kill").with("source", "ability");
+                        stack.push((kill, killed, 1));
+                        // Killing a frozen enemy that was not shattered
+                        // leaves a shard.
+                        let unshattered = y.frozen * (1.0 - self.var("policy.shatter_frozen"));
+                        let frozen_kills = killed * unshattered / pack;
+                        if frozen_kills > 0.0 {
+                            let chance = self.pickup_chance();
+                            for (rank, size) in [(Rank::Minor, "small"), (Rank::Elite, "large")] {
+                                let shard = Event::new("pickup")
+                                    .with("object", "stasis_shard")
+                                    .with("size", size);
+                                stack.push((shard, frozen_kills * chance * self.s.share(rank), 1));
+                            }
+                        }
+                    }
+                }
+                _ => {}
             }
         }
         Generation {

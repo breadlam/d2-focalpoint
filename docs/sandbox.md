@@ -259,6 +259,20 @@ contexts from `focalpoint mechanics import`.
   - Conditions it reads as always or never true are listed under "Taken
     without data".
 
+**Rates** put time in: the steady state per minute in the scenario.
+- **Casts** come from passive regeneration: the economy's cooldowns at
+  the build's stats, plus regeneration bonuses by their uptime. They also
+  come from the energy the build returns.
+- **Kills:** the scenario supplies `scenario.pack_size ×
+  scenario.packs_per_minute` enemies a minute. Abilities and verbs kill
+  some of them; area damage is spread over the pack. Weapons take the
+  rest, and weapon kills fire the rules that need them.
+- **Damage, healing and buff uptimes:** each buff's mean stacks come from
+  its applications times its duration, up to its maximum.
+- **Caps:** a self-feeding loop is capped at one cast per
+  `policy.min_cast_interval`, and chained events at the enemies supplied.
+  `analyze` reports which caps were hit.
+
 The acceptance cases ([escalation.md](escalation.md)) come out of the
 records, with no rule written for them. Default pack, stats at 100, Howl of
 the Storm's freeze radius 3 m (the tests pin the variables they read, with

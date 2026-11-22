@@ -163,6 +163,16 @@ status = "guess"
 basis = "The share of a fight spent below a health threshold (critically wounded); endgame players avoid it, harder content forces more."
 measure = "From recordings: time below 30% health over the encounter."
 
+[[variable]]
+name = "policy.min_cast_interval"
+guess = 1.5
+low = 0.8
+high = 3.0
+unit = "s"
+status = "guess"
+basis = "The shortest time between two casts of one ability: its animation and the time to find the next target."
+measure = "From recordings of a build that never runs out of an ability's energy: the time between casts."
+
 # --------------------------------------------------------- the scenario
 
 [[variable]]
@@ -184,6 +194,16 @@ unit = "m"
 status = "guess"
 basis = "Packs spread over a room or a corridor's width; most fall within 15-20 m across."
 measure = "Estimate pack spread in recordings against known distances (doorways, the Shooting Range markers)."
+
+[[variable]]
+name = "scenario.packs_per_minute"
+guess = 1.5
+low = 0.5
+high = 4.0
+unit = "count"
+status = "guess"
+basis = "Ad-clear content brings a new pack every 30-60 s of combat; dense content (Onslaught, Conquest waves) faster."
+measure = "From the recorded clears: kills per minute over pack size, per activity (calibration); or count packs in recordings."
 
 [[variable]]
 name = "scenario.elite_share"

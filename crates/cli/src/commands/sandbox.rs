@@ -362,20 +362,8 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
         .collect();
     let compiled = compile(&ontology, &base, &build, &vars);
     let s = scenario(a, &db, &vars)?;
-    let mut seeds: Vec<Event> = [
-        ("grenade", "grenade"),
-        ("melee", "melee"),
-        ("class_ability", "class"),
-        ("super", "super"),
-    ]
-    .iter()
-    .filter(|(slot, _)| build.equipped(slot).is_some())
-    .map(|(_, ability)| Event::cast(ability))
-    .collect();
+    let mut seeds = focalpoint_sandbox::rates::seeds(&compiled);
     seeds.extend(a.seeds.iter().map(|e| Event::new(e)));
-    if seeds.is_empty() {
-        bail!("nothing to start from: equip an ability, or give --seed");
-    }
     println!(
         "{}: durability ×{:.2}, packs of {} within {} m, {:.0}% elites",
         s.name,
@@ -443,6 +431,47 @@ fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
             ]);
         }
         println!("{}", render(format, &header, &rows));
+    }
+
+    let r = focalpoint_sandbox::rates::rates(&ontology, &compiled, &economy, &s, &report);
+    println!("## Per minute");
+    let header = ["", "value"].map(String::from);
+    let mut rows: Vec<Vec<String>> = r
+        .casts_per_min
+        .iter()
+        .map(|(a, n)| {
+            let returned = r.returned_per_min.get(a).copied().unwrap_or(0.0);
+            vec![
+                format!("{a} casts"),
+                format!("{n:.1} ({:.1} paid by returned energy)", returned.min(*n)),
+            ]
+        })
+        .collect();
+    rows.extend([
+        vec![
+            "kills by abilities and verbs".into(),
+            format!(
+                "{:.1} of {:.1} ({:.0}%)",
+                r.ability_kills_per_min,
+                r.supply_per_min,
+                100.0 * r.ability_kill_share()
+            ),
+        ],
+        vec![
+            "damage a second (abilities, verbs)".into(),
+            format!("{:.0}", r.damage_per_s),
+        ],
+        vec!["healing a second".into(), format!("{:.1}", r.heal_per_s)],
+    ]);
+    for (b, u) in &r.buffs {
+        rows.push(vec![
+            format!("{b} uptime"),
+            format!("{:.0}% (mean x{:.1})", 100.0 * u.uptime, u.mean_stacks),
+        ]);
+    }
+    println!("{}", render(format, &header, &rows));
+    for c in &r.capped {
+        println!("Capped: {c}");
     }
 
     println!("## Generations");
