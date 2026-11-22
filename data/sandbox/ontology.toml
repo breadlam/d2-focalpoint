@@ -856,3 +856,25 @@ params = [
   { name = "duration", value = 6.0, unit = "s" },
   { name = "damage_resist", value = 0.1, unit = "fraction" },
 ]
+
+# ------------------------------------------------------- exotic armor, more
+
+[[state]]
+name = "burning_fists"
+kind = "buff"
+max_stacks = 5
+description = "Wormgod Caress: melee and weapon damage per stack, from melee kills and finishers."
+sources = ["compendium:Exotic Armors/Armor/Wormgod Caress"]
+params = [
+  { name = "duration", value = 9.5, unit = "s" },
+]
+
+[[state]]
+name = "warlords_sigil"
+kind = "buff"
+max_stacks = 10
+description = "Winter's Guile: melee damage per stack, from melee kills and finishers."
+sources = ["compendium:Exotic Armors/Armor/Winter's Guile"]
+params = [
+  { name = "duration", value = 4.75, unit = "s" },
+]

@@ -32,3 +32,190 @@ granted_by = "armor:Dawn Chorus"
 sources = ["compendium:Exotic Armors/Armor/Dawn Chorus"]
 on = "ignition_hit"
 effect = { energy = "melee", amount = 0.40 }
+
+# ----------------------------------------------------- more exotic armor
+
+[[rule]]
+granted_by = "armor:Getaway Artist"
+sources = ["compendium:Exotic Armors/Armor/Getaway Artist"]
+on = { event = "cast", ability = "grenade" }
+effect = [
+  { apply = "arc_soul", duration = 20, target = "self" },
+  { apply = "amplified", target = "self" },
+  { damage = 69, times = 33, element = "arc", source = "grenade", tags = ["grenade"] },
+  { energy = "grenade", amount = 0.05, times = 11 },
+]
+note = "Holding grenade summons an Arc Soul for 20 s (about 33 rounds in 11 bursts), each burst's hit granting 5% grenade energy."
+
+[[modifier]]
+granted_by = "armor:Synthoceps"
+sources = ["compendium:Exotic Armors/Armor/Synthoceps"]
+damage = "melee"
+mul = 2.65
+category = "exotic"
+when = [{ enemies_within = 15, min = 3 }]
+
+[[modifier]]
+granted_by = "armor:Synthoceps"
+sources = ["compendium:Exotic Armors/Armor/Synthoceps"]
+damage = "super"
+mul = 1.5
+category = "exotic"
+when = [{ enemies_within = 15, min = 3 }]
+
+[[rule]]
+granted_by = "armor:Shards of Galanor"
+sources = ["compendium:Exotic Armors/Armor/Shards of Galanor"]
+on = { event = "kill", source = "super" }
+effect = { energy = "super", amount = { by_rank = { minor = 0.03, elite = 0.2 } }, scaling = "fixed" }
+note = "Blade Barrage hits and kills refund up to 50% super energy, more for tougher enemies."
+
+[[rule]]
+granted_by = "armor:Shards of Galanor"
+sources = ["compendium:Exotic Armors/Armor/Shards of Galanor"]
+on = { event = "kill", source = "melee", element = "solar" }
+effect = { energy = "super", amount = { by_rank = { minor = 0.025, elite = 0.05 } } }
+
+[[rule]]
+granted_by = "armor:Wormgod Caress"
+sources = ["compendium:Exotic Armors/Armor/Wormgod Caress"]
+on = { event = "kill", source = "melee" }
+effect = { apply = "burning_fists", stacks = 1, target = "self" }
+
+[[modifier]]
+granted_by = "armor:Wormgod Caress"
+sources = ["court:Empowering Buffs/Wormgod Caress"]
+damage = "melee"
+mul = 1.25
+category = "empowering"
+when = [{ stacks = "burning_fists", min = 3 }]
+note = "Court: 20 | 25 | 30 | 35% at x2-x5: x3 taken."
+
+[[rule]]
+granted_by = "armor:Mask of Fealty"
+sources = ["compendium:Exotic Armors/Armor/Mask of Fealty"]
+on = { event = "cast", ability = "melee" }
+effect = [
+  { spawn = "stasis_crystal", count = 2, size = "small" },
+  { energy = "melee", amount = 0.075, times = 3, scaling = "fixed" },
+]
+note = "Withering Blade's bounces make two small crystals and each hit grants 7.5% fixed melee energy."
+
+[[rule]]
+granted_by = ["armor:Celestial Nighthawk", "super:Golden Gun: Marksman"]
+sources = ["compendium:Exotic Armors/Armor/Celestial Nighthawk"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { damage = 12984, element = "solar", source = "super", tags = ["super"] },
+  { emit = "ignition", attributes = { by = "super" } },
+]
+note = "One shot instead of three, which also ignites."
+
+[[rule]]
+granted_by = "armor:Hallowfire Heart"
+sources = ["compendium:Exotic Armors/Armor/Hallowfire Heart"]
+on = { event = "kill", source = "ability" }
+effect = { apply = "cure", stacks = 2, target = "self" }
+note = "While a Solar super is charged; its Sunfire Furnace stacks' regeneration is in the cooldown workbook (+140%)."
+
+[[rule]]
+granted_by = "armor:Hallowfire Heart"
+sources = ["cooldowns:Regen Effects/Hallowfire Heart"]
+on = { event = "kill", source = "ability" }
+effect = [{ regen = "grenade", amount = 1.4, duration = 20 }, { regen = "melee", amount = 1.4, duration = 20 }]
+
+[[modifier]]
+granted_by = "armor:Shinobu's Vow"
+sources = ["compendium:Exotic Armors/Armor/Shinobu's Vow"]
+param = "grenade.charges"
+add = 1
+
+[[rule]]
+granted_by = "armor:Shinobu's Vow"
+sources = ["compendium:Exotic Armors/Armor/Shinobu's Vow"]
+on = { event = "hit", source = "grenade" }
+effect = [{ energy = "grenade", amount = 0.042 }, { apply = "bolt_charge", stacks = 1, target = "self" }]
+
+[[modifier]]
+granted_by = "armor:Stronghold"
+sources = ["compendium:Exotic Armors/Armor/Stronghold"]
+param = "guardian.damage_resist"
+add = 0.1
+confidence = "assumed"
+note = "50% while blocking with a sword; blocking a fifth of the time taken."
+
+[[modifier]]
+granted_by = "armor:Cuirass of the Falling Star"
+sources = ["compendium:Exotic Armors/Armor/Cuirass of the Falling Star"]
+damage = "super"
+mul = 1.55
+category = "exotic"
+note = "Thundercrash only: the build's super decides."
+
+[[rule]]
+granted_by = "armor:Cuirass of the Falling Star"
+sources = ["compendium:Exotic Armors/Armor/Cuirass of the Falling Star"]
+on = { event = "kill", source = "melee" }
+when = [{ has = "amplified" }]
+effect = { energy = "super", amount = 0.025 }
+
+[[rule]]
+granted_by = "armor:Geomag Stabilizers"
+sources = ["compendium:Exotic Armors/Armor/Geomag Stabilizers"]
+on = { event = "pickup", object = "ionic_trace" }
+effect = { energy = "super", amount = 0.04 }
+
+[[rule]]
+granted_by = "armor:Winter's Guile"
+sources = ["compendium:Exotic Armors/Armor/Winter's Guile"]
+on = { event = "kill", source = "melee" }
+effect = { apply = "warlords_sigil", stacks = 1, target = "self" }
+
+[[rule]]
+granted_by = "armor:Winter's Guile"
+sources = ["compendium:Exotic Armors/Armor/Winter's Guile"]
+on = "finisher"
+effect = { apply = "warlords_sigil", stacks = 3, target = "self" }
+
+[[modifier]]
+granted_by = "armor:Winter's Guile"
+sources = ["compendium:Exotic Armors/Armor/Winter's Guile"]
+damage = "melee"
+mul = 2.0
+category = "exotic"
+when = [{ stacks = "warlords_sigil", min = 5 }]
+confidence = "assumed"
+note = "Melee damage rises with Warlord's Sigil stacks; +100% at x5 taken."
+
+[[rule]]
+granted_by = "armor:Icefall Mantle"
+sources = ["compendium:Exotic Armors/Armor/Icefall Mantle"]
+on = { event = "kill", element = "stasis" }
+effect = { apply = "frost_armor", stacks = 1, target = "self" }
+chance = 0.5
+note = "Two Stasis kills within 3 s grant a stack: one kill in two."
+
+[[rule]]
+granted_by = "armor:Icefall Mantle"
+sources = ["compendium:Exotic Armors/Armor/Icefall Mantle"]
+on = { event = "gain", state = "frost_armor" }
+effect = { heal = 10 }
+
+[[rule]]
+granted_by = ["armor:Orpheus Rig", "super:Shadowshot: Deadfall"]
+sources = ["compendium:Exotic Armors/Armor/Orpheus Rig"]
+on = { event = "cast", ability = "super" }
+effect = [
+  { energy = "grenade", amount = 0.1, times = 4 },
+  { energy = "melee", amount = 0.1, times = 4 },
+  { energy = "class", amount = 0.1, times = 4 },
+  { energy = "super", amount = 0.4, scaling = "fixed" },
+]
+note = "For each enemy tethered: 10% grenade, melee and class energy and a super refund (up to 50%): four tethered taken."
+
+[[modifier]]
+granted_by = "armor:St0mp-EE5"
+sources = ["compendium:Exotic Armors/Armor/St0mp-EE5"]
+param = "guardian.damage_resist"
+add = 0.3
+when = [{ movement = "airborne" }]
