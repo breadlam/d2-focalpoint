@@ -50,6 +50,10 @@ pub struct Event {
     /// Set off by a state reaching its maximum (an ignition by Scorch at
     /// x100): a boundary, where a chain's next generation starts.
     pub chained: bool,
+    /// Hits each enemy takes from the source (an Arc Soul's 33 rounds land
+    /// on the few enemies near it): what the hits apply lands on distinct
+    /// enemies this many times fewer, and their damage adds up.
+    pub per_target: f64,
 }
 
 impl Event {
@@ -64,6 +68,7 @@ impl Event {
             element: None,
             member: false,
             chained: false,
+            per_target: 1.0,
         }
     }
 
@@ -167,6 +172,9 @@ pub struct Yield {
     spent_at: BTreeMap<String, f64>,
     /// Firings of rules with a per-activation limit, by rule.
     limited: BTreeMap<usize, f64>,
+    /// Enemies a state has been applied to this generation, by state: a
+    /// pack has only so many to Jolt, freeze or make Volatile.
+    afflicted: BTreeMap<String, f64>,
 }
 
 /// One generation: what a boundary event leads to before the next ones.
@@ -495,7 +503,18 @@ impl<'a> Engine<'a> {
     ) -> Vec<(Event, f64)> {
         let mut out = Vec::new();
         let n = self.targets(eff);
-        let p = p * eff.times.as_ref().map_or(1.0, |a| self.amount(a));
+        let times = eff.times.as_ref().map_or(1.0, |a| self.amount(a));
+        let p = p * times;
+        // Repeated hits on one target spread over at most the pack: each
+        // enemy takes `repeat` of them (and of the hits that set this off).
+        let own = if n <= 1.0 && times > 1.0 {
+            times / times.min(self.s.pack.size.max(1.0))
+        } else {
+            1.0
+        };
+        let repeat = own * parent.per_target.max(1.0);
+        // Applications to distinct enemies per application.
+        let distinct = 1.0 / repeat;
         if let Some(state) = &eff.extend {
             // An extension counts only while the buff is up: held whenever
             // the build applies it.
@@ -506,22 +525,32 @@ impl<'a> Engine<'a> {
         }
         if let Some(state) = &eff.apply {
             let on_player = matches!(eff.target.as_deref(), Some("self" | "allies" | "fireteam"));
+            // New enemies affected, at most the pack's that are not yet.
+            let fresh = if on_player || w <= 0.0 {
+                p * n * distinct
+            } else {
+                let done = y.afflicted.get(state).copied().unwrap_or(0.0);
+                let left = (self.s.pack.size - done).max(0.0);
+                let fresh = (w * p * n * distinct).min(left);
+                *y.afflicted.entry(state.clone()).or_default() += fresh;
+                fresh / w
+            };
             if state == "volatile" && !on_player {
                 // A Volatile enemy explodes when it is damaged again.
                 let explosions = self.var("policy.volatile_explosions_per_enemy");
-                out.push((Event::new("volatile_explosion"), p * n * explosions));
+                out.push((Event::new("volatile_explosion"), fresh * explosions));
             }
             if state == "unravel" && !on_player {
                 // An Unraveled enemy releases seeking threads when damaged,
                 // at most every `unravel.cooldown`.
                 let releases = self.var("policy.unravel_releases_per_enemy");
-                out.push((Event::new("unravel_thread"), p * n * releases));
+                out.push((Event::new("unravel_thread"), fresh * releases));
             }
             if state == "jolt" && !on_player {
                 // A Jolted enemy chains lightning each time it is damaged
                 // again, at most once per `jolt.chain_cooldown`.
                 let chains = self.var("policy.jolt_chains_per_enemy");
-                out.push((Event::new("jolt_chain"), p * n * chains));
+                out.push((Event::new("jolt_chain"), fresh * chains));
             }
             if self.thresholds.contains_key(state) && on_player {
                 // Stacks on the player (Bolt Charge) add up to their
@@ -532,7 +561,7 @@ impl<'a> Engine<'a> {
                 acc.1 += w * p;
             }
             if state == "frozen" {
-                out.push((Event::new("freeze"), p * n));
+                out.push((Event::new("freeze"), fresh));
             } else if self.thresholds.contains_key(state) && !on_player {
                 // Outside a burst, stacks add up across applications over
                 // time: the rates turn them into the state's event.
@@ -559,7 +588,7 @@ impl<'a> Engine<'a> {
             if on_player {
                 out.push((Event::new("gain").with("state", state), p));
             } else if parent.name != "ignition_hit" || !self.thresholds.contains_key(state) {
-                out.push((Event::new("apply").with("state", state), p * n));
+                out.push((Event::new("apply").with("state", state), p * n * distinct));
             }
         }
         if let (Some(a), None) = (&eff.damage, &eff.emit) {
@@ -578,6 +607,7 @@ impl<'a> Engine<'a> {
             if eff.tags.iter().any(|t| t == "powered_melee") {
                 hit = hit.with("powered", "true");
             }
+            hit.per_target = repeat;
             out.push((hit.clone(), p * n));
             if n > 1.0 {
                 y.pack_damage += w * p * n * dmg;
@@ -588,11 +618,18 @@ impl<'a> Engine<'a> {
                 *y.pack_damage_by.entry(key).or_default() += w * p * n * dmg;
             } else {
                 let eff = self.var("scenario.ability_efficiency");
-                let kills = p * n * (1.0 - self.s.survives_mixed(dmg * eff));
+                let kills = if repeat > 1.0 {
+                    // Damage adds up on the few enemies hit: kills by
+                    // damage, at most one an enemy.
+                    (p * n * self.s.kills_per_hit(dmg * eff)).min(p * n * distinct)
+                } else {
+                    p * n * (1.0 - self.s.survives_mixed(dmg * eff))
+                };
                 y.kills += w * kills;
                 if kills > 0.0 {
                     let mut kill = hit;
                     kill.name = "kill".into();
+                    kill.per_target = 1.0;
                     out.push((kill, kills));
                 }
             }
@@ -1590,6 +1627,35 @@ mod tests {
         // Converter's count at the melee hit that spends it.
         assert!(rc.counters["converter_shards"] >= 8.0, "{:?}", rc.counters);
         assert!(rb.counters["converter_shards"] >= rc.counters["converter_shards"]);
+    }
+
+    #[test]
+    fn repeated_hits_jolt_distinct_enemies() {
+        // Getaway Artist's Arc Soul fires 33 rounds a grenade; with Facet
+        // of Dominance each round jolts, but only the pack's 8 enemies can
+        // be Jolted, each chaining `policy.jolt_chains_per_enemy` times.
+        let parts = [
+            "armor:Getaway Artist",
+            "grenade:Storm Grenade",
+            "fragment:Facet of Dominance",
+        ];
+        let r = gain(&parts, Event::cast("grenade"), 3.47);
+        let g = r
+            .generations
+            .iter()
+            .find(|g| g.root.name == "cast")
+            .unwrap();
+        let without = gain(&parts[..2], Event::cast("grenade"), 3.47);
+        let g0 = without
+            .generations
+            .iter()
+            .find(|g| g.root.name == "cast")
+            .unwrap();
+        // Each chain hits up to `jolt.chain_targets` (3) for 119.
+        let bound = 8.0 * 3.0 * 3.0 * 119.0 * 1.5;
+        let added = g.yields.damage - g0.yields.damage;
+        assert!(added > 0.0 && added < bound, "added {added}, bound {bound}");
+        assert!(g.yields.kills <= 8.0 + 1e-9, "kills {}", g.yields.kills);
     }
 
     #[test]

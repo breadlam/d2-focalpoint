@@ -717,3 +717,13 @@ unit = "fraction"
 status = "guess"
 basis = "Siphons spawn an Orb for two kills within a few seconds: about one weapon kill in two completes such a pair in ad-clear."
 measure = "From recordings: Siphon Orbs per weapon kill."
+
+[[variable]]
+name = "scenario.damage_spread"
+guess = 0.4
+low = 0.1
+high = 0.8
+unit = "log sigma"
+status = "guess"
+basis = "Damage an enemy actually takes varies around the documented number (falloff, partial hits, where it stands): a log-normal spread whose sigma this is. 0.4 puts a third of enemies outside x0.67-x1.5 of the documented damage."
+measure = "From recordings: the share of one enemy type an ability of known damage kills in one hit, against the share its documented health predicts."

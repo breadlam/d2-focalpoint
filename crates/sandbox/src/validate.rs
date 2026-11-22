@@ -52,14 +52,30 @@ pub const SCENARIOS: [(&str, &str); 2] = [
 /// A recorded kit's clears in one context.
 #[derive(Debug, Clone)]
 pub struct Kit {
-    /// `kind:name` parts.
+    /// `kind:name` parts: the subclass kit and exotic armor.
     pub parts: Vec<String>,
+    /// Modelled artifact perks and armor mods that most of the kit's clears
+    /// ran (by build share): evaluated with the kit, not part of its key.
+    pub accessories: Vec<String>,
     pub context: String,
     /// Clears, by build share.
     pub clears: f64,
     pub players: i64,
     /// Mean score against the players' usual level (log scale).
     pub effect: f64,
+    /// The recorded share of the kit's kills by grenade, melee, super and
+    /// other abilities (the activity report's split), by build share.
+    pub ability_kill_share: Option<f64>,
+}
+
+impl Kit {
+    /// The parts evaluated: the kit and its accessories.
+    #[must_use]
+    pub fn build(&self) -> Vec<String> {
+        let mut out = self.parts.clone();
+        out.extend(self.accessories.iter().cloned());
+        out
+    }
 }
 
 /// Recorded kits with at least `min_clears` clears and `min_players`
@@ -68,17 +84,17 @@ pub fn kits(
     db: &Database,
     min_clears: f64,
     min_players: i64,
-    artifact_perks: &[String],
+    accessories: &[String],
 ) -> Result<Vec<Kit>> {
-    let perks = artifact_perks
+    let listed = accessories
         .iter()
         .map(|p| format!("'{}'", p.replace('\'', "''")))
         .collect::<Vec<_>>()
         .join(", ");
-    let perks = if perks.is_empty() {
+    let listed = if listed.is_empty() {
         "''".to_string()
     } else {
-        perks
+        listed
     };
     let sql = format!(
         "WITH {clears},
@@ -88,37 +104,64 @@ pub fn kits(
              FROM build_component bc JOIN item i ON i.item_hash = bc.component_hash
              WHERE bc.kind IN ('super', 'grenade', 'melee', 'class_ability', 'aspect', 'fragment', 'transcendence')
                 OR (bc.kind = 'armor' AND i.is_exotic)
-                OR (bc.kind = 'artifact_perk' AND i.name IN ({perks}))
-             GROUP BY 1)
-         SELECT k.kit, c.ctx, sum(c.share) AS w, sum(c.share * c.resid) / sum(c.share) AS effect,
-                count(DISTINCT c.membership_id) AS players
-         FROM c JOIN kit k USING (build_id)
-         WHERE c.ctx IN ('hard', 'easy')
-         GROUP BY ALL
-         HAVING sum(c.share) >= ? AND count(DISTINCT c.membership_id) >= ?
+             GROUP BY 1),
+         acc AS (
+             SELECT DISTINCT bc.build_id, bc.kind || ':' || i.name AS part
+             FROM build_component bc JOIN item i ON i.item_hash = bc.component_hash
+             WHERE bc.kind IN ('artifact_perk', 'armor_mod')
+               AND bc.kind || ':' || i.name IN ({listed})),
+         runs AS (
+             SELECT k.kit, c.ctx, c.build_id, c.share, c.resid, c.instance_id, c.membership_id
+             FROM c JOIN kit k USING (build_id) WHERE c.ctx IN ('hard', 'easy')),
+         pk AS (
+             SELECT instance_id, membership_id, sum(kills) AS kills,
+                    sum(grenade_kills + melee_kills + super_kills + ability_kills) AS abilities
+             FROM run_player SEMI JOIN runs USING (instance_id, membership_id) GROUP BY ALL),
+         agg AS (
+             SELECT kit, ctx, sum(share) AS w, sum(share * resid) / sum(share) AS effect,
+                    count(DISTINCT membership_id) AS players,
+                    sum(share * pk.abilities) / nullif(sum(share * pk.kills), 0) AS ability_share
+             FROM runs LEFT JOIN pk USING (instance_id, membership_id) GROUP BY ALL
+             HAVING sum(share) >= ? AND count(DISTINCT membership_id) >= ?),
+         accs AS (
+             SELECT r.kit, r.ctx, a.part, sum(r.share) AS w
+             FROM runs r JOIN acc a USING (build_id) GROUP BY ALL)
+         SELECT agg.kit, agg.ctx, agg.w, agg.effect, agg.players,
+                coalesce(array_to_string(list_sort(list(accs.part) FILTER (WHERE accs.w >= 0.5 * agg.w)), '|'), ''),
+                agg.ability_share
+         FROM agg LEFT JOIN accs USING (kit, ctx)
+         GROUP BY agg.kit, agg.ctx, agg.w, agg.effect, agg.players, agg.ability_share
          ORDER BY 1, 2",
         clears = escalation::clears_cte(),
     );
     let mut stmt = db.conn().prepare(&sql)?;
     let rows = stmt.query_map(duckdb::params![min_clears, min_players], |r| {
         let kit: String = r.get(0)?;
+        let acc: String = r.get(5)?;
         Ok(Kit {
             parts: kit.split('|').map(String::from).collect(),
+            accessories: acc
+                .split('|')
+                .filter(|p| !p.is_empty())
+                .map(String::from)
+                .collect(),
             context: r.get(1)?,
             clears: r.get(2)?,
             effect: r.get(3)?,
             players: r.get(4)?,
+            ability_kill_share: r.get(6)?,
         })
     })?;
     Ok(rows.collect::<duckdb::Result<_>>()?)
 }
 
-/// The artifact perks the rule base models, by name.
-fn artifact_perks(base: &RuleBase) -> Vec<String> {
+/// The modelled parts evaluated with a kit rather than keying it: artifact
+/// perks and armor mods.
+fn accessories(base: &RuleBase) -> Vec<String> {
     base.modelled()
         .iter()
-        .filter(|p| p.kind == "artifact_perk")
-        .map(|p| p.name.clone())
+        .filter(|p| p.kind == "artifact_perk" || p.kind == "armor_mod")
+        .map(ToString::to_string)
         .collect()
 }
 
@@ -175,6 +218,13 @@ pub struct ContextReport {
     pub recorded_ability_kill_share: Option<f64>,
     /// The ability efficiency calibrated to the recorded share, if fitted.
     pub fitted_efficiency: Option<f64>,
+    /// The model's share of kills by abilities against each kit's recorded
+    /// share: how well the model orders kits by a mechanism it predicts
+    /// directly, not through the effect.
+    pub kill_share_pearson: f64,
+    pub kill_share_spearman: f64,
+    /// The kits' mean recorded share.
+    pub kits_recorded_kill_share: Option<f64>,
 }
 
 /// The mean share of kills by abilities the model gives a set of kits.
@@ -188,7 +238,7 @@ fn mean_kill_share(
 ) -> Result<f64> {
     let mut total = 0.0;
     for k in kits {
-        let m = metrics(o, base, vars, e, s, &k.parts)?;
+        let m = metrics(o, base, vars, e, s, &k.build())?;
         total += m[0].exp_m1().min(1.0);
     }
     #[allow(clippy::cast_precision_loss)]
@@ -207,7 +257,12 @@ pub fn fit_efficiency(
     s: &Scenario,
     kits: &[&Kit],
 ) -> Result<Option<f64>> {
-    let Some(target) = s.recorded_ability_kill_share else {
+    // The kits' own recorded share where known, else the context's.
+    let recorded: Vec<f64> = kits.iter().filter_map(|k| k.ability_kill_share).collect();
+    #[allow(clippy::cast_precision_loss)]
+    let kits_share =
+        (!recorded.is_empty()).then(|| recorded.iter().sum::<f64>() / recorded.len() as f64);
+    let Some(target) = kits_share.or(s.recorded_ability_kill_share) else {
         return Ok(None);
     };
     let at = |x: f64| -> Result<f64> {
@@ -245,7 +300,7 @@ pub fn validate(
 ) -> Result<Vec<ContextReport>> {
     let e = Economy::load(db)?;
     let modelled: BTreeSet<String> = base.modelled().iter().map(ToString::to_string).collect();
-    let all = kits(db, min_clears, min_players, &artifact_perks(base))?;
+    let all = kits(db, min_clears, min_players, &accessories(base))?;
     let mut out = Vec::new();
     for (context, scenario_name) in SCENARIOS {
         let s = Scenario::from_context(db, scenario_name, vars)?;
@@ -264,9 +319,15 @@ pub fn validate(
         let mut y = Vec::with_capacity(kits.len());
         let (mut parts, mut known) = (0usize, 0usize);
         let mut share = 0.0;
+        let (mut model_share, mut recorded_share) = (Vec::new(), Vec::new());
         for k in &kits {
-            let m = metrics(o, base, vars, &e, &s, &k.parts)?;
+            let build = k.build();
+            let m = metrics(o, base, vars, &e, &s, &build)?;
             share += (m[0].exp_m1()).min(1.0);
+            if let Some(r) = k.ability_kill_share {
+                model_share.push(m[0].exp_m1().min(1.0));
+                recorded_share.push(r);
+            }
             x.push(m);
             y.push(k.effect);
             parts += k.parts.len();
@@ -303,6 +364,11 @@ pub fn validate(
             model_ability_kill_share: share / (kits.len().max(1) as f64),
             recorded_ability_kill_share: s.recorded_ability_kill_share,
             fitted_efficiency: fitted,
+            kill_share_pearson: pearson(&model_share, &recorded_share),
+            kill_share_spearman: spearman(&model_share, &recorded_share),
+            #[allow(clippy::cast_precision_loss)]
+            kits_recorded_kill_share: (!recorded_share.is_empty())
+                .then(|| recorded_share.iter().sum::<f64>() / recorded_share.len() as f64),
         });
     }
     Ok(out)
@@ -355,7 +421,7 @@ pub fn calibrate(
         anyhow::bail!("no calibrated context {context:?}: one of hard, easy");
     };
     let s = Scenario::from_context(db, name, vars)?;
-    let all = kits(db, min_clears, min_players, &artifact_perks(base))?;
+    let all = kits(db, min_clears, min_players, &accessories(base))?;
     let kits: Vec<&Kit> = all.iter().filter(|k| k.context == context).collect();
     let mut fitted = vars.clone();
     if let Some(x) = fit_efficiency(o, base, vars, e, &s, &kits)? {
@@ -364,7 +430,7 @@ pub fn calibrate(
     let mut x = Vec::with_capacity(kits.len());
     let mut y = Vec::with_capacity(kits.len());
     for k in &kits {
-        x.push(metrics(o, base, &fitted, e, &s, &k.parts)?);
+        x.push(metrics(o, base, &fitted, e, &s, &k.build())?);
         y.push(k.effect);
     }
     let (z, stats) = standardise(&x);
@@ -415,7 +481,7 @@ pub fn part_checks(
         .iter()
         .map(|(_, name)| Scenario::from_context(db, name, vars))
         .collect::<Result<_>>()?;
-    let mut pool = kits(db, 10.0, 3, &artifact_perks(base))?;
+    let mut pool = kits(db, 10.0, 3, &accessories(base))?;
     pool.sort_by(|a, b| b.clears.total_cmp(&a.clears));
     let modelled: BTreeSet<String> = base.modelled().iter().map(ToString::to_string).collect();
     let mut out = Vec::new();
@@ -427,7 +493,7 @@ pub fn part_checks(
         let mut seen = BTreeSet::new();
         let with: Vec<&Kit> = pool
             .iter()
-            .filter(|k| k.parts.contains(&key) && seen.insert(k.parts.clone()))
+            .filter(|k| k.build().contains(&key) && seen.insert(k.build()))
             .take(max_kits)
             .collect();
         if with.is_empty() {
@@ -435,9 +501,10 @@ pub fn part_checks(
         }
         let mut deltas = [vec![0.0; METRICS.len()], vec![0.0; METRICS.len()]];
         for k in &with {
-            let without: Vec<String> = k.parts.iter().filter(|p| **p != key).cloned().collect();
+            let build = k.build();
+            let without: Vec<String> = build.iter().filter(|p| **p != key).cloned().collect();
             for (si, s) in scenarios.iter().enumerate() {
-                let a = metrics(o, base, vars, &e, s, &k.parts)?;
+                let a = metrics(o, base, vars, &e, s, &build)?;
                 let b = metrics(o, base, vars, &e, s, &without)?;
                 for (j, d) in deltas[si].iter_mut().enumerate() {
                     *d += a[j] - b[j];

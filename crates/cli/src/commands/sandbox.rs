@@ -300,7 +300,7 @@ fn load(dir: Option<&Path>) -> Result<(Ontology, RuleBase, Variables)> {
     })
 }
 
-fn pairs(list: &[String], what: &str) -> Result<Vec<(String, f64)>> {
+pub(crate) fn pairs(list: &[String], what: &str) -> Result<Vec<(String, f64)>> {
     list.iter()
         .map(|kv| {
             let Some((k, v)) = kv.split_once('=') else {

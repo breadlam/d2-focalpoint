@@ -54,7 +54,7 @@ pub fn clears_cte() -> String {
     format!(
         "lvl AS (SELECT membership_id, avg(perf) AS level, count(*) AS n FROM run_score GROUP BY 1),
          c AS (
-             SELECT rb.build_id, rb.share, r.membership_id, b.class || ' ' || b.element AS sub,
+             SELECT rb.build_id, rb.share, r.instance_id, r.membership_id, b.class || ' ' || b.element AS sub,
                     CASE WHEN a.target_group IN ({hard}) THEN 'hard'
                          WHEN a.target_group IN ({easy}) THEN 'easy' ELSE 'boss' END AS ctx,
                     r.perf - (l.level * l.n - r.perf) / (l.n - 1) AS resid

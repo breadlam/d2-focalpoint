@@ -74,6 +74,10 @@ pub struct Scenario {
     pub elite_health: Vec<f64>,
     /// Damage to kill over health.
     pub durability: f64,
+    /// The spread (log-normal sigma) of the damage an enemy actually takes
+    /// around what the sources document: falloff, partial hits, where it
+    /// stands. 0 makes survival a step at the enemy's health.
+    pub damage_spread: f64,
     /// Stat values by stat: `melee`, `grenade`, `class`, `super`, ...
     pub stats: BTreeMap<String, f64>,
     /// A stat's value where `stats` gives none.
@@ -112,6 +116,7 @@ impl Scenario {
             minor_health,
             elite_health,
             durability,
+            damage_spread: vars.engine("scenario.damage_spread", 0.4),
             stats: BTreeMap::new(),
             default_stat: vars.engine("build.default_stat", 100.0),
             supply_per_min: None,
@@ -121,6 +126,7 @@ impl Scenario {
                 "scenario.pack_size",
                 "scenario.pack_radius",
                 "scenario.elite_share",
+                "scenario.damage_spread",
                 "build.default_stat",
             ]
             .map(String::from)
@@ -261,12 +267,44 @@ impl Scenario {
         }
         #[allow(clippy::cast_precision_loss)]
         let n = health.len() as f64;
-        #[allow(clippy::cast_precision_loss)]
-        let alive = health
+        let alive: f64 = health
             .iter()
-            .filter(|h| *h * self.durability > damage)
-            .count() as f64;
+            .map(|h| {
+                let need = h * self.durability;
+                if self.damage_spread <= 0.0 || damage <= 0.0 {
+                    if need > damage { 1.0 } else { 0.0 }
+                } else {
+                    normal_cdf((need / damage).ln() / self.damage_spread)
+                }
+            })
+            .sum();
         alive / n
+    }
+
+    /// Kills a hit of `damage` makes when hits add up on the same enemies
+    /// (many small hits): its damage over the health it must take, at most
+    /// one, ranks mixed.
+    #[must_use]
+    pub fn kills_per_hit(&self, damage: f64) -> f64 {
+        Rank::ALL
+            .iter()
+            .map(|r| {
+                let health = match r {
+                    Rank::Minor => &self.minor_health,
+                    Rank::Elite => &self.elite_health,
+                };
+                if health.is_empty() {
+                    return 0.0;
+                }
+                #[allow(clippy::cast_precision_loss)]
+                let n = health.len() as f64;
+                let per: f64 = health
+                    .iter()
+                    .map(|h| (damage / (h * self.durability)).min(1.0))
+                    .sum();
+                self.share(*r) * per / n
+            })
+            .sum()
     }
 
     /// The share of a pack that survives `damage`, ranks mixed.
@@ -279,19 +317,55 @@ impl Scenario {
     }
 }
 
+/// The standard normal distribution function (Abramowitz and Stegun
+/// 7.1.26; error under 1.5e-7).
+#[must_use]
+pub fn normal_cdf(z: f64) -> f64 {
+    let x = z.abs() / std::f64::consts::SQRT_2;
+    let t = 1.0 / (1.0 + 0.327_591_1 * x);
+    let poly = t
+        * (0.254_829_592
+            + t * (-0.284_496_736
+                + t * (1.421_413_741 + t * (-1.453_152_027 + t * 1.061_405_429))));
+    let erf = 1.0 - poly * (-x * x).exp();
+    if z >= 0.0 {
+        f64::midpoint(1.0, erf)
+    } else {
+        f64::midpoint(1.0, -erf)
+    }
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
 
     /// Tier-2 health like `MossyMax`'s: minors 120–550, elites 550–2,250.
+    /// Survival is a step (no damage spread), so tests can count kills.
     pub(crate) fn scenario(durability: f64) -> Scenario {
-        Scenario::new(
+        let mut s = Scenario::new(
             "test",
             vec![120.0, 215.0, 323.0, 525.0],
             vec![550.0, 1470.0, 1825.0, 2250.0],
             durability,
             &Variables::builtin().unwrap(),
-        )
+        );
+        s.damage_spread = 0.0;
+        s
+    }
+
+    #[test]
+    fn damage_spread_smooths_survival() {
+        let mut s = scenario(1.0);
+        s.damage_spread = 0.4;
+        // Damage equal to an enemy's health kills it half the time.
+        let one = Scenario {
+            minor_health: vec![200.0],
+            ..s.clone()
+        };
+        assert!((one.survives(Rank::Minor, 200.0) - 0.5).abs() < 1e-6);
+        assert!(one.survives(Rank::Minor, 400.0) < 0.05);
+        assert!(one.survives(Rank::Minor, 100.0) > 0.95);
+        assert!((normal_cdf(1.0) - 0.841_344_7).abs() < 1e-6);
     }
 
     #[test]

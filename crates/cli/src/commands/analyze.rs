@@ -160,6 +160,14 @@ pub struct ModelArgs {
     /// Kits each part is judged on (--parts)
     #[arg(long, default_value_t = 20)]
     pub max_kits: usize,
+
+    /// Instead: list each context's kits with their accessories and metrics
+    #[arg(long)]
+    pub kits: bool,
+
+    /// Set a variable (`name=value`), as `sandbox analyze --set`
+    #[arg(long, value_name = "NAME=VALUE")]
+    pub set: Vec<String>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -320,11 +328,80 @@ pub fn run(args: &Args, db: &Path) -> Result<()> {
     }
 }
 
+/// `analyze model --kits`: each context's kits, with the accessories they
+/// are evaluated with and the model's metrics.
+#[allow(clippy::many_single_char_names)]
+fn list_kits(
+    db: &Database,
+    o: &focalpoint_sandbox::ontology::Ontology,
+    base: &focalpoint_sandbox::rules::RuleBase,
+    vars: &focalpoint_sandbox::variables::Variables,
+    a: &ModelArgs,
+    format: Format,
+) -> Result<()> {
+    use focalpoint_sandbox::{economy::Economy, scenario::Scenario, validate};
+    let e = Economy::load(db)?;
+    let modelled: Vec<String> = base
+        .modelled()
+        .iter()
+        .filter(|p| p.kind == "artifact_perk" || p.kind == "armor_mod")
+        .map(ToString::to_string)
+        .collect();
+    let all = validate::kits(db, a.min_clears, a.min_players, &modelled)?;
+    for (context, name) in validate::SCENARIOS {
+        let s = Scenario::from_context(db, name, vars)?;
+        println!("## {context} content, in {name}");
+        let header = [
+            "kit",
+            "accessories",
+            "clears",
+            "effect",
+            "ability kill share",
+            "recorded",
+            "loop gain",
+            "casts a minute",
+            "damage resist",
+        ]
+        .map(String::from);
+        let mut rows = Vec::new();
+        for k in all.iter().filter(|k| k.context == context) {
+            let m = validate::metrics(o, base, vars, &e, &s, &k.build())?;
+            let short = |parts: &[String]| {
+                parts
+                    .iter()
+                    .map(|p| p.split_once(':').map_or(p.as_str(), |(_, n)| n))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            };
+            rows.push(vec![
+                short(&k.parts),
+                short(&k.accessories),
+                format!("{:.0}", k.clears),
+                pct(k.effect.exp_m1()),
+                format!("{:.0}%", 100.0 * m[0].exp_m1().min(1.0)),
+                k.ability_kill_share
+                    .map_or_else(|| "—".to_string(), |v| format!("{:.0}%", 100.0 * v)),
+                format!("{:.2}", m[4]),
+                format!("{:.1}", m[5]),
+                format!("{:.2}", m[3]),
+            ]);
+        }
+        println!("{}", render(format, &header, &rows));
+    }
+    Ok(())
+}
+
 fn run_model(db: &Database, a: &ModelArgs, format: Format) -> Result<()> {
     use focalpoint_sandbox::validate;
     let ontology = focalpoint_sandbox::ontology::Ontology::builtin()?;
     let base = focalpoint_sandbox::builtin_rules()?;
-    let vars = focalpoint_sandbox::variables::Variables::builtin()?;
+    let mut vars = focalpoint_sandbox::variables::Variables::builtin()?;
+    for (k, v) in super::sandbox::pairs(&a.set, "set")? {
+        vars.set(&k, v)?;
+    }
+    if a.kits {
+        return list_kits(db, &ontology, &base, &vars, a, format);
+    }
     if a.parts {
         let checks = validate::part_checks(db, &ontology, &base, &vars, 150.0, 20, a.max_kits)?;
         println!(
@@ -399,10 +476,16 @@ fn run_model(db: &Database, a: &ModelArgs, format: Format) -> Result<()> {
             println!("Calibrated: scenario.ability_efficiency = {x:.3}");
         }
         println!(
-            "Share of kills by abilities: model {:.0}% (mean over the kits), recorded {}",
+            "Share of kills by abilities: model {:.0}% (mean over the kits), recorded {} (the kits), {} (the context's median player)",
             100.0 * r.model_ability_kill_share,
+            r.kits_recorded_kill_share
+                .map_or_else(|| "—".to_string(), |v| format!("{:.0}%", 100.0 * v)),
             r.recorded_ability_kill_share
                 .map_or_else(|| "—".to_string(), |v| format!("{:.0}%", 100.0 * v))
+        );
+        println!(
+            "Each kit's share, model against recorded: Pearson {:.2}, Spearman {:.2}",
+            r.kill_share_pearson, r.kill_share_spearman
         );
         let header = [
             "metric",
