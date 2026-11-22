@@ -35,7 +35,7 @@ enum Command {
     Mechanics(commands::mechanics::Args),
     /// Rank builds and players, separating the build from the player
     Rank(Box<commands::rank::Args>),
-    /// The build model: check the part cards against the vocabulary
+    /// The build model: check its rule base against the vocabulary
     Sandbox(commands::sandbox::Args),
     /// Search builds by class, exotics, abilities, perks, mods, activity, ...
     Search(Box<commands::search::Args>),

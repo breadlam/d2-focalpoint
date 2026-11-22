@@ -1,6 +1,6 @@
 # The build model's closed vocabulary (docs/build-model.md, docs/sandbox.md).
 #
-# Part cards (data/sandbox/parts/) may only use the names defined here: an
+# The rule base (data/sandbox/rules/) may only use the names defined here: an
 # unknown event, state, parameter or attribute value is an error. The core
 # verbs' parameters are their PvE values, each with its source:
 #   compendium:<tab>/<entry>   the Destiny Data Compendium

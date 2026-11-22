@@ -1,23 +1,20 @@
-//! Checking cards against the ontology, and their coverage of the parts
-//! recorded builds use.
+//! Checking the rule base against the ontology, and its coverage of the
+//! parts recorded builds use.
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::card::{Amount, CONFIDENCE, Card, Condition, Effect, PART_KINDS, Rule, Trigger};
 use crate::ontology::Ontology;
+use crate::rules::{
+    Amount, CONFIDENCE, Condition, Effect, Grant, Modifier, PART_KINDS, Part, Rule, RuleBase,
+    Trigger,
+};
 
-/// A card and the file it came from.
-#[derive(Debug, Clone)]
-pub struct Located {
-    pub file: String,
-    pub card: Card,
-}
-
-/// Something wrong with a card.
+/// Something wrong with a record.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Problem {
     pub file: String,
-    pub card: String,
+    /// The record: `rule 2 (fragment:Ember of Char)`.
+    pub record: String,
     pub message: String,
 }
 
@@ -25,7 +22,7 @@ pub struct Problem {
 #[derive(Debug, Clone, Default)]
 pub struct Report {
     pub problems: Vec<Problem>,
-    /// Cards, rules and modifiers whose only sources are Clarity's.
+    /// Parts whose own records all rest on Clarity alone.
     pub clarity_only: Vec<String>,
 }
 
@@ -33,18 +30,76 @@ const SIZES: [&str; 3] = ["small", "medium", "large"];
 
 struct Checker<'a> {
     o: &'a Ontology,
+    counters: &'a BTreeSet<&'a str>,
     file: &'a str,
-    card: &'a Card,
-    out: &'a mut Vec<Problem>,
+    record: String,
+    out: Vec<Problem>,
 }
 
-impl Checker<'_> {
+impl<'a> Checker<'a> {
+    fn new(
+        o: &'a Ontology,
+        counters: &'a BTreeSet<&'a str>,
+        file: &'a str,
+        record: String,
+    ) -> Self {
+        Self {
+            o,
+            counters,
+            file,
+            record,
+            out: Vec::new(),
+        }
+    }
+
     fn problem(&mut self, message: impl Into<String>) {
         self.out.push(Problem {
             file: self.file.to_string(),
-            card: format!("{} ({})", self.card.name, self.card.kind),
+            record: self.record.clone(),
             message: message.into(),
         });
+    }
+
+    fn counter(&self, name: &str) -> bool {
+        self.counters.contains(name)
+    }
+
+    fn part(&mut self, p: &Part) {
+        if !PART_KINDS.contains(&p.kind.as_str()) {
+            self.problem(format!(
+                "part {p}: kind {:?} is not one of {PART_KINDS:?}",
+                p.kind
+            ));
+        }
+        if p.name.trim() != p.name {
+            self.problem(format!("part {p}: the name has spaces around it"));
+        }
+    }
+
+    fn grant(&mut self, g: &Grant) {
+        if g.all.is_empty() {
+            self.problem("granted by no part");
+        }
+        for p in &g.all {
+            self.part(p);
+        }
+        if g.all.iter().collect::<BTreeSet<_>>().len() < g.all.len() {
+            self.problem(format!("{g} names a part twice"));
+        }
+    }
+
+    /// A record's provenance: at least one source, of a known family, and
+    /// a known confidence.
+    fn provenance(&mut self, sources: &[String], confidence: &str) {
+        if sources.is_empty() {
+            self.problem("a record needs at least one source");
+        }
+        self.sources(sources);
+        if !CONFIDENCE.contains(&confidence) {
+            self.problem(format!(
+                "confidence {confidence:?} is not one of {CONFIDENCE:?}"
+            ));
+        }
     }
 
     fn in_list(&mut self, what: &str, value: &str, list: &[String]) {
@@ -83,14 +138,6 @@ impl Checker<'_> {
                 }
                 _ => self.problem(format!("source {s:?} is not `family:reference`")),
             }
-        }
-    }
-
-    fn confidence(&mut self, c: Option<&String>) {
-        if let Some(c) = c
-            && !CONFIDENCE.contains(&c.as_str())
-        {
-            self.problem(format!("confidence {c:?} is not one of {CONFIDENCE:?}"));
         }
     }
 
@@ -140,8 +187,8 @@ impl Checker<'_> {
                 }
             }
             "counter" => {
-                if !text.is_some_and(|c| self.card.counter.iter().any(|d| d.name == c)) {
-                    self.problem(format!("{event}.counter names no counter of this card"));
+                if !text.is_some_and(|c| self.counter(c)) {
+                    self.problem(format!("{event}.counter names no declared counter"));
                 }
             }
             _ => self.problem(format!(
@@ -172,7 +219,6 @@ impl Checker<'_> {
         let set = [
             ("has", c.has.is_some()),
             ("lacks", c.lacks.is_some()),
-            ("equipped", c.equipped.is_some()),
             ("stacks", c.stacks.is_some()),
             ("movement", c.movement.is_some()),
             ("in_super", c.in_super.is_some()),
@@ -195,7 +241,7 @@ impl Checker<'_> {
             self.state("lacks", s, &["buff"]);
         }
         if let Some(s) = &c.stacks {
-            if !self.card.counter.iter().any(|d| &d.name == s) {
+            if !self.counter(s) {
                 self.state("stacks", s, &[]);
             }
             if c.min.is_none() {
@@ -245,9 +291,9 @@ impl Checker<'_> {
         }
         if t.by_counter.is_some() {
             match &t.counter {
-                Some(c) if self.card.counter.iter().any(|d| &d.name == c) => {}
+                Some(c) if self.counter(c) => {}
                 _ => self.problem(format!(
-                    "{what}: by_counter needs `counter`, one of this card's counters"
+                    "{what}: by_counter needs `counter`, a declared counter"
                 )),
             }
         }
@@ -281,14 +327,12 @@ impl Checker<'_> {
             self.problem("`attributes` only belongs to an `emit` effect");
         }
         for c in [&e.consume, &e.progress].into_iter().flatten() {
-            let own = self.card.counter.iter().any(|d| &d.name == c);
-            if e.progress.is_some() && !own {
+            let counter = self.counter(c);
+            if e.progress.is_some() && !counter {
+                self.problem(format!("progress: {c:?} is not a declared counter"));
+            } else if !counter && !self.o.states.contains_key(c) {
                 self.problem(format!(
-                    "progress: {c:?} is not one of this card's counters"
-                ));
-            } else if !own && !self.o.states.contains_key(c) {
-                self.problem(format!(
-                    "consume: {c:?} is neither a state nor one of this card's counters"
+                    "consume: {c:?} is neither a state nor a declared counter"
                 ));
             }
         }
@@ -340,6 +384,8 @@ impl Checker<'_> {
     }
 
     fn rule(&mut self, r: &Rule) {
+        self.grant(&r.granted_by);
+        self.provenance(&r.sources, &r.confidence);
         self.trigger(&r.on);
         for c in &r.when {
             self.condition(c);
@@ -355,153 +401,162 @@ impl Checker<'_> {
         {
             self.problem(format!("chance {p} is not a probability"));
         }
-        if !r.with.is_empty() && r.effect.len() != 1 {
-            self.problem("`with` variants need a rule with a single effect");
+    }
+
+    fn modifier(&mut self, m: &Modifier) {
+        self.grant(&m.granted_by);
+        self.provenance(&m.sources, &m.confidence);
+        let targets = [m.param.is_some(), m.damage.is_some(), m.stat.is_some()]
+            .iter()
+            .filter(|s| **s)
+            .count();
+        if targets != 1 {
+            self.problem("a modifier sets one of `param`, `damage`, `stat`");
         }
-        for w in &r.with {
-            if w.part.trim().is_empty() {
-                self.problem("a `with` variant names no part");
-            }
-            if let Some(e) = r.effect.first() {
-                match e.with(&w.overrides) {
-                    Ok(merged) => self.effect(&merged),
-                    Err(err) => self.problem(format!("with {:?}: {err}", w.part)),
-                }
-            }
+        let ops = [m.add.is_some(), m.mul.is_some(), m.set.is_some()]
+            .iter()
+            .filter(|s| **s)
+            .count();
+        if ops != 1 {
+            self.problem("a modifier sets one of `add`, `mul`, `set`");
         }
-        self.confidence(r.confidence.as_ref());
-        self.sources(&r.sources);
+        let v = self.o.vocabulary.clone();
+        if let Some(p) = &m.param
+            && !self.o.has_param(p)
+        {
+            self.problem(format!("parameter {p:?} is not in the ontology"));
+        }
+        if let Some(t) = &m.damage {
+            self.in_list("damage tag", t, &v.damage_tags);
+        }
+        if let Some(s) = &m.stat {
+            self.in_list("stat", s, &v.stats);
+        }
+        if let Some(el) = &m.element {
+            if m.damage.is_none() {
+                self.problem("`element` restricts a damage modifier; it needs `damage`");
+            }
+            self.in_list("element", el, &v.elements);
+        }
+        if let Some(cat) = &m.category {
+            self.in_list("damage category", cat, &v.damage_categories);
+        }
+        if let Some(r) = &m.round
+            && r != "up"
+        {
+            self.problem(format!("round {r:?}: only `up` is known"));
+        }
+        for w in &m.when {
+            self.condition(w);
+        }
     }
 }
 
-/// Check every card against the ontology.
+/// Check the rule base against the ontology.
 #[must_use]
-pub fn check(o: &Ontology, cards: &[Located]) -> Report {
+pub fn check(o: &Ontology, base: &RuleBase) -> Report {
     let mut report = Report::default();
-    let mut seen: BTreeMap<(String, String), String> = BTreeMap::new();
-    for Located { file, card } in cards {
-        let mut c = Checker {
-            o,
-            file,
-            card,
-            out: &mut report.problems,
-        };
-        if !PART_KINDS.contains(&card.kind.as_str()) {
-            c.problem(format!("kind {:?} is not one of {PART_KINDS:?}", card.kind));
+    let counters: BTreeSet<&str> = base.counters.iter().map(|c| c.item.name.as_str()).collect();
+    let checker = |file, record| Checker::new(o, &counters, file, record);
+    let mut problems = Vec::new();
+    for r in &base.rules {
+        let mut c = checker(&r.file, format!("rule {} ({})", r.index, r.item.granted_by));
+        c.rule(&r.item);
+        problems.append(&mut c.out);
+    }
+    for m in &base.modifiers {
+        let mut c = checker(
+            &m.file,
+            format!("modifier {} ({})", m.index, m.item.granted_by),
+        );
+        c.modifier(&m.item);
+        problems.append(&mut c.out);
+    }
+    let progressed: BTreeSet<&str> = base
+        .rules
+        .iter()
+        .flat_map(|r| r.item.effect.iter())
+        .filter_map(|e| e.progress.as_deref())
+        .collect();
+    let mut declared = BTreeSet::new();
+    for k in &base.counters {
+        let name = k.item.name.as_str();
+        let mut c = checker(&k.file, format!("counter {name:?}"));
+        if !declared.insert(name) {
+            c.problem("declared twice");
         }
-        if let Some(first) = seen.insert((card.name.clone(), card.kind.clone()), file.clone()) {
-            c.problem(format!("also carded in {first}"));
+        if k.item.threshold <= 0.0 {
+            c.problem("its threshold must be positive");
         }
-        if card.sources.is_empty() {
-            c.problem("a card needs at least one source");
+        if !progressed.contains(name) {
+            c.problem("no rule progresses it");
         }
-        c.sources(&card.sources);
-        c.confidence(Some(&card.confidence));
-        let mut counters = BTreeSet::new();
-        for d in &card.counter {
-            if !counters.insert(&d.name) {
-                c.problem(format!("counter {:?} defined twice", d.name));
-            }
+        problems.append(&mut c.out);
+    }
+    for g in &base.gaps {
+        let mut c = checker(&g.file, format!("gap {} ({})", g.index, g.item.part));
+        c.part(&g.item.part);
+        if g.item.note.trim().is_empty() {
+            c.problem("a gap needs a note saying what is not modelled");
         }
-        for r in &card.rule {
-            c.rule(r);
-        }
-        for m in &card.modify {
-            let targets = [m.param.is_some(), m.damage.is_some(), m.stat.is_some()]
+        c.sources(&g.item.sources);
+        problems.append(&mut c.out);
+    }
+    problems.sort();
+    report.problems = problems;
+    // A part rests on Clarity alone when every record naming it does.
+    let only_clarity = |s: &[String]| !s.is_empty() && s.iter().all(|x| x.starts_with("clarity:"));
+    let mut by_part: BTreeMap<&Part, bool> = BTreeMap::new();
+    let records = base
+        .rules
+        .iter()
+        .map(|r| (&r.item.granted_by, &r.item.sources))
+        .chain(
+            base.modifiers
                 .iter()
-                .filter(|s| **s)
-                .count();
-            if targets != 1 {
-                c.problem("a modifier sets one of `param`, `damage`, `stat`");
-            }
-            let ops = [m.add.is_some(), m.mul.is_some(), m.set.is_some()]
-                .iter()
-                .filter(|s| **s)
-                .count();
-            if ops != 1 {
-                c.problem("a modifier sets one of `add`, `mul`, `set`");
-            }
-            if let Some(p) = &m.param
-                && !o.has_param(p)
-            {
-                c.problem(format!("parameter {p:?} is not in the ontology"));
-            }
-            if let Some(t) = &m.damage {
-                let list = o.vocabulary.damage_tags.clone();
-                c.in_list("damage tag", t, &list);
-            }
-            if let Some(s) = &m.stat {
-                let list = o.vocabulary.stats.clone();
-                c.in_list("stat", s, &list);
-            }
-            if let Some(el) = &m.element {
-                if m.damage.is_none() {
-                    c.problem("`element` restricts a damage modifier; it needs `damage`");
-                }
-                let list = o.vocabulary.elements.clone();
-                c.in_list("element", el, &list);
-            }
-            if let Some(cat) = &m.category {
-                let list = o.vocabulary.damage_categories.clone();
-                c.in_list("damage category", cat, &list);
-            }
-            if let Some(r) = &m.round
-                && r != "up"
-            {
-                c.problem(format!("round {r:?}: only `up` is known"));
-            }
-            for w in &m.when {
-                c.condition(w);
-            }
-            c.confidence(m.confidence.as_ref());
-            c.sources(&m.sources);
-        }
-        let only_clarity =
-            |s: &[String]| !s.is_empty() && s.iter().all(|x| x.starts_with("clarity:"));
-        if only_clarity(&card.sources)
-            && card
-                .rule
-                .iter()
-                .all(|r| r.sources.is_empty() || only_clarity(&r.sources))
-            && card
-                .modify
-                .iter()
-                .all(|m| m.sources.is_empty() || only_clarity(&m.sources))
-        {
-            report
-                .clarity_only
-                .push(format!("{} ({})", card.name, card.kind));
+                .map(|m| (&m.item.granted_by, &m.item.sources)),
+        );
+    for (grant, sources) in records {
+        for p in &grant.all {
+            *by_part.entry(p).or_insert(true) &= only_clarity(sources);
         }
     }
-    report.problems.sort();
+    report.clarity_only = by_part
+        .into_iter()
+        .filter(|(_, only)| *only)
+        .map(|(p, _)| p.to_string())
+        .collect();
     report
 }
 
-/// How much of the recorded part use the cards cover, for one kind.
+/// How much of the recorded part use the rule base models, for one kind.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Coverage {
     pub kind: String,
     pub parts: usize,
-    pub carded_parts: usize,
+    /// Parts granting some record alone.
+    pub modelled: usize,
+    /// Modelled parts with a gap.
+    pub partial: usize,
     pub uses: i64,
-    pub carded_uses: i64,
+    pub modelled_uses: i64,
 }
 
-/// A part recorded builds use that no card describes.
+/// A part recorded builds use that the rule base does not model.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Uncarded {
+pub struct Unmodelled {
     pub kind: String,
     pub name: String,
     pub uses: i64,
 }
 
-/// Coverage of the recorded builds' parts by the cards, by kind, and the
-/// most-used parts without a card (the drafting worklist); cards that
-/// name no manifest item of their kind are listed too.
+/// Coverage of the recorded builds' parts by the rule base, by kind; the
+/// most-used parts not modelled (the drafting worklist); and the parts the
+/// records name that no manifest item has the name of.
 pub fn coverage(
     db: &focalpoint_db::Database,
-    cards: &[Located],
-) -> anyhow::Result<(Vec<Coverage>, Vec<Uncarded>, Vec<String>)> {
+    base: &RuleBase,
+) -> anyhow::Result<(Vec<Coverage>, Vec<Unmodelled>, Vec<String>)> {
     let kinds = PART_KINDS
         .iter()
         .map(|k| format!("'{k}'"))
@@ -520,38 +575,33 @@ pub fn coverage(
     let rows: Vec<(String, String, i64)> = stmt
         .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))?
         .collect::<duckdb::Result<_>>()?;
-    let carded: BTreeSet<(&str, &str)> = cards
-        .iter()
-        .map(|c| (c.card.kind.as_str(), c.card.name.as_str()))
-        .collect();
+    let key = |p: &Part| (p.kind.clone(), p.name.clone());
+    let modelled: BTreeSet<(String, String)> = base.modelled().into_iter().map(key).collect();
+    let partial: BTreeSet<(String, String)> = base.gaps.iter().map(|g| key(&g.item.part)).collect();
     let mut by_kind: BTreeMap<String, Coverage> = BTreeMap::new();
-    let mut uncarded = Vec::new();
-    let mut used: BTreeSet<(String, String)> = BTreeSet::new();
+    let mut unmodelled = Vec::new();
     for (kind, name, uses) in rows {
-        let has = carded.contains(&(kind.as_str(), name.as_str()));
-        let c = by_kind.entry(kind.clone()).or_insert(Coverage {
-            kind: kind.clone(),
+        let part = (kind, name);
+        let c = by_kind.entry(part.0.clone()).or_insert(Coverage {
+            kind: part.0.clone(),
             parts: 0,
-            carded_parts: 0,
+            modelled: 0,
+            partial: 0,
             uses: 0,
-            carded_uses: 0,
+            modelled_uses: 0,
         });
         c.parts += 1;
         c.uses += uses;
-        if has {
-            c.carded_parts += 1;
-            c.carded_uses += uses;
+        if modelled.contains(&part) {
+            c.modelled += 1;
+            c.modelled_uses += uses;
+            c.partial += usize::from(partial.contains(&part));
         } else {
-            uncarded.push(Uncarded {
-                kind: kind.clone(),
-                name: name.clone(),
-                uses,
-            });
+            let (kind, name) = part;
+            unmodelled.push(Unmodelled { kind, name, uses });
         }
-        used.insert((kind, name));
     }
-    uncarded.sort_by(|a, b| b.uses.cmp(&a.uses).then_with(|| a.name.cmp(&b.name)));
-    // Cards naming nothing: no manifest item (or set bonus perk) of the name.
+    unmodelled.sort_by(|a, b| b.uses.cmp(&a.uses).then_with(|| a.name.cmp(&b.name)));
     let mut stmt = db
         .conn()
         .prepare("SELECT name FROM item UNION SELECT name FROM sandbox_perk")?;
@@ -559,98 +609,27 @@ pub fn coverage(
         .query_map([], |r| r.get::<_, Option<String>>(0))?
         .filter_map(|r| r.ok().flatten())
         .collect();
-    let mut unresolved: Vec<String> = cards
-        .iter()
-        .filter(|c| !names.contains(&c.card.name))
-        .map(|c| format!("{} ({})", c.card.name, c.card.kind))
+    let unresolved = base
+        .parts()
+        .into_iter()
+        .filter(|p| !names.contains(&p.name))
+        .map(ToString::to_string)
         .collect();
-    // Parts named inside rules and modifiers: `equipped` and `with`.
-    for c in cards {
-        for name in referenced_parts(&c.card) {
-            if !names.contains(name) {
-                unresolved.push(format!("{name} (named by {})", c.card.name));
-            }
-        }
-    }
-    Ok((by_kind.into_values().collect(), uncarded, unresolved))
-}
-
-/// The parts a card's rules and modifiers name (`equipped`, `with`).
-fn referenced_parts(card: &Card) -> BTreeSet<&str> {
-    let mut out = BTreeSet::new();
-    let conditions = card
-        .rule
-        .iter()
-        .flat_map(|r| r.when.iter())
-        .chain(card.modify.iter().flat_map(|m| m.when.iter()));
-    out.extend(conditions.filter_map(|c| c.equipped.as_deref()));
-    out.extend(
-        card.rule
-            .iter()
-            .flat_map(|r| r.with.iter().map(|w| w.part.as_str())),
-    );
-    out
+    Ok((by_kind.into_values().collect(), unmodelled, unresolved))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::card::parse;
 
-    fn located(text: &str) -> Vec<Located> {
-        parse(text)
-            .unwrap()
-            .into_iter()
-            .map(|card| Located {
-                file: "t.toml".into(),
-                card,
-            })
-            .collect()
+    fn messages(text: &str) -> (Vec<String>, Report) {
+        let o = Ontology::builtin().unwrap();
+        let r = check(&o, &RuleBase::parse("t.toml", text).unwrap());
+        (r.problems.iter().map(|p| p.message.clone()).collect(), r)
     }
 
-    #[test]
-    fn good_cards_pass_and_bad_names_fail() {
-        let o = Ontology::builtin().unwrap();
-        let good = located(
-            r#"
-            [[part]]
-            name = "Ember of Char"
-            kind = "fragment"
-            sources = ["compendium:Solar/Fragments/Char"]
-            [[part.rule]]
-            on = { event = "ignition_hit", origin = false }
-            effect = { apply = "scorch", stacks = 40, target = "target" }
-            "#,
-        );
-        let r = check(&o, &good);
-        assert!(r.problems.is_empty(), "{:?}", r.problems);
-        let bad = located(
-            r#"
-            [[part]]
-            name = "Nonsense"
-            kind = "doohickey"
-            sources = ["wiki:x", "clarity:1"]
-            [[part.rule]]
-            on = { event = "ignite", origin = false }
-            effect = [{ apply = "scorchh" }, { energy = "melee", spawn = "firesprite" }]
-            [[part.modify]]
-            param = "ignition.colour"
-            mul = 2
-            "#,
-        );
-        let msgs: Vec<String> = check(&o, &bad)
-            .problems
-            .into_iter()
-            .map(|p| p.message)
-            .collect();
-        for needle in [
-            "kind \"doohickey\"",
-            "family \"wiki\"",
-            "event \"ignite\"",
-            "state \"scorchh\"",
-            "exactly one primary",
-            "parameter \"ignition.colour\"",
-        ] {
+    fn assert_has(msgs: &[String], needles: &[&str]) {
+        for needle in needles {
             assert!(
                 msgs.iter().any(|m| m.contains(needle)),
                 "missing {needle}: {msgs:?}"
@@ -659,26 +638,96 @@ mod tests {
     }
 
     #[test]
-    fn variants_are_checked_merged_and_clarity_only_cards_reported() {
-        let o = Ontology::builtin().unwrap();
-        let cards = located(
+    fn good_records_pass_and_bad_names_fail() {
+        let (msgs, _) = messages(
             r#"
-            [[part]]
-            name = "Whisper of Hunger"
-            kind = "fragment"
-            sources = ["clarity:2483898431"]
-            [[part.rule]]
-            on = { event = "pickup", object = "stasis_shard" }
-            effect = { energy = "melee", amount = 0.1 }
-            with = [{ part = "X", energy = "elbow" }]
+            [[rule]]
+            granted_by = "fragment:Ember of Char"
+            sources = ["compendium:Solar/Fragments/Char"]
+            on = { event = "ignition_hit", origin = false }
+            effect = { apply = "scorch", stacks = 40, target = "target" }
             "#,
         );
-        let r = check(&o, &cards);
+        assert!(msgs.is_empty(), "{msgs:?}");
+        let (msgs, _) = messages(
+            r#"
+            [[rule]]
+            granted_by = ["doohickey:Nonsense", "fragment:Ember of Char", "fragment:Ember of Char"]
+            sources = ["wiki:x", "clarity:1"]
+            confidence = "certain"
+            on = { event = "ignite", origin = false }
+            effect = [{ apply = "scorchh" }, { energy = "melee", spawn = "firesprite" }]
+
+            [[modifier]]
+            granted_by = "fragment:Ember of Char"
+            sources = []
+            param = "ignition.colour"
+            mul = 2
+            "#,
+        );
+        assert_has(
+            &msgs,
+            &[
+                "kind \"doohickey\"",
+                "names a part twice",
+                "family \"wiki\"",
+                "confidence \"certain\"",
+                "event \"ignite\"",
+                "state \"scorchh\"",
+                "exactly one primary",
+                "parameter \"ignition.colour\"",
+                "at least one source",
+            ],
+        );
+    }
+
+    #[test]
+    fn counters_and_gaps_are_checked_and_clarity_only_parts_reported() {
+        let (msgs, r) = messages(
+            r#"
+            [[counter]]
+            name = "shards"
+            threshold = 15
+
+            [[counter]]
+            name = "shards"
+
+            [[counter]]
+            name = "idle"
+
+            [[rule]]
+            granted_by = "fragment:Whisper of Hunger"
+            sources = ["clarity:2483898431"]
+            on = { event = "pickup", object = "stasis_shard" }
+            effect = { progress = "shards", amount = 1 }
+
+            [[rule]]
+            granted_by = "fragment:Whisper of Hunger"
+            sources = ["clarity:2483898431"]
+            on = "kill"
+            when = [{ stacks = "nothing", min = 1 }]
+            effect = [{ consume = "shards" }, { progress = "unknown" }]
+
+            [[gap]]
+            part = "fragment:Whisper of Hunger"
+            note = " "
+            "#,
+        );
+        assert_has(
+            &msgs,
+            &[
+                "declared twice",
+                "no rule progresses it",
+                "state \"nothing\"",
+                "\"unknown\" is not a declared counter",
+                "needs a note",
+            ],
+        );
+        assert_eq!(r.clarity_only, ["fragment:Whisper of Hunger"]);
         assert!(
-            r.problems.iter().any(|p| p.message.contains("\"elbow\"")),
+            r.problems.iter().any(|p| p.record == "counter \"idle\""),
             "{:?}",
             r.problems
         );
-        assert_eq!(r.clarity_only, ["Whisper of Hunger (fragment)"]);
     }
 }

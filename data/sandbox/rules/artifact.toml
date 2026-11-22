@@ -1,0 +1,62 @@
+# Artifact perks (docs/sandbox.md).
+
+# Each ignition adds a second damage instance that counts as an ignition
+# (so ignition modifiers and on-ignition rules apply to it), without
+# falloff, but does not itself trigger another Fulmination. With Ember of
+# Char, the Fulmination Scorches what it hits too: with Ember of Ashes as
+# well, a neighbour takes x60 from the ignition and x60 from the
+# Fulmination, enough to ignite.
+[[rule]]
+granted_by = "artifact_perk:Solar Fulmination"
+sources = ["compendium:Artifact Perks/Hunter's Journal (Echoes)/Solar Fulmination"]
+on = { event = "ignition", fulmination = false }
+effect = { emit = "ignition", attributes = { fulmination = true }, damage = 171, radius = 12, falloff = 1.0, element = "solar", tags = ["ignition"] }
+
+# Crystalline Converter.
+
+[[counter]]
+name = "converter_shards"
+threshold = 15
+note = "Crystalline Converter: Stasis Shard pickups since the last Stasis melee hit."
+
+[[counter]]
+name = "converter_primed"
+threshold = 1
+note = "Crystalline Converter: set by a class ability; the next Stasis weapon kill spawns a shard."
+
+[[rule]]
+granted_by = "artifact_perk:Crystalline Converter"
+sources = ["compendium:Artifact Perks/Tablet of Ruin (Heresy)/Crystalline Converter"]
+on = { event = "pickup", object = "stasis_shard" }
+effect = { progress = "converter_shards", amount = 1 }
+
+# A Stasis melee hit spends the count: 8, 12 or 15 pickups spawn 1, 2 or 3
+# crystals.
+[[rule]]
+granted_by = "artifact_perk:Crystalline Converter"
+sources = ["compendium:Artifact Perks/Tablet of Ruin (Heresy)/Crystalline Converter"]
+on = { event = "hit", source = "melee", element = "stasis" }
+when = [{ stacks = "converter_shards", min = 8 }]
+effect = [
+  { spawn = "stasis_crystal", count = { by_counter = [[8, 1], [12, 2], [15, 3]], counter = "converter_shards" }, size = "medium" },
+  { consume = "converter_shards" },
+]
+note = "The crystals' size is not stated; medium is assumed."
+
+[[rule]]
+granted_by = "artifact_perk:Crystalline Converter"
+sources = ["compendium:Artifact Perks/Tablet of Ruin (Heresy)/Crystalline Converter"]
+on = { event = "cast", ability = "class" }
+effect = { progress = "converter_primed", amount = 1 }
+
+[[rule]]
+granted_by = "artifact_perk:Crystalline Converter"
+sources = ["compendium:Artifact Perks/Tablet of Ruin (Heresy)/Crystalline Converter"]
+on = { event = "kill", source = "weapon", element = "stasis" }
+when = [{ stacks = "converter_primed", min = 1 }]
+effect = [{ spawn = "stasis_shard", count = 1 }, { consume = "converter_primed" }]
+
+[[gap]]
+part = "artifact_perk:Crystalline Converter"
+note = "A Diamond Lance hit spends the shard count too."
+sources = ["compendium:Artifact Perks/Tablet of Ruin (Heresy)/Crystalline Converter"]

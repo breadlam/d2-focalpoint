@@ -62,7 +62,7 @@ where the gain crosses 1.
  manifest ─┐                              recorded clears ─┐
  sheets  ──┼─▶ knowledge base ─▶ compiler ─▶ build rules ──┼─▶ evaluator ─▶ score per context
  texts   ──┘   (ontology, core     ▲          + scenario   │   (fluid + simulation,      │
-               verbs, part cards)  │                       │    calibrated)              ▼
+               verbs, rule base)   │                       │    calibrated)              ▼
                                    └──── context profiles ─┘                        synthesis
 ```
 
@@ -76,8 +76,11 @@ registries, each small and closed:
 | **Events** | kill (by weapon, ability, super, melee, grenade, precision, of a debuffed or elite target, multikill), hit, precision hit, ability cast, super cast, damage taken, pickup (Orb, shard, Firesprite, Ionic Trace, ammo), finisher, rally, reload, sprint/slide/airborne, buff gained or lost, threshold reached |
 | **States** | resources (grenade, melee, class, super energy; ammo; health and shields; Armor Charge; Transcendence; counters), buffs (Radiant, Restoration, Devour, Woven Mail, Frost Armor, Amplified, Bolt Charge, Invisibility, Speed Booster, Overshield, surges…), debuffs (Scorch, Jolt, Volatile, Weaken, Slow, Freeze, Sever, Suspend, Unravel, Blind, Suppression…), objects (Orb of Power, Stasis Crystal and Shard, Firesprite, Ionic Trace, Void Breach, Tangle, Threadling, Well…) |
 | **Effects** | deal damage (amount, element, category, radius or chain, target filter), apply a state (stacks, duration), grant energy (flat %, regen multiplier for a time), spawn an object, modify (a stat, damage category, damage resistance, healing), consume, refund |
-| **Conditions** | has a state or *n* stacks, health below or above, enemies within *r*, target rank, element of the source, equipped with a part (the "with Ember of Ashes" clauses) |
+| **Conditions** | has a state or *n* stacks, health below or above, enemies within *r*, target rank, element of the source |
 | **Limits** | duration, refresh or extend rules, maximum stacks, decay, internal cooldown, every *n*-th trigger, chance |
+
+What is equipped is not a condition. Each rule and modifier says which
+parts grant it (§3).
 
 Damage modifiers carry **Court's categories** (global debuff, empowering
 buff, weapon surge, amplification, exotic intrinsic, weapon perk, world).
@@ -108,35 +111,42 @@ systems every build uses:
   scalars, buff categories, and the Power delta.
 - **Survival:** health and shields by stat, damage resistance, healing.
 
-### 3. Part cards: declarative, sourced, tested
+### 3. The rule base: declarative, sourced, tested
 
 The format and the checks are in [sandbox.md](sandbox.md).
 
-Each part — aspect, fragment, ability, super, exotic and its perks, set
-bonus, artifact perk, armor mod, weapon perk, origin trait — gets a
-**card** in `data/sandbox/`: its rules and passive modifiers in the
-ontology's terms. Every number cites its source and confidence, as in
-`data/difficulty.toml`. Structure comes from the manifest, not the card:
-slot, fragment capacity, energy cost, stat investments, class, element and
-set membership. For example:
+Every part is described by the **rules and modifiers it grants**, in the
+ontology's terms, in `data/sandbox/rules/`. That covers aspects,
+fragments, abilities, supers, exotics and their perks, set bonuses,
+artifact perks, armor mods, weapon perks and origin traits.
+
+The unit is the record, not the part. Each record says which parts grant
+it: one part, or several together, as with Dawn Chorus's rule for
+Daybreak. So behaviour that belongs to a combination needs no special case
+in either part. The same holds, later, for set piece counts and activity
+modifiers. Compiling a build selects the records its loadout grants.
+
+Every number cites its source and confidence, as in
+`data/difficulty.toml`. Structure comes from the manifest, not the
+records: slot, fragment capacity, energy cost, stat investments, class,
+element and set membership. For example:
 
 ```toml
-[[part]]
-hash = 362132291                      # Ember of Char
-sources = ["clarity:362132291", "compendium:Solar/Fragments"]
-
-[[part.rule]]
-on = "ignition"
-target = { enemies_hit = true, except = "origin" }
-effect = { apply = "scorch", stacks = 40 }
-with = [{ part = "Ember of Ashes", stacks = 60 }]
-confidence = "documented"
+[[rule]]
+granted_by = "fragment:Ember of Char"
+sources = ["compendium:Solar/Fragments/Char", "clarity:362132291"]
+on = { event = "ignition_hit", origin = false }
+effect = { apply = "scorch", stacks = 40, target = "target" }
 ```
 
-**Weapons are parametric, not per weapon.** Damage comes from archetype,
-frame and combatant scalars (MossyMax), handling and reload from manifest
-stats, and the 942 perks are cards (230 cover 90% of use). Exotic weapons
-get cards of their own.
+**Weapons are parametric, not per weapon.**
+
+- Damage comes from archetype, frame and combatant scalars (MossyMax).
+- Handling and reload come from manifest stats.
+- The 942 perks grant records (230 perks cover 90% of use). A perk's
+  numbers often depend on the weapon it is on, so its records will take
+  them by archetype, as amounts already vary by tier.
+- Exotic weapons grant records of their own.
 
 **Encoding is the main cost, so the design plans for it.**
 
@@ -145,16 +155,16 @@ get cards of their own.
   regen multipliers; Court's buff values and durations; MossyMax's weapon
   tables; the Compendium's mechanics tables.
 - **Assisted drafting** for prose (Clarity, the Compendium's part texts,
-  Endgame Analysis's trigger and effect columns). Cards are drafted in batches
+  Endgame Analysis's trigger and effect columns). Records are drafted in batches
   in working sessions and committed. Nothing is generated at run time.
-- **Checks on every card:**
+- **Checks on every record:**
   - the schema;
   - the closed vocabulary: an unknown term fails;
-  - the numbers in the card must reproduce the numbers in its source text;
+  - the numbers in a record must reproduce the numbers in its source text;
   - Clarity and the Compendium must agree where both give a number.
-- **Coverage-driven order.** Cards are written in order of recorded use,
+- **Coverage-driven order.** Parts are modelled in order of recorded use,
   weighted by how much the model's rankings depend on them. A build
-  containing parts without cards is still evaluated: the unmodelled parts
+  containing parts not yet modelled is still evaluated: the unmodelled parts
   are reported, and the data-driven layer below covers them.
 
 | Parts | Distinct | 90% of uses | 99% of uses |
@@ -300,33 +310,38 @@ exists from the start. Depth then follows coverage.
 
 1. **Foundation.**
    - the ontology;
-   - the card schema and compiler;
+   - the rule base's schema and compiler;
    - the scenario model;
    - the fluid solver and loop analysis, and the simulator;
    - the core verbs of all five elements and Prismatic;
    - the energy economy, damage pipeline and survival model, imported
      from the cooldown workbook, Court's guide and MossyMax's sheets;
    - manifest-derived constraints.
-2. **First cards:** every subclass kit, the most-used exotics, set bonuses,
+2. **First records:** every subclass kit, the most-used exotics, set bonuses,
    artifact perks and mods, and weapons by archetype with the top perks.
    That is enough to evaluate the kits of most recorded builds. The
    acceptance cases pass here: the Scorch/Ignition chain falls out of the
-   Solar verbs, three cards and the scenario.
+   Solar verbs, the records of three parts and the scenario.
 3. **Calibration and validation harness** (`focalpoint analyze model`):
    fitted context parameters, acceptance cases, Aegis rank agreement,
    held-out lifts.
 4. **Synthesis v1** on the fluid evaluator, verified by simulation, with
-   explanations. Cards extended to 90% coverage.
+   explanations. Records extended to 90% coverage.
 5. **99% coverage, the surrogate,** and the site.
 
 ## Decisions
 
-- **Card format: TOML** with a strict schema, like the other `data/` files.
+- **Records, not parts.** The unit of knowledge is the rule or modifier
+  together with what grants it. A part is not an object that owns its
+  behaviour. Combinations grant records the way single parts do, and so,
+  later, will set piece counts and activity modifiers. Compiling a build
+  is a selection.
+- **Rule base format: TOML** with a strict schema, like the other `data/` files.
   A compact language can replace it later; the compiler is the only reader.
-- **Assisted drafting** of cards from source prose, each card checked
+- **Assisted drafting** of records from source prose, each checked
   against its source.
 - **Weapons from the first stage**, parametric by archetype and frame, with
-  perks as cards.
+  perks granting records.
 - **Solo first.** The model and synthesis target the best builds for one
   player in each context. Team modelling comes later: it matters most for
   boss damage, while solo builds do well everywhere else.

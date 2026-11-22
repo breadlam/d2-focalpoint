@@ -1,0 +1,169 @@
+# Stasis (docs/sandbox.md).
+
+# Howl of the Storm.
+
+[[modifier]]
+granted_by = "aspect:Howl of the Storm"
+sources = ["compendium:Stasis/Aspect/Howl of the Storm", "clarity:1563930741"]
+param = "melee.charges"
+add = 1
+
+# The sliding uppercut: 146 melee damage, freezes nearby enemies, and two
+# lines of crystals (2 small, 4 medium, 2 large) whose shatters deal 158
+# powered Stasis melee damage, down to 45% over 8 m.
+[[rule]]
+granted_by = "aspect:Howl of the Storm"
+sources = ["compendium:Stasis/Aspect/Howl of the Storm", "clarity:1563930741"]
+on = { event = "cast", ability = "melee" }
+when = [{ movement = "slide" }]
+effect = [
+  { damage = 146, element = "stasis", source = "melee", tags = ["melee", "powered_melee"] },
+  { apply = "frozen", target = "area" },
+  { spawn = "stasis_crystal", sizes = { small = 2, medium = 4, large = 2 }, source = "melee", tags = ["powered_melee", "crystal"], falloff = 0.45 },
+]
+note = "The freeze radius is not stated."
+
+[[modifier]]
+granted_by = "aspect:Howl of the Storm"
+sources = ["compendium:Stasis/Aspect/Howl of the Storm", "clarity:1563930741"]
+damage = "powered_melee"
+element = "stasis"
+mul = 1.5
+when = [{ target_has = "frozen" }, { target_rank_not = ["boss"] }]
+note = "Howl's own damage against frozen non-boss enemies."
+
+# Tectonic Harvest.
+
+[[counter]]
+name = "harvest_shatter"
+threshold = 1
+note = "Tectonic Harvest: Kinetic and Stasis weapon kills while Frost Armor is active progress it; more stacks, more progress."
+
+[[rule]]
+granted_by = "aspect:Tectonic Harvest"
+sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
+on = { event = "pickup", object = "stasis_shard", size = "small" }
+effect = [{ heal = 10 }, { apply = "frost_armor", stacks = 1, target = "self" }]
+
+[[rule]]
+granted_by = "aspect:Tectonic Harvest"
+sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
+on = { event = "pickup", object = "stasis_shard", size = "large" }
+effect = [{ heal = 20 }, { apply = "frost_armor", stacks = 3, target = "self" }]
+note = "The Compendium leaves the large shard's healing unknown; Clarity gives 20 HP."
+
+[[rule]]
+granted_by = "aspect:Tectonic Harvest"
+sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
+on = { event = "kill", source = "weapon" }
+when = [{ has = "frost_armor" }]
+effect = { progress = "harvest_shatter", amount = 0.2 }
+confidence = "assumed"
+note = "Kinetic and Stasis weapon kills only; the progress per kill (rising with Frost Armor stacks) is not documented."
+
+[[rule]]
+granted_by = "aspect:Tectonic Harvest"
+sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
+on = { event = "counter_full", counter = "harvest_shatter" }
+effect = [{ emit = "shatter", attributes = { of = "enemy" } }, { consume = "harvest_shatter" }]
+
+[[gap]]
+part = "aspect:Tectonic Harvest"
+note = "Taking damage while Frost Armor is active grants melee energy, at most once a second; no source gives the amount."
+sources = ["compendium:Stasis/Aspect/Tectonic Harvest", "clarity:2031919264"]
+
+# Whisper of Hunger: the sources disagree. The Compendium has +60%, additive
+# with other increases (10% -> 16%, 50% -> 80%); Clarity has 10% -> 17.5%
+# and 50% -> 75%. The Compendium's is used.
+
+[[modifier]]
+granted_by = "fragment:Whisper of Hunger"
+sources = ["compendium:Stasis/Fragments/Hunger", "clarity:2483898431"]
+param = "stasis_shard.melee_energy_small"
+mul = 1.6
+note = "The Compendium's +60%; Clarity disagrees (10% -> 17.5%)."
+
+[[modifier]]
+granted_by = "fragment:Whisper of Hunger"
+sources = ["compendium:Stasis/Fragments/Hunger", "clarity:2483898431"]
+param = "stasis_shard.melee_energy_large"
+mul = 1.6
+note = "The Compendium's +60%; Clarity disagrees (50% -> 75%)."
+
+# Whisper of Conduction.
+
+[[modifier]]
+granted_by = "fragment:Whisper of Conduction"
+sources = ["compendium:Stasis/Fragments/Conduction", "clarity:2483898429"]
+param = "stasis_shard.pickup_radius"
+set = 15
+note = "Shards within 15 m are pulled to the player after 1 s."
+
+# Whisper of Rime.
+
+[[modifier]]
+granted_by = "fragment:Whisper of Rime"
+sources = ["compendium:Stasis/Fragments/Rime", "compendium:Stasis/Glossary/Frost Armor", "clarity:2483898430"]
+param = "frost_armor.max_stacks"
+set = 7
+
+[[modifier]]
+granted_by = "fragment:Whisper of Rime"
+sources = ["compendium:Stasis/Fragments/Rime", "compendium:Stasis/Glossary/Frost Armor", "clarity:2483898430"]
+param = "frost_armor.damage_resist_max"
+set = 0.50
+
+[[modifier]]
+granted_by = "fragment:Whisper of Rime"
+sources = ["compendium:Stasis/Fragments/Rime", "compendium:Stasis/Glossary/Frost Armor", "clarity:2483898430"]
+param = "frost_armor.stack_duration"
+set = 6
+
+# Glacial Quake.
+
+[[modifier]]
+granted_by = "super:Glacial Quake"
+sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
+param = "super.duration"
+set = 25
+
+[[modifier]]
+granted_by = "super:Glacial Quake"
+sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
+param = "super.damage_resist"
+set = 0.90
+
+[[rule]]
+granted_by = "super:Glacial Quake"
+sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
+on = { event = "cast", ability = "super" }
+effect = { apply = "frozen", target = "area", radius = 8 }
+
+[[rule]]
+granted_by = "super:Glacial Quake"
+sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
+on = "kill"
+when = [{ in_super = true }]
+effect = { spawn = "orb_of_power", count = 1 }
+limit = 7
+note = "Each of these Orbs grants 7.15% ability energy."
+
+[[rule]]
+granted_by = "super:Glacial Quake"
+sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
+on = "super_end"
+effect = { charges = "melee", count = 3 }
+
+[[modifier]]
+granted_by = "super:Glacial Quake"
+sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
+damage = "any"
+element = "stasis"
+mul = 4.1
+when = [{ in_super = true }, { target_has = "frozen" }]
+note = "All Stasis damage against frozen enemies (light attacks and contact damage aside) is +310% and counts as super damage."
+
+[[gap]]
+part = "super:Glacial Quake"
+note = "Contact damage (300 every 0.15 s to frozen enemies and crystals), the light and heavy attacks, and Glacial Howl (15% super energy per uppercut)."
+sources = ["compendium:Stasis/Super Abilities/Glacial Quake"]
