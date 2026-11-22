@@ -6,8 +6,12 @@ use std::path::{Path, PathBuf};
 use anyhow::{Result, bail};
 use focalpoint_db::Database;
 use focalpoint_sandbox::check;
+use focalpoint_sandbox::compile::{Build, compile};
+use focalpoint_sandbox::economy::Economy;
+use focalpoint_sandbox::fluid::{Engine, Event, Knob, Setup, threshold};
 use focalpoint_sandbox::ontology::Ontology;
 use focalpoint_sandbox::rules::RuleBase;
+use focalpoint_sandbox::scenario::Scenario;
 
 use crate::output::{Format, render, thousands};
 
@@ -31,6 +35,48 @@ focalpoint sandbox check --top 50             # a longer list of parts not yet m
 With a database, also resolves the parts the records name against the manifest and lists the most-used \
 parts not yet modelled: the drafting worklist.")]
     Check(CheckArgs),
+    /// Analyse a build in a context: its loops, their gains and thresholds
+    #[command(after_help = "Examples:\n  \
+focalpoint sandbox analyze --part 'fragment:Ember of Char' --part 'fragment:Ember of Ashes' \\\n    \
+--part 'artifact_perk:Solar Fulmination' --part 'armor:Dawn Chorus' --seed ignition \\\n    \
+--context 'Ultimate Conquest'\n  \
+focalpoint sandbox analyze --part 'aspect:Howl of the Storm' --part 'melee:Shiver Strike' \\\n    \
+--part 'fragment:Whisper of Hunger' --stat melee=70\n\n\
+Parts are `kind:name`, as the rule base writes them. Each equipped ability's cast is a seed; --seed adds \
+events (ignition). The scenario is the context's durability and health tier with the pack priors; \
+without --context, durability 1. Needs `focalpoint mechanics import`.")]
+    Analyze(AnalyzeArgs),
+}
+
+#[derive(Debug, clap::Args)]
+pub struct AnalyzeArgs {
+    /// A part of the build, `kind:name` (repeat)
+    #[arg(long = "part", required = true)]
+    pub parts: Vec<String>,
+
+    /// An extra event to start from, as well as the abilities' casts: `ignition`
+    #[arg(long = "seed")]
+    pub seeds: Vec<String>,
+
+    /// The context: an id or a name (`focalpoint mechanics context`)
+    #[arg(long)]
+    pub context: Option<String>,
+
+    /// Enemies per pack
+    #[arg(long)]
+    pub pack: Option<f64>,
+
+    /// The pack's radius, in metres
+    #[arg(long)]
+    pub spread: Option<f64>,
+
+    /// The share of elites
+    #[arg(long)]
+    pub elites: Option<f64>,
+
+    /// A stat's value, `melee=70` (repeat; 100 where not given)
+    #[arg(long = "stat")]
+    pub stats: Vec<String>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -47,6 +93,7 @@ pub struct CheckArgs {
 pub fn run(args: &Args, db: &Path) -> Result<()> {
     match &args.what {
         What::Check(a) => check(a, db, args.format),
+        What::Analyze(a) => analyze(a, db, args.format),
     }
 }
 
@@ -166,6 +213,171 @@ fn coverage(db: &Database, base: &RuleBase, top: usize, format: Format) -> Resul
             .map(|u| vec![u.kind.clone(), u.name.clone(), thousands(u.uses)])
             .collect();
         println!("{}", render(format, &header, &rows));
+    }
+    Ok(())
+}
+
+fn scenario(a: &AnalyzeArgs, db: &Database) -> Result<Scenario> {
+    let mut s = match &a.context {
+        Some(q) => Scenario::from_context(db, q)?,
+        None => Scenario::baseline(db)?,
+    };
+    if let Some(n) = a.pack {
+        s.pack.size = n;
+    }
+    if let Some(r) = a.spread {
+        s.pack.radius_m = r;
+    }
+    if let Some(e) = a.elites {
+        s.elite_share = e;
+    }
+    for kv in &a.stats {
+        let Some((k, v)) = kv.split_once('=') else {
+            bail!("--stat {kv:?}: expected name=value");
+        };
+        s.stats.insert(k.trim().to_string(), v.trim().parse()?);
+    }
+    Ok(s)
+}
+
+fn analyze(a: &AnalyzeArgs, db: &Path, format: Format) -> Result<()> {
+    let ontology = Ontology::builtin()?;
+    let base = focalpoint_sandbox::builtin_rules()?;
+    let db = Database::open_read_only(db)?;
+    let economy = Economy::load(&db)?;
+    let build = Build::parse(a.parts.iter().map(String::as_str))?;
+    let unknown: Vec<String> = build
+        .parts
+        .iter()
+        .filter(|p| !base.parts().contains(p))
+        .map(ToString::to_string)
+        .collect();
+    let compiled = compile(&ontology, &base, &build);
+    let s = scenario(a, &db)?;
+    let mut seeds: Vec<Event> = [
+        ("grenade", "grenade"),
+        ("melee", "melee"),
+        ("class_ability", "class"),
+        ("super", "super"),
+    ]
+    .iter()
+    .filter(|(slot, _)| build.equipped(slot).is_some())
+    .map(|(_, ability)| Event::cast(ability))
+    .collect();
+    seeds.extend(a.seeds.iter().map(|e| Event::new(e)));
+    if seeds.is_empty() {
+        bail!("nothing to start from: equip an ability, or give --seed");
+    }
+    println!(
+        "{}: durability ×{:.2}, packs of {} within {} m, {:.0}% elites",
+        s.name,
+        s.durability,
+        s.pack.size,
+        s.pack.radius_m,
+        s.elite_share * 100.0
+    );
+    println!(
+        "Build: {} rules, {} modifiers granted",
+        compiled.rules.len(),
+        compiled.modifiers.len()
+    );
+    if !unknown.is_empty() {
+        println!("Not modelled (no records): {}", unknown.join(", "));
+    }
+    let report = Engine::new(&ontology, &compiled, &economy, &s).analyse(&seeds);
+
+    println!("## Loops");
+    if report.loops.is_empty() {
+        println!("None: nothing this build does comes back to itself.");
+    } else {
+        let knobs = [
+            (Knob::PackSize, (1.0, 40.0)),
+            (Knob::Durability, (0.25, 12.0)),
+        ];
+        let header = ["loop", "gain", "crosses 1 at"].map(String::from);
+        let mut rows = Vec::new();
+        for l in &report.loops {
+            let member = l.members[0].clone();
+            let mut at = Vec::new();
+            let stats: Vec<Knob> = ["grenade", "melee", "class", "super"]
+                .iter()
+                .filter(|st| {
+                    l.members
+                        .iter()
+                        .any(|m| m.contains(&format!("ability={st}")))
+                })
+                .map(|st| Knob::Stat((*st).to_string()))
+                .collect();
+            for (knob, range) in knobs
+                .iter()
+                .cloned()
+                .chain(stats.into_iter().map(|k| (k, (0.0, 200.0))))
+            {
+                let setup = Setup {
+                    ontology: &ontology,
+                    compiled: &compiled,
+                    economy: &economy,
+                    scenario: &s,
+                    seeds: &seeds,
+                };
+                if let Some(x) = threshold(setup, &member, &knob, range) {
+                    at.push(format!("{knob} {x:.1}"));
+                }
+            }
+            rows.push(vec![
+                l.members.join(" → "),
+                format!("{:.2}", l.gain),
+                if at.is_empty() {
+                    "—".into()
+                } else {
+                    at.join("; ")
+                },
+            ]);
+        }
+        println!("{}", render(format, &header, &rows));
+    }
+
+    println!("## Generations");
+    let header = [
+        "from", "leads to", "damage", "kills", "energy", "pickups", "frozen",
+    ]
+    .map(String::from);
+    let rows: Vec<Vec<String>> = report
+        .generations
+        .iter()
+        .map(|g| {
+            let y = &g.yields;
+            vec![
+                g.root.to_string(),
+                g.next
+                    .iter()
+                    .map(|(e, n)| format!("{n:.2} {e}"))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                format!("{:.0}", y.damage),
+                format!("{:.2}", y.kills),
+                y.energy
+                    .iter()
+                    .map(|(k, v)| format!("{k} {v:.2}"))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                format!("{:.1}", y.pickups),
+                format!("{:.1}", y.frozen),
+            ]
+        })
+        .collect();
+    println!("{}", render(format, &header, &rows));
+    if !report.counters.is_empty() {
+        let c: Vec<String> = report
+            .counters
+            .iter()
+            .map(|(k, v)| format!("{k} {v:.1}"))
+            .collect();
+        println!("Counters when spent: {}", c.join(", "));
+    }
+    println!("## Taken without data");
+    for n in s.assumptions.iter().chain(report.notes.iter()) {
+        println!("- {n}");
     }
     Ok(())
 }

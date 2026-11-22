@@ -77,6 +77,8 @@ points, Ember of Char +21.7, Solar Fulmination +18.3.
 - A shard grants 10% melee energy (small) or 50% (large); **Whisper of
   Hunger** raises that to **17.5% and 75%**: eight small shards return
   **140%** of a melee charge — a loop gain above 1 (80% without Hunger).
+  The model's own figures, with Shiver Strike's chunk scalar, the stat
+  and the shards of frozen enemies, are in [sandbox.md](sandbox.md).
 - **Crystalline Converter** (artifact): every 8 | 12 | 15 shard pickups,
   the next Stasis melee spawns 1 | 2 | 3 more crystals — shards make
   crystals that make shards.

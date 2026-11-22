@@ -319,6 +319,10 @@ pub struct Effect {
     pub source: Option<String>,
     /// Attributes of the emitted event.
     pub attributes: Option<BTreeMap<String, toml::Value>>,
+    /// How energy is scaled: `chunk` (default: the ability's chunk scalar
+    /// and the stat), `stat` (Clarity's "not affected by Chunk Energy
+    /// Scalars") or `fixed` (neither).
+    pub scaling: Option<String>,
 }
 
 impl Effect {

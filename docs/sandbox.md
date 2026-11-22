@@ -14,6 +14,8 @@ kinds of file, both built into the binary:
 ```sh
 focalpoint sandbox check                      # check the rule base; coverage, gaps and the drafting worklist
 focalpoint sandbox check --dir data/sandbox   # while editing, without rebuilding
+focalpoint sandbox analyze --part 'aspect:Howl of the Storm' --part 'melee:Shiver Strike' \
+    --part 'fragment:Whisper of Hunger' --context 'Ultimate Conquest'   # a build's loops
 ```
 
 `check` fails on any name the vocabulary does not define. With a database,
@@ -198,3 +200,73 @@ missing behaviour stays visible.
   Fulmination counts as an ignition, so each enemy it damages fires the
   ignition rule again, and the doubling follows.
 - Don't re-implement a core verb. Apply it or modify its parameters.
+
+## Analysing a build
+
+`focalpoint sandbox analyze` compiles a build and follows what it does
+in a scenario (`docs/build-model.md` §4–5). It needs the economy and
+contexts from `focalpoint mechanics import`.
+
+- **Compiling.** The loadout's granted records. Every passive
+  modifier's parameter is resolved once: the largest `set`, then each
+  `add`, then each `mul`. Ember of Ashes' ×1.5 Scorch is rounded up.
+- **The scenario.** A pack of enemies spread over a disc, which gives
+  the expected neighbours within any radius. Elites make up a share of
+  the pack. Health is the context's health tier times its durability
+  ([durability.md](durability.md)). Stats default to 100. Pack size,
+  spread and elite share are priors until calibrated: `--pack`,
+  `--spread`, `--elites`, `--stat melee=70`.
+- **The energy economy** ([mechanics.md](mechanics.md)). A documented
+  chunk of energy is the pre-Edge of Fate figure. It arrives multiplied
+  by the ability's chunk scalar and by 0.40 to 0.90 for the stat
+  (`scaling = "stat"` or `"fixed"` on an energy effect skips the
+  scalar, or both).
+- **Generations.** The analysis follows events, on average, from a
+  *boundary* to the next ones. A boundary is an ability cast (energy
+  comes back as casts), or an event a state set off by filling (an
+  ignition by Scorch at x100). The expected boundaries each boundary
+  reaches form a matrix. Its spectral radius, per loop, is the loop's
+  **gain**: above 1 the loop feeds itself. `analyze` also finds the
+  pack size, durability and stat at which each loop crosses 1.
+- **Core verbs, written once.**
+  - An ignition hits its target and every neighbour within its radius.
+    An ignition and what it sets off in the same place (a Fulmination)
+    form one burst. A neighbour ignites in turn when the burst's Scorch
+    on it reaches x100 and it survives the burst's damage.
+  - Stasis crystals freeze enemies within 2.6 m and are shattered.
+    Frozen enemies are shattered; the overlapping freezes of a
+    generation cover a share of the pack.
+  - Every shatter leaves a Stasis Shard (a large one from an elite). A
+    picked-up shard grants melee energy.
+- **What it takes without data** it lists under "Taken without data":
+  the player's policy (slides into the melee, shatters what is frozen),
+  conditions read as always or never true, unknown radii.
+
+The acceptance cases ([escalation.md](escalation.md)) come out of the
+records, with no rule written for them. Default pack and stat 100:
+
+| Loop | Build | Gain | Crosses 1 |
+|---|---|---|---|
+| Ignition chain | Char, Ashes, Fulmination, Dawn Chorus; Ultimate Conquest | 2.04 | runs above durability 2.4 and in packs of more than 4.4 |
+| | the same, Grandmaster Conquest | 1.65 | |
+| | the same, durability 1 | 0.46 | neighbours die first |
+| | without Fulmination | 0 | 60 Scorch a neighbour, short of 100 |
+| Shard loop | Howl, Shiver Strike, Conduction | 0.96 | at 8.8 enemies a pack |
+| | + Whisper of Hunger | 1.54 | at melee stat 41.5 |
+| | + Crystalline Converter | 1.15 | at melee stat 67.9 |
+| | + both | 1.84 | at melee stat 27.4 |
+
+The chain's durability threshold sits between Master content (×2.24) and
+Grandmaster Conquests (×3.47), as the recorded clears suggest. The shard
+loop's numbers are lower than the 1.4 of a naive count. Shiver Strike's
+chunk scalar (0.7) and the stat (0.9 at 100) cut each shard's energy. The
+shards from frozen enemies, large ones from elites, make up the
+difference.
+
+Not modelled yet:
+
+- Scorch from separate applications adding up over time.
+- Kills of slowed or frozen enemies leaving shards.
+- Cooldowns and limits on rules.
+- Regeneration bonuses, which change rates rather than generations.
+- The discrete-event simulation that will check all of this.

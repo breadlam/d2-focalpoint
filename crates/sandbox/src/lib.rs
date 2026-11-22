@@ -6,11 +6,22 @@
 //! * [`rules`]: the rule base, the rules and modifiers build parts grant
 //!   (`data/sandbox/rules/`; format in `docs/sandbox.md`);
 //! * [`check`]: the rule base checked against the vocabulary, and its
-//!   coverage of the parts recorded builds use.
+//!   coverage of the parts recorded builds use;
+//! * [`economy`]: ability cooldowns, stat curves and what a chunk of
+//!   energy is worth (from `focalpoint mechanics import`);
+//! * [`scenario`]: the environment a build is evaluated in: packs, ranks,
+//!   health and durability;
+//! * [`compile`]: a loadout's records and parameters;
+//! * [`fluid`]: the mean-field analysis: generations, loop gains and
+//!   thresholds.
 
 pub mod check;
+pub mod compile;
+pub mod economy;
+pub mod fluid;
 pub mod ontology;
 pub mod rules;
+pub mod scenario;
 
 use rules::RuleBase;
 

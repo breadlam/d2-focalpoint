@@ -381,6 +381,14 @@ impl<'a> Checker<'a> {
         {
             self.problem(format!("falloff {f} is not a fraction"));
         }
+        if let Some(s) = &e.scaling {
+            if e.energy.is_none() {
+                self.problem("`scaling` belongs to an `energy` effect");
+            }
+            if crate::economy::Scaling::parse(Some(s)).is_none() {
+                self.problem(format!("scaling {s:?} is not chunk, stat or fixed"));
+            }
+        }
     }
 
     fn rule(&mut self, r: &Rule) {

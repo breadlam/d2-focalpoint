@@ -1,6 +1,12 @@
 # The build model (proposal)
 
-**Status: accepted (2026-11-21); stage 1 in progress.** A design for modelling Destiny 2 builds as a whole,
+**Status: accepted (2026-11-21); stage 1 in progress.** Done: the
+vocabulary and rule base, the imported economy, damage-buff and combatant
+tables, scenarios, compiling, and the fluid analysis with the first core
+verbs, which the ignition-chain and shard-loop cases pass
+([sandbox.md](sandbox.md)).
+
+A design for modelling Destiny 2 builds as a whole,
 so the synergy evaluator and build synthesis share one model. It replaces
 the plan to model mechanics loop by loop ([escalation.md](escalation.md)):
 the Scorch/Ignition chain, the Stasis shard loop and the rest fall out of
